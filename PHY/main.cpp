@@ -275,6 +275,82 @@ int main(void) {
 	return 0;
 }
 
+enum getSerialCommand
+{
+	Set_Byte=0x23,
+	Valid_Byte=0x24,
+	Set_Word=0x25,
+	Reset_All=0x26,
+	Init_Ptr=0x27,
+	Turn_On_GPIO=0x28,
+	Turn_Off_GPIO=0x29,
+	Set_Flag=0x2A,
+	Clear_Flag=0x2B,
+	Read_byte=0x2C,
+    Trig_Cam=0x2E,
+	Set_Delay=0x2F,
+	Read_Mem=0x30    
+};
+
+void Check_RX_Data(uint16_t *frameArray)
+{
+  int i=0;
+  if(frameArray[i]==Valid_Byte)
+  {
+  	switch(frameArray[++i])
+  	{
+  	 case Set_Byte:
+  	   if(frameArray[++i]==\0) return;
+  	   break;
+  	 case Set_Word:
+  	  if(frameArray[++i]==\0) return;
+  	  	break;
+  	 case Reset_All:
+  	  	break;
+  	 case Init_Ptr:
+  	  	break;
+  	 case Turn_On_GPIO:
+      if(frameArray[++i]==\0) return;
+      	break;
+     case Turn_Off_GPIO:
+      if(frameArray[++i]==\0) return;
+      	break;
+     case Set_Flag:
+      if(frameArray[++i]==\0) return;
+      	break;
+     case Clear_Flag:
+      if(frameArray[++i]==\0) return;
+      	break;
+     case Read_byte:
+      if(frameArray[++i]==\0) return;
+      	break;
+     case Trig_Cam:
+      if(frameArray[++i]==\0) return;
+		break;
+     case Set_Delay:
+      if(frameArray[++i]==\0) return;
+      	break;
+     case Read_Mem:
+      if(frameArray[++i]==\0) return;
+
+     default:
+       	break;
+
+  	}
+  }
+ else
+ {
+
+ //implement result checking logic
+ }
+
+
+}
+
+
+
+
+
 // extern "C"{
 int modbus_exception_handler(int modbus_ret){
 	switch(modbus_ret){
