@@ -1,0 +1,3582 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"ee_printf-arg.c"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.section	.rodata
+  24              		.align	2
+  25              	.LC0:
+  26 0000 30313233 		.ascii	"0123456789abcdefghijklmnopqrstuvwxyz\000"
+  26      34353637 
+  26      38396162 
+  26      63646566 
+  26      6768696A 
+  27              		.section	.data.lower_digits,"aw",%progbits
+  28              		.align	2
+  31              	lower_digits:
+  32 0000 00000000 		.word	.LC0
+  33              		.section	.rodata
+  34 0025 000000   		.align	2
+  35              	.LC1:
+  36 0028 30313233 		.ascii	"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ\000"
+  36      34353637 
+  36      38394142 
+  36      43444546 
+  36      4748494A 
+  37              		.section	.data.upper_digits,"aw",%progbits
+  38              		.align	2
+  41              	upper_digits:
+  42 0000 28000000 		.word	.LC1
+  43              		.section	.text.ee_strnlen,"ax",%progbits
+  44              		.align	2
+  45              		.thumb
+  46              		.thumb_func
+  48              	ee_strnlen:
+  49              	.LFB29:
+  50              		.file 1 "..//utils/printf/ee_printf-arg.c"
+   1:..//utils/printf/ee_printf-arg.c **** /* File : barebones/ee_printf.c
+   2:..//utils/printf/ee_printf-arg.c **** 	This file contains an implementation of ee_printf that only requires a method to output a char to 
+   3:..//utils/printf/ee_printf-arg.c **** 
+   4:..//utils/printf/ee_printf-arg.c **** This code is based on a file that contains the following:
+   5:..//utils/printf/ee_printf-arg.c ****  Copyright (C) 2002 Michael Ringgaard. All rights reserved.
+   6:..//utils/printf/ee_printf-arg.c **** 
+   7:..//utils/printf/ee_printf-arg.c ****  Redistribution and use in source and binary forms, with or without
+   8:..//utils/printf/ee_printf-arg.c ****  modification, are permitted provided that the following conditions
+   9:..//utils/printf/ee_printf-arg.c ****  are met:
+  10:..//utils/printf/ee_printf-arg.c ****  
+  11:..//utils/printf/ee_printf-arg.c ****  1. Redistributions of source code must retain the above copyright 
+  12:..//utils/printf/ee_printf-arg.c ****     notice, this list of conditions and the following disclaimer.  
+  13:..//utils/printf/ee_printf-arg.c ****  2. Redistributions in binary form must reproduce the above copyright
+  14:..//utils/printf/ee_printf-arg.c ****     notice, this list of conditions and the following disclaimer in the
+  15:..//utils/printf/ee_printf-arg.c ****     documentation and/or other materials provided with the distribution.  
+  16:..//utils/printf/ee_printf-arg.c ****  3. Neither the name of the project nor the names of its contributors
+  17:..//utils/printf/ee_printf-arg.c ****     may be used to endorse or promote products derived from this software
+  18:..//utils/printf/ee_printf-arg.c ****     without specific prior written permission. 
+  19:..//utils/printf/ee_printf-arg.c ****  
+  20:..//utils/printf/ee_printf-arg.c ****  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+  21:..//utils/printf/ee_printf-arg.c ****  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  22:..//utils/printf/ee_printf-arg.c ****  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  23:..//utils/printf/ee_printf-arg.c ****  ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+  24:..//utils/printf/ee_printf-arg.c ****  FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  25:..//utils/printf/ee_printf-arg.c ****  DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+  26:..//utils/printf/ee_printf-arg.c ****  OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+  27:..//utils/printf/ee_printf-arg.c ****  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+  28:..//utils/printf/ee_printf-arg.c ****  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+  29:..//utils/printf/ee_printf-arg.c ****  OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
+  30:..//utils/printf/ee_printf-arg.c ****  SUCH DAMAGE.
+  31:..//utils/printf/ee_printf-arg.c **** 
+  32:..//utils/printf/ee_printf-arg.c **** */
+  33:..//utils/printf/ee_printf-arg.c **** 
+  34:..//utils/printf/ee_printf-arg.c **** // #include <coremark.h>
+  35:..//utils/printf/ee_printf-arg.c **** #include <stdarg.h>
+  36:..//utils/printf/ee_printf-arg.c **** #include <stddef.h>
+  37:..//utils/printf/ee_printf-arg.c **** // #include <string.h>
+  38:..//utils/printf/ee_printf-arg.c **** #include "debug_frmwrk.h"
+  39:..//utils/printf/ee_printf-arg.c **** #include "ee_printf-arg.h"
+  40:..//utils/printf/ee_printf-arg.c **** 
+  41:..//utils/printf/ee_printf-arg.c **** #define ZEROPAD  	(1<<0)	/* Pad with zero */
+  42:..//utils/printf/ee_printf-arg.c **** #define SIGN    	(1<<1)	/* Unsigned/signed long */
+  43:..//utils/printf/ee_printf-arg.c **** #define PLUS    	(1<<2)	/* Show plus */
+  44:..//utils/printf/ee_printf-arg.c **** #define SPACE   	(1<<3)	/* Spacer */
+  45:..//utils/printf/ee_printf-arg.c **** #define LEFT    	(1<<4)	/* Left justified */
+  46:..//utils/printf/ee_printf-arg.c **** #define HEX_PREP 	(1<<5)	/* 0x */
+  47:..//utils/printf/ee_printf-arg.c **** #define UPPERCASE   (1<<6)	/* 'ABCDEF' */
+  48:..//utils/printf/ee_printf-arg.c **** 
+  49:..//utils/printf/ee_printf-arg.c **** #define is_digit(c) ((c) >= '0' && (c) <= '9')
+  50:..//utils/printf/ee_printf-arg.c **** 
+  51:..//utils/printf/ee_printf-arg.c **** #define putsnonl(c) UARTPuts(DEBUG_UART_PORT,c)
+  52:..//utils/printf/ee_printf-arg.c **** 
+  53:..//utils/printf/ee_printf-arg.c **** static char *lower_digits = "0123456789abcdefghijklmnopqrstuvwxyz";
+  54:..//utils/printf/ee_printf-arg.c **** static char *upper_digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  55:..//utils/printf/ee_printf-arg.c **** static size_t ee_strnlen(const char *s, size_t count);
+  56:..//utils/printf/ee_printf-arg.c **** 
+  57:..//utils/printf/ee_printf-arg.c **** static size_t ee_strnlen(const char *s, size_t count){
+  51              		.loc 1 57 0
+  52              		.cfi_startproc
+  53              		@ args = 0, pretend = 0, frame = 16
+  54              		@ frame_needed = 1, uses_anonymous_args = 0
+  55              		@ link register save eliminated.
+  56 0000 80B4     		push	{r7}
+  57              	.LCFI0:
+  58              		.cfi_def_cfa_offset 4
+  59 0002 85B0     		sub	sp, sp, #20
+  60              	.LCFI1:
+  61              		.cfi_def_cfa_offset 24
+  62 0004 00AF     		add	r7, sp, #0
+  63              		.cfi_offset 7, -4
+  64              	.LCFI2:
+  65              		.cfi_def_cfa_register 7
+  66 0006 7860     		str	r0, [r7, #4]
+  67 0008 3960     		str	r1, [r7, #0]
+  58:..//utils/printf/ee_printf-arg.c **** 	const char *sc;
+  59:..//utils/printf/ee_printf-arg.c **** 	for (sc = s; *sc != '\0' && count--; ++sc);
+  68              		.loc 1 59 0
+  69 000a 7B68     		ldr	r3, [r7, #4]
+  70 000c FB60     		str	r3, [r7, #12]
+  71 000e 03E0     		b	.L2
+  72              	.L4:
+  73 0010 FB68     		ldr	r3, [r7, #12]
+  74 0012 03F10103 		add	r3, r3, #1
+  75 0016 FB60     		str	r3, [r7, #12]
+  76              	.L2:
+  77 0018 FB68     		ldr	r3, [r7, #12]
+  78 001a 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+  79 001c 002B     		cmp	r3, #0
+  80 001e 0BD0     		beq	.L3
+  81 0020 3B68     		ldr	r3, [r7, #0]
+  82 0022 002B     		cmp	r3, #0
+  83 0024 0CBF     		ite	eq
+  84 0026 0023     		moveq	r3, #0
+  85 0028 0123     		movne	r3, #1
+  86 002a DBB2     		uxtb	r3, r3
+  87 002c 3A68     		ldr	r2, [r7, #0]
+  88 002e 02F1FF32 		add	r2, r2, #-1
+  89 0032 3A60     		str	r2, [r7, #0]
+  90 0034 002B     		cmp	r3, #0
+  91 0036 EBD1     		bne	.L4
+  92              	.L3:
+  60:..//utils/printf/ee_printf-arg.c **** 	return sc - s;
+  93              		.loc 1 60 0
+  94 0038 FA68     		ldr	r2, [r7, #12]
+  95 003a 7B68     		ldr	r3, [r7, #4]
+  96 003c C3EB0203 		rsb	r3, r3, r2
+  61:..//utils/printf/ee_printf-arg.c **** }
+  97              		.loc 1 61 0
+  98 0040 1846     		mov	r0, r3
+  99 0042 07F11407 		add	r7, r7, #20
+ 100 0046 BD46     		mov	sp, r7
+ 101 0048 80BC     		pop	{r7}
+ 102 004a 7047     		bx	lr
+ 103              		.cfi_endproc
+ 104              	.LFE29:
+ 106              		.section	.text.ee_skip_atoi,"ax",%progbits
+ 107              		.align	2
+ 108              		.thumb
+ 109              		.thumb_func
+ 111              	ee_skip_atoi:
+ 112              	.LFB30:
+  62:..//utils/printf/ee_printf-arg.c **** 
+  63:..//utils/printf/ee_printf-arg.c **** static int ee_skip_atoi(const char **s){
+ 113              		.loc 1 63 0
+ 114              		.cfi_startproc
+ 115              		@ args = 0, pretend = 0, frame = 16
+ 116              		@ frame_needed = 1, uses_anonymous_args = 0
+ 117              		@ link register save eliminated.
+ 118 0000 80B4     		push	{r7}
+ 119              	.LCFI3:
+ 120              		.cfi_def_cfa_offset 4
+ 121 0002 85B0     		sub	sp, sp, #20
+ 122              	.LCFI4:
+ 123              		.cfi_def_cfa_offset 24
+ 124 0004 00AF     		add	r7, sp, #0
+ 125              		.cfi_offset 7, -4
+ 126              	.LCFI5:
+ 127              		.cfi_def_cfa_register 7
+ 128 0006 7860     		str	r0, [r7, #4]
+  64:..//utils/printf/ee_printf-arg.c **** 	int i = 0;
+ 129              		.loc 1 64 0
+ 130 0008 4FF00003 		mov	r3, #0
+ 131 000c FB60     		str	r3, [r7, #12]
+  65:..//utils/printf/ee_printf-arg.c **** 	while (is_digit(**s)) i = i*10 + *((*s)++) - '0';
+ 132              		.loc 1 65 0
+ 133 000e 12E0     		b	.L7
+ 134              	.L9:
+ 135 0010 FA68     		ldr	r2, [r7, #12]
+ 136 0012 1346     		mov	r3, r2
+ 137 0014 4FEA8303 		lsl	r3, r3, #2
+ 138 0018 1344     		add	r3, r3, r2
+ 139 001a 4FEA4303 		lsl	r3, r3, #1
+ 140 001e 1946     		mov	r1, r3
+ 141 0020 7B68     		ldr	r3, [r7, #4]
+ 142 0022 1B68     		ldr	r3, [r3, #0]
+ 143 0024 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 144 0026 0A44     		add	r2, r1, r2
+ 145 0028 A2F13002 		sub	r2, r2, #48
+ 146 002c FA60     		str	r2, [r7, #12]
+ 147 002e 03F10102 		add	r2, r3, #1
+ 148 0032 7B68     		ldr	r3, [r7, #4]
+ 149 0034 1A60     		str	r2, [r3, #0]
+ 150              	.L7:
+ 151 0036 7B68     		ldr	r3, [r7, #4]
+ 152 0038 1B68     		ldr	r3, [r3, #0]
+ 153 003a 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 154 003c 2F2B     		cmp	r3, #47
+ 155 003e 04D9     		bls	.L8
+ 156 0040 7B68     		ldr	r3, [r7, #4]
+ 157 0042 1B68     		ldr	r3, [r3, #0]
+ 158 0044 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 159 0046 392B     		cmp	r3, #57
+ 160 0048 E2D9     		bls	.L9
+ 161              	.L8:
+  66:..//utils/printf/ee_printf-arg.c **** 	return i;
+ 162              		.loc 1 66 0
+ 163 004a FB68     		ldr	r3, [r7, #12]
+  67:..//utils/printf/ee_printf-arg.c **** }
+ 164              		.loc 1 67 0
+ 165 004c 1846     		mov	r0, r3
+ 166 004e 07F11407 		add	r7, r7, #20
+ 167 0052 BD46     		mov	sp, r7
+ 168 0054 80BC     		pop	{r7}
+ 169 0056 7047     		bx	lr
+ 170              		.cfi_endproc
+ 171              	.LFE30:
+ 173              		.section	.text.ee_number,"ax",%progbits
+ 174              		.align	2
+ 175              		.thumb
+ 176              		.thumb_func
+ 178              	ee_number:
+ 179              	.LFB31:
+  68:..//utils/printf/ee_printf-arg.c **** 
+  69:..//utils/printf/ee_printf-arg.c **** static char *ee_number(char *str, long num, int base, int size, int precision, int type){
+ 180              		.loc 1 69 0
+ 181              		.cfi_startproc
+ 182              		@ args = 8, pretend = 0, frame = 96
+ 183              		@ frame_needed = 1, uses_anonymous_args = 0
+ 184              		@ link register save eliminated.
+ 185 0000 80B4     		push	{r7}
+ 186              	.LCFI6:
+ 187              		.cfi_def_cfa_offset 4
+ 188 0002 99B0     		sub	sp, sp, #100
+ 189              	.LCFI7:
+ 190              		.cfi_def_cfa_offset 104
+ 191 0004 00AF     		add	r7, sp, #0
+ 192              		.cfi_offset 7, -4
+ 193              	.LCFI8:
+ 194              		.cfi_def_cfa_register 7
+ 195 0006 F860     		str	r0, [r7, #12]
+ 196 0008 B960     		str	r1, [r7, #8]
+ 197 000a 7A60     		str	r2, [r7, #4]
+ 198 000c 3B60     		str	r3, [r7, #0]
+  70:..//utils/printf/ee_printf-arg.c **** 	char c, sign, tmp[66];
+  71:..//utils/printf/ee_printf-arg.c **** 	char *dig = lower_digits;
+ 199              		.loc 1 71 0
+ 200 000e 40F20003 		movw	r3, #:lower16:lower_digits
+ 201 0012 C0F20003 		movt	r3, #:upper16:lower_digits
+ 202 0016 1B68     		ldr	r3, [r3, #0]
+ 203 0018 BB65     		str	r3, [r7, #88]
+  72:..//utils/printf/ee_printf-arg.c **** 	int i;
+  73:..//utils/printf/ee_printf-arg.c **** 
+  74:..//utils/printf/ee_printf-arg.c **** 	if (type & UPPERCASE)  dig = upper_digits;
+ 204              		.loc 1 74 0
+ 205 001a FB6E     		ldr	r3, [r7, #108]
+ 206 001c 03F04003 		and	r3, r3, #64
+ 207 0020 002B     		cmp	r3, #0
+ 208 0022 05D0     		beq	.L12
+ 209 0024 40F20003 		movw	r3, #:lower16:upper_digits
+ 210 0028 C0F20003 		movt	r3, #:upper16:upper_digits
+ 211 002c 1B68     		ldr	r3, [r3, #0]
+ 212 002e BB65     		str	r3, [r7, #88]
+ 213              	.L12:
+  75:..//utils/printf/ee_printf-arg.c **** 	if (type & LEFT) type &= ~ZEROPAD;
+ 214              		.loc 1 75 0
+ 215 0030 FB6E     		ldr	r3, [r7, #108]
+ 216 0032 03F01003 		and	r3, r3, #16
+ 217 0036 002B     		cmp	r3, #0
+ 218 0038 03D0     		beq	.L13
+ 219 003a FB6E     		ldr	r3, [r7, #108]
+ 220 003c 23F00103 		bic	r3, r3, #1
+ 221 0040 FB66     		str	r3, [r7, #108]
+ 222              	.L13:
+  76:..//utils/printf/ee_printf-arg.c **** 	if (base < 2 || base > 36) return 0;
+ 223              		.loc 1 76 0
+ 224 0042 7B68     		ldr	r3, [r7, #4]
+ 225 0044 012B     		cmp	r3, #1
+ 226 0046 02DD     		ble	.L14
+ 227 0048 7B68     		ldr	r3, [r7, #4]
+ 228 004a 242B     		cmp	r3, #36
+ 229 004c 02DD     		ble	.L15
+ 230              	.L14:
+ 231 004e 4FF00003 		mov	r3, #0
+ 232 0052 41E1     		b	.L16
+ 233              	.L15:
+  77:..//utils/printf/ee_printf-arg.c **** 
+  78:..//utils/printf/ee_printf-arg.c **** 	c = (type & ZEROPAD) ? '0' : ' ';
+ 234              		.loc 1 78 0
+ 235 0054 FB6E     		ldr	r3, [r7, #108]
+ 236 0056 03F00103 		and	r3, r3, #1
+ 237 005a DBB2     		uxtb	r3, r3
+ 238 005c 002B     		cmp	r3, #0
+ 239 005e 02D0     		beq	.L17
+ 240 0060 4FF03003 		mov	r3, #48
+ 241 0064 01E0     		b	.L18
+ 242              	.L17:
+ 243 0066 4FF02003 		mov	r3, #32
+ 244              	.L18:
+ 245 006a 87F85630 		strb	r3, [r7, #86]
+  79:..//utils/printf/ee_printf-arg.c **** 	sign = 0;
+ 246              		.loc 1 79 0
+ 247 006e 4FF00003 		mov	r3, #0
+ 248 0072 87F85730 		strb	r3, [r7, #87]
+  80:..//utils/printf/ee_printf-arg.c **** 	if (type & SIGN){
+ 249              		.loc 1 80 0
+ 250 0076 FB6E     		ldr	r3, [r7, #108]
+ 251 0078 03F00203 		and	r3, r3, #2
+ 252 007c 002B     		cmp	r3, #0
+ 253 007e 2AD0     		beq	.L19
+  81:..//utils/printf/ee_printf-arg.c **** 		if (num < 0){
+ 254              		.loc 1 81 0
+ 255 0080 BB68     		ldr	r3, [r7, #8]
+ 256 0082 002B     		cmp	r3, #0
+ 257 0084 0CDA     		bge	.L20
+  82:..//utils/printf/ee_printf-arg.c **** 			sign = '-';
+ 258              		.loc 1 82 0
+ 259 0086 4FF02D03 		mov	r3, #45
+ 260 008a 87F85730 		strb	r3, [r7, #87]
+  83:..//utils/printf/ee_printf-arg.c **** 			num = -num;
+ 261              		.loc 1 83 0
+ 262 008e BB68     		ldr	r3, [r7, #8]
+ 263 0090 C3F10003 		rsb	r3, r3, #0
+ 264 0094 BB60     		str	r3, [r7, #8]
+  84:..//utils/printf/ee_printf-arg.c **** 			size--;
+ 265              		.loc 1 84 0
+ 266 0096 3B68     		ldr	r3, [r7, #0]
+ 267 0098 03F1FF33 		add	r3, r3, #-1
+ 268 009c 3B60     		str	r3, [r7, #0]
+ 269 009e 1AE0     		b	.L19
+ 270              	.L20:
+  85:..//utils/printf/ee_printf-arg.c **** 		}else if (type & PLUS){
+ 271              		.loc 1 85 0
+ 272 00a0 FB6E     		ldr	r3, [r7, #108]
+ 273 00a2 03F00403 		and	r3, r3, #4
+ 274 00a6 002B     		cmp	r3, #0
+ 275 00a8 08D0     		beq	.L21
+  86:..//utils/printf/ee_printf-arg.c **** 			sign = '+';
+ 276              		.loc 1 86 0
+ 277 00aa 4FF02B03 		mov	r3, #43
+ 278 00ae 87F85730 		strb	r3, [r7, #87]
+  87:..//utils/printf/ee_printf-arg.c **** 			size--;
+ 279              		.loc 1 87 0
+ 280 00b2 3B68     		ldr	r3, [r7, #0]
+ 281 00b4 03F1FF33 		add	r3, r3, #-1
+ 282 00b8 3B60     		str	r3, [r7, #0]
+ 283 00ba 0CE0     		b	.L19
+ 284              	.L21:
+  88:..//utils/printf/ee_printf-arg.c **** 		}else if (type & SPACE){
+ 285              		.loc 1 88 0
+ 286 00bc FB6E     		ldr	r3, [r7, #108]
+ 287 00be 03F00803 		and	r3, r3, #8
+ 288 00c2 002B     		cmp	r3, #0
+ 289 00c4 07D0     		beq	.L19
+  89:..//utils/printf/ee_printf-arg.c **** 			sign = ' ';
+ 290              		.loc 1 89 0
+ 291 00c6 4FF02003 		mov	r3, #32
+ 292 00ca 87F85730 		strb	r3, [r7, #87]
+  90:..//utils/printf/ee_printf-arg.c **** 			size--;
+ 293              		.loc 1 90 0
+ 294 00ce 3B68     		ldr	r3, [r7, #0]
+ 295 00d0 03F1FF33 		add	r3, r3, #-1
+ 296 00d4 3B60     		str	r3, [r7, #0]
+ 297              	.L19:
+  91:..//utils/printf/ee_printf-arg.c **** 		}
+  92:..//utils/printf/ee_printf-arg.c **** 	}
+  93:..//utils/printf/ee_printf-arg.c **** 
+  94:..//utils/printf/ee_printf-arg.c **** 	if (type & HEX_PREP){
+ 298              		.loc 1 94 0
+ 299 00d6 FB6E     		ldr	r3, [r7, #108]
+ 300 00d8 03F02003 		and	r3, r3, #32
+ 301 00dc 002B     		cmp	r3, #0
+ 302 00de 0ED0     		beq	.L22
+  95:..//utils/printf/ee_printf-arg.c **** 		if (base == 16)
+ 303              		.loc 1 95 0
+ 304 00e0 7B68     		ldr	r3, [r7, #4]
+ 305 00e2 102B     		cmp	r3, #16
+ 306 00e4 04D1     		bne	.L23
+  96:..//utils/printf/ee_printf-arg.c **** 			size -= 2;
+ 307              		.loc 1 96 0
+ 308 00e6 3B68     		ldr	r3, [r7, #0]
+ 309 00e8 A3F10203 		sub	r3, r3, #2
+ 310 00ec 3B60     		str	r3, [r7, #0]
+ 311 00ee 06E0     		b	.L22
+ 312              	.L23:
+  97:..//utils/printf/ee_printf-arg.c **** 		else if (base == 8)
+ 313              		.loc 1 97 0
+ 314 00f0 7B68     		ldr	r3, [r7, #4]
+ 315 00f2 082B     		cmp	r3, #8
+ 316 00f4 03D1     		bne	.L22
+  98:..//utils/printf/ee_printf-arg.c **** 			size--;
+ 317              		.loc 1 98 0
+ 318 00f6 3B68     		ldr	r3, [r7, #0]
+ 319 00f8 03F1FF33 		add	r3, r3, #-1
+ 320 00fc 3B60     		str	r3, [r7, #0]
+ 321              	.L22:
+  99:..//utils/printf/ee_printf-arg.c **** 	}
+ 100:..//utils/printf/ee_printf-arg.c **** 
+ 101:..//utils/printf/ee_printf-arg.c **** 	i = 0;
+ 322              		.loc 1 101 0
+ 323 00fe 4FF00003 		mov	r3, #0
+ 324 0102 FB65     		str	r3, [r7, #92]
+ 102:..//utils/printf/ee_printf-arg.c **** 
+ 103:..//utils/printf/ee_printf-arg.c **** 	if (num == 0)
+ 325              		.loc 1 103 0
+ 326 0104 BB68     		ldr	r3, [r7, #8]
+ 327 0106 002B     		cmp	r3, #0
+ 328 0108 27D1     		bne	.L26
+ 104:..//utils/printf/ee_printf-arg.c **** 		tmp[i++] = '0';
+ 329              		.loc 1 104 0
+ 330 010a FB6D     		ldr	r3, [r7, #92]
+ 331 010c 07F16000 		add	r0, r7, #96
+ 332 0110 0344     		add	r3, r0, r3
+ 333 0112 4FF03002 		mov	r2, #48
+ 334 0116 03F84C2C 		strb	r2, [r3, #-76]
+ 335 011a FB6D     		ldr	r3, [r7, #92]
+ 336 011c 03F10103 		add	r3, r3, #1
+ 337 0120 FB65     		str	r3, [r7, #92]
+ 338 0122 1DE0     		b	.L25
+ 339              	.L27:
+ 105:..//utils/printf/ee_printf-arg.c **** 	else{
+ 106:..//utils/printf/ee_printf-arg.c **** 		while (num != 0){
+ 107:..//utils/printf/ee_printf-arg.c **** 			tmp[i++] = dig[((unsigned long) num) % (unsigned) base];
+ 340              		.loc 1 107 0
+ 341 0124 F96D     		ldr	r1, [r7, #92]
+ 342 0126 BB68     		ldr	r3, [r7, #8]
+ 343 0128 7A68     		ldr	r2, [r7, #4]
+ 344 012a B3FBF2F0 		udiv	r0, r3, r2
+ 345 012e 02FB00F2 		mul	r2, r2, r0
+ 346 0132 C2EB0302 		rsb	r2, r2, r3
+ 347 0136 BB6D     		ldr	r3, [r7, #88]
+ 348 0138 1344     		add	r3, r2, r3
+ 349 013a 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 350 013c 07F16000 		add	r0, r7, #96
+ 351 0140 00EB0103 		add	r3, r0, r1
+ 352 0144 03F84C2C 		strb	r2, [r3, #-76]
+ 353 0148 FB6D     		ldr	r3, [r7, #92]
+ 354 014a 03F10103 		add	r3, r3, #1
+ 355 014e FB65     		str	r3, [r7, #92]
+ 108:..//utils/printf/ee_printf-arg.c **** 			num = ((unsigned long) num) / (unsigned) base;
+ 356              		.loc 1 108 0
+ 357 0150 BA68     		ldr	r2, [r7, #8]
+ 358 0152 7B68     		ldr	r3, [r7, #4]
+ 359 0154 B2FBF3F3 		udiv	r3, r2, r3
+ 360 0158 BB60     		str	r3, [r7, #8]
+ 361              	.L26:
+ 362              		.loc 1 106 0
+ 363 015a BB68     		ldr	r3, [r7, #8]
+ 364 015c 002B     		cmp	r3, #0
+ 365 015e E1D1     		bne	.L27
+ 366              	.L25:
+ 109:..//utils/printf/ee_printf-arg.c **** 		}
+ 110:..//utils/printf/ee_printf-arg.c **** 	}
+ 111:..//utils/printf/ee_printf-arg.c **** 
+ 112:..//utils/printf/ee_printf-arg.c **** 	if (i > precision) precision = i;
+ 367              		.loc 1 112 0
+ 368 0160 FA6D     		ldr	r2, [r7, #92]
+ 369 0162 BB6E     		ldr	r3, [r7, #104]
+ 370 0164 9A42     		cmp	r2, r3
+ 371 0166 01DD     		ble	.L28
+ 372 0168 FB6D     		ldr	r3, [r7, #92]
+ 373 016a BB66     		str	r3, [r7, #104]
+ 374              	.L28:
+ 113:..//utils/printf/ee_printf-arg.c **** 	size -= precision;
+ 375              		.loc 1 113 0
+ 376 016c 3A68     		ldr	r2, [r7, #0]
+ 377 016e BB6E     		ldr	r3, [r7, #104]
+ 378 0170 C3EB0203 		rsb	r3, r3, r2
+ 379 0174 3B60     		str	r3, [r7, #0]
+ 114:..//utils/printf/ee_printf-arg.c **** 	if (!(type & (ZEROPAD | LEFT))) while (size-- > 0) *str++ = ' ';
+ 380              		.loc 1 114 0
+ 381 0176 FB6E     		ldr	r3, [r7, #108]
+ 382 0178 03F01103 		and	r3, r3, #17
+ 383 017c 002B     		cmp	r3, #0
+ 384 017e 14D1     		bne	.L29
+ 385 0180 07E0     		b	.L30
+ 386              	.L31:
+ 387 0182 FB68     		ldr	r3, [r7, #12]
+ 388 0184 4FF02002 		mov	r2, #32
+ 389 0188 1A70     		strb	r2, [r3, #0]
+ 390 018a FB68     		ldr	r3, [r7, #12]
+ 391 018c 03F10103 		add	r3, r3, #1
+ 392 0190 FB60     		str	r3, [r7, #12]
+ 393              	.L30:
+ 394 0192 3B68     		ldr	r3, [r7, #0]
+ 395 0194 002B     		cmp	r3, #0
+ 396 0196 D4BF     		ite	le
+ 397 0198 0023     		movle	r3, #0
+ 398 019a 0123     		movgt	r3, #1
+ 399 019c DBB2     		uxtb	r3, r3
+ 400 019e 3A68     		ldr	r2, [r7, #0]
+ 401 01a0 02F1FF32 		add	r2, r2, #-1
+ 402 01a4 3A60     		str	r2, [r7, #0]
+ 403 01a6 002B     		cmp	r3, #0
+ 404 01a8 EBD1     		bne	.L31
+ 405              	.L29:
+ 115:..//utils/printf/ee_printf-arg.c **** 	if (sign) *str++ = sign;
+ 406              		.loc 1 115 0
+ 407 01aa 97F85730 		ldrb	r3, [r7, #87]	@ zero_extendqisi2
+ 408 01ae 002B     		cmp	r3, #0
+ 409 01b0 07D0     		beq	.L32
+ 410 01b2 FB68     		ldr	r3, [r7, #12]
+ 411 01b4 97F85720 		ldrb	r2, [r7, #87]
+ 412 01b8 1A70     		strb	r2, [r3, #0]
+ 413 01ba FB68     		ldr	r3, [r7, #12]
+ 414 01bc 03F10103 		add	r3, r3, #1
+ 415 01c0 FB60     		str	r3, [r7, #12]
+ 416              	.L32:
+ 116:..//utils/printf/ee_printf-arg.c **** 
+ 117:..//utils/printf/ee_printf-arg.c **** 	if (type & HEX_PREP){
+ 417              		.loc 1 117 0
+ 418 01c2 FB6E     		ldr	r3, [r7, #108]
+ 419 01c4 03F02003 		and	r3, r3, #32
+ 420 01c8 002B     		cmp	r3, #0
+ 421 01ca 24D0     		beq	.L33
+ 118:..//utils/printf/ee_printf-arg.c **** 		if (base == 8)
+ 422              		.loc 1 118 0
+ 423 01cc 7B68     		ldr	r3, [r7, #4]
+ 424 01ce 082B     		cmp	r3, #8
+ 425 01d0 08D1     		bne	.L34
+ 119:..//utils/printf/ee_printf-arg.c **** 			*str++ = '0';
+ 426              		.loc 1 119 0
+ 427 01d2 FB68     		ldr	r3, [r7, #12]
+ 428 01d4 4FF03002 		mov	r2, #48
+ 429 01d8 1A70     		strb	r2, [r3, #0]
+ 430 01da FB68     		ldr	r3, [r7, #12]
+ 431 01dc 03F10103 		add	r3, r3, #1
+ 432 01e0 FB60     		str	r3, [r7, #12]
+ 433 01e2 18E0     		b	.L33
+ 434              	.L34:
+ 120:..//utils/printf/ee_printf-arg.c **** 		else if (base == 16){
+ 435              		.loc 1 120 0
+ 436 01e4 7B68     		ldr	r3, [r7, #4]
+ 437 01e6 102B     		cmp	r3, #16
+ 438 01e8 15D1     		bne	.L33
+ 121:..//utils/printf/ee_printf-arg.c **** 			*str++ = '0';
+ 439              		.loc 1 121 0
+ 440 01ea FB68     		ldr	r3, [r7, #12]
+ 441 01ec 4FF03002 		mov	r2, #48
+ 442 01f0 1A70     		strb	r2, [r3, #0]
+ 443 01f2 FB68     		ldr	r3, [r7, #12]
+ 444 01f4 03F10103 		add	r3, r3, #1
+ 445 01f8 FB60     		str	r3, [r7, #12]
+ 122:..//utils/printf/ee_printf-arg.c **** 			*str++ = lower_digits[33];
+ 446              		.loc 1 122 0
+ 447 01fa 40F20003 		movw	r3, #:lower16:lower_digits
+ 448 01fe C0F20003 		movt	r3, #:upper16:lower_digits
+ 449 0202 1B68     		ldr	r3, [r3, #0]
+ 450 0204 03F12103 		add	r3, r3, #33
+ 451 0208 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 452 020a FB68     		ldr	r3, [r7, #12]
+ 453 020c 1A70     		strb	r2, [r3, #0]
+ 454 020e FB68     		ldr	r3, [r7, #12]
+ 455 0210 03F10103 		add	r3, r3, #1
+ 456 0214 FB60     		str	r3, [r7, #12]
+ 457              	.L33:
+ 123:..//utils/printf/ee_printf-arg.c **** 		}
+ 124:..//utils/printf/ee_printf-arg.c **** 	}
+ 125:..//utils/printf/ee_printf-arg.c **** 
+ 126:..//utils/printf/ee_printf-arg.c **** 	if (!(type & LEFT)) while (size-- > 0) *str++ = c;
+ 458              		.loc 1 126 0
+ 459 0216 FB6E     		ldr	r3, [r7, #108]
+ 460 0218 03F01003 		and	r3, r3, #16
+ 461 021c 002B     		cmp	r3, #0
+ 462 021e 1ED1     		bne	.L45
+ 463 0220 07E0     		b	.L36
+ 464              	.L37:
+ 465 0222 FB68     		ldr	r3, [r7, #12]
+ 466 0224 97F85620 		ldrb	r2, [r7, #86]
+ 467 0228 1A70     		strb	r2, [r3, #0]
+ 468 022a FB68     		ldr	r3, [r7, #12]
+ 469 022c 03F10103 		add	r3, r3, #1
+ 470 0230 FB60     		str	r3, [r7, #12]
+ 471              	.L36:
+ 472 0232 3B68     		ldr	r3, [r7, #0]
+ 473 0234 002B     		cmp	r3, #0
+ 474 0236 D4BF     		ite	le
+ 475 0238 0023     		movle	r3, #0
+ 476 023a 0123     		movgt	r3, #1
+ 477 023c DBB2     		uxtb	r3, r3
+ 478 023e 3A68     		ldr	r2, [r7, #0]
+ 479 0240 02F1FF32 		add	r2, r2, #-1
+ 480 0244 3A60     		str	r2, [r7, #0]
+ 481 0246 002B     		cmp	r3, #0
+ 482 0248 EBD1     		bne	.L37
+ 127:..//utils/printf/ee_printf-arg.c **** 	while (i < precision--) *str++ = '0';
+ 483              		.loc 1 127 0
+ 484 024a 09E0     		b	.L38
+ 485              	.L39:
+ 486 024c FB68     		ldr	r3, [r7, #12]
+ 487 024e 4FF03002 		mov	r2, #48
+ 488 0252 1A70     		strb	r2, [r3, #0]
+ 489 0254 FB68     		ldr	r3, [r7, #12]
+ 490 0256 03F10103 		add	r3, r3, #1
+ 491 025a FB60     		str	r3, [r7, #12]
+ 492 025c 00E0     		b	.L38
+ 493              	.L45:
+ 494 025e 00BF     		nop
+ 495              	.L38:
+ 496 0260 BA6E     		ldr	r2, [r7, #104]
+ 497 0262 FB6D     		ldr	r3, [r7, #92]
+ 498 0264 9A42     		cmp	r2, r3
+ 499 0266 D4BF     		ite	le
+ 500 0268 0023     		movle	r3, #0
+ 501 026a 0123     		movgt	r3, #1
+ 502 026c DBB2     		uxtb	r3, r3
+ 503 026e BA6E     		ldr	r2, [r7, #104]
+ 504 0270 02F1FF32 		add	r2, r2, #-1
+ 505 0274 BA66     		str	r2, [r7, #104]
+ 506 0276 002B     		cmp	r3, #0
+ 507 0278 E8D1     		bne	.L39
+ 128:..//utils/printf/ee_printf-arg.c **** 	while (i-- > 0) *str++ = tmp[i];
+ 508              		.loc 1 128 0
+ 509 027a 0BE0     		b	.L40
+ 510              	.L41:
+ 511 027c FB6D     		ldr	r3, [r7, #92]
+ 512 027e 07F16002 		add	r2, r7, #96
+ 513 0282 1344     		add	r3, r2, r3
+ 514 0284 13F84C2C 		ldrb	r2, [r3, #-76]	@ zero_extendqisi2
+ 515 0288 FB68     		ldr	r3, [r7, #12]
+ 516 028a 1A70     		strb	r2, [r3, #0]
+ 517 028c FB68     		ldr	r3, [r7, #12]
+ 518 028e 03F10103 		add	r3, r3, #1
+ 519 0292 FB60     		str	r3, [r7, #12]
+ 520              	.L40:
+ 521 0294 FB6D     		ldr	r3, [r7, #92]
+ 522 0296 002B     		cmp	r3, #0
+ 523 0298 D4BF     		ite	le
+ 524 029a 0023     		movle	r3, #0
+ 525 029c 0123     		movgt	r3, #1
+ 526 029e DBB2     		uxtb	r3, r3
+ 527 02a0 FA6D     		ldr	r2, [r7, #92]
+ 528 02a2 02F1FF32 		add	r2, r2, #-1
+ 529 02a6 FA65     		str	r2, [r7, #92]
+ 530 02a8 002B     		cmp	r3, #0
+ 531 02aa E7D1     		bne	.L41
+ 129:..//utils/printf/ee_printf-arg.c **** 	while (size-- > 0) *str++ = ' ';
+ 532              		.loc 1 129 0
+ 533 02ac 07E0     		b	.L42
+ 534              	.L43:
+ 535 02ae FB68     		ldr	r3, [r7, #12]
+ 536 02b0 4FF02002 		mov	r2, #32
+ 537 02b4 1A70     		strb	r2, [r3, #0]
+ 538 02b6 FB68     		ldr	r3, [r7, #12]
+ 539 02b8 03F10103 		add	r3, r3, #1
+ 540 02bc FB60     		str	r3, [r7, #12]
+ 541              	.L42:
+ 542 02be 3B68     		ldr	r3, [r7, #0]
+ 543 02c0 002B     		cmp	r3, #0
+ 544 02c2 D4BF     		ite	le
+ 545 02c4 0023     		movle	r3, #0
+ 546 02c6 0123     		movgt	r3, #1
+ 547 02c8 DBB2     		uxtb	r3, r3
+ 548 02ca 3A68     		ldr	r2, [r7, #0]
+ 549 02cc 02F1FF32 		add	r2, r2, #-1
+ 550 02d0 3A60     		str	r2, [r7, #0]
+ 551 02d2 002B     		cmp	r3, #0
+ 552 02d4 EBD1     		bne	.L43
+ 130:..//utils/printf/ee_printf-arg.c **** 
+ 131:..//utils/printf/ee_printf-arg.c **** 	return str;
+ 553              		.loc 1 131 0
+ 554 02d6 FB68     		ldr	r3, [r7, #12]
+ 555              	.L16:
+ 132:..//utils/printf/ee_printf-arg.c **** }
+ 556              		.loc 1 132 0
+ 557 02d8 1846     		mov	r0, r3
+ 558 02da 07F16407 		add	r7, r7, #100
+ 559 02de BD46     		mov	sp, r7
+ 560 02e0 80BC     		pop	{r7}
+ 561 02e2 7047     		bx	lr
+ 562              		.cfi_endproc
+ 563              	.LFE31:
+ 565              		.section	.text.eaddr,"ax",%progbits
+ 566              		.align	2
+ 567              		.thumb
+ 568              		.thumb_func
+ 570              	eaddr:
+ 571              	.LFB32:
+ 133:..//utils/printf/ee_printf-arg.c **** 
+ 134:..//utils/printf/ee_printf-arg.c **** static char *eaddr(char *str, unsigned char *addr, int size, int precision, int type){
+ 572              		.loc 1 134 0
+ 573              		.cfi_startproc
+ 574              		@ args = 4, pretend = 0, frame = 56
+ 575              		@ frame_needed = 1, uses_anonymous_args = 0
+ 576              		@ link register save eliminated.
+ 577 0000 80B4     		push	{r7}
+ 578              	.LCFI9:
+ 579              		.cfi_def_cfa_offset 4
+ 580 0002 8FB0     		sub	sp, sp, #60
+ 581              	.LCFI10:
+ 582              		.cfi_def_cfa_offset 64
+ 583 0004 00AF     		add	r7, sp, #0
+ 584              		.cfi_offset 7, -4
+ 585              	.LCFI11:
+ 586              		.cfi_def_cfa_register 7
+ 587 0006 F860     		str	r0, [r7, #12]
+ 588 0008 B960     		str	r1, [r7, #8]
+ 589 000a 7A60     		str	r2, [r7, #4]
+ 590 000c 3B60     		str	r3, [r7, #0]
+ 135:..//utils/printf/ee_printf-arg.c **** 	char tmp[24];
+ 136:..//utils/printf/ee_printf-arg.c **** 	char *dig = lower_digits;
+ 591              		.loc 1 136 0
+ 592 000e 40F20003 		movw	r3, #:lower16:lower_digits
+ 593 0012 C0F20003 		movt	r3, #:upper16:lower_digits
+ 594 0016 1B68     		ldr	r3, [r3, #0]
+ 595 0018 FB62     		str	r3, [r7, #44]
+ 137:..//utils/printf/ee_printf-arg.c **** 	int i, len;
+ 138:..//utils/printf/ee_printf-arg.c **** 
+ 139:..//utils/printf/ee_printf-arg.c **** 	if (type & UPPERCASE)  dig = upper_digits;
+ 596              		.loc 1 139 0
+ 597 001a 3B6C     		ldr	r3, [r7, #64]
+ 598 001c 03F04003 		and	r3, r3, #64
+ 599 0020 002B     		cmp	r3, #0
+ 600 0022 05D0     		beq	.L47
+ 601 0024 40F20003 		movw	r3, #:lower16:upper_digits
+ 602 0028 C0F20003 		movt	r3, #:upper16:upper_digits
+ 603 002c 1B68     		ldr	r3, [r3, #0]
+ 604 002e FB62     		str	r3, [r7, #44]
+ 605              	.L47:
+ 140:..//utils/printf/ee_printf-arg.c **** 	len = 0;
+ 606              		.loc 1 140 0
+ 607 0030 4FF00003 		mov	r3, #0
+ 608 0034 7B63     		str	r3, [r7, #52]
+ 141:..//utils/printf/ee_printf-arg.c **** 	for (i = 0; i < 6; i++){
+ 609              		.loc 1 141 0
+ 610 0036 4FF00003 		mov	r3, #0
+ 611 003a 3B63     		str	r3, [r7, #48]
+ 612 003c 3AE0     		b	.L48
+ 613              	.L50:
+ 142:..//utils/printf/ee_printf-arg.c **** 		if (i != 0) tmp[len++] = ':';
+ 614              		.loc 1 142 0
+ 615 003e 3B6B     		ldr	r3, [r7, #48]
+ 616 0040 002B     		cmp	r3, #0
+ 617 0042 0BD0     		beq	.L49
+ 618 0044 7B6B     		ldr	r3, [r7, #52]
+ 619 0046 07F13801 		add	r1, r7, #56
+ 620 004a 0B44     		add	r3, r1, r3
+ 621 004c 4FF03A02 		mov	r2, #58
+ 622 0050 03F8242C 		strb	r2, [r3, #-36]
+ 623 0054 7B6B     		ldr	r3, [r7, #52]
+ 624 0056 03F10103 		add	r3, r3, #1
+ 625 005a 7B63     		str	r3, [r7, #52]
+ 626              	.L49:
+ 143:..//utils/printf/ee_printf-arg.c **** 		tmp[len++] = dig[addr[i] >> 4];
+ 627              		.loc 1 143 0
+ 628 005c 7B6B     		ldr	r3, [r7, #52]
+ 629 005e 396B     		ldr	r1, [r7, #48]
+ 630 0060 BA68     		ldr	r2, [r7, #8]
+ 631 0062 0A44     		add	r2, r1, r2
+ 632 0064 1278     		ldrb	r2, [r2, #0]	@ zero_extendqisi2
+ 633 0066 4FEA1212 		lsr	r2, r2, #4
+ 634 006a D2B2     		uxtb	r2, r2
+ 635 006c 1146     		mov	r1, r2
+ 636 006e FA6A     		ldr	r2, [r7, #44]
+ 637 0070 0A44     		add	r2, r1, r2
+ 638 0072 1278     		ldrb	r2, [r2, #0]	@ zero_extendqisi2
+ 639 0074 07F13801 		add	r1, r7, #56
+ 640 0078 0B44     		add	r3, r1, r3
+ 641 007a 03F8242C 		strb	r2, [r3, #-36]
+ 642 007e 7B6B     		ldr	r3, [r7, #52]
+ 643 0080 03F10103 		add	r3, r3, #1
+ 644 0084 7B63     		str	r3, [r7, #52]
+ 144:..//utils/printf/ee_printf-arg.c **** 		tmp[len++] = dig[addr[i] & 0x0F];
+ 645              		.loc 1 144 0
+ 646 0086 7B6B     		ldr	r3, [r7, #52]
+ 647 0088 396B     		ldr	r1, [r7, #48]
+ 648 008a BA68     		ldr	r2, [r7, #8]
+ 649 008c 0A44     		add	r2, r1, r2
+ 650 008e 1278     		ldrb	r2, [r2, #0]	@ zero_extendqisi2
+ 651 0090 02F00F01 		and	r1, r2, #15
+ 652 0094 FA6A     		ldr	r2, [r7, #44]
+ 653 0096 0A44     		add	r2, r1, r2
+ 654 0098 1278     		ldrb	r2, [r2, #0]	@ zero_extendqisi2
+ 655 009a 07F13801 		add	r1, r7, #56
+ 656 009e 0B44     		add	r3, r1, r3
+ 657 00a0 03F8242C 		strb	r2, [r3, #-36]
+ 658 00a4 7B6B     		ldr	r3, [r7, #52]
+ 659 00a6 03F10103 		add	r3, r3, #1
+ 660 00aa 7B63     		str	r3, [r7, #52]
+ 661              		.loc 1 141 0
+ 662 00ac 3B6B     		ldr	r3, [r7, #48]
+ 663 00ae 03F10103 		add	r3, r3, #1
+ 664 00b2 3B63     		str	r3, [r7, #48]
+ 665              	.L48:
+ 666 00b4 3B6B     		ldr	r3, [r7, #48]
+ 667 00b6 052B     		cmp	r3, #5
+ 668 00b8 C1DD     		ble	.L50
+ 145:..//utils/printf/ee_printf-arg.c **** 	}
+ 146:..//utils/printf/ee_printf-arg.c **** 
+ 147:..//utils/printf/ee_printf-arg.c **** 	if (!(type & LEFT)) while (len < size--) *str++ = ' ';
+ 669              		.loc 1 147 0
+ 670 00ba 3B6C     		ldr	r3, [r7, #64]
+ 671 00bc 03F01003 		and	r3, r3, #16
+ 672 00c0 002B     		cmp	r3, #0
+ 673 00c2 15D1     		bne	.L51
+ 674 00c4 07E0     		b	.L52
+ 675              	.L53:
+ 676 00c6 FB68     		ldr	r3, [r7, #12]
+ 677 00c8 4FF02002 		mov	r2, #32
+ 678 00cc 1A70     		strb	r2, [r3, #0]
+ 679 00ce FB68     		ldr	r3, [r7, #12]
+ 680 00d0 03F10103 		add	r3, r3, #1
+ 681 00d4 FB60     		str	r3, [r7, #12]
+ 682              	.L52:
+ 683 00d6 7A68     		ldr	r2, [r7, #4]
+ 684 00d8 7B6B     		ldr	r3, [r7, #52]
+ 685 00da 9A42     		cmp	r2, r3
+ 686 00dc D4BF     		ite	le
+ 687 00de 0023     		movle	r3, #0
+ 688 00e0 0123     		movgt	r3, #1
+ 689 00e2 DBB2     		uxtb	r3, r3
+ 690 00e4 7A68     		ldr	r2, [r7, #4]
+ 691 00e6 02F1FF32 		add	r2, r2, #-1
+ 692 00ea 7A60     		str	r2, [r7, #4]
+ 693 00ec 002B     		cmp	r3, #0
+ 694 00ee EAD1     		bne	.L53
+ 695              	.L51:
+ 148:..//utils/printf/ee_printf-arg.c **** 	for (i = 0; i < len; ++i) *str++ = tmp[i];
+ 696              		.loc 1 148 0
+ 697 00f0 4FF00003 		mov	r3, #0
+ 698 00f4 3B63     		str	r3, [r7, #48]
+ 699 00f6 0FE0     		b	.L54
+ 700              	.L55:
+ 701 00f8 3B6B     		ldr	r3, [r7, #48]
+ 702 00fa 07F13802 		add	r2, r7, #56
+ 703 00fe 1344     		add	r3, r2, r3
+ 704 0100 13F8242C 		ldrb	r2, [r3, #-36]	@ zero_extendqisi2
+ 705 0104 FB68     		ldr	r3, [r7, #12]
+ 706 0106 1A70     		strb	r2, [r3, #0]
+ 707 0108 FB68     		ldr	r3, [r7, #12]
+ 708 010a 03F10103 		add	r3, r3, #1
+ 709 010e FB60     		str	r3, [r7, #12]
+ 710 0110 3B6B     		ldr	r3, [r7, #48]
+ 711 0112 03F10103 		add	r3, r3, #1
+ 712 0116 3B63     		str	r3, [r7, #48]
+ 713              	.L54:
+ 714 0118 3A6B     		ldr	r2, [r7, #48]
+ 715 011a 7B6B     		ldr	r3, [r7, #52]
+ 716 011c 9A42     		cmp	r2, r3
+ 717 011e EBDB     		blt	.L55
+ 149:..//utils/printf/ee_printf-arg.c **** 	while (len < size--) *str++ = ' ';
+ 718              		.loc 1 149 0
+ 719 0120 07E0     		b	.L56
+ 720              	.L57:
+ 721 0122 FB68     		ldr	r3, [r7, #12]
+ 722 0124 4FF02002 		mov	r2, #32
+ 723 0128 1A70     		strb	r2, [r3, #0]
+ 724 012a FB68     		ldr	r3, [r7, #12]
+ 725 012c 03F10103 		add	r3, r3, #1
+ 726 0130 FB60     		str	r3, [r7, #12]
+ 727              	.L56:
+ 728 0132 7A68     		ldr	r2, [r7, #4]
+ 729 0134 7B6B     		ldr	r3, [r7, #52]
+ 730 0136 9A42     		cmp	r2, r3
+ 731 0138 D4BF     		ite	le
+ 732 013a 0023     		movle	r3, #0
+ 733 013c 0123     		movgt	r3, #1
+ 734 013e DBB2     		uxtb	r3, r3
+ 735 0140 7A68     		ldr	r2, [r7, #4]
+ 736 0142 02F1FF32 		add	r2, r2, #-1
+ 737 0146 7A60     		str	r2, [r7, #4]
+ 738 0148 002B     		cmp	r3, #0
+ 739 014a EAD1     		bne	.L57
+ 150:..//utils/printf/ee_printf-arg.c **** 
+ 151:..//utils/printf/ee_printf-arg.c **** 	return str;
+ 740              		.loc 1 151 0
+ 741 014c FB68     		ldr	r3, [r7, #12]
+ 152:..//utils/printf/ee_printf-arg.c **** }
+ 742              		.loc 1 152 0
+ 743 014e 1846     		mov	r0, r3
+ 744 0150 07F13C07 		add	r7, r7, #60
+ 745 0154 BD46     		mov	sp, r7
+ 746 0156 80BC     		pop	{r7}
+ 747 0158 7047     		bx	lr
+ 748              		.cfi_endproc
+ 749              	.LFE32:
+ 751 015a 00BF     		.section	.text.iaddr,"ax",%progbits
+ 752              		.align	2
+ 753              		.thumb
+ 754              		.thumb_func
+ 756              	iaddr:
+ 757              	.LFB33:
+ 153:..//utils/printf/ee_printf-arg.c **** 
+ 154:..//utils/printf/ee_printf-arg.c **** static char *iaddr(char *str, unsigned char *addr, int size, int precision, int type){
+ 758              		.loc 1 154 0
+ 759              		.cfi_startproc
+ 760              		@ args = 4, pretend = 0, frame = 56
+ 761              		@ frame_needed = 1, uses_anonymous_args = 0
+ 762              		@ link register save eliminated.
+ 763 0000 80B4     		push	{r7}
+ 764              	.LCFI12:
+ 765              		.cfi_def_cfa_offset 4
+ 766 0002 8FB0     		sub	sp, sp, #60
+ 767              	.LCFI13:
+ 768              		.cfi_def_cfa_offset 64
+ 769 0004 00AF     		add	r7, sp, #0
+ 770              		.cfi_offset 7, -4
+ 771              	.LCFI14:
+ 772              		.cfi_def_cfa_register 7
+ 773 0006 F860     		str	r0, [r7, #12]
+ 774 0008 B960     		str	r1, [r7, #8]
+ 775 000a 7A60     		str	r2, [r7, #4]
+ 776 000c 3B60     		str	r3, [r7, #0]
+ 155:..//utils/printf/ee_printf-arg.c **** 	char tmp[24];
+ 156:..//utils/printf/ee_printf-arg.c **** 	int i, n, len;
+ 157:..//utils/printf/ee_printf-arg.c **** 
+ 158:..//utils/printf/ee_printf-arg.c **** 	len = 0;
+ 777              		.loc 1 158 0
+ 778 000e 4FF00003 		mov	r3, #0
+ 779 0012 7B63     		str	r3, [r7, #52]
+ 159:..//utils/printf/ee_printf-arg.c **** 	for (i = 0; i < 4; i++){
+ 780              		.loc 1 159 0
+ 781 0014 4FF00003 		mov	r3, #0
+ 782 0018 FB62     		str	r3, [r7, #44]
+ 783 001a E3E0     		b	.L60
+ 784              	.L66:
+ 160:..//utils/printf/ee_printf-arg.c **** 		if (i != 0) tmp[len++] = '.';
+ 785              		.loc 1 160 0
+ 786 001c FB6A     		ldr	r3, [r7, #44]
+ 787 001e 002B     		cmp	r3, #0
+ 788 0020 0BD0     		beq	.L61
+ 789 0022 7B6B     		ldr	r3, [r7, #52]
+ 790 0024 07F13800 		add	r0, r7, #56
+ 791 0028 0344     		add	r3, r0, r3
+ 792 002a 4FF02E02 		mov	r2, #46
+ 793 002e 03F8242C 		strb	r2, [r3, #-36]
+ 794 0032 7B6B     		ldr	r3, [r7, #52]
+ 795 0034 03F10103 		add	r3, r3, #1
+ 796 0038 7B63     		str	r3, [r7, #52]
+ 797              	.L61:
+ 161:..//utils/printf/ee_printf-arg.c **** 		n = addr[i];
+ 798              		.loc 1 161 0
+ 799 003a FA6A     		ldr	r2, [r7, #44]
+ 800 003c BB68     		ldr	r3, [r7, #8]
+ 801 003e 1344     		add	r3, r2, r3
+ 802 0040 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 803 0042 3B63     		str	r3, [r7, #48]
+ 162:..//utils/printf/ee_printf-arg.c **** 
+ 163:..//utils/printf/ee_printf-arg.c **** 		if (n == 0)
+ 804              		.loc 1 163 0
+ 805 0044 3B6B     		ldr	r3, [r7, #48]
+ 806 0046 002B     		cmp	r3, #0
+ 807 0048 11D1     		bne	.L62
+ 164:..//utils/printf/ee_printf-arg.c **** 			tmp[len++] = lower_digits[0];
+ 808              		.loc 1 164 0
+ 809 004a 796B     		ldr	r1, [r7, #52]
+ 810 004c 40F20003 		movw	r3, #:lower16:lower_digits
+ 811 0050 C0F20003 		movt	r3, #:upper16:lower_digits
+ 812 0054 1B68     		ldr	r3, [r3, #0]
+ 813 0056 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 814 0058 07F1380C 		add	ip, r7, #56
+ 815 005c 0CEB0103 		add	r3, ip, r1
+ 816 0060 03F8242C 		strb	r2, [r3, #-36]
+ 817 0064 7B6B     		ldr	r3, [r7, #52]
+ 818 0066 03F10103 		add	r3, r3, #1
+ 819 006a 7B63     		str	r3, [r7, #52]
+ 820 006c B6E0     		b	.L63
+ 821              	.L62:
+ 165:..//utils/printf/ee_printf-arg.c **** 		else{
+ 166:..//utils/printf/ee_printf-arg.c **** 			if (n >= 100){
+ 822              		.loc 1 166 0
+ 823 006e 3B6B     		ldr	r3, [r7, #48]
+ 824 0070 632B     		cmp	r3, #99
+ 825 0072 68DD     		ble	.L64
+ 167:..//utils/printf/ee_printf-arg.c **** 				tmp[len++] = lower_digits[n / 100];
+ 826              		.loc 1 167 0
+ 827 0074 796B     		ldr	r1, [r7, #52]
+ 828 0076 40F20003 		movw	r3, #:lower16:lower_digits
+ 829 007a C0F20003 		movt	r3, #:upper16:lower_digits
+ 830 007e 1868     		ldr	r0, [r3, #0]
+ 831 0080 3A6B     		ldr	r2, [r7, #48]
+ 832 0082 48F21F53 		movw	r3, #:lower16:1374389535
+ 833 0086 C5F2EB13 		movt	r3, #:upper16:1374389535
+ 834 008a 83FB02C3 		smull	ip, r3, r3, r2
+ 835 008e 4FEA631C 		asr	ip, r3, #5
+ 836 0092 4FEAE273 		asr	r3, r2, #31
+ 837 0096 C3EB0C03 		rsb	r3, r3, ip
+ 838 009a 0344     		add	r3, r0, r3
+ 839 009c 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 840 009e 07F13800 		add	r0, r7, #56
+ 841 00a2 00EB0103 		add	r3, r0, r1
+ 842 00a6 03F8242C 		strb	r2, [r3, #-36]
+ 843 00aa 7B6B     		ldr	r3, [r7, #52]
+ 844 00ac 03F10103 		add	r3, r3, #1
+ 845 00b0 7B63     		str	r3, [r7, #52]
+ 168:..//utils/printf/ee_printf-arg.c **** 				n = n % 100;
+ 846              		.loc 1 168 0
+ 847 00b2 3B6B     		ldr	r3, [r7, #48]
+ 848 00b4 48F21F52 		movw	r2, #:lower16:1374389535
+ 849 00b8 C5F2EB12 		movt	r2, #:upper16:1374389535
+ 850 00bc 82FB0312 		smull	r1, r2, r2, r3
+ 851 00c0 4FEA6211 		asr	r1, r2, #5
+ 852 00c4 4FEAE372 		asr	r2, r3, #31
+ 853 00c8 C2EB0102 		rsb	r2, r2, r1
+ 854 00cc 4FF06401 		mov	r1, #100
+ 855 00d0 01FB02F2 		mul	r2, r1, r2
+ 856 00d4 C2EB0303 		rsb	r3, r2, r3
+ 857 00d8 3B63     		str	r3, [r7, #48]
+ 169:..//utils/printf/ee_printf-arg.c **** 				tmp[len++] = lower_digits[n / 10];
+ 858              		.loc 1 169 0
+ 859 00da 796B     		ldr	r1, [r7, #52]
+ 860 00dc 40F20003 		movw	r3, #:lower16:lower_digits
+ 861 00e0 C0F20003 		movt	r3, #:upper16:lower_digits
+ 862 00e4 1868     		ldr	r0, [r3, #0]
+ 863 00e6 3A6B     		ldr	r2, [r7, #48]
+ 864 00e8 46F26763 		movw	r3, #:lower16:1717986919
+ 865 00ec C6F26663 		movt	r3, #:upper16:1717986919
+ 866 00f0 83FB02C3 		smull	ip, r3, r3, r2
+ 867 00f4 4FEAA30C 		asr	ip, r3, #2
+ 868 00f8 4FEAE273 		asr	r3, r2, #31
+ 869 00fc C3EB0C03 		rsb	r3, r3, ip
+ 870 0100 0344     		add	r3, r0, r3
+ 871 0102 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 872 0104 07F13800 		add	r0, r7, #56
+ 873 0108 00EB0103 		add	r3, r0, r1
+ 874 010c 03F8242C 		strb	r2, [r3, #-36]
+ 875 0110 7B6B     		ldr	r3, [r7, #52]
+ 876 0112 03F10103 		add	r3, r3, #1
+ 877 0116 7B63     		str	r3, [r7, #52]
+ 170:..//utils/printf/ee_printf-arg.c **** 				n = n % 10;
+ 878              		.loc 1 170 0
+ 879 0118 3A6B     		ldr	r2, [r7, #48]
+ 880 011a 46F26763 		movw	r3, #:lower16:1717986919
+ 881 011e C6F26663 		movt	r3, #:upper16:1717986919
+ 882 0122 83FB0213 		smull	r1, r3, r3, r2
+ 883 0126 4FEAA301 		asr	r1, r3, #2
+ 884 012a 4FEAE273 		asr	r3, r2, #31
+ 885 012e C3EB0101 		rsb	r1, r3, r1
+ 886 0132 0B46     		mov	r3, r1
+ 887 0134 4FEA8303 		lsl	r3, r3, #2
+ 888 0138 0B44     		add	r3, r3, r1
+ 889 013a 4FEA4303 		lsl	r3, r3, #1
+ 890 013e C3EB0203 		rsb	r3, r3, r2
+ 891 0142 3B63     		str	r3, [r7, #48]
+ 892 0144 37E0     		b	.L65
+ 893              	.L64:
+ 171:..//utils/printf/ee_printf-arg.c **** 			}else if (n >= 10){
+ 894              		.loc 1 171 0
+ 895 0146 3B6B     		ldr	r3, [r7, #48]
+ 896 0148 092B     		cmp	r3, #9
+ 897 014a 34DD     		ble	.L65
+ 172:..//utils/printf/ee_printf-arg.c **** 				tmp[len++] = lower_digits[n / 10];
+ 898              		.loc 1 172 0
+ 899 014c 796B     		ldr	r1, [r7, #52]
+ 900 014e 40F20003 		movw	r3, #:lower16:lower_digits
+ 901 0152 C0F20003 		movt	r3, #:upper16:lower_digits
+ 902 0156 1868     		ldr	r0, [r3, #0]
+ 903 0158 3A6B     		ldr	r2, [r7, #48]
+ 904 015a 46F26763 		movw	r3, #:lower16:1717986919
+ 905 015e C6F26663 		movt	r3, #:upper16:1717986919
+ 906 0162 83FB02C3 		smull	ip, r3, r3, r2
+ 907 0166 4FEAA30C 		asr	ip, r3, #2
+ 908 016a 4FEAE273 		asr	r3, r2, #31
+ 909 016e C3EB0C03 		rsb	r3, r3, ip
+ 910 0172 0344     		add	r3, r0, r3
+ 911 0174 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 912 0176 07F13800 		add	r0, r7, #56
+ 913 017a 00EB0103 		add	r3, r0, r1
+ 914 017e 03F8242C 		strb	r2, [r3, #-36]
+ 915 0182 7B6B     		ldr	r3, [r7, #52]
+ 916 0184 03F10103 		add	r3, r3, #1
+ 917 0188 7B63     		str	r3, [r7, #52]
+ 173:..//utils/printf/ee_printf-arg.c **** 				n = n % 10;
+ 918              		.loc 1 173 0
+ 919 018a 3A6B     		ldr	r2, [r7, #48]
+ 920 018c 46F26763 		movw	r3, #:lower16:1717986919
+ 921 0190 C6F26663 		movt	r3, #:upper16:1717986919
+ 922 0194 83FB0213 		smull	r1, r3, r3, r2
+ 923 0198 4FEAA301 		asr	r1, r3, #2
+ 924 019c 4FEAE273 		asr	r3, r2, #31
+ 925 01a0 C3EB0101 		rsb	r1, r3, r1
+ 926 01a4 0B46     		mov	r3, r1
+ 927 01a6 4FEA8303 		lsl	r3, r3, #2
+ 928 01aa 0B44     		add	r3, r3, r1
+ 929 01ac 4FEA4303 		lsl	r3, r3, #1
+ 930 01b0 C3EB0203 		rsb	r3, r3, r2
+ 931 01b4 3B63     		str	r3, [r7, #48]
+ 932              	.L65:
+ 174:..//utils/printf/ee_printf-arg.c **** 			}
+ 175:..//utils/printf/ee_printf-arg.c **** 			tmp[len++] = lower_digits[n];
+ 933              		.loc 1 175 0
+ 934 01b6 796B     		ldr	r1, [r7, #52]
+ 935 01b8 40F20003 		movw	r3, #:lower16:lower_digits
+ 936 01bc C0F20003 		movt	r3, #:upper16:lower_digits
+ 937 01c0 1A68     		ldr	r2, [r3, #0]
+ 938 01c2 3B6B     		ldr	r3, [r7, #48]
+ 939 01c4 1344     		add	r3, r2, r3
+ 940 01c6 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 941 01c8 07F1380C 		add	ip, r7, #56
+ 942 01cc 0CEB0103 		add	r3, ip, r1
+ 943 01d0 03F8242C 		strb	r2, [r3, #-36]
+ 944 01d4 7B6B     		ldr	r3, [r7, #52]
+ 945 01d6 03F10103 		add	r3, r3, #1
+ 946 01da 7B63     		str	r3, [r7, #52]
+ 947              	.L63:
+ 948              		.loc 1 159 0
+ 949 01dc FB6A     		ldr	r3, [r7, #44]
+ 950 01de 03F10103 		add	r3, r3, #1
+ 951 01e2 FB62     		str	r3, [r7, #44]
+ 952              	.L60:
+ 953 01e4 FB6A     		ldr	r3, [r7, #44]
+ 954 01e6 032B     		cmp	r3, #3
+ 955 01e8 7FF718AF 		ble	.L66
+ 176:..//utils/printf/ee_printf-arg.c **** 		}
+ 177:..//utils/printf/ee_printf-arg.c **** 	}
+ 178:..//utils/printf/ee_printf-arg.c **** 
+ 179:..//utils/printf/ee_printf-arg.c **** 	if (!(type & LEFT)) while (len < size--) *str++ = ' ';
+ 956              		.loc 1 179 0
+ 957 01ec 3B6C     		ldr	r3, [r7, #64]
+ 958 01ee 03F01003 		and	r3, r3, #16
+ 959 01f2 002B     		cmp	r3, #0
+ 960 01f4 15D1     		bne	.L67
+ 961 01f6 07E0     		b	.L68
+ 962              	.L69:
+ 963 01f8 FB68     		ldr	r3, [r7, #12]
+ 964 01fa 4FF02002 		mov	r2, #32
+ 965 01fe 1A70     		strb	r2, [r3, #0]
+ 966 0200 FB68     		ldr	r3, [r7, #12]
+ 967 0202 03F10103 		add	r3, r3, #1
+ 968 0206 FB60     		str	r3, [r7, #12]
+ 969              	.L68:
+ 970 0208 7A68     		ldr	r2, [r7, #4]
+ 971 020a 7B6B     		ldr	r3, [r7, #52]
+ 972 020c 9A42     		cmp	r2, r3
+ 973 020e D4BF     		ite	le
+ 974 0210 0023     		movle	r3, #0
+ 975 0212 0123     		movgt	r3, #1
+ 976 0214 DBB2     		uxtb	r3, r3
+ 977 0216 7A68     		ldr	r2, [r7, #4]
+ 978 0218 02F1FF32 		add	r2, r2, #-1
+ 979 021c 7A60     		str	r2, [r7, #4]
+ 980 021e 002B     		cmp	r3, #0
+ 981 0220 EAD1     		bne	.L69
+ 982              	.L67:
+ 180:..//utils/printf/ee_printf-arg.c **** 	for (i = 0; i < len; ++i) *str++ = tmp[i];
+ 983              		.loc 1 180 0
+ 984 0222 4FF00003 		mov	r3, #0
+ 985 0226 FB62     		str	r3, [r7, #44]
+ 986 0228 0FE0     		b	.L70
+ 987              	.L71:
+ 988 022a FB6A     		ldr	r3, [r7, #44]
+ 989 022c 07F13800 		add	r0, r7, #56
+ 990 0230 0344     		add	r3, r0, r3
+ 991 0232 13F8242C 		ldrb	r2, [r3, #-36]	@ zero_extendqisi2
+ 992 0236 FB68     		ldr	r3, [r7, #12]
+ 993 0238 1A70     		strb	r2, [r3, #0]
+ 994 023a FB68     		ldr	r3, [r7, #12]
+ 995 023c 03F10103 		add	r3, r3, #1
+ 996 0240 FB60     		str	r3, [r7, #12]
+ 997 0242 FB6A     		ldr	r3, [r7, #44]
+ 998 0244 03F10103 		add	r3, r3, #1
+ 999 0248 FB62     		str	r3, [r7, #44]
+ 1000              	.L70:
+ 1001 024a FA6A     		ldr	r2, [r7, #44]
+ 1002 024c 7B6B     		ldr	r3, [r7, #52]
+ 1003 024e 9A42     		cmp	r2, r3
+ 1004 0250 EBDB     		blt	.L71
+ 181:..//utils/printf/ee_printf-arg.c **** 	while (len < size--) *str++ = ' ';
+ 1005              		.loc 1 181 0
+ 1006 0252 07E0     		b	.L72
+ 1007              	.L73:
+ 1008 0254 FB68     		ldr	r3, [r7, #12]
+ 1009 0256 4FF02002 		mov	r2, #32
+ 1010 025a 1A70     		strb	r2, [r3, #0]
+ 1011 025c FB68     		ldr	r3, [r7, #12]
+ 1012 025e 03F10103 		add	r3, r3, #1
+ 1013 0262 FB60     		str	r3, [r7, #12]
+ 1014              	.L72:
+ 1015 0264 7A68     		ldr	r2, [r7, #4]
+ 1016 0266 7B6B     		ldr	r3, [r7, #52]
+ 1017 0268 9A42     		cmp	r2, r3
+ 1018 026a D4BF     		ite	le
+ 1019 026c 0023     		movle	r3, #0
+ 1020 026e 0123     		movgt	r3, #1
+ 1021 0270 DBB2     		uxtb	r3, r3
+ 1022 0272 7A68     		ldr	r2, [r7, #4]
+ 1023 0274 02F1FF32 		add	r2, r2, #-1
+ 1024 0278 7A60     		str	r2, [r7, #4]
+ 1025 027a 002B     		cmp	r3, #0
+ 1026 027c EAD1     		bne	.L73
+ 182:..//utils/printf/ee_printf-arg.c **** 
+ 183:..//utils/printf/ee_printf-arg.c **** 	return str;
+ 1027              		.loc 1 183 0
+ 1028 027e FB68     		ldr	r3, [r7, #12]
+ 184:..//utils/printf/ee_printf-arg.c **** }
+ 1029              		.loc 1 184 0
+ 1030 0280 1846     		mov	r0, r3
+ 1031 0282 07F13C07 		add	r7, r7, #60
+ 1032 0286 BD46     		mov	sp, r7
+ 1033 0288 80BC     		pop	{r7}
+ 1034 028a 7047     		bx	lr
+ 1035              		.cfi_endproc
+ 1036              	.LFE33:
+ 1038              		.section	.text.ee_bufcpy,"ax",%progbits
+ 1039              		.align	2
+ 1040              		.thumb
+ 1041              		.thumb_func
+ 1043              	ee_bufcpy:
+ 1044              	.LFB34:
+ 185:..//utils/printf/ee_printf-arg.c **** 
+ 186:..//utils/printf/ee_printf-arg.c **** #ifdef HAS_FLOAT
+ 187:..//utils/printf/ee_printf-arg.c **** char *ecvtbuf(double arg, int ndigits, int *decpt, int *sign, char *buf);
+ 188:..//utils/printf/ee_printf-arg.c **** char *fcvtbuf(double arg, int ndigits, int *decpt, int *sign, char *buf);
+ 189:..//utils/printf/ee_printf-arg.c **** static void ee_bufcpy(char *d, char *s, int count); 
+ 190:..//utils/printf/ee_printf-arg.c **** 
+ 191:..//utils/printf/ee_printf-arg.c **** void ee_bufcpy(char *pd, char *ps, int count) {
+ 1045              		.loc 1 191 0
+ 1046              		.cfi_startproc
+ 1047              		@ args = 0, pretend = 0, frame = 24
+ 1048              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1049              		@ link register save eliminated.
+ 1050 0000 80B4     		push	{r7}
+ 1051              	.LCFI15:
+ 1052              		.cfi_def_cfa_offset 4
+ 1053 0002 87B0     		sub	sp, sp, #28
+ 1054              	.LCFI16:
+ 1055              		.cfi_def_cfa_offset 32
+ 1056 0004 00AF     		add	r7, sp, #0
+ 1057              		.cfi_offset 7, -4
+ 1058              	.LCFI17:
+ 1059              		.cfi_def_cfa_register 7
+ 1060 0006 F860     		str	r0, [r7, #12]
+ 1061 0008 B960     		str	r1, [r7, #8]
+ 1062 000a 7A60     		str	r2, [r7, #4]
+ 192:..//utils/printf/ee_printf-arg.c **** 	char *pe=ps+count;
+ 1063              		.loc 1 192 0
+ 1064 000c 7B68     		ldr	r3, [r7, #4]
+ 1065 000e BA68     		ldr	r2, [r7, #8]
+ 1066 0010 1344     		add	r3, r2, r3
+ 1067 0012 7B61     		str	r3, [r7, #20]
+ 193:..//utils/printf/ee_printf-arg.c **** 	while (ps!=pe)
+ 1068              		.loc 1 193 0
+ 1069 0014 0BE0     		b	.L76
+ 1070              	.L77:
+ 194:..//utils/printf/ee_printf-arg.c **** 		*pd++=*ps++;
+ 1071              		.loc 1 194 0
+ 1072 0016 BB68     		ldr	r3, [r7, #8]
+ 1073 0018 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 1074 001a FB68     		ldr	r3, [r7, #12]
+ 1075 001c 1A70     		strb	r2, [r3, #0]
+ 1076 001e FB68     		ldr	r3, [r7, #12]
+ 1077 0020 03F10103 		add	r3, r3, #1
+ 1078 0024 FB60     		str	r3, [r7, #12]
+ 1079 0026 BB68     		ldr	r3, [r7, #8]
+ 1080 0028 03F10103 		add	r3, r3, #1
+ 1081 002c BB60     		str	r3, [r7, #8]
+ 1082              	.L76:
+ 1083              		.loc 1 193 0
+ 1084 002e BA68     		ldr	r2, [r7, #8]
+ 1085 0030 7B69     		ldr	r3, [r7, #20]
+ 1086 0032 9A42     		cmp	r2, r3
+ 1087 0034 EFD1     		bne	.L77
+ 195:..//utils/printf/ee_printf-arg.c **** }
+ 1088              		.loc 1 195 0
+ 1089 0036 07F11C07 		add	r7, r7, #28
+ 1090 003a BD46     		mov	sp, r7
+ 1091 003c 80BC     		pop	{r7}
+ 1092 003e 7047     		bx	lr
+ 1093              		.cfi_endproc
+ 1094              	.LFE34:
+ 1096              		.global	__aeabi_dcmpeq
+ 1097              		.section	.text.parse_float,"ax",%progbits
+ 1098              		.align	2
+ 1099              		.thumb
+ 1100              		.thumb_func
+ 1102              	parse_float:
+ 1103              	.LFB35:
+ 196:..//utils/printf/ee_printf-arg.c **** 
+ 197:..//utils/printf/ee_printf-arg.c **** static void parse_float(double value, char *buffer, char fmt, int precision){
+ 1104              		.loc 1 197 0
+ 1105              		.cfi_startproc
+ 1106              		@ args = 4, pretend = 0, frame = 128
+ 1107              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1108 0000 80B5     		push	{r7, lr}
+ 1109              	.LCFI18:
+ 1110              		.cfi_def_cfa_offset 8
+ 1111 0002 A2B0     		sub	sp, sp, #136
+ 1112              	.LCFI19:
+ 1113              		.cfi_def_cfa_offset 144
+ 1114 0004 02AF     		add	r7, sp, #8
+ 1115              		.cfi_offset 14, -4
+ 1116              		.cfi_offset 7, -8
+ 1117              	.LCFI20:
+ 1118              		.cfi_def_cfa 7, 136
+ 1119 0006 C7E90201 		strd	r0, [r7, #8]
+ 1120 000a 7A60     		str	r2, [r7, #4]
+ 1121 000c FB70     		strb	r3, [r7, #3]
+ 198:..//utils/printf/ee_printf-arg.c **** 	int decpt, sign, exp, pos;
+ 199:..//utils/printf/ee_printf-arg.c **** 	char *fdigits = NULL;
+ 1122              		.loc 1 199 0
+ 1123 000e 4FF00003 		mov	r3, #0
+ 1124 0012 7B67     		str	r3, [r7, #116]
+ 200:..//utils/printf/ee_printf-arg.c **** 	char cvtbuf[80];
+ 201:..//utils/printf/ee_printf-arg.c **** 	int capexp = 0;
+ 1125              		.loc 1 201 0
+ 1126 0014 4FF00003 		mov	r3, #0
+ 1127 0018 BB67     		str	r3, [r7, #120]
+ 202:..//utils/printf/ee_printf-arg.c **** 	int magnitude;
+ 203:..//utils/printf/ee_printf-arg.c **** 
+ 204:..//utils/printf/ee_printf-arg.c **** 	if (fmt == 'G' || fmt == 'E'){
+ 1128              		.loc 1 204 0
+ 1129 001a FB78     		ldrb	r3, [r7, #3]	@ zero_extendqisi2
+ 1130 001c 472B     		cmp	r3, #71
+ 1131 001e 02D0     		beq	.L80
+ 1132 0020 FB78     		ldrb	r3, [r7, #3]	@ zero_extendqisi2
+ 1133 0022 452B     		cmp	r3, #69
+ 1134 0024 06D1     		bne	.L81
+ 1135              	.L80:
+ 205:..//utils/printf/ee_printf-arg.c **** 		capexp = 1;
+ 1136              		.loc 1 205 0
+ 1137 0026 4FF00103 		mov	r3, #1
+ 1138 002a BB67     		str	r3, [r7, #120]
+ 206:..//utils/printf/ee_printf-arg.c **** 		fmt += 'a' - 'A';
+ 1139              		.loc 1 206 0
+ 1140 002c FB78     		ldrb	r3, [r7, #3]
+ 1141 002e 03F12003 		add	r3, r3, #32
+ 1142 0032 FB70     		strb	r3, [r7, #3]
+ 1143              	.L81:
+ 207:..//utils/printf/ee_printf-arg.c **** 	}
+ 208:..//utils/printf/ee_printf-arg.c **** 
+ 209:..//utils/printf/ee_printf-arg.c **** 	if (fmt == 'g'){
+ 1144              		.loc 1 209 0
+ 1145 0034 FB78     		ldrb	r3, [r7, #3]	@ zero_extendqisi2
+ 1146 0036 672B     		cmp	r3, #103
+ 1147 0038 35D1     		bne	.L82
+ 210:..//utils/printf/ee_printf-arg.c **** 		fdigits = ecvtbuf(value, precision, &decpt, &sign, cvtbuf);
+ 1148              		.loc 1 210 0
+ 1149 003a 07F16803 		add	r3, r7, #104
+ 1150 003e 07F16402 		add	r2, r7, #100
+ 1151 0042 0092     		str	r2, [sp, #0]
+ 1152 0044 07F11402 		add	r2, r7, #20
+ 1153 0048 0192     		str	r2, [sp, #4]
+ 1154 004a D7E90201 		ldrd	r0, [r7, #8]
+ 1155 004e D7F88820 		ldr	r2, [r7, #136]
+ 1156 0052 40F2000C 		movw	ip, #:lower16:ecvtbuf
+ 1157 0056 C0F2000C 		movt	ip, #:upper16:ecvtbuf
+ 1158 005a E047     		blx	ip
+ 1159 005c 0346     		mov	r3, r0
+ 1160 005e 7B67     		str	r3, [r7, #116]
+ 211:..//utils/printf/ee_printf-arg.c **** 		magnitude = decpt - 1;
+ 1161              		.loc 1 211 0
+ 1162 0060 BB6E     		ldr	r3, [r7, #104]
+ 1163 0062 03F1FF33 		add	r3, r3, #-1
+ 1164 0066 FB67     		str	r3, [r7, #124]
+ 212:..//utils/printf/ee_printf-arg.c **** 		if (magnitude < -4  ||  magnitude > precision - 1){
+ 1165              		.loc 1 212 0
+ 1166 0068 FB6F     		ldr	r3, [r7, #124]
+ 1167 006a 13F1040F 		cmn	r3, #4
+ 1168 006e 06DB     		blt	.L83
+ 1169 0070 D7F88830 		ldr	r3, [r7, #136]
+ 1170 0074 03F1FF32 		add	r2, r3, #-1
+ 1171 0078 FB6F     		ldr	r3, [r7, #124]
+ 1172 007a 9A42     		cmp	r2, r3
+ 1173 007c 09DA     		bge	.L84
+ 1174              	.L83:
+ 213:..//utils/printf/ee_printf-arg.c **** 			fmt = 'e';
+ 1175              		.loc 1 213 0
+ 1176 007e 4FF06503 		mov	r3, #101
+ 1177 0082 FB70     		strb	r3, [r7, #3]
+ 214:..//utils/printf/ee_printf-arg.c **** 			precision -= 1;
+ 1178              		.loc 1 214 0
+ 1179 0084 D7F88830 		ldr	r3, [r7, #136]
+ 1180 0088 03F1FF33 		add	r3, r3, #-1
+ 1181 008c C7F88830 		str	r3, [r7, #136]
+ 1182              		.loc 1 212 0
+ 1183 0090 09E0     		b	.L82
+ 1184              	.L84:
+ 215:..//utils/printf/ee_printf-arg.c **** 		}else{
+ 216:..//utils/printf/ee_printf-arg.c **** 			fmt = 'f';
+ 1185              		.loc 1 216 0
+ 1186 0092 4FF06603 		mov	r3, #102
+ 1187 0096 FB70     		strb	r3, [r7, #3]
+ 217:..//utils/printf/ee_printf-arg.c **** 			precision -= decpt;
+ 1188              		.loc 1 217 0
+ 1189 0098 BB6E     		ldr	r3, [r7, #104]
+ 1190 009a D7F88820 		ldr	r2, [r7, #136]
+ 1191 009e C3EB0203 		rsb	r3, r3, r2
+ 1192 00a2 C7F88830 		str	r3, [r7, #136]
+ 1193              	.L82:
+ 218:..//utils/printf/ee_printf-arg.c **** 		}
+ 219:..//utils/printf/ee_printf-arg.c **** 	}
+ 220:..//utils/printf/ee_printf-arg.c **** 
+ 221:..//utils/printf/ee_printf-arg.c **** 	if (fmt == 'e'){
+ 1194              		.loc 1 221 0
+ 1195 00a6 FB78     		ldrb	r3, [r7, #3]	@ zero_extendqisi2
+ 1196 00a8 652B     		cmp	r3, #101
+ 1197 00aa 40F0FE80 		bne	.L85
+ 222:..//utils/printf/ee_printf-arg.c **** 		fdigits = ecvtbuf(value, precision + 1, &decpt, &sign, cvtbuf);
+ 1198              		.loc 1 222 0
+ 1199 00ae D7F88830 		ldr	r3, [r7, #136]
+ 1200 00b2 03F10102 		add	r2, r3, #1
+ 1201 00b6 07F16803 		add	r3, r7, #104
+ 1202 00ba 07F16401 		add	r1, r7, #100
+ 1203 00be 0091     		str	r1, [sp, #0]
+ 1204 00c0 07F11401 		add	r1, r7, #20
+ 1205 00c4 0191     		str	r1, [sp, #4]
+ 1206 00c6 D7E90201 		ldrd	r0, [r7, #8]
+ 1207 00ca 40F2000C 		movw	ip, #:lower16:ecvtbuf
+ 1208 00ce C0F2000C 		movt	ip, #:upper16:ecvtbuf
+ 1209 00d2 E047     		blx	ip
+ 1210 00d4 0346     		mov	r3, r0
+ 1211 00d6 7B67     		str	r3, [r7, #116]
+ 223:..//utils/printf/ee_printf-arg.c **** 
+ 224:..//utils/printf/ee_printf-arg.c **** 		if (sign) *buffer++ = '-';
+ 1212              		.loc 1 224 0
+ 1213 00d8 7B6E     		ldr	r3, [r7, #100]
+ 1214 00da 002B     		cmp	r3, #0
+ 1215 00dc 07D0     		beq	.L86
+ 1216 00de 7B68     		ldr	r3, [r7, #4]
+ 1217 00e0 4FF02D02 		mov	r2, #45
+ 1218 00e4 1A70     		strb	r2, [r3, #0]
+ 1219 00e6 7B68     		ldr	r3, [r7, #4]
+ 1220 00e8 03F10103 		add	r3, r3, #1
+ 1221 00ec 7B60     		str	r3, [r7, #4]
+ 1222              	.L86:
+ 225:..//utils/printf/ee_printf-arg.c **** 		*buffer++ = *fdigits;
+ 1223              		.loc 1 225 0
+ 1224 00ee 7B6F     		ldr	r3, [r7, #116]
+ 1225 00f0 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 1226 00f2 7B68     		ldr	r3, [r7, #4]
+ 1227 00f4 1A70     		strb	r2, [r3, #0]
+ 1228 00f6 7B68     		ldr	r3, [r7, #4]
+ 1229 00f8 03F10103 		add	r3, r3, #1
+ 1230 00fc 7B60     		str	r3, [r7, #4]
+ 226:..//utils/printf/ee_printf-arg.c **** 		if (precision > 0) *buffer++ = '.';
+ 1231              		.loc 1 226 0
+ 1232 00fe D7F88830 		ldr	r3, [r7, #136]
+ 1233 0102 002B     		cmp	r3, #0
+ 1234 0104 07DD     		ble	.L87
+ 1235 0106 7B68     		ldr	r3, [r7, #4]
+ 1236 0108 4FF02E02 		mov	r2, #46
+ 1237 010c 1A70     		strb	r2, [r3, #0]
+ 1238 010e 7B68     		ldr	r3, [r7, #4]
+ 1239 0110 03F10103 		add	r3, r3, #1
+ 1240 0114 7B60     		str	r3, [r7, #4]
+ 1241              	.L87:
+ 227:..//utils/printf/ee_printf-arg.c **** 		ee_bufcpy(buffer, fdigits + 1, precision);
+ 1242              		.loc 1 227 0
+ 1243 0116 7B6F     		ldr	r3, [r7, #116]
+ 1244 0118 03F10103 		add	r3, r3, #1
+ 1245 011c 7868     		ldr	r0, [r7, #4]
+ 1246 011e 1946     		mov	r1, r3
+ 1247 0120 D7F88820 		ldr	r2, [r7, #136]
+ 1248 0124 40F20003 		movw	r3, #:lower16:ee_bufcpy
+ 1249 0128 C0F20003 		movt	r3, #:upper16:ee_bufcpy
+ 1250 012c 9847     		blx	r3
+ 228:..//utils/printf/ee_printf-arg.c **** 		buffer += precision;
+ 1251              		.loc 1 228 0
+ 1252 012e D7F88830 		ldr	r3, [r7, #136]
+ 1253 0132 7A68     		ldr	r2, [r7, #4]
+ 1254 0134 1344     		add	r3, r2, r3
+ 1255 0136 7B60     		str	r3, [r7, #4]
+ 229:..//utils/printf/ee_printf-arg.c **** 		*buffer++ = capexp ? 'E' : 'e';
+ 1256              		.loc 1 229 0
+ 1257 0138 BB6F     		ldr	r3, [r7, #120]
+ 1258 013a 002B     		cmp	r3, #0
+ 1259 013c 02D0     		beq	.L88
+ 1260 013e 4FF04503 		mov	r3, #69
+ 1261 0142 01E0     		b	.L89
+ 1262              	.L88:
+ 1263 0144 4FF06503 		mov	r3, #101
+ 1264              	.L89:
+ 1265 0148 7A68     		ldr	r2, [r7, #4]
+ 1266 014a 1370     		strb	r3, [r2, #0]
+ 1267 014c 7B68     		ldr	r3, [r7, #4]
+ 1268 014e 03F10103 		add	r3, r3, #1
+ 1269 0152 7B60     		str	r3, [r7, #4]
+ 230:..//utils/printf/ee_printf-arg.c **** 
+ 231:..//utils/printf/ee_printf-arg.c **** 		if (decpt == 0){
+ 1270              		.loc 1 231 0
+ 1271 0154 BB6E     		ldr	r3, [r7, #104]
+ 1272 0156 002B     		cmp	r3, #0
+ 1273 0158 15D1     		bne	.L90
+ 232:..//utils/printf/ee_printf-arg.c **** 			if (value == 0.0)
+ 1274              		.loc 1 232 0
+ 1275 015a 40F2000C 		movw	ip, #:lower16:__aeabi_dcmpeq
+ 1276 015e C0F2000C 		movt	ip, #:upper16:__aeabi_dcmpeq
+ 1277 0162 D7E90201 		ldrd	r0, [r7, #8]
+ 1278 0166 4FF00002 		mov	r2, #0
+ 1279 016a 4FF00003 		mov	r3, #0
+ 1280 016e E047     		blx	ip
+ 1281 0170 0346     		mov	r3, r0
+ 1282 0172 002B     		cmp	r3, #0
+ 1283 0174 03D0     		beq	.L113
+ 1284              	.L112:
+ 233:..//utils/printf/ee_printf-arg.c **** 				exp = 0;
+ 1285              		.loc 1 233 0
+ 1286 0176 4FF00003 		mov	r3, #0
+ 1287 017a FB66     		str	r3, [r7, #108]
+ 234:..//utils/printf/ee_printf-arg.c **** 			else
+ 235:..//utils/printf/ee_printf-arg.c **** 				exp = -1;
+ 1288              		.loc 1 235 0
+ 1289 017c 07E0     		b	.L94
+ 1290              	.L113:
+ 1291 017e 4FF0FF33 		mov	r3, #-1
+ 1292 0182 FB66     		str	r3, [r7, #108]
+ 1293 0184 03E0     		b	.L94
+ 1294              	.L90:
+ 236:..//utils/printf/ee_printf-arg.c **** 		}else
+ 237:..//utils/printf/ee_printf-arg.c **** 			exp = decpt - 1;
+ 1295              		.loc 1 237 0
+ 1296 0186 BB6E     		ldr	r3, [r7, #104]
+ 1297 0188 03F1FF33 		add	r3, r3, #-1
+ 1298 018c FB66     		str	r3, [r7, #108]
+ 1299              	.L94:
+ 238:..//utils/printf/ee_printf-arg.c **** 
+ 239:..//utils/printf/ee_printf-arg.c **** 		if (exp < 0){
+ 1300              		.loc 1 239 0
+ 1301 018e FB6E     		ldr	r3, [r7, #108]
+ 1302 0190 002B     		cmp	r3, #0
+ 1303 0192 0CDA     		bge	.L95
+ 240:..//utils/printf/ee_printf-arg.c **** 			*buffer++ = '-';
+ 1304              		.loc 1 240 0
+ 1305 0194 7B68     		ldr	r3, [r7, #4]
+ 1306 0196 4FF02D02 		mov	r2, #45
+ 1307 019a 1A70     		strb	r2, [r3, #0]
+ 1308 019c 7B68     		ldr	r3, [r7, #4]
+ 1309 019e 03F10103 		add	r3, r3, #1
+ 1310 01a2 7B60     		str	r3, [r7, #4]
+ 241:..//utils/printf/ee_printf-arg.c **** 			exp = -exp;
+ 1311              		.loc 1 241 0
+ 1312 01a4 FB6E     		ldr	r3, [r7, #108]
+ 1313 01a6 C3F10003 		rsb	r3, r3, #0
+ 1314 01aa FB66     		str	r3, [r7, #108]
+ 1315 01ac 07E0     		b	.L96
+ 1316              	.L95:
+ 242:..//utils/printf/ee_printf-arg.c **** 		}else
+ 243:..//utils/printf/ee_printf-arg.c **** 			*buffer++ = '+';
+ 1317              		.loc 1 243 0
+ 1318 01ae 7B68     		ldr	r3, [r7, #4]
+ 1319 01b0 4FF02B02 		mov	r2, #43
+ 1320 01b4 1A70     		strb	r2, [r3, #0]
+ 1321 01b6 7B68     		ldr	r3, [r7, #4]
+ 1322 01b8 03F10103 		add	r3, r3, #1
+ 1323 01bc 7B60     		str	r3, [r7, #4]
+ 1324              	.L96:
+ 244:..//utils/printf/ee_printf-arg.c **** 
+ 245:..//utils/printf/ee_printf-arg.c **** 		buffer[2] = (exp % 10) + '0';
+ 1325              		.loc 1 245 0
+ 1326 01be 7B68     		ldr	r3, [r7, #4]
+ 1327 01c0 03F10200 		add	r0, r3, #2
+ 1328 01c4 F96E     		ldr	r1, [r7, #108]
+ 1329 01c6 46F26763 		movw	r3, #:lower16:1717986919
+ 1330 01ca C6F26663 		movt	r3, #:upper16:1717986919
+ 1331 01ce 83FB0123 		smull	r2, r3, r3, r1
+ 1332 01d2 4FEAA302 		asr	r2, r3, #2
+ 1333 01d6 4FEAE173 		asr	r3, r1, #31
+ 1334 01da C3EB0202 		rsb	r2, r3, r2
+ 1335 01de 1346     		mov	r3, r2
+ 1336 01e0 4FEA8303 		lsl	r3, r3, #2
+ 1337 01e4 1344     		add	r3, r3, r2
+ 1338 01e6 4FEA4303 		lsl	r3, r3, #1
+ 1339 01ea C3EB0102 		rsb	r2, r3, r1
+ 1340 01ee D3B2     		uxtb	r3, r2
+ 1341 01f0 03F13003 		add	r3, r3, #48
+ 1342 01f4 DBB2     		uxtb	r3, r3
+ 1343 01f6 0370     		strb	r3, [r0, #0]
+ 246:..//utils/printf/ee_printf-arg.c **** 		exp = exp / 10;
+ 1344              		.loc 1 246 0
+ 1345 01f8 FA6E     		ldr	r2, [r7, #108]
+ 1346 01fa 46F26763 		movw	r3, #:lower16:1717986919
+ 1347 01fe C6F26663 		movt	r3, #:upper16:1717986919
+ 1348 0202 83FB0213 		smull	r1, r3, r3, r2
+ 1349 0206 4FEAA301 		asr	r1, r3, #2
+ 1350 020a 4FEAE273 		asr	r3, r2, #31
+ 1351 020e C3EB0103 		rsb	r3, r3, r1
+ 1352 0212 FB66     		str	r3, [r7, #108]
+ 247:..//utils/printf/ee_printf-arg.c **** 		buffer[1] = (exp % 10) + '0';
+ 1353              		.loc 1 247 0
+ 1354 0214 7B68     		ldr	r3, [r7, #4]
+ 1355 0216 03F10100 		add	r0, r3, #1
+ 1356 021a F96E     		ldr	r1, [r7, #108]
+ 1357 021c 46F26763 		movw	r3, #:lower16:1717986919
+ 1358 0220 C6F26663 		movt	r3, #:upper16:1717986919
+ 1359 0224 83FB0123 		smull	r2, r3, r3, r1
+ 1360 0228 4FEAA302 		asr	r2, r3, #2
+ 1361 022c 4FEAE173 		asr	r3, r1, #31
+ 1362 0230 C3EB0202 		rsb	r2, r3, r2
+ 1363 0234 1346     		mov	r3, r2
+ 1364 0236 4FEA8303 		lsl	r3, r3, #2
+ 1365 023a 1344     		add	r3, r3, r2
+ 1366 023c 4FEA4303 		lsl	r3, r3, #1
+ 1367 0240 C3EB0102 		rsb	r2, r3, r1
+ 1368 0244 D3B2     		uxtb	r3, r2
+ 1369 0246 03F13003 		add	r3, r3, #48
+ 1370 024a DBB2     		uxtb	r3, r3
+ 1371 024c 0370     		strb	r3, [r0, #0]
+ 248:..//utils/printf/ee_printf-arg.c **** 		exp = exp / 10;
+ 1372              		.loc 1 248 0
+ 1373 024e FA6E     		ldr	r2, [r7, #108]
+ 1374 0250 46F26763 		movw	r3, #:lower16:1717986919
+ 1375 0254 C6F26663 		movt	r3, #:upper16:1717986919
+ 1376 0258 83FB0213 		smull	r1, r3, r3, r2
+ 1377 025c 4FEAA301 		asr	r1, r3, #2
+ 1378 0260 4FEAE273 		asr	r3, r2, #31
+ 1379 0264 C3EB0103 		rsb	r3, r3, r1
+ 1380 0268 FB66     		str	r3, [r7, #108]
+ 249:..//utils/printf/ee_printf-arg.c **** 		buffer[0] = (exp % 10) + '0';
+ 1381              		.loc 1 249 0
+ 1382 026a F96E     		ldr	r1, [r7, #108]
+ 1383 026c 46F26763 		movw	r3, #:lower16:1717986919
+ 1384 0270 C6F26663 		movt	r3, #:upper16:1717986919
+ 1385 0274 83FB0123 		smull	r2, r3, r3, r1
+ 1386 0278 4FEAA302 		asr	r2, r3, #2
+ 1387 027c 4FEAE173 		asr	r3, r1, #31
+ 1388 0280 C3EB0202 		rsb	r2, r3, r2
+ 1389 0284 1346     		mov	r3, r2
+ 1390 0286 4FEA8303 		lsl	r3, r3, #2
+ 1391 028a 1344     		add	r3, r3, r2
+ 1392 028c 4FEA4303 		lsl	r3, r3, #1
+ 1393 0290 C3EB0102 		rsb	r2, r3, r1
+ 1394 0294 D3B2     		uxtb	r3, r2
+ 1395 0296 03F13003 		add	r3, r3, #48
+ 1396 029a DAB2     		uxtb	r2, r3
+ 1397 029c 7B68     		ldr	r3, [r7, #4]
+ 1398 029e 1A70     		strb	r2, [r3, #0]
+ 250:..//utils/printf/ee_printf-arg.c **** 		buffer += 3;
+ 1399              		.loc 1 250 0
+ 1400 02a0 7B68     		ldr	r3, [r7, #4]
+ 1401 02a2 03F10303 		add	r3, r3, #3
+ 1402 02a6 7B60     		str	r3, [r7, #4]
+ 1403 02a8 B3E0     		b	.L97
+ 1404              	.L85:
+ 251:..//utils/printf/ee_printf-arg.c **** 	}else if (fmt == 'f'){
+ 1405              		.loc 1 251 0
+ 1406 02aa FB78     		ldrb	r3, [r7, #3]	@ zero_extendqisi2
+ 1407 02ac 662B     		cmp	r3, #102
+ 1408 02ae 40F0B080 		bne	.L97
+ 252:..//utils/printf/ee_printf-arg.c **** 		fdigits = fcvtbuf(value, precision, &decpt, &sign, cvtbuf);
+ 1409              		.loc 1 252 0
+ 1410 02b2 07F16803 		add	r3, r7, #104
+ 1411 02b6 07F16402 		add	r2, r7, #100
+ 1412 02ba 0092     		str	r2, [sp, #0]
+ 1413 02bc 07F11402 		add	r2, r7, #20
+ 1414 02c0 0192     		str	r2, [sp, #4]
+ 1415 02c2 D7E90201 		ldrd	r0, [r7, #8]
+ 1416 02c6 D7F88820 		ldr	r2, [r7, #136]
+ 1417 02ca 40F2000C 		movw	ip, #:lower16:fcvtbuf
+ 1418 02ce C0F2000C 		movt	ip, #:upper16:fcvtbuf
+ 1419 02d2 E047     		blx	ip
+ 1420 02d4 0346     		mov	r3, r0
+ 1421 02d6 7B67     		str	r3, [r7, #116]
+ 253:..//utils/printf/ee_printf-arg.c **** 		if (sign) *buffer++ = '-';
+ 1422              		.loc 1 253 0
+ 1423 02d8 7B6E     		ldr	r3, [r7, #100]
+ 1424 02da 002B     		cmp	r3, #0
+ 1425 02dc 07D0     		beq	.L98
+ 1426 02de 7B68     		ldr	r3, [r7, #4]
+ 1427 02e0 4FF02D02 		mov	r2, #45
+ 1428 02e4 1A70     		strb	r2, [r3, #0]
+ 1429 02e6 7B68     		ldr	r3, [r7, #4]
+ 1430 02e8 03F10103 		add	r3, r3, #1
+ 1431 02ec 7B60     		str	r3, [r7, #4]
+ 1432              	.L98:
+ 254:..//utils/printf/ee_printf-arg.c **** 		if (*fdigits){
+ 1433              		.loc 1 254 0
+ 1434 02ee 7B6F     		ldr	r3, [r7, #116]
+ 1435 02f0 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 1436 02f2 002B     		cmp	r3, #0
+ 1437 02f4 64D0     		beq	.L99
+ 255:..//utils/printf/ee_printf-arg.c **** 			if (decpt <= 0){
+ 1438              		.loc 1 255 0
+ 1439 02f6 BB6E     		ldr	r3, [r7, #104]
+ 1440 02f8 002B     		cmp	r3, #0
+ 1441 02fa 37DC     		bgt	.L100
+ 256:..//utils/printf/ee_printf-arg.c **** 				*buffer++ = '0';
+ 1442              		.loc 1 256 0
+ 1443 02fc 7B68     		ldr	r3, [r7, #4]
+ 1444 02fe 4FF03002 		mov	r2, #48
+ 1445 0302 1A70     		strb	r2, [r3, #0]
+ 1446 0304 7B68     		ldr	r3, [r7, #4]
+ 1447 0306 03F10103 		add	r3, r3, #1
+ 1448 030a 7B60     		str	r3, [r7, #4]
+ 257:..//utils/printf/ee_printf-arg.c **** 				*buffer++ = '.';
+ 1449              		.loc 1 257 0
+ 1450 030c 7B68     		ldr	r3, [r7, #4]
+ 1451 030e 4FF02E02 		mov	r2, #46
+ 1452 0312 1A70     		strb	r2, [r3, #0]
+ 1453 0314 7B68     		ldr	r3, [r7, #4]
+ 1454 0316 03F10103 		add	r3, r3, #1
+ 1455 031a 7B60     		str	r3, [r7, #4]
+ 258:..//utils/printf/ee_printf-arg.c **** 				for (pos = 0; pos < -decpt; pos++) *buffer++ = '0';
+ 1456              		.loc 1 258 0
+ 1457 031c 4FF00003 		mov	r3, #0
+ 1458 0320 3B67     		str	r3, [r7, #112]
+ 1459 0322 0BE0     		b	.L101
+ 1460              	.L102:
+ 1461 0324 7B68     		ldr	r3, [r7, #4]
+ 1462 0326 4FF03002 		mov	r2, #48
+ 1463 032a 1A70     		strb	r2, [r3, #0]
+ 1464 032c 7B68     		ldr	r3, [r7, #4]
+ 1465 032e 03F10103 		add	r3, r3, #1
+ 1466 0332 7B60     		str	r3, [r7, #4]
+ 1467 0334 3B6F     		ldr	r3, [r7, #112]
+ 1468 0336 03F10103 		add	r3, r3, #1
+ 1469 033a 3B67     		str	r3, [r7, #112]
+ 1470              	.L101:
+ 1471 033c BB6E     		ldr	r3, [r7, #104]
+ 1472 033e C3F10002 		rsb	r2, r3, #0
+ 1473 0342 3B6F     		ldr	r3, [r7, #112]
+ 1474 0344 9A42     		cmp	r2, r3
+ 1475 0346 EDDC     		bgt	.L102
+ 259:..//utils/printf/ee_printf-arg.c **** 				while (*fdigits) *buffer++ = *fdigits++;
+ 1476              		.loc 1 259 0
+ 1477 0348 0BE0     		b	.L103
+ 1478              	.L104:
+ 1479 034a 7B6F     		ldr	r3, [r7, #116]
+ 1480 034c 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 1481 034e 7B68     		ldr	r3, [r7, #4]
+ 1482 0350 1A70     		strb	r2, [r3, #0]
+ 1483 0352 7B68     		ldr	r3, [r7, #4]
+ 1484 0354 03F10103 		add	r3, r3, #1
+ 1485 0358 7B60     		str	r3, [r7, #4]
+ 1486 035a 7B6F     		ldr	r3, [r7, #116]
+ 1487 035c 03F10103 		add	r3, r3, #1
+ 1488 0360 7B67     		str	r3, [r7, #116]
+ 1489              	.L103:
+ 1490 0362 7B6F     		ldr	r3, [r7, #116]
+ 1491 0364 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 1492 0366 002B     		cmp	r3, #0
+ 1493 0368 EFD1     		bne	.L104
+ 260:..//utils/printf/ee_printf-arg.c **** 			}else{
+ 261:..//utils/printf/ee_printf-arg.c **** 				pos = 0;
+ 262:..//utils/printf/ee_printf-arg.c **** 				while (*fdigits){
+ 1494              		.loc 1 262 0
+ 1495 036a 52E0     		b	.L97
+ 1496              	.L100:
+ 1497              		.loc 1 261 0
+ 1498 036c 4FF00003 		mov	r3, #0
+ 1499 0370 3B67     		str	r3, [r7, #112]
+ 1500              		.loc 1 262 0
+ 1501 0372 20E0     		b	.L106
+ 1502              	.L108:
+ 263:..//utils/printf/ee_printf-arg.c **** 					if (pos++ == decpt) *buffer++ = '.';
+ 1503              		.loc 1 263 0
+ 1504 0374 BB6E     		ldr	r3, [r7, #104]
+ 1505 0376 3A6F     		ldr	r2, [r7, #112]
+ 1506 0378 9A42     		cmp	r2, r3
+ 1507 037a 14BF     		ite	ne
+ 1508 037c 0023     		movne	r3, #0
+ 1509 037e 0123     		moveq	r3, #1
+ 1510 0380 DBB2     		uxtb	r3, r3
+ 1511 0382 3A6F     		ldr	r2, [r7, #112]
+ 1512 0384 02F10102 		add	r2, r2, #1
+ 1513 0388 3A67     		str	r2, [r7, #112]
+ 1514 038a 002B     		cmp	r3, #0
+ 1515 038c 07D0     		beq	.L107
+ 1516 038e 7B68     		ldr	r3, [r7, #4]
+ 1517 0390 4FF02E02 		mov	r2, #46
+ 1518 0394 1A70     		strb	r2, [r3, #0]
+ 1519 0396 7B68     		ldr	r3, [r7, #4]
+ 1520 0398 03F10103 		add	r3, r3, #1
+ 1521 039c 7B60     		str	r3, [r7, #4]
+ 1522              	.L107:
+ 264:..//utils/printf/ee_printf-arg.c **** 					*buffer++ = *fdigits++;
+ 1523              		.loc 1 264 0
+ 1524 039e 7B6F     		ldr	r3, [r7, #116]
+ 1525 03a0 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 1526 03a2 7B68     		ldr	r3, [r7, #4]
+ 1527 03a4 1A70     		strb	r2, [r3, #0]
+ 1528 03a6 7B68     		ldr	r3, [r7, #4]
+ 1529 03a8 03F10103 		add	r3, r3, #1
+ 1530 03ac 7B60     		str	r3, [r7, #4]
+ 1531 03ae 7B6F     		ldr	r3, [r7, #116]
+ 1532 03b0 03F10103 		add	r3, r3, #1
+ 1533 03b4 7B67     		str	r3, [r7, #116]
+ 1534              	.L106:
+ 1535              		.loc 1 262 0
+ 1536 03b6 7B6F     		ldr	r3, [r7, #116]
+ 1537 03b8 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 1538 03ba 002B     		cmp	r3, #0
+ 1539 03bc DAD1     		bne	.L108
+ 1540 03be 28E0     		b	.L97
+ 1541              	.L99:
+ 265:..//utils/printf/ee_printf-arg.c **** 				}
+ 266:..//utils/printf/ee_printf-arg.c **** 			}
+ 267:..//utils/printf/ee_printf-arg.c **** 		}else{
+ 268:..//utils/printf/ee_printf-arg.c **** 			*buffer++ = '0';
+ 1542              		.loc 1 268 0
+ 1543 03c0 7B68     		ldr	r3, [r7, #4]
+ 1544 03c2 4FF03002 		mov	r2, #48
+ 1545 03c6 1A70     		strb	r2, [r3, #0]
+ 1546 03c8 7B68     		ldr	r3, [r7, #4]
+ 1547 03ca 03F10103 		add	r3, r3, #1
+ 1548 03ce 7B60     		str	r3, [r7, #4]
+ 269:..//utils/printf/ee_printf-arg.c **** 			if (precision > 0){
+ 1549              		.loc 1 269 0
+ 1550 03d0 D7F88830 		ldr	r3, [r7, #136]
+ 1551 03d4 002B     		cmp	r3, #0
+ 1552 03d6 1CDD     		ble	.L97
+ 270:..//utils/printf/ee_printf-arg.c **** 				*buffer++ = '.';
+ 1553              		.loc 1 270 0
+ 1554 03d8 7B68     		ldr	r3, [r7, #4]
+ 1555 03da 4FF02E02 		mov	r2, #46
+ 1556 03de 1A70     		strb	r2, [r3, #0]
+ 1557 03e0 7B68     		ldr	r3, [r7, #4]
+ 1558 03e2 03F10103 		add	r3, r3, #1
+ 1559 03e6 7B60     		str	r3, [r7, #4]
+ 271:..//utils/printf/ee_printf-arg.c **** 				for (pos = 0; pos < precision; pos++) *buffer++ = '0';
+ 1560              		.loc 1 271 0
+ 1561 03e8 4FF00003 		mov	r3, #0
+ 1562 03ec 3B67     		str	r3, [r7, #112]
+ 1563 03ee 0BE0     		b	.L109
+ 1564              	.L110:
+ 1565 03f0 7B68     		ldr	r3, [r7, #4]
+ 1566 03f2 4FF03002 		mov	r2, #48
+ 1567 03f6 1A70     		strb	r2, [r3, #0]
+ 1568 03f8 7B68     		ldr	r3, [r7, #4]
+ 1569 03fa 03F10103 		add	r3, r3, #1
+ 1570 03fe 7B60     		str	r3, [r7, #4]
+ 1571 0400 3B6F     		ldr	r3, [r7, #112]
+ 1572 0402 03F10103 		add	r3, r3, #1
+ 1573 0406 3B67     		str	r3, [r7, #112]
+ 1574              	.L109:
+ 1575 0408 3A6F     		ldr	r2, [r7, #112]
+ 1576 040a D7F88830 		ldr	r3, [r7, #136]
+ 1577 040e 9A42     		cmp	r2, r3
+ 1578 0410 EEDB     		blt	.L110
+ 1579              	.L97:
+ 272:..//utils/printf/ee_printf-arg.c **** 			}
+ 273:..//utils/printf/ee_printf-arg.c **** 		}
+ 274:..//utils/printf/ee_printf-arg.c **** 	}
+ 275:..//utils/printf/ee_printf-arg.c **** 	*buffer = '\0';
+ 1580              		.loc 1 275 0
+ 1581 0412 7B68     		ldr	r3, [r7, #4]
+ 1582 0414 4FF00002 		mov	r2, #0
+ 1583 0418 1A70     		strb	r2, [r3, #0]
+ 276:..//utils/printf/ee_printf-arg.c **** }
+ 1584              		.loc 1 276 0
+ 1585 041a 07F18007 		add	r7, r7, #128
+ 1586 041e BD46     		mov	sp, r7
+ 1587 0420 80BD     		pop	{r7, pc}
+ 1588              		.cfi_endproc
+ 1589              	.LFE35:
+ 1591 0422 00BF     		.section	.text.decimal_point,"ax",%progbits
+ 1592              		.align	2
+ 1593              		.thumb
+ 1594              		.thumb_func
+ 1596              	decimal_point:
+ 1597              	.LFB36:
+ 277:..//utils/printf/ee_printf-arg.c **** 
+ 278:..//utils/printf/ee_printf-arg.c **** static void decimal_point(char *buffer){
+ 1598              		.loc 1 278 0
+ 1599              		.cfi_startproc
+ 1600              		@ args = 0, pretend = 0, frame = 16
+ 1601              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1602 0000 80B5     		push	{r7, lr}
+ 1603              	.LCFI21:
+ 1604              		.cfi_def_cfa_offset 8
+ 1605 0002 84B0     		sub	sp, sp, #16
+ 1606              	.LCFI22:
+ 1607              		.cfi_def_cfa_offset 24
+ 1608 0004 00AF     		add	r7, sp, #0
+ 1609              		.cfi_offset 14, -4
+ 1610              		.cfi_offset 7, -8
+ 1611              	.LCFI23:
+ 1612              		.cfi_def_cfa_register 7
+ 1613 0006 7860     		str	r0, [r7, #4]
+ 279:..//utils/printf/ee_printf-arg.c **** 	while (*buffer){
+ 1614              		.loc 1 279 0
+ 1615 0008 0FE0     		b	.L115
+ 1616              	.L119:
+ 280:..//utils/printf/ee_printf-arg.c **** 		if (*buffer == '.') return;
+ 1617              		.loc 1 280 0
+ 1618 000a 7B68     		ldr	r3, [r7, #4]
+ 1619 000c 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 1620 000e 2E2B     		cmp	r3, #46
+ 1621 0010 41D0     		beq	.L124
+ 1622              	.L116:
+ 281:..//utils/printf/ee_printf-arg.c **** 		if (*buffer == 'e' || *buffer == 'E') break;
+ 1623              		.loc 1 281 0
+ 1624 0012 7B68     		ldr	r3, [r7, #4]
+ 1625 0014 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 1626 0016 652B     		cmp	r3, #101
+ 1627 0018 0BD0     		beq	.L118
+ 1628 001a 7B68     		ldr	r3, [r7, #4]
+ 1629 001c 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 1630 001e 452B     		cmp	r3, #69
+ 1631 0020 07D0     		beq	.L118
+ 282:..//utils/printf/ee_printf-arg.c **** 		buffer++;
+ 1632              		.loc 1 282 0
+ 1633 0022 7B68     		ldr	r3, [r7, #4]
+ 1634 0024 03F10103 		add	r3, r3, #1
+ 1635 0028 7B60     		str	r3, [r7, #4]
+ 1636              	.L115:
+ 1637              		.loc 1 279 0
+ 1638 002a 7B68     		ldr	r3, [r7, #4]
+ 1639 002c 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 1640 002e 002B     		cmp	r3, #0
+ 1641 0030 EBD1     		bne	.L119
+ 1642              	.L118:
+ 283:..//utils/printf/ee_printf-arg.c **** 	}
+ 284:..//utils/printf/ee_printf-arg.c **** 
+ 285:..//utils/printf/ee_printf-arg.c **** 	if (*buffer){
+ 1643              		.loc 1 285 0
+ 1644 0032 7B68     		ldr	r3, [r7, #4]
+ 1645 0034 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 1646 0036 002B     		cmp	r3, #0
+ 1647 0038 20D0     		beq	.L120
+ 1648              	.LBB2:
+ 286:..//utils/printf/ee_printf-arg.c **** 		int n = ee_strnlen(buffer,256);
+ 1649              		.loc 1 286 0
+ 1650 003a 7868     		ldr	r0, [r7, #4]
+ 1651 003c 4FF48071 		mov	r1, #256
+ 1652 0040 40F20003 		movw	r3, #:lower16:ee_strnlen
+ 1653 0044 C0F20003 		movt	r3, #:upper16:ee_strnlen
+ 1654 0048 9847     		blx	r3
+ 1655 004a 0346     		mov	r3, r0
+ 1656 004c FB60     		str	r3, [r7, #12]
+ 287:..//utils/printf/ee_printf-arg.c **** 		while (n > 0){
+ 1657              		.loc 1 287 0
+ 1658 004e 0DE0     		b	.L121
+ 1659              	.L122:
+ 288:..//utils/printf/ee_printf-arg.c **** 			buffer[n + 1] = buffer[n];
+ 1660              		.loc 1 288 0
+ 1661 0050 FB68     		ldr	r3, [r7, #12]
+ 1662 0052 03F10102 		add	r2, r3, #1
+ 1663 0056 7B68     		ldr	r3, [r7, #4]
+ 1664 0058 1344     		add	r3, r2, r3
+ 1665 005a F968     		ldr	r1, [r7, #12]
+ 1666 005c 7A68     		ldr	r2, [r7, #4]
+ 1667 005e 0A44     		add	r2, r1, r2
+ 1668 0060 1278     		ldrb	r2, [r2, #0]	@ zero_extendqisi2
+ 1669 0062 1A70     		strb	r2, [r3, #0]
+ 289:..//utils/printf/ee_printf-arg.c **** 			n--;
+ 1670              		.loc 1 289 0
+ 1671 0064 FB68     		ldr	r3, [r7, #12]
+ 1672 0066 03F1FF33 		add	r3, r3, #-1
+ 1673 006a FB60     		str	r3, [r7, #12]
+ 1674              	.L121:
+ 1675              		.loc 1 287 0
+ 1676 006c FB68     		ldr	r3, [r7, #12]
+ 1677 006e 002B     		cmp	r3, #0
+ 1678 0070 EEDC     		bgt	.L122
+ 290:..//utils/printf/ee_printf-arg.c **** 		}
+ 291:..//utils/printf/ee_printf-arg.c **** 		*buffer = '.';
+ 1679              		.loc 1 291 0
+ 1680 0072 7B68     		ldr	r3, [r7, #4]
+ 1681 0074 4FF02E02 		mov	r2, #46
+ 1682 0078 1A70     		strb	r2, [r3, #0]
+ 1683 007a 0DE0     		b	.L123
+ 1684              	.L120:
+ 1685              	.LBE2:
+ 292:..//utils/printf/ee_printf-arg.c **** 	}else{
+ 293:..//utils/printf/ee_printf-arg.c **** 		*buffer++ = '.';
+ 1686              		.loc 1 293 0
+ 1687 007c 7B68     		ldr	r3, [r7, #4]
+ 1688 007e 4FF02E02 		mov	r2, #46
+ 1689 0082 1A70     		strb	r2, [r3, #0]
+ 1690 0084 7B68     		ldr	r3, [r7, #4]
+ 1691 0086 03F10103 		add	r3, r3, #1
+ 1692 008a 7B60     		str	r3, [r7, #4]
+ 294:..//utils/printf/ee_printf-arg.c **** 		*buffer = '\0';
+ 1693              		.loc 1 294 0
+ 1694 008c 7B68     		ldr	r3, [r7, #4]
+ 1695 008e 4FF00002 		mov	r2, #0
+ 1696 0092 1A70     		strb	r2, [r3, #0]
+ 1697 0094 00E0     		b	.L123
+ 1698              	.L124:
+ 1699              		.loc 1 280 0
+ 1700 0096 00BF     		nop
+ 1701              	.L123:
+ 295:..//utils/printf/ee_printf-arg.c **** 	}
+ 296:..//utils/printf/ee_printf-arg.c **** }
+ 1702              		.loc 1 296 0
+ 1703 0098 07F11007 		add	r7, r7, #16
+ 1704 009c BD46     		mov	sp, r7
+ 1705 009e 80BD     		pop	{r7, pc}
+ 1706              		.cfi_endproc
+ 1707              	.LFE36:
+ 1709              		.section	.text.cropzeros,"ax",%progbits
+ 1710              		.align	2
+ 1711              		.thumb
+ 1712              		.thumb_func
+ 1714              	cropzeros:
+ 1715              	.LFB37:
+ 297:..//utils/printf/ee_printf-arg.c **** 
+ 298:..//utils/printf/ee_printf-arg.c **** static void cropzeros(char *buffer){
+ 1716              		.loc 1 298 0
+ 1717              		.cfi_startproc
+ 1718              		@ args = 0, pretend = 0, frame = 16
+ 1719              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1720              		@ link register save eliminated.
+ 1721 0000 80B4     		push	{r7}
+ 1722              	.LCFI24:
+ 1723              		.cfi_def_cfa_offset 4
+ 1724 0002 85B0     		sub	sp, sp, #20
+ 1725              	.LCFI25:
+ 1726              		.cfi_def_cfa_offset 24
+ 1727 0004 00AF     		add	r7, sp, #0
+ 1728              		.cfi_offset 7, -4
+ 1729              	.LCFI26:
+ 1730              		.cfi_def_cfa_register 7
+ 1731 0006 7860     		str	r0, [r7, #4]
+ 299:..//utils/printf/ee_printf-arg.c **** 	char *stop;
+ 300:..//utils/printf/ee_printf-arg.c **** 	while (*buffer && *buffer != '.') buffer++;
+ 1732              		.loc 1 300 0
+ 1733 0008 03E0     		b	.L126
+ 1734              	.L128:
+ 1735 000a 7B68     		ldr	r3, [r7, #4]
+ 1736 000c 03F10103 		add	r3, r3, #1
+ 1737 0010 7B60     		str	r3, [r7, #4]
+ 1738              	.L126:
+ 1739 0012 7B68     		ldr	r3, [r7, #4]
+ 1740 0014 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 1741 0016 002B     		cmp	r3, #0
+ 1742 0018 03D0     		beq	.L127
+ 1743 001a 7B68     		ldr	r3, [r7, #4]
+ 1744 001c 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 1745 001e 2E2B     		cmp	r3, #46
+ 1746 0020 F3D1     		bne	.L128
+ 1747              	.L127:
+ 301:..//utils/printf/ee_printf-arg.c **** 	if (*buffer++){
+ 1748              		.loc 1 301 0
+ 1749 0022 7B68     		ldr	r3, [r7, #4]
+ 1750 0024 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 1751 0026 002B     		cmp	r3, #0
+ 1752 0028 0CBF     		ite	eq
+ 1753 002a 0023     		moveq	r3, #0
+ 1754 002c 0123     		movne	r3, #1
+ 1755 002e DBB2     		uxtb	r3, r3
+ 1756 0030 7A68     		ldr	r2, [r7, #4]
+ 1757 0032 02F10102 		add	r2, r2, #1
+ 1758 0036 7A60     		str	r2, [r7, #4]
+ 1759 0038 002B     		cmp	r3, #0
+ 1760 003a 34D0     		beq	.L138
+ 302:..//utils/printf/ee_printf-arg.c **** 		while (*buffer && *buffer != 'e' && *buffer != 'E') buffer++;
+ 1761              		.loc 1 302 0
+ 1762 003c 03E0     		b	.L130
+ 1763              	.L132:
+ 1764 003e 7B68     		ldr	r3, [r7, #4]
+ 1765 0040 03F10103 		add	r3, r3, #1
+ 1766 0044 7B60     		str	r3, [r7, #4]
+ 1767              	.L130:
+ 1768 0046 7B68     		ldr	r3, [r7, #4]
+ 1769 0048 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 1770 004a 002B     		cmp	r3, #0
+ 1771 004c 07D0     		beq	.L131
+ 1772 004e 7B68     		ldr	r3, [r7, #4]
+ 1773 0050 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 1774 0052 652B     		cmp	r3, #101
+ 1775 0054 03D0     		beq	.L131
+ 1776 0056 7B68     		ldr	r3, [r7, #4]
+ 1777 0058 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 1778 005a 452B     		cmp	r3, #69
+ 1779 005c EFD1     		bne	.L132
+ 1780              	.L131:
+ 303:..//utils/printf/ee_printf-arg.c **** 		stop = buffer--;
+ 1781              		.loc 1 303 0
+ 1782 005e 7B68     		ldr	r3, [r7, #4]
+ 1783 0060 FB60     		str	r3, [r7, #12]
+ 1784 0062 7B68     		ldr	r3, [r7, #4]
+ 1785 0064 03F1FF33 		add	r3, r3, #-1
+ 1786 0068 7B60     		str	r3, [r7, #4]
+ 304:..//utils/printf/ee_printf-arg.c **** 		while (*buffer == '0') buffer--;
+ 1787              		.loc 1 304 0
+ 1788 006a 03E0     		b	.L133
+ 1789              	.L134:
+ 1790 006c 7B68     		ldr	r3, [r7, #4]
+ 1791 006e 03F1FF33 		add	r3, r3, #-1
+ 1792 0072 7B60     		str	r3, [r7, #4]
+ 1793              	.L133:
+ 1794 0074 7B68     		ldr	r3, [r7, #4]
+ 1795 0076 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 1796 0078 302B     		cmp	r3, #48
+ 1797 007a F7D0     		beq	.L134
+ 305:..//utils/printf/ee_printf-arg.c **** 		if (*buffer == '.') buffer--;
+ 1798              		.loc 1 305 0
+ 1799 007c 7B68     		ldr	r3, [r7, #4]
+ 1800 007e 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 1801 0080 2E2B     		cmp	r3, #46
+ 1802 0082 0CD1     		bne	.L136
+ 1803 0084 7B68     		ldr	r3, [r7, #4]
+ 1804 0086 03F1FF33 		add	r3, r3, #-1
+ 1805 008a 7B60     		str	r3, [r7, #4]
+ 306:..//utils/printf/ee_printf-arg.c **** 		while (buffer!=stop)
+ 1806              		.loc 1 306 0
+ 1807 008c 07E0     		b	.L136
+ 1808              	.L137:
+ 307:..//utils/printf/ee_printf-arg.c **** 		*++buffer=0;
+ 1809              		.loc 1 307 0
+ 1810 008e 7B68     		ldr	r3, [r7, #4]
+ 1811 0090 03F10103 		add	r3, r3, #1
+ 1812 0094 7B60     		str	r3, [r7, #4]
+ 1813 0096 7B68     		ldr	r3, [r7, #4]
+ 1814 0098 4FF00002 		mov	r2, #0
+ 1815 009c 1A70     		strb	r2, [r3, #0]
+ 1816              	.L136:
+ 1817              		.loc 1 306 0
+ 1818 009e 7A68     		ldr	r2, [r7, #4]
+ 1819 00a0 FB68     		ldr	r3, [r7, #12]
+ 1820 00a2 9A42     		cmp	r2, r3
+ 1821 00a4 F3D1     		bne	.L137
+ 1822              	.L138:
+ 308:..//utils/printf/ee_printf-arg.c **** 	}
+ 309:..//utils/printf/ee_printf-arg.c **** }
+ 1823              		.loc 1 309 0
+ 1824 00a6 07F11407 		add	r7, r7, #20
+ 1825 00aa BD46     		mov	sp, r7
+ 1826 00ac 80BC     		pop	{r7}
+ 1827 00ae 7047     		bx	lr
+ 1828              		.cfi_endproc
+ 1829              	.LFE37:
+ 1831              		.global	__aeabi_dcmplt
+ 1832              		.section	.text.flt,"ax",%progbits
+ 1833              		.align	2
+ 1834              		.thumb
+ 1835              		.thumb_func
+ 1837              	flt:
+ 1838              	.LFB38:
+ 310:..//utils/printf/ee_printf-arg.c **** 
+ 311:..//utils/printf/ee_printf-arg.c **** static char *flt(char *str, double num, int size, int precision, char fmt, int flags)
+ 312:..//utils/printf/ee_printf-arg.c **** {
+ 1839              		.loc 1 312 0
+ 1840              		.cfi_startproc
+ 1841              		@ args = 16, pretend = 0, frame = 112
+ 1842              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1843 0000 90B5     		push	{r4, r7, lr}
+ 1844              	.LCFI27:
+ 1845              		.cfi_def_cfa_offset 12
+ 1846 0002 9FB0     		sub	sp, sp, #124
+ 1847              	.LCFI28:
+ 1848              		.cfi_def_cfa_offset 136
+ 1849 0004 02AF     		add	r7, sp, #8
+ 1850              		.cfi_offset 14, -4
+ 1851              		.cfi_offset 7, -8
+ 1852              		.cfi_offset 4, -12
+ 1853              	.LCFI29:
+ 1854              		.cfi_def_cfa 7, 128
+ 1855 0006 F860     		str	r0, [r7, #12]
+ 1856 0008 C7E90023 		strd	r2, [r7]
+ 313:..//utils/printf/ee_printf-arg.c **** 	char tmp[80];
+ 314:..//utils/printf/ee_printf-arg.c **** 	char c, sign;
+ 315:..//utils/printf/ee_printf-arg.c **** 	int n, i;
+ 316:..//utils/printf/ee_printf-arg.c **** 
+ 317:..//utils/printf/ee_printf-arg.c **** 	// Left align means no zero padding
+ 318:..//utils/printf/ee_printf-arg.c **** 	if (flags & LEFT) flags &= ~ZEROPAD;
+ 1857              		.loc 1 318 0
+ 1858 000c D7F88C30 		ldr	r3, [r7, #140]
+ 1859 0010 03F01003 		and	r3, r3, #16
+ 1860 0014 002B     		cmp	r3, #0
+ 1861 0016 05D0     		beq	.L140
+ 1862 0018 D7F88C30 		ldr	r3, [r7, #140]
+ 1863 001c 23F00103 		bic	r3, r3, #1
+ 1864 0020 C7F88C30 		str	r3, [r7, #140]
+ 1865              	.L140:
+ 319:..//utils/printf/ee_printf-arg.c **** 
+ 320:..//utils/printf/ee_printf-arg.c **** 	// Determine padding and sign char
+ 321:..//utils/printf/ee_printf-arg.c **** 	c = (flags & ZEROPAD) ? '0' : ' ';
+ 1866              		.loc 1 321 0
+ 1867 0024 D7F88C30 		ldr	r3, [r7, #140]
+ 1868 0028 03F00103 		and	r3, r3, #1
+ 1869 002c DBB2     		uxtb	r3, r3
+ 1870 002e 002B     		cmp	r3, #0
+ 1871 0030 02D0     		beq	.L141
+ 1872 0032 4FF03003 		mov	r3, #48
+ 1873 0036 01E0     		b	.L142
+ 1874              	.L141:
+ 1875 0038 4FF02003 		mov	r3, #32
+ 1876              	.L142:
+ 1877 003c 87F86630 		strb	r3, [r7, #102]
+ 322:..//utils/printf/ee_printf-arg.c **** 	sign = 0;
+ 1878              		.loc 1 322 0
+ 1879 0040 4FF00003 		mov	r3, #0
+ 1880 0044 87F86730 		strb	r3, [r7, #103]
+ 323:..//utils/printf/ee_printf-arg.c **** 	if (flags & SIGN){
+ 1881              		.loc 1 323 0
+ 1882 0048 D7F88C30 		ldr	r3, [r7, #140]
+ 1883 004c 03F00203 		and	r3, r3, #2
+ 1884 0050 002B     		cmp	r3, #0
+ 1885 0052 48D0     		beq	.L143
+ 324:..//utils/printf/ee_printf-arg.c **** 		if (num < 0.0){
+ 1886              		.loc 1 324 0
+ 1887 0054 4FF00003 		mov	r3, #0
+ 1888 0058 1C46     		mov	r4, r3
+ 1889 005a 40F2000C 		movw	ip, #:lower16:__aeabi_dcmplt
+ 1890 005e C0F2000C 		movt	ip, #:upper16:__aeabi_dcmplt
+ 1891 0062 D7E90001 		ldrd	r0, [r7]
+ 1892 0066 4FF00002 		mov	r2, #0
+ 1893 006a 4FF00003 		mov	r3, #0
+ 1894 006e E047     		blx	ip
+ 1895 0070 0346     		mov	r3, r0
+ 1896 0072 002B     		cmp	r3, #0
+ 1897 0074 02D0     		beq	.L144
+ 1898              	.L145:
+ 1899 0076 4FF00103 		mov	r3, #1
+ 1900 007a 1C46     		mov	r4, r3
+ 1901              	.L144:
+ 1902 007c E3B2     		uxtb	r3, r4
+ 1903 007e 002B     		cmp	r3, #0
+ 1904 0080 10D0     		beq	.L146
+ 325:..//utils/printf/ee_printf-arg.c **** 		  sign = '-';
+ 1905              		.loc 1 325 0
+ 1906 0082 4FF02D03 		mov	r3, #45
+ 1907 0086 87F86730 		strb	r3, [r7, #103]
+ 326:..//utils/printf/ee_printf-arg.c **** 		  num = -num;
+ 1908              		.loc 1 326 0
+ 1909 008a 3B68     		ldr	r3, [r7, #0]
+ 1910 008c 3B60     		str	r3, [r7, #0]
+ 1911 008e 7B68     		ldr	r3, [r7, #4]
+ 1912 0090 83F00043 		eor	r3, r3, #-2147483648
+ 1913 0094 7B60     		str	r3, [r7, #4]
+ 327:..//utils/printf/ee_printf-arg.c **** 		  size--;
+ 1914              		.loc 1 327 0
+ 1915 0096 D7F88030 		ldr	r3, [r7, #128]
+ 1916 009a 03F1FF33 		add	r3, r3, #-1
+ 1917 009e C7F88030 		str	r3, [r7, #128]
+ 1918 00a2 20E0     		b	.L143
+ 1919              	.L146:
+ 328:..//utils/printf/ee_printf-arg.c **** 		}else if (flags & PLUS){
+ 1920              		.loc 1 328 0
+ 1921 00a4 D7F88C30 		ldr	r3, [r7, #140]
+ 1922 00a8 03F00403 		and	r3, r3, #4
+ 1923 00ac 002B     		cmp	r3, #0
+ 1924 00ae 0AD0     		beq	.L147
+ 329:..//utils/printf/ee_printf-arg.c **** 			sign = '+';
+ 1925              		.loc 1 329 0
+ 1926 00b0 4FF02B03 		mov	r3, #43
+ 1927 00b4 87F86730 		strb	r3, [r7, #103]
+ 330:..//utils/printf/ee_printf-arg.c **** 			size--;
+ 1928              		.loc 1 330 0
+ 1929 00b8 D7F88030 		ldr	r3, [r7, #128]
+ 1930 00bc 03F1FF33 		add	r3, r3, #-1
+ 1931 00c0 C7F88030 		str	r3, [r7, #128]
+ 1932 00c4 0FE0     		b	.L143
+ 1933              	.L147:
+ 331:..//utils/printf/ee_printf-arg.c **** 		}else if (flags & SPACE){
+ 1934              		.loc 1 331 0
+ 1935 00c6 D7F88C30 		ldr	r3, [r7, #140]
+ 1936 00ca 03F00803 		and	r3, r3, #8
+ 1937 00ce 002B     		cmp	r3, #0
+ 1938 00d0 09D0     		beq	.L143
+ 332:..//utils/printf/ee_printf-arg.c **** 			sign = ' ';
+ 1939              		.loc 1 332 0
+ 1940 00d2 4FF02003 		mov	r3, #32
+ 1941 00d6 87F86730 		strb	r3, [r7, #103]
+ 333:..//utils/printf/ee_printf-arg.c **** 			size--;
+ 1942              		.loc 1 333 0
+ 1943 00da D7F88030 		ldr	r3, [r7, #128]
+ 1944 00de 03F1FF33 		add	r3, r3, #-1
+ 1945 00e2 C7F88030 		str	r3, [r7, #128]
+ 1946              	.L143:
+ 334:..//utils/printf/ee_printf-arg.c **** 		}
+ 335:..//utils/printf/ee_printf-arg.c **** 	}
+ 336:..//utils/printf/ee_printf-arg.c **** 
+ 337:..//utils/printf/ee_printf-arg.c **** 	// Compute the precision value
+ 338:..//utils/printf/ee_printf-arg.c **** 	if (precision < 0)
+ 1947              		.loc 1 338 0
+ 1948 00e6 D7F88430 		ldr	r3, [r7, #132]
+ 1949 00ea 002B     		cmp	r3, #0
+ 1950 00ec 03DA     		bge	.L148
+ 339:..//utils/printf/ee_printf-arg.c **** 	precision = 6; // Default precision: 6
+ 1951              		.loc 1 339 0
+ 1952 00ee 4FF00603 		mov	r3, #6
+ 1953 00f2 C7F88430 		str	r3, [r7, #132]
+ 1954              	.L148:
+ 340:..//utils/printf/ee_printf-arg.c **** 
+ 341:..//utils/printf/ee_printf-arg.c **** 	// Convert floating point number to text
+ 342:..//utils/printf/ee_printf-arg.c **** 	parse_float(num, tmp, fmt, precision);
+ 1955              		.loc 1 342 0
+ 1956 00f6 07F11402 		add	r2, r7, #20
+ 1957 00fa 97F88830 		ldrb	r3, [r7, #136]	@ zero_extendqisi2
+ 1958 00fe D7F88410 		ldr	r1, [r7, #132]
+ 1959 0102 0091     		str	r1, [sp, #0]
+ 1960 0104 D7E90001 		ldrd	r0, [r7]
+ 1961 0108 40F2000C 		movw	ip, #:lower16:parse_float
+ 1962 010c C0F2000C 		movt	ip, #:upper16:parse_float
+ 1963 0110 E047     		blx	ip
+ 343:..//utils/printf/ee_printf-arg.c **** 
+ 344:..//utils/printf/ee_printf-arg.c **** 	if ((flags & HEX_PREP) && precision == 0) decimal_point(tmp);
+ 1964              		.loc 1 344 0
+ 1965 0112 D7F88C30 		ldr	r3, [r7, #140]
+ 1966 0116 03F02003 		and	r3, r3, #32
+ 1967 011a 002B     		cmp	r3, #0
+ 1968 011c 0BD0     		beq	.L149
+ 1969 011e D7F88430 		ldr	r3, [r7, #132]
+ 1970 0122 002B     		cmp	r3, #0
+ 1971 0124 07D1     		bne	.L149
+ 1972 0126 07F11403 		add	r3, r7, #20
+ 1973 012a 1846     		mov	r0, r3
+ 1974 012c 40F20003 		movw	r3, #:lower16:decimal_point
+ 1975 0130 C0F20003 		movt	r3, #:upper16:decimal_point
+ 1976 0134 9847     		blx	r3
+ 1977              	.L149:
+ 345:..//utils/printf/ee_printf-arg.c **** 	if (fmt == 'g' && !(flags & HEX_PREP)) cropzeros(tmp);
+ 1978              		.loc 1 345 0
+ 1979 0136 97F88830 		ldrb	r3, [r7, #136]	@ zero_extendqisi2
+ 1980 013a 672B     		cmp	r3, #103
+ 1981 013c 0DD1     		bne	.L150
+ 1982 013e D7F88C30 		ldr	r3, [r7, #140]
+ 1983 0142 03F02003 		and	r3, r3, #32
+ 1984 0146 002B     		cmp	r3, #0
+ 1985 0148 07D1     		bne	.L150
+ 1986 014a 07F11403 		add	r3, r7, #20
+ 1987 014e 1846     		mov	r0, r3
+ 1988 0150 40F20003 		movw	r3, #:lower16:cropzeros
+ 1989 0154 C0F20003 		movt	r3, #:upper16:cropzeros
+ 1990 0158 9847     		blx	r3
+ 1991              	.L150:
+ 346:..//utils/printf/ee_printf-arg.c **** 
+ 347:..//utils/printf/ee_printf-arg.c **** 	n = ee_strnlen(tmp,256);
+ 1992              		.loc 1 347 0
+ 1993 015a 07F11403 		add	r3, r7, #20
+ 1994 015e 1846     		mov	r0, r3
+ 1995 0160 4FF48071 		mov	r1, #256
+ 1996 0164 40F20003 		movw	r3, #:lower16:ee_strnlen
+ 1997 0168 C0F20003 		movt	r3, #:upper16:ee_strnlen
+ 1998 016c 9847     		blx	r3
+ 1999 016e 0346     		mov	r3, r0
+ 2000 0170 BB66     		str	r3, [r7, #104]
+ 348:..//utils/printf/ee_printf-arg.c **** 
+ 349:..//utils/printf/ee_printf-arg.c **** 	// Output number with alignment and padding
+ 350:..//utils/printf/ee_printf-arg.c **** 	size -= n;
+ 2001              		.loc 1 350 0
+ 2002 0172 D7F88020 		ldr	r2, [r7, #128]
+ 2003 0176 BB6E     		ldr	r3, [r7, #104]
+ 2004 0178 C3EB0203 		rsb	r3, r3, r2
+ 2005 017c C7F88030 		str	r3, [r7, #128]
+ 351:..//utils/printf/ee_printf-arg.c **** 	if (!(flags & (ZEROPAD | LEFT))) while (size-- > 0) *str++ = ' ';
+ 2006              		.loc 1 351 0
+ 2007 0180 D7F88C30 		ldr	r3, [r7, #140]
+ 2008 0184 03F01103 		and	r3, r3, #17
+ 2009 0188 002B     		cmp	r3, #0
+ 2010 018a 17D1     		bne	.L151
+ 2011 018c 07E0     		b	.L152
+ 2012              	.L153:
+ 2013 018e FB68     		ldr	r3, [r7, #12]
+ 2014 0190 4FF02002 		mov	r2, #32
+ 2015 0194 1A70     		strb	r2, [r3, #0]
+ 2016 0196 FB68     		ldr	r3, [r7, #12]
+ 2017 0198 03F10103 		add	r3, r3, #1
+ 2018 019c FB60     		str	r3, [r7, #12]
+ 2019              	.L152:
+ 2020 019e D7F88030 		ldr	r3, [r7, #128]
+ 2021 01a2 002B     		cmp	r3, #0
+ 2022 01a4 D4BF     		ite	le
+ 2023 01a6 0023     		movle	r3, #0
+ 2024 01a8 0123     		movgt	r3, #1
+ 2025 01aa DBB2     		uxtb	r3, r3
+ 2026 01ac D7F88020 		ldr	r2, [r7, #128]
+ 2027 01b0 02F1FF32 		add	r2, r2, #-1
+ 2028 01b4 C7F88020 		str	r2, [r7, #128]
+ 2029 01b8 002B     		cmp	r3, #0
+ 2030 01ba E8D1     		bne	.L153
+ 2031              	.L151:
+ 352:..//utils/printf/ee_printf-arg.c **** 	if (sign) *str++ = sign;
+ 2032              		.loc 1 352 0
+ 2033 01bc 97F86730 		ldrb	r3, [r7, #103]	@ zero_extendqisi2
+ 2034 01c0 002B     		cmp	r3, #0
+ 2035 01c2 07D0     		beq	.L154
+ 2036 01c4 FB68     		ldr	r3, [r7, #12]
+ 2037 01c6 97F86720 		ldrb	r2, [r7, #103]
+ 2038 01ca 1A70     		strb	r2, [r3, #0]
+ 2039 01cc FB68     		ldr	r3, [r7, #12]
+ 2040 01ce 03F10103 		add	r3, r3, #1
+ 2041 01d2 FB60     		str	r3, [r7, #12]
+ 2042              	.L154:
+ 353:..//utils/printf/ee_printf-arg.c **** 	if (!(flags & LEFT)) while (size-- > 0) *str++ = c;
+ 2043              		.loc 1 353 0
+ 2044 01d4 D7F88C30 		ldr	r3, [r7, #140]
+ 2045 01d8 03F01003 		and	r3, r3, #16
+ 2046 01dc 002B     		cmp	r3, #0
+ 2047 01de 17D1     		bne	.L155
+ 2048 01e0 07E0     		b	.L156
+ 2049              	.L157:
+ 2050 01e2 FB68     		ldr	r3, [r7, #12]
+ 2051 01e4 97F86620 		ldrb	r2, [r7, #102]
+ 2052 01e8 1A70     		strb	r2, [r3, #0]
+ 2053 01ea FB68     		ldr	r3, [r7, #12]
+ 2054 01ec 03F10103 		add	r3, r3, #1
+ 2055 01f0 FB60     		str	r3, [r7, #12]
+ 2056              	.L156:
+ 2057 01f2 D7F88030 		ldr	r3, [r7, #128]
+ 2058 01f6 002B     		cmp	r3, #0
+ 2059 01f8 D4BF     		ite	le
+ 2060 01fa 0023     		movle	r3, #0
+ 2061 01fc 0123     		movgt	r3, #1
+ 2062 01fe DBB2     		uxtb	r3, r3
+ 2063 0200 D7F88020 		ldr	r2, [r7, #128]
+ 2064 0204 02F1FF32 		add	r2, r2, #-1
+ 2065 0208 C7F88020 		str	r2, [r7, #128]
+ 2066 020c 002B     		cmp	r3, #0
+ 2067 020e E8D1     		bne	.L157
+ 2068              	.L155:
+ 354:..//utils/printf/ee_printf-arg.c **** 	for (i = 0; i < n; i++) *str++ = tmp[i];
+ 2069              		.loc 1 354 0
+ 2070 0210 4FF00003 		mov	r3, #0
+ 2071 0214 FB66     		str	r3, [r7, #108]
+ 2072 0216 0FE0     		b	.L158
+ 2073              	.L159:
+ 2074 0218 FB6E     		ldr	r3, [r7, #108]
+ 2075 021a 07F17002 		add	r2, r7, #112
+ 2076 021e 1344     		add	r3, r2, r3
+ 2077 0220 13F85C2C 		ldrb	r2, [r3, #-92]	@ zero_extendqisi2
+ 2078 0224 FB68     		ldr	r3, [r7, #12]
+ 2079 0226 1A70     		strb	r2, [r3, #0]
+ 2080 0228 FB68     		ldr	r3, [r7, #12]
+ 2081 022a 03F10103 		add	r3, r3, #1
+ 2082 022e FB60     		str	r3, [r7, #12]
+ 2083 0230 FB6E     		ldr	r3, [r7, #108]
+ 2084 0232 03F10103 		add	r3, r3, #1
+ 2085 0236 FB66     		str	r3, [r7, #108]
+ 2086              	.L158:
+ 2087 0238 FA6E     		ldr	r2, [r7, #108]
+ 2088 023a BB6E     		ldr	r3, [r7, #104]
+ 2089 023c 9A42     		cmp	r2, r3
+ 2090 023e EBDB     		blt	.L159
+ 355:..//utils/printf/ee_printf-arg.c **** 	while (size-- > 0) *str++ = ' ';
+ 2091              		.loc 1 355 0
+ 2092 0240 07E0     		b	.L160
+ 2093              	.L161:
+ 2094 0242 FB68     		ldr	r3, [r7, #12]
+ 2095 0244 4FF02002 		mov	r2, #32
+ 2096 0248 1A70     		strb	r2, [r3, #0]
+ 2097 024a FB68     		ldr	r3, [r7, #12]
+ 2098 024c 03F10103 		add	r3, r3, #1
+ 2099 0250 FB60     		str	r3, [r7, #12]
+ 2100              	.L160:
+ 2101 0252 D7F88030 		ldr	r3, [r7, #128]
+ 2102 0256 002B     		cmp	r3, #0
+ 2103 0258 D4BF     		ite	le
+ 2104 025a 0023     		movle	r3, #0
+ 2105 025c 0123     		movgt	r3, #1
+ 2106 025e DBB2     		uxtb	r3, r3
+ 2107 0260 D7F88020 		ldr	r2, [r7, #128]
+ 2108 0264 02F1FF32 		add	r2, r2, #-1
+ 2109 0268 C7F88020 		str	r2, [r7, #128]
+ 2110 026c 002B     		cmp	r3, #0
+ 2111 026e E8D1     		bne	.L161
+ 356:..//utils/printf/ee_printf-arg.c **** 
+ 357:..//utils/printf/ee_printf-arg.c **** 	return str;
+ 2112              		.loc 1 357 0
+ 2113 0270 FB68     		ldr	r3, [r7, #12]
+ 358:..//utils/printf/ee_printf-arg.c **** }
+ 2114              		.loc 1 358 0
+ 2115 0272 1846     		mov	r0, r3
+ 2116 0274 07F17407 		add	r7, r7, #116
+ 2117 0278 BD46     		mov	sp, r7
+ 2118 027a 90BD     		pop	{r4, r7, pc}
+ 2119              		.cfi_endproc
+ 2120              	.LFE38:
+ 2122              		.section	.rodata
+ 2123 004d 000000   		.align	2
+ 2124              	.LC2:
+ 2125 0050 3C4E554C 		.ascii	"<NULL>\000"
+ 2125      4C3E00
+ 2126 0057 00       		.section	.text.ee_vsprintf,"ax",%progbits
+ 2127              		.align	2
+ 2128              		.thumb
+ 2129              		.thumb_func
+ 2131              	ee_vsprintf:
+ 2132              	.LFB39:
+ 359:..//utils/printf/ee_printf-arg.c **** 
+ 360:..//utils/printf/ee_printf-arg.c **** #endif
+ 361:..//utils/printf/ee_printf-arg.c **** 
+ 362:..//utils/printf/ee_printf-arg.c **** static int ee_vsprintf(char *buf, const char *fmt, va_list args)
+ 363:..//utils/printf/ee_printf-arg.c **** {
+ 2133              		.loc 1 363 0
+ 2134              		.cfi_startproc
+ 2135              		@ args = 0, pretend = 0, frame = 56
+ 2136              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2137 0000 80B5     		push	{r7, lr}
+ 2138              	.LCFI30:
+ 2139              		.cfi_def_cfa_offset 8
+ 2140 0002 92B0     		sub	sp, sp, #72
+ 2141              	.LCFI31:
+ 2142              		.cfi_def_cfa_offset 80
+ 2143 0004 04AF     		add	r7, sp, #16
+ 2144              		.cfi_offset 14, -4
+ 2145              		.cfi_offset 7, -8
+ 2146              	.LCFI32:
+ 2147              		.cfi_def_cfa 7, 64
+ 2148 0006 F860     		str	r0, [r7, #12]
+ 2149 0008 B960     		str	r1, [r7, #8]
+ 2150 000a 7A60     		str	r2, [r7, #4]
+ 364:..//utils/printf/ee_printf-arg.c **** 	int len;
+ 365:..//utils/printf/ee_printf-arg.c **** 	unsigned long num;
+ 366:..//utils/printf/ee_printf-arg.c **** 	int i, base;
+ 367:..//utils/printf/ee_printf-arg.c **** 	char *str;
+ 368:..//utils/printf/ee_printf-arg.c **** 	char *s;
+ 369:..//utils/printf/ee_printf-arg.c **** 
+ 370:..//utils/printf/ee_printf-arg.c **** 	int flags;            // Flags to number()
+ 371:..//utils/printf/ee_printf-arg.c **** 
+ 372:..//utils/printf/ee_printf-arg.c **** 	int field_width;      // Width of output field
+ 373:..//utils/printf/ee_printf-arg.c **** 	int precision;        // Min. # of digits for integers; max number of chars for from string
+ 374:..//utils/printf/ee_printf-arg.c **** 	int qualifier;        // 'h', 'l', or 'L' for integer fields
+ 375:..//utils/printf/ee_printf-arg.c **** 
+ 376:..//utils/printf/ee_printf-arg.c **** 	for (str = buf; *fmt; fmt++){
+ 2151              		.loc 1 376 0
+ 2152 000c FB68     		ldr	r3, [r7, #12]
+ 2153 000e 3B62     		str	r3, [r7, #32]
+ 2154 0010 ACE2     		b	.L164
+ 2155              	.L218:
+ 377:..//utils/printf/ee_printf-arg.c **** 		if (*fmt != '%'){
+ 2156              		.loc 1 377 0
+ 2157 0012 BB68     		ldr	r3, [r7, #8]
+ 2158 0014 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 2159 0016 252B     		cmp	r3, #37
+ 2160 0018 08D0     		beq	.L165
+ 378:..//utils/printf/ee_printf-arg.c **** 		  *str++ = *fmt;
+ 2161              		.loc 1 378 0
+ 2162 001a BB68     		ldr	r3, [r7, #8]
+ 2163 001c 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 2164 001e 3B6A     		ldr	r3, [r7, #32]
+ 2165 0020 1A70     		strb	r2, [r3, #0]
+ 2166 0022 3B6A     		ldr	r3, [r7, #32]
+ 2167 0024 03F10103 		add	r3, r3, #1
+ 2168 0028 3B62     		str	r3, [r7, #32]
+ 379:..//utils/printf/ee_printf-arg.c **** 		  continue;
+ 2169              		.loc 1 379 0
+ 2170 002a 9BE2     		b	.L166
+ 2171              	.L165:
+ 380:..//utils/printf/ee_printf-arg.c **** 		}
+ 381:..//utils/printf/ee_printf-arg.c ****                   
+ 382:..//utils/printf/ee_printf-arg.c **** 		// Process flags
+ 383:..//utils/printf/ee_printf-arg.c **** 		flags = 0;
+ 2172              		.loc 1 383 0
+ 2173 002c 4FF00003 		mov	r3, #0
+ 2174 0030 BB62     		str	r3, [r7, #40]
+ 2175              	.L167:
+ 384:..//utils/printf/ee_printf-arg.c **** 	repeat:
+ 385:..//utils/printf/ee_printf-arg.c **** 		fmt++; // This also skips first '%'
+ 2176              		.loc 1 385 0
+ 2177 0032 BB68     		ldr	r3, [r7, #8]
+ 2178 0034 03F10103 		add	r3, r3, #1
+ 2179 0038 BB60     		str	r3, [r7, #8]
+ 386:..//utils/printf/ee_printf-arg.c **** 		switch (*fmt){
+ 2180              		.loc 1 386 0
+ 2181 003a BB68     		ldr	r3, [r7, #8]
+ 2182 003c 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 2183 003e A3F12003 		sub	r3, r3, #32
+ 2184 0042 102B     		cmp	r3, #16
+ 2185 0044 3DD8     		bhi	.L168
+ 2186 0046 01A2     		adr	r2, .L174
+ 2187 0048 52F823F0 		ldr	pc, [r2, r3, lsl #2]
+ 2188              		.align	2
+ 2189              	.L174:
+ 2190 004c A5000000 		.word	.L169+1
+ 2191 0050 C3000000 		.word	.L168+1
+ 2192 0054 C3000000 		.word	.L168+1
+ 2193 0058 AF000000 		.word	.L170+1
+ 2194 005c C3000000 		.word	.L168+1
+ 2195 0060 C3000000 		.word	.L168+1
+ 2196 0064 C3000000 		.word	.L168+1
+ 2197 0068 C3000000 		.word	.L168+1
+ 2198 006c C3000000 		.word	.L168+1
+ 2199 0070 C3000000 		.word	.L168+1
+ 2200 0074 C3000000 		.word	.L168+1
+ 2201 0078 9B000000 		.word	.L171+1
+ 2202 007c C3000000 		.word	.L168+1
+ 2203 0080 91000000 		.word	.L172+1
+ 2204 0084 C3000000 		.word	.L168+1
+ 2205 0088 C3000000 		.word	.L168+1
+ 2206 008c B9000000 		.word	.L173+1
+ 2207              	.L172:
+ 387:..//utils/printf/ee_printf-arg.c **** 			case '-': flags |= LEFT; goto repeat;
+ 2208              		.loc 1 387 0
+ 2209 0090 BB6A     		ldr	r3, [r7, #40]
+ 2210 0092 43F01003 		orr	r3, r3, #16
+ 2211 0096 BB62     		str	r3, [r7, #40]
+ 2212 0098 CBE7     		b	.L167
+ 2213              	.L171:
+ 388:..//utils/printf/ee_printf-arg.c **** 			case '+': flags |= PLUS; goto repeat;
+ 2214              		.loc 1 388 0
+ 2215 009a BB6A     		ldr	r3, [r7, #40]
+ 2216 009c 43F00403 		orr	r3, r3, #4
+ 2217 00a0 BB62     		str	r3, [r7, #40]
+ 2218 00a2 C6E7     		b	.L167
+ 2219              	.L169:
+ 389:..//utils/printf/ee_printf-arg.c **** 			case ' ': flags |= SPACE; goto repeat;
+ 2220              		.loc 1 389 0
+ 2221 00a4 BB6A     		ldr	r3, [r7, #40]
+ 2222 00a6 43F00803 		orr	r3, r3, #8
+ 2223 00aa BB62     		str	r3, [r7, #40]
+ 2224 00ac C1E7     		b	.L167
+ 2225              	.L170:
+ 390:..//utils/printf/ee_printf-arg.c **** 			case '#': flags |= HEX_PREP; goto repeat;
+ 2226              		.loc 1 390 0
+ 2227 00ae BB6A     		ldr	r3, [r7, #40]
+ 2228 00b0 43F02003 		orr	r3, r3, #32
+ 2229 00b4 BB62     		str	r3, [r7, #40]
+ 2230 00b6 BCE7     		b	.L167
+ 2231              	.L173:
+ 391:..//utils/printf/ee_printf-arg.c **** 			case '0': flags |= ZEROPAD; goto repeat;
+ 2232              		.loc 1 391 0
+ 2233 00b8 BB6A     		ldr	r3, [r7, #40]
+ 2234 00ba 43F00103 		orr	r3, r3, #1
+ 2235 00be BB62     		str	r3, [r7, #40]
+ 2236 00c0 B7E7     		b	.L167
+ 2237              	.L168:
+ 392:..//utils/printf/ee_printf-arg.c **** 		}
+ 393:..//utils/printf/ee_printf-arg.c ****           
+ 394:..//utils/printf/ee_printf-arg.c **** 		// Get field width
+ 395:..//utils/printf/ee_printf-arg.c **** 		field_width = -1;
+ 2238              		.loc 1 395 0
+ 2239 00c2 4FF0FF33 		mov	r3, #-1
+ 2240 00c6 FB62     		str	r3, [r7, #44]
+ 396:..//utils/printf/ee_printf-arg.c **** 		if (is_digit(*fmt))
+ 2241              		.loc 1 396 0
+ 2242 00c8 BB68     		ldr	r3, [r7, #8]
+ 2243 00ca 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 2244 00cc 2F2B     		cmp	r3, #47
+ 2245 00ce 0ED9     		bls	.L175
+ 2246 00d0 BB68     		ldr	r3, [r7, #8]
+ 2247 00d2 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 2248 00d4 392B     		cmp	r3, #57
+ 2249 00d6 0AD8     		bhi	.L175
+ 397:..//utils/printf/ee_printf-arg.c **** 			field_width = ee_skip_atoi(&fmt);
+ 2250              		.loc 1 397 0
+ 2251 00d8 07F10803 		add	r3, r7, #8
+ 2252 00dc 1846     		mov	r0, r3
+ 2253 00de 40F20003 		movw	r3, #:lower16:ee_skip_atoi
+ 2254 00e2 C0F20003 		movt	r3, #:upper16:ee_skip_atoi
+ 2255 00e6 9847     		blx	r3
+ 2256 00e8 0346     		mov	r3, r0
+ 2257 00ea FB62     		str	r3, [r7, #44]
+ 2258              		.loc 1 396 0
+ 2259 00ec 18E0     		b	.L176
+ 2260              	.L175:
+ 398:..//utils/printf/ee_printf-arg.c **** 		else if (*fmt == '*'){
+ 2261              		.loc 1 398 0
+ 2262 00ee BB68     		ldr	r3, [r7, #8]
+ 2263 00f0 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 2264 00f2 2A2B     		cmp	r3, #42
+ 2265 00f4 14D1     		bne	.L176
+ 399:..//utils/printf/ee_printf-arg.c **** 			fmt++;
+ 2266              		.loc 1 399 0
+ 2267 00f6 BB68     		ldr	r3, [r7, #8]
+ 2268 00f8 03F10103 		add	r3, r3, #1
+ 2269 00fc BB60     		str	r3, [r7, #8]
+ 400:..//utils/printf/ee_printf-arg.c **** 			field_width = va_arg(args, int);
+ 2270              		.loc 1 400 0
+ 2271 00fe 7B68     		ldr	r3, [r7, #4]
+ 2272 0100 03F10402 		add	r2, r3, #4
+ 2273 0104 7A60     		str	r2, [r7, #4]
+ 2274 0106 1B68     		ldr	r3, [r3, #0]
+ 2275 0108 FB62     		str	r3, [r7, #44]
+ 401:..//utils/printf/ee_printf-arg.c **** 			if (field_width < 0){
+ 2276              		.loc 1 401 0
+ 2277 010a FB6A     		ldr	r3, [r7, #44]
+ 2278 010c 002B     		cmp	r3, #0
+ 2279 010e 07DA     		bge	.L176
+ 402:..//utils/printf/ee_printf-arg.c **** 				field_width = -field_width;
+ 2280              		.loc 1 402 0
+ 2281 0110 FB6A     		ldr	r3, [r7, #44]
+ 2282 0112 C3F10003 		rsb	r3, r3, #0
+ 2283 0116 FB62     		str	r3, [r7, #44]
+ 403:..//utils/printf/ee_printf-arg.c **** 				flags |= LEFT;
+ 2284              		.loc 1 403 0
+ 2285 0118 BB6A     		ldr	r3, [r7, #40]
+ 2286 011a 43F01003 		orr	r3, r3, #16
+ 2287 011e BB62     		str	r3, [r7, #40]
+ 2288              	.L176:
+ 404:..//utils/printf/ee_printf-arg.c **** 			}
+ 405:..//utils/printf/ee_printf-arg.c **** 		}
+ 406:..//utils/printf/ee_printf-arg.c **** 
+ 407:..//utils/printf/ee_printf-arg.c **** 		// Get the precision
+ 408:..//utils/printf/ee_printf-arg.c **** 		precision = -1;
+ 2289              		.loc 1 408 0
+ 2290 0120 4FF0FF33 		mov	r3, #-1
+ 2291 0124 3B63     		str	r3, [r7, #48]
+ 409:..//utils/printf/ee_printf-arg.c **** 		if (*fmt == '.'){
+ 2292              		.loc 1 409 0
+ 2293 0126 BB68     		ldr	r3, [r7, #8]
+ 2294 0128 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 2295 012a 2E2B     		cmp	r3, #46
+ 2296 012c 2AD1     		bne	.L177
+ 410:..//utils/printf/ee_printf-arg.c **** 			++fmt;    
+ 2297              		.loc 1 410 0
+ 2298 012e BB68     		ldr	r3, [r7, #8]
+ 2299 0130 03F10103 		add	r3, r3, #1
+ 2300 0134 BB60     		str	r3, [r7, #8]
+ 411:..//utils/printf/ee_printf-arg.c **** 			if (is_digit(*fmt))
+ 2301              		.loc 1 411 0
+ 2302 0136 BB68     		ldr	r3, [r7, #8]
+ 2303 0138 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 2304 013a 2F2B     		cmp	r3, #47
+ 2305 013c 0ED9     		bls	.L178
+ 2306 013e BB68     		ldr	r3, [r7, #8]
+ 2307 0140 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 2308 0142 392B     		cmp	r3, #57
+ 2309 0144 0AD8     		bhi	.L178
+ 412:..//utils/printf/ee_printf-arg.c **** 				precision = ee_skip_atoi(&fmt);
+ 2310              		.loc 1 412 0
+ 2311 0146 07F10803 		add	r3, r7, #8
+ 2312 014a 1846     		mov	r0, r3
+ 2313 014c 40F20003 		movw	r3, #:lower16:ee_skip_atoi
+ 2314 0150 C0F20003 		movt	r3, #:upper16:ee_skip_atoi
+ 2315 0154 9847     		blx	r3
+ 2316 0156 0346     		mov	r3, r0
+ 2317 0158 3B63     		str	r3, [r7, #48]
+ 2318              		.loc 1 411 0
+ 2319 015a 0DE0     		b	.L179
+ 2320              	.L178:
+ 413:..//utils/printf/ee_printf-arg.c **** 			else if (*fmt == '*'){
+ 2321              		.loc 1 413 0
+ 2322 015c BB68     		ldr	r3, [r7, #8]
+ 2323 015e 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 2324 0160 2A2B     		cmp	r3, #42
+ 2325 0162 09D1     		bne	.L179
+ 414:..//utils/printf/ee_printf-arg.c **** 				++fmt;
+ 2326              		.loc 1 414 0
+ 2327 0164 BB68     		ldr	r3, [r7, #8]
+ 2328 0166 03F10103 		add	r3, r3, #1
+ 2329 016a BB60     		str	r3, [r7, #8]
+ 415:..//utils/printf/ee_printf-arg.c **** 				precision = va_arg(args, int);
+ 2330              		.loc 1 415 0
+ 2331 016c 7B68     		ldr	r3, [r7, #4]
+ 2332 016e 03F10402 		add	r2, r3, #4
+ 2333 0172 7A60     		str	r2, [r7, #4]
+ 2334 0174 1B68     		ldr	r3, [r3, #0]
+ 2335 0176 3B63     		str	r3, [r7, #48]
+ 2336              	.L179:
+ 416:..//utils/printf/ee_printf-arg.c **** 			}
+ 417:..//utils/printf/ee_printf-arg.c **** 			if (precision < 0) precision = 0;
+ 2337              		.loc 1 417 0
+ 2338 0178 3B6B     		ldr	r3, [r7, #48]
+ 2339 017a 002B     		cmp	r3, #0
+ 2340 017c 02DA     		bge	.L177
+ 2341 017e 4FF00003 		mov	r3, #0
+ 2342 0182 3B63     		str	r3, [r7, #48]
+ 2343              	.L177:
+ 418:..//utils/printf/ee_printf-arg.c **** 		}
+ 419:..//utils/printf/ee_printf-arg.c **** 
+ 420:..//utils/printf/ee_printf-arg.c **** 		// Get the conversion qualifier
+ 421:..//utils/printf/ee_printf-arg.c **** 		qualifier = -1;
+ 2344              		.loc 1 421 0
+ 2345 0184 4FF0FF33 		mov	r3, #-1
+ 2346 0188 7B63     		str	r3, [r7, #52]
+ 422:..//utils/printf/ee_printf-arg.c **** 		if (*fmt == 'l' || *fmt == 'L'){
+ 2347              		.loc 1 422 0
+ 2348 018a BB68     		ldr	r3, [r7, #8]
+ 2349 018c 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 2350 018e 6C2B     		cmp	r3, #108
+ 2351 0190 03D0     		beq	.L180
+ 2352 0192 BB68     		ldr	r3, [r7, #8]
+ 2353 0194 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 2354 0196 4C2B     		cmp	r3, #76
+ 2355 0198 06D1     		bne	.L181
+ 2356              	.L180:
+ 423:..//utils/printf/ee_printf-arg.c **** 			qualifier = *fmt;
+ 2357              		.loc 1 423 0
+ 2358 019a BB68     		ldr	r3, [r7, #8]
+ 2359 019c 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 2360 019e 7B63     		str	r3, [r7, #52]
+ 424:..//utils/printf/ee_printf-arg.c **** 			fmt++;
+ 2361              		.loc 1 424 0
+ 2362 01a0 BB68     		ldr	r3, [r7, #8]
+ 2363 01a2 03F10103 		add	r3, r3, #1
+ 2364 01a6 BB60     		str	r3, [r7, #8]
+ 2365              	.L181:
+ 425:..//utils/printf/ee_printf-arg.c **** 		}
+ 426:..//utils/printf/ee_printf-arg.c **** 
+ 427:..//utils/printf/ee_printf-arg.c **** 		// Default base
+ 428:..//utils/printf/ee_printf-arg.c **** 		base = 10;
+ 2366              		.loc 1 428 0
+ 2367 01a8 4FF00A03 		mov	r3, #10
+ 2368 01ac FB61     		str	r3, [r7, #28]
+ 429:..//utils/printf/ee_printf-arg.c **** 
+ 430:..//utils/printf/ee_printf-arg.c **** 		switch (*fmt){
+ 2369              		.loc 1 430 0
+ 2370 01ae BB68     		ldr	r3, [r7, #8]
+ 2371 01b0 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 2372 01b2 A3F14103 		sub	r3, r3, #65
+ 2373 01b6 372B     		cmp	r3, #55
+ 2374 01b8 00F28981 		bhi	.L182
+ 2375 01bc 01A2     		adr	r2, .L194
+ 2376 01be 52F823F0 		ldr	pc, [r2, r3, lsl #2]
+ 2377 01c2 00BF     		.align	2
+ 2378              	.L194:
+ 2379 01c4 0F040000 		.word	.L183+1
+ 2380 01c8 CF040000 		.word	.L182+1
+ 2381 01cc CF040000 		.word	.L182+1
+ 2382 01d0 CF040000 		.word	.L182+1
+ 2383 01d4 CF040000 		.word	.L182+1
+ 2384 01d8 CF040000 		.word	.L182+1
+ 2385 01dc CF040000 		.word	.L182+1
+ 2386 01e0 CF040000 		.word	.L182+1
+ 2387 01e4 CF040000 		.word	.L182+1
+ 2388 01e8 CF040000 		.word	.L182+1
+ 2389 01ec CF040000 		.word	.L182+1
+ 2390 01f0 CF040000 		.word	.L182+1
+ 2391 01f4 CF040000 		.word	.L182+1
+ 2392 01f8 CF040000 		.word	.L182+1
+ 2393 01fc CF040000 		.word	.L182+1
+ 2394 0200 CF040000 		.word	.L182+1
+ 2395 0204 CF040000 		.word	.L182+1
+ 2396 0208 CF040000 		.word	.L182+1
+ 2397 020c CF040000 		.word	.L182+1
+ 2398 0210 CF040000 		.word	.L182+1
+ 2399 0214 CF040000 		.word	.L182+1
+ 2400 0218 CF040000 		.word	.L182+1
+ 2401 021c CF040000 		.word	.L182+1
+ 2402 0220 71040000 		.word	.L184+1
+ 2403 0224 CF040000 		.word	.L182+1
+ 2404 0228 CF040000 		.word	.L182+1
+ 2405 022c CF040000 		.word	.L182+1
+ 2406 0230 CF040000 		.word	.L182+1
+ 2407 0234 CF040000 		.word	.L182+1
+ 2408 0238 CF040000 		.word	.L182+1
+ 2409 023c CF040000 		.word	.L182+1
+ 2410 0240 CF040000 		.word	.L182+1
+ 2411 0244 17040000 		.word	.L185+1
+ 2412 0248 CF040000 		.word	.L182+1
+ 2413 024c A5020000 		.word	.L186+1
+ 2414 0250 81040000 		.word	.L187+1
+ 2415 0254 CF040000 		.word	.L182+1
+ 2416 0258 8B040000 		.word	.L188+1
+ 2417 025c CF040000 		.word	.L182+1
+ 2418 0260 CF040000 		.word	.L182+1
+ 2419 0264 81040000 		.word	.L187+1
+ 2420 0268 CF040000 		.word	.L182+1
+ 2421 026c CF040000 		.word	.L182+1
+ 2422 0270 CF040000 		.word	.L182+1
+ 2423 0274 CF040000 		.word	.L182+1
+ 2424 0278 CF040000 		.word	.L182+1
+ 2425 027c 69040000 		.word	.L189+1
+ 2426 0280 CD030000 		.word	.L190+1
+ 2427 0284 CF040000 		.word	.L182+1
+ 2428 0288 CF040000 		.word	.L182+1
+ 2429 028c 09030000 		.word	.L191+1
+ 2430 0290 CF040000 		.word	.L182+1
+ 2431 0294 0B050000 		.word	.L220+1
+ 2432 0298 CF040000 		.word	.L182+1
+ 2433 029c CF040000 		.word	.L182+1
+ 2434 02a0 79040000 		.word	.L193+1
+ 2435              	.L186:
+ 431:..//utils/printf/ee_printf-arg.c **** 			case 'c':
+ 432:..//utils/printf/ee_printf-arg.c **** 				if (!(flags & LEFT)) while (--field_width > 0) *str++ = ' ';
+ 2436              		.loc 1 432 0
+ 2437 02a4 BB6A     		ldr	r3, [r7, #40]
+ 2438 02a6 03F01003 		and	r3, r3, #16
+ 2439 02aa 002B     		cmp	r3, #0
+ 2440 02ac 0FD1     		bne	.L195
+ 2441 02ae 07E0     		b	.L196
+ 2442              	.L197:
+ 2443 02b0 3B6A     		ldr	r3, [r7, #32]
+ 2444 02b2 4FF02002 		mov	r2, #32
+ 2445 02b6 1A70     		strb	r2, [r3, #0]
+ 2446 02b8 3B6A     		ldr	r3, [r7, #32]
+ 2447 02ba 03F10103 		add	r3, r3, #1
+ 2448 02be 3B62     		str	r3, [r7, #32]
+ 2449              	.L196:
+ 2450 02c0 FB6A     		ldr	r3, [r7, #44]
+ 2451 02c2 03F1FF33 		add	r3, r3, #-1
+ 2452 02c6 FB62     		str	r3, [r7, #44]
+ 2453 02c8 FB6A     		ldr	r3, [r7, #44]
+ 2454 02ca 002B     		cmp	r3, #0
+ 2455 02cc F0DC     		bgt	.L197
+ 2456              	.L195:
+ 433:..//utils/printf/ee_printf-arg.c **** 				*str++ = (unsigned char) va_arg(args, int);
+ 2457              		.loc 1 433 0
+ 2458 02ce 7B68     		ldr	r3, [r7, #4]
+ 2459 02d0 03F10402 		add	r2, r3, #4
+ 2460 02d4 7A60     		str	r2, [r7, #4]
+ 2461 02d6 1B68     		ldr	r3, [r3, #0]
+ 2462 02d8 DAB2     		uxtb	r2, r3
+ 2463 02da 3B6A     		ldr	r3, [r7, #32]
+ 2464 02dc 1A70     		strb	r2, [r3, #0]
+ 2465 02de 3B6A     		ldr	r3, [r7, #32]
+ 2466 02e0 03F10103 		add	r3, r3, #1
+ 2467 02e4 3B62     		str	r3, [r7, #32]
+ 434:..//utils/printf/ee_printf-arg.c **** 				while (--field_width > 0) *str++ = ' ';
+ 2468              		.loc 1 434 0
+ 2469 02e6 07E0     		b	.L198
+ 2470              	.L199:
+ 2471 02e8 3B6A     		ldr	r3, [r7, #32]
+ 2472 02ea 4FF02002 		mov	r2, #32
+ 2473 02ee 1A70     		strb	r2, [r3, #0]
+ 2474 02f0 3B6A     		ldr	r3, [r7, #32]
+ 2475 02f2 03F10103 		add	r3, r3, #1
+ 2476 02f6 3B62     		str	r3, [r7, #32]
+ 2477              	.L198:
+ 2478 02f8 FB6A     		ldr	r3, [r7, #44]
+ 2479 02fa 03F1FF33 		add	r3, r3, #-1
+ 2480 02fe FB62     		str	r3, [r7, #44]
+ 2481 0300 FB6A     		ldr	r3, [r7, #44]
+ 2482 0302 002B     		cmp	r3, #0
+ 2483 0304 F0DC     		bgt	.L199
+ 435:..//utils/printf/ee_printf-arg.c **** 			continue;
+ 2484              		.loc 1 435 0
+ 2485 0306 2DE1     		b	.L166
+ 2486              	.L191:
+ 436:..//utils/printf/ee_printf-arg.c **** 
+ 437:..//utils/printf/ee_printf-arg.c **** 			case 's':
+ 438:..//utils/printf/ee_printf-arg.c **** 				s = va_arg(args, char *);
+ 2487              		.loc 1 438 0
+ 2488 0308 7B68     		ldr	r3, [r7, #4]
+ 2489 030a 03F10402 		add	r2, r3, #4
+ 2490 030e 7A60     		str	r2, [r7, #4]
+ 2491 0310 1B68     		ldr	r3, [r3, #0]
+ 2492 0312 7B62     		str	r3, [r7, #36]
+ 439:..//utils/printf/ee_printf-arg.c **** 				if (!s) s = "<NULL>";
+ 2493              		.loc 1 439 0
+ 2494 0314 7B6A     		ldr	r3, [r7, #36]
+ 2495 0316 002B     		cmp	r3, #0
+ 2496 0318 04D1     		bne	.L200
+ 2497 031a 40F20003 		movw	r3, #:lower16:.LC2
+ 2498 031e C0F20003 		movt	r3, #:upper16:.LC2
+ 2499 0322 7B62     		str	r3, [r7, #36]
+ 2500              	.L200:
+ 440:..//utils/printf/ee_printf-arg.c **** 					len = ee_strnlen(s, precision);
+ 2501              		.loc 1 440 0
+ 2502 0324 3B6B     		ldr	r3, [r7, #48]
+ 2503 0326 786A     		ldr	r0, [r7, #36]
+ 2504 0328 1946     		mov	r1, r3
+ 2505 032a 40F20003 		movw	r3, #:lower16:ee_strnlen
+ 2506 032e C0F20003 		movt	r3, #:upper16:ee_strnlen
+ 2507 0332 9847     		blx	r3
+ 2508 0334 0346     		mov	r3, r0
+ 2509 0336 3B61     		str	r3, [r7, #16]
+ 441:..//utils/printf/ee_printf-arg.c **** 				if (!(flags & LEFT)) while (len < field_width--) *str++ = ' ';
+ 2510              		.loc 1 441 0
+ 2511 0338 BB6A     		ldr	r3, [r7, #40]
+ 2512 033a 03F01003 		and	r3, r3, #16
+ 2513 033e 002B     		cmp	r3, #0
+ 2514 0340 15D1     		bne	.L201
+ 2515 0342 07E0     		b	.L202
+ 2516              	.L203:
+ 2517 0344 3B6A     		ldr	r3, [r7, #32]
+ 2518 0346 4FF02002 		mov	r2, #32
+ 2519 034a 1A70     		strb	r2, [r3, #0]
+ 2520 034c 3B6A     		ldr	r3, [r7, #32]
+ 2521 034e 03F10103 		add	r3, r3, #1
+ 2522 0352 3B62     		str	r3, [r7, #32]
+ 2523              	.L202:
+ 2524 0354 FA6A     		ldr	r2, [r7, #44]
+ 2525 0356 3B69     		ldr	r3, [r7, #16]
+ 2526 0358 9A42     		cmp	r2, r3
+ 2527 035a D4BF     		ite	le
+ 2528 035c 0023     		movle	r3, #0
+ 2529 035e 0123     		movgt	r3, #1
+ 2530 0360 DBB2     		uxtb	r3, r3
+ 2531 0362 FA6A     		ldr	r2, [r7, #44]
+ 2532 0364 02F1FF32 		add	r2, r2, #-1
+ 2533 0368 FA62     		str	r2, [r7, #44]
+ 2534 036a 002B     		cmp	r3, #0
+ 2535 036c EAD1     		bne	.L203
+ 2536              	.L201:
+ 442:..//utils/printf/ee_printf-arg.c **** 				for (i = 0; i < len; ++i) *str++ = *s++;
+ 2537              		.loc 1 442 0
+ 2538 036e 4FF00003 		mov	r3, #0
+ 2539 0372 BB61     		str	r3, [r7, #24]
+ 2540 0374 0FE0     		b	.L204
+ 2541              	.L205:
+ 2542 0376 7B6A     		ldr	r3, [r7, #36]
+ 2543 0378 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 2544 037a 3B6A     		ldr	r3, [r7, #32]
+ 2545 037c 1A70     		strb	r2, [r3, #0]
+ 2546 037e 3B6A     		ldr	r3, [r7, #32]
+ 2547 0380 03F10103 		add	r3, r3, #1
+ 2548 0384 3B62     		str	r3, [r7, #32]
+ 2549 0386 7B6A     		ldr	r3, [r7, #36]
+ 2550 0388 03F10103 		add	r3, r3, #1
+ 2551 038c 7B62     		str	r3, [r7, #36]
+ 2552 038e BB69     		ldr	r3, [r7, #24]
+ 2553 0390 03F10103 		add	r3, r3, #1
+ 2554 0394 BB61     		str	r3, [r7, #24]
+ 2555              	.L204:
+ 2556 0396 BA69     		ldr	r2, [r7, #24]
+ 2557 0398 3B69     		ldr	r3, [r7, #16]
+ 2558 039a 9A42     		cmp	r2, r3
+ 2559 039c EBDB     		blt	.L205
+ 443:..//utils/printf/ee_printf-arg.c **** 				while (len < field_width--) *str++ = ' ';
+ 2560              		.loc 1 443 0
+ 2561 039e 07E0     		b	.L206
+ 2562              	.L207:
+ 2563 03a0 3B6A     		ldr	r3, [r7, #32]
+ 2564 03a2 4FF02002 		mov	r2, #32
+ 2565 03a6 1A70     		strb	r2, [r3, #0]
+ 2566 03a8 3B6A     		ldr	r3, [r7, #32]
+ 2567 03aa 03F10103 		add	r3, r3, #1
+ 2568 03ae 3B62     		str	r3, [r7, #32]
+ 2569              	.L206:
+ 2570 03b0 FA6A     		ldr	r2, [r7, #44]
+ 2571 03b2 3B69     		ldr	r3, [r7, #16]
+ 2572 03b4 9A42     		cmp	r2, r3
+ 2573 03b6 D4BF     		ite	le
+ 2574 03b8 0023     		movle	r3, #0
+ 2575 03ba 0123     		movgt	r3, #1
+ 2576 03bc DBB2     		uxtb	r3, r3
+ 2577 03be FA6A     		ldr	r2, [r7, #44]
+ 2578 03c0 02F1FF32 		add	r2, r2, #-1
+ 2579 03c4 FA62     		str	r2, [r7, #44]
+ 2580 03c6 002B     		cmp	r3, #0
+ 2581 03c8 EAD1     		bne	.L207
+ 444:..//utils/printf/ee_printf-arg.c **** 			continue;
+ 2582              		.loc 1 444 0
+ 2583 03ca CBE0     		b	.L166
+ 2584              	.L190:
+ 445:..//utils/printf/ee_printf-arg.c **** 
+ 446:..//utils/printf/ee_printf-arg.c **** 			case 'p':
+ 447:..//utils/printf/ee_printf-arg.c **** 			if (field_width == -1){
+ 2585              		.loc 1 447 0
+ 2586 03cc FB6A     		ldr	r3, [r7, #44]
+ 2587 03ce B3F1FF3F 		cmp	r3, #-1
+ 2588 03d2 06D1     		bne	.L208
+ 448:..//utils/printf/ee_printf-arg.c **** 				field_width = 2 * sizeof(void *);
+ 2589              		.loc 1 448 0
+ 2590 03d4 4FF00803 		mov	r3, #8
+ 2591 03d8 FB62     		str	r3, [r7, #44]
+ 449:..//utils/printf/ee_printf-arg.c **** 				flags |= ZEROPAD;
+ 2592              		.loc 1 449 0
+ 2593 03da BB6A     		ldr	r3, [r7, #40]
+ 2594 03dc 43F00103 		orr	r3, r3, #1
+ 2595 03e0 BB62     		str	r3, [r7, #40]
+ 2596              	.L208:
+ 450:..//utils/printf/ee_printf-arg.c **** 			}
+ 451:..//utils/printf/ee_printf-arg.c **** 			str = ee_number(str, (unsigned long) va_arg(args, void *), 16, field_width, precision, flags);
+ 2597              		.loc 1 451 0
+ 2598 03e2 7B68     		ldr	r3, [r7, #4]
+ 2599 03e4 03F10402 		add	r2, r3, #4
+ 2600 03e8 7A60     		str	r2, [r7, #4]
+ 2601 03ea 1B68     		ldr	r3, [r3, #0]
+ 2602 03ec 3A6B     		ldr	r2, [r7, #48]
+ 2603 03ee 0092     		str	r2, [sp, #0]
+ 2604 03f0 BA6A     		ldr	r2, [r7, #40]
+ 2605 03f2 0192     		str	r2, [sp, #4]
+ 2606 03f4 386A     		ldr	r0, [r7, #32]
+ 2607 03f6 1946     		mov	r1, r3
+ 2608 03f8 4FF01002 		mov	r2, #16
+ 2609 03fc FB6A     		ldr	r3, [r7, #44]
+ 2610 03fe 40F2000C 		movw	ip, #:lower16:ee_number
+ 2611 0402 C0F2000C 		movt	ip, #:upper16:ee_number
+ 2612 0406 E047     		blx	ip
+ 2613 0408 0346     		mov	r3, r0
+ 2614 040a 3B62     		str	r3, [r7, #32]
+ 452:..//utils/printf/ee_printf-arg.c **** 			continue;
+ 2615              		.loc 1 452 0
+ 2616 040c AAE0     		b	.L166
+ 2617              	.L183:
+ 453:..//utils/printf/ee_printf-arg.c **** 
+ 454:..//utils/printf/ee_printf-arg.c **** 			case 'A':
+ 455:..//utils/printf/ee_printf-arg.c **** 			flags |= UPPERCASE;
+ 2618              		.loc 1 455 0
+ 2619 040e BB6A     		ldr	r3, [r7, #40]
+ 2620 0410 43F04003 		orr	r3, r3, #64
+ 2621 0414 BB62     		str	r3, [r7, #40]
+ 2622              	.L185:
+ 456:..//utils/printf/ee_printf-arg.c **** 
+ 457:..//utils/printf/ee_printf-arg.c **** 			case 'a':
+ 458:..//utils/printf/ee_printf-arg.c **** 			if (qualifier == 'l')
+ 2623              		.loc 1 458 0
+ 2624 0416 7B6B     		ldr	r3, [r7, #52]
+ 2625 0418 6C2B     		cmp	r3, #108
+ 2626 041a 12D1     		bne	.L209
+ 459:..//utils/printf/ee_printf-arg.c **** 				str = eaddr(str, va_arg(args, unsigned char *), field_width, precision, flags);
+ 2627              		.loc 1 459 0
+ 2628 041c 7B68     		ldr	r3, [r7, #4]
+ 2629 041e 03F10402 		add	r2, r3, #4
+ 2630 0422 7A60     		str	r2, [r7, #4]
+ 2631 0424 1B68     		ldr	r3, [r3, #0]
+ 2632 0426 BA6A     		ldr	r2, [r7, #40]
+ 2633 0428 0092     		str	r2, [sp, #0]
+ 2634 042a 386A     		ldr	r0, [r7, #32]
+ 2635 042c 1946     		mov	r1, r3
+ 2636 042e FA6A     		ldr	r2, [r7, #44]
+ 2637 0430 3B6B     		ldr	r3, [r7, #48]
+ 2638 0432 40F2000C 		movw	ip, #:lower16:eaddr
+ 2639 0436 C0F2000C 		movt	ip, #:upper16:eaddr
+ 2640 043a E047     		blx	ip
+ 2641 043c 0346     		mov	r3, r0
+ 2642 043e 3B62     		str	r3, [r7, #32]
+ 460:..//utils/printf/ee_printf-arg.c **** 			else
+ 461:..//utils/printf/ee_printf-arg.c **** 				str = iaddr(str, va_arg(args, unsigned char *), field_width, precision, flags);
+ 462:..//utils/printf/ee_printf-arg.c **** 			continue;
+ 2643              		.loc 1 462 0
+ 2644 0440 90E0     		b	.L166
+ 2645              	.L209:
+ 2646              		.loc 1 461 0
+ 2647 0442 7B68     		ldr	r3, [r7, #4]
+ 2648 0444 03F10402 		add	r2, r3, #4
+ 2649 0448 7A60     		str	r2, [r7, #4]
+ 2650 044a 1B68     		ldr	r3, [r3, #0]
+ 2651 044c BA6A     		ldr	r2, [r7, #40]
+ 2652 044e 0092     		str	r2, [sp, #0]
+ 2653 0450 386A     		ldr	r0, [r7, #32]
+ 2654 0452 1946     		mov	r1, r3
+ 2655 0454 FA6A     		ldr	r2, [r7, #44]
+ 2656 0456 3B6B     		ldr	r3, [r7, #48]
+ 2657 0458 40F2000C 		movw	ip, #:lower16:iaddr
+ 2658 045c C0F2000C 		movt	ip, #:upper16:iaddr
+ 2659 0460 E047     		blx	ip
+ 2660 0462 0346     		mov	r3, r0
+ 2661 0464 3B62     		str	r3, [r7, #32]
+ 2662              		.loc 1 462 0
+ 2663 0466 7DE0     		b	.L166
+ 2664              	.L189:
+ 463:..//utils/printf/ee_printf-arg.c **** 
+ 464:..//utils/printf/ee_printf-arg.c **** 			// Integer number formats - set up the flags and "break"
+ 465:..//utils/printf/ee_printf-arg.c **** 			case 'o':
+ 466:..//utils/printf/ee_printf-arg.c **** 				base = 8;
+ 2665              		.loc 1 466 0
+ 2666 0468 4FF00803 		mov	r3, #8
+ 2667 046c FB61     		str	r3, [r7, #28]
+ 467:..//utils/printf/ee_printf-arg.c **** 			break;
+ 2668              		.loc 1 467 0
+ 2669 046e 4DE0     		b	.L211
+ 2670              	.L184:
+ 468:..//utils/printf/ee_printf-arg.c **** 
+ 469:..//utils/printf/ee_printf-arg.c **** 			case 'X':
+ 470:..//utils/printf/ee_printf-arg.c **** 				flags |= UPPERCASE;
+ 2671              		.loc 1 470 0
+ 2672 0470 BB6A     		ldr	r3, [r7, #40]
+ 2673 0472 43F04003 		orr	r3, r3, #64
+ 2674 0476 BB62     		str	r3, [r7, #40]
+ 2675              	.L193:
+ 471:..//utils/printf/ee_printf-arg.c **** 
+ 472:..//utils/printf/ee_printf-arg.c **** 			case 'x':
+ 473:..//utils/printf/ee_printf-arg.c **** 				base = 16;
+ 2676              		.loc 1 473 0
+ 2677 0478 4FF01003 		mov	r3, #16
+ 2678 047c FB61     		str	r3, [r7, #28]
+ 474:..//utils/printf/ee_printf-arg.c **** 			break;
+ 2679              		.loc 1 474 0
+ 2680 047e 45E0     		b	.L211
+ 2681              	.L187:
+ 475:..//utils/printf/ee_printf-arg.c **** 
+ 476:..//utils/printf/ee_printf-arg.c **** 			case 'd':
+ 477:..//utils/printf/ee_printf-arg.c **** 			case 'i':
+ 478:..//utils/printf/ee_printf-arg.c **** 				flags |= SIGN;
+ 2682              		.loc 1 478 0
+ 2683 0480 BB6A     		ldr	r3, [r7, #40]
+ 2684 0482 43F00203 		orr	r3, r3, #2
+ 2685 0486 BB62     		str	r3, [r7, #40]
+ 479:..//utils/printf/ee_printf-arg.c **** 
+ 480:..//utils/printf/ee_printf-arg.c **** 			case 'u':
+ 481:..//utils/printf/ee_printf-arg.c **** 			break;
+ 2686              		.loc 1 481 0
+ 2687 0488 40E0     		b	.L211
+ 2688              	.L188:
+ 482:..//utils/printf/ee_printf-arg.c **** 
+ 483:..//utils/printf/ee_printf-arg.c **** 			#ifdef HAS_FLOAT
+ 484:..//utils/printf/ee_printf-arg.c **** 
+ 485:..//utils/printf/ee_printf-arg.c **** 			case 'f':
+ 486:..//utils/printf/ee_printf-arg.c **** 				str = flt(str, va_arg(args, double), field_width, precision, *fmt, flags | SIGN);
+ 2689              		.loc 1 486 0
+ 2690 048a 7B68     		ldr	r3, [r7, #4]
+ 2691 048c 03F10703 		add	r3, r3, #7
+ 2692 0490 23F00703 		bic	r3, r3, #7
+ 2693 0494 03F10802 		add	r2, r3, #8
+ 2694 0498 7A60     		str	r2, [r7, #4]
+ 2695 049a D3E90023 		ldrd	r2, [r3]
+ 2696 049e B968     		ldr	r1, [r7, #8]
+ 2697 04a0 0878     		ldrb	r0, [r1, #0]	@ zero_extendqisi2
+ 2698 04a2 B96A     		ldr	r1, [r7, #40]
+ 2699 04a4 41F00201 		orr	r1, r1, #2
+ 2700 04a8 D7F82CC0 		ldr	ip, [r7, #44]
+ 2701 04ac CDF800C0 		str	ip, [sp, #0]
+ 2702 04b0 D7F830C0 		ldr	ip, [r7, #48]
+ 2703 04b4 CDF804C0 		str	ip, [sp, #4]
+ 2704 04b8 0290     		str	r0, [sp, #8]
+ 2705 04ba 0391     		str	r1, [sp, #12]
+ 2706 04bc 386A     		ldr	r0, [r7, #32]
+ 2707 04be 40F20001 		movw	r1, #:lower16:flt
+ 2708 04c2 C0F20001 		movt	r1, #:upper16:flt
+ 2709 04c6 8847     		blx	r1
+ 2710 04c8 0346     		mov	r3, r0
+ 2711 04ca 3B62     		str	r3, [r7, #32]
+ 487:..//utils/printf/ee_printf-arg.c **** 			continue;
+ 2712              		.loc 1 487 0
+ 2713 04cc 4AE0     		b	.L166
+ 2714              	.L182:
+ 488:..//utils/printf/ee_printf-arg.c **** 
+ 489:..//utils/printf/ee_printf-arg.c **** 			#endif
+ 490:..//utils/printf/ee_printf-arg.c **** 
+ 491:..//utils/printf/ee_printf-arg.c **** 			default:
+ 492:..//utils/printf/ee_printf-arg.c **** 			if (*fmt != '%') *str++ = '%';		
+ 2715              		.loc 1 492 0
+ 2716 04ce BB68     		ldr	r3, [r7, #8]
+ 2717 04d0 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 2718 04d2 252B     		cmp	r3, #37
+ 2719 04d4 07D0     		beq	.L212
+ 2720 04d6 3B6A     		ldr	r3, [r7, #32]
+ 2721 04d8 4FF02502 		mov	r2, #37
+ 2722 04dc 1A70     		strb	r2, [r3, #0]
+ 2723 04de 3B6A     		ldr	r3, [r7, #32]
+ 2724 04e0 03F10103 		add	r3, r3, #1
+ 2725 04e4 3B62     		str	r3, [r7, #32]
+ 2726              	.L212:
+ 493:..//utils/printf/ee_printf-arg.c **** 			if (*fmt)
+ 2727              		.loc 1 493 0
+ 2728 04e6 BB68     		ldr	r3, [r7, #8]
+ 2729 04e8 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 2730 04ea 002B     		cmp	r3, #0
+ 2731 04ec 08D0     		beq	.L213
+ 494:..//utils/printf/ee_printf-arg.c **** 				*str++ = *fmt;
+ 2732              		.loc 1 494 0
+ 2733 04ee BB68     		ldr	r3, [r7, #8]
+ 2734 04f0 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 2735 04f2 3B6A     		ldr	r3, [r7, #32]
+ 2736 04f4 1A70     		strb	r2, [r3, #0]
+ 2737 04f6 3B6A     		ldr	r3, [r7, #32]
+ 2738 04f8 03F10103 		add	r3, r3, #1
+ 2739 04fc 3B62     		str	r3, [r7, #32]
+ 495:..//utils/printf/ee_printf-arg.c **** 			else
+ 496:..//utils/printf/ee_printf-arg.c **** 				--fmt;
+ 497:..//utils/printf/ee_printf-arg.c **** 			continue;
+ 2740              		.loc 1 497 0
+ 2741 04fe 31E0     		b	.L166
+ 2742              	.L213:
+ 2743              		.loc 1 496 0
+ 2744 0500 BB68     		ldr	r3, [r7, #8]
+ 2745 0502 03F1FF33 		add	r3, r3, #-1
+ 2746 0506 BB60     		str	r3, [r7, #8]
+ 2747              		.loc 1 497 0
+ 2748 0508 2CE0     		b	.L166
+ 2749              	.L220:
+ 2750              		.loc 1 481 0
+ 2751 050a 00BF     		nop
+ 2752              	.L211:
+ 498:..//utils/printf/ee_printf-arg.c **** 		}
+ 499:..//utils/printf/ee_printf-arg.c **** 
+ 500:..//utils/printf/ee_printf-arg.c **** 		if (qualifier == 'l')
+ 2753              		.loc 1 500 0
+ 2754 050c 7B6B     		ldr	r3, [r7, #52]
+ 2755 050e 6C2B     		cmp	r3, #108
+ 2756 0510 06D1     		bne	.L215
+ 501:..//utils/printf/ee_printf-arg.c **** 			num = va_arg(args, unsigned long);
+ 2757              		.loc 1 501 0
+ 2758 0512 7B68     		ldr	r3, [r7, #4]
+ 2759 0514 03F10402 		add	r2, r3, #4
+ 2760 0518 7A60     		str	r2, [r7, #4]
+ 2761 051a 1B68     		ldr	r3, [r3, #0]
+ 2762 051c 7B61     		str	r3, [r7, #20]
+ 2763 051e 11E0     		b	.L216
+ 2764              	.L215:
+ 502:..//utils/printf/ee_printf-arg.c **** 		else if (flags & SIGN)
+ 2765              		.loc 1 502 0
+ 2766 0520 BB6A     		ldr	r3, [r7, #40]
+ 2767 0522 03F00203 		and	r3, r3, #2
+ 2768 0526 002B     		cmp	r3, #0
+ 2769 0528 06D0     		beq	.L217
+ 503:..//utils/printf/ee_printf-arg.c **** 			num = va_arg(args, int);
+ 2770              		.loc 1 503 0
+ 2771 052a 7B68     		ldr	r3, [r7, #4]
+ 2772 052c 03F10402 		add	r2, r3, #4
+ 2773 0530 7A60     		str	r2, [r7, #4]
+ 2774 0532 1B68     		ldr	r3, [r3, #0]
+ 2775 0534 7B61     		str	r3, [r7, #20]
+ 2776 0536 05E0     		b	.L216
+ 2777              	.L217:
+ 504:..//utils/printf/ee_printf-arg.c **** 		else
+ 505:..//utils/printf/ee_printf-arg.c **** 			num = va_arg(args, unsigned int);
+ 2778              		.loc 1 505 0
+ 2779 0538 7B68     		ldr	r3, [r7, #4]
+ 2780 053a 03F10402 		add	r2, r3, #4
+ 2781 053e 7A60     		str	r2, [r7, #4]
+ 2782 0540 1B68     		ldr	r3, [r3, #0]
+ 2783 0542 7B61     		str	r3, [r7, #20]
+ 2784              	.L216:
+ 506:..//utils/printf/ee_printf-arg.c **** 
+ 507:..//utils/printf/ee_printf-arg.c **** 		str = ee_number(str, num, base, field_width, precision, flags);
+ 2785              		.loc 1 507 0
+ 2786 0544 7B69     		ldr	r3, [r7, #20]
+ 2787 0546 3A6B     		ldr	r2, [r7, #48]
+ 2788 0548 0092     		str	r2, [sp, #0]
+ 2789 054a BA6A     		ldr	r2, [r7, #40]
+ 2790 054c 0192     		str	r2, [sp, #4]
+ 2791 054e 386A     		ldr	r0, [r7, #32]
+ 2792 0550 1946     		mov	r1, r3
+ 2793 0552 FA69     		ldr	r2, [r7, #28]
+ 2794 0554 FB6A     		ldr	r3, [r7, #44]
+ 2795 0556 40F2000C 		movw	ip, #:lower16:ee_number
+ 2796 055a C0F2000C 		movt	ip, #:upper16:ee_number
+ 2797 055e E047     		blx	ip
+ 2798 0560 0346     		mov	r3, r0
+ 2799 0562 3B62     		str	r3, [r7, #32]
+ 2800              	.L166:
+ 2801              		.loc 1 376 0
+ 2802 0564 BB68     		ldr	r3, [r7, #8]
+ 2803 0566 03F10103 		add	r3, r3, #1
+ 2804 056a BB60     		str	r3, [r7, #8]
+ 2805              	.L164:
+ 2806 056c BB68     		ldr	r3, [r7, #8]
+ 2807 056e 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 2808 0570 002B     		cmp	r3, #0
+ 2809 0572 7FF44EAD 		bne	.L218
+ 508:..//utils/printf/ee_printf-arg.c **** 		}
+ 509:..//utils/printf/ee_printf-arg.c **** 
+ 510:..//utils/printf/ee_printf-arg.c **** 	*str = '\0';
+ 2810              		.loc 1 510 0
+ 2811 0576 3B6A     		ldr	r3, [r7, #32]
+ 2812 0578 4FF00002 		mov	r2, #0
+ 2813 057c 1A70     		strb	r2, [r3, #0]
+ 511:..//utils/printf/ee_printf-arg.c **** 	return str - buf;
+ 2814              		.loc 1 511 0
+ 2815 057e 3A6A     		ldr	r2, [r7, #32]
+ 2816 0580 FB68     		ldr	r3, [r7, #12]
+ 2817 0582 C3EB0203 		rsb	r3, r3, r2
+ 512:..//utils/printf/ee_printf-arg.c **** }
+ 2818              		.loc 1 512 0
+ 2819 0586 1846     		mov	r0, r3
+ 2820 0588 07F13807 		add	r7, r7, #56
+ 2821 058c BD46     		mov	sp, r7
+ 2822 058e 80BD     		pop	{r7, pc}
+ 2823              		.cfi_endproc
+ 2824              	.LFE39:
+ 2826              		.section	.text.uart_send_char,"ax",%progbits
+ 2827              		.align	2
+ 2828              		.global	uart_send_char
+ 2829              		.thumb
+ 2830              		.thumb_func
+ 2832              	uart_send_char:
+ 2833              	.LFB40:
+ 513:..//utils/printf/ee_printf-arg.c **** 
+ 514:..//utils/printf/ee_printf-arg.c **** void uart_send_char(char c) {
+ 2834              		.loc 1 514 0
+ 2835              		.cfi_startproc
+ 2836              		@ args = 0, pretend = 0, frame = 16
+ 2837              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2838 0000 80B5     		push	{r7, lr}
+ 2839              	.LCFI33:
+ 2840              		.cfi_def_cfa_offset 8
+ 2841 0002 84B0     		sub	sp, sp, #16
+ 2842              	.LCFI34:
+ 2843              		.cfi_def_cfa_offset 24
+ 2844 0004 00AF     		add	r7, sp, #0
+ 2845              		.cfi_offset 14, -4
+ 2846              		.cfi_offset 7, -8
+ 2847              	.LCFI35:
+ 2848              		.cfi_def_cfa_register 7
+ 2849 0006 0346     		mov	r3, r0
+ 2850 0008 FB71     		strb	r3, [r7, #7]
+ 515:..//utils/printf/ee_printf-arg.c **** 	char str[2];
+ 516:..//utils/printf/ee_printf-arg.c **** 	str[0] = c;
+ 2851              		.loc 1 516 0
+ 2852 000a FB79     		ldrb	r3, [r7, #7]
+ 2853 000c 3B73     		strb	r3, [r7, #12]
+ 517:..//utils/printf/ee_printf-arg.c **** 	str[1] = '\0';
+ 2854              		.loc 1 517 0
+ 2855 000e 4FF00003 		mov	r3, #0
+ 2856 0012 7B73     		strb	r3, [r7, #13]
+ 518:..//utils/printf/ee_printf-arg.c **** 	putsnonl(str);
+ 2857              		.loc 1 518 0
+ 2858 0014 07F10C03 		add	r3, r7, #12
+ 2859 0018 4CF20000 		movw	r0, #:lower16:1073790976
+ 2860 001c C4F20000 		movt	r0, #:upper16:1073790976
+ 2861 0020 1946     		mov	r1, r3
+ 2862 0022 40F20003 		movw	r3, #:lower16:UARTPuts
+ 2863 0026 C0F20003 		movt	r3, #:upper16:UARTPuts
+ 2864 002a 9847     		blx	r3
+ 519:..//utils/printf/ee_printf-arg.c **** }
+ 2865              		.loc 1 519 0
+ 2866 002c 07F11007 		add	r7, r7, #16
+ 2867 0030 BD46     		mov	sp, r7
+ 2868 0032 80BD     		pop	{r7, pc}
+ 2869              		.cfi_endproc
+ 2870              	.LFE40:
+ 2872              		.section	.text.sprintf,"ax",%progbits
+ 2873              		.align	2
+ 2874              		.global	sprintf
+ 2875              		.thumb
+ 2876              		.thumb_func
+ 2878              	sprintf:
+ 2879              	.LFB41:
+ 520:..//utils/printf/ee_printf-arg.c **** 
+ 521:..//utils/printf/ee_printf-arg.c **** int sprintf(char *buf, const char *fmt, ...) {	
+ 522:..//utils/printf/ee_printf-arg.c **** 	va_list args;
+ 523:..//utils/printf/ee_printf-arg.c **** 	int n;
+ 524:..//utils/printf/ee_printf-arg.c **** 
+ 525:..//utils/printf/ee_printf-arg.c **** 	va_start(args, fmt);
+ 2880              		.loc 1 525 0
+ 2881              		.cfi_startproc
+ 2882              		@ args = 4, pretend = 12, frame = 16
+ 2883              		@ frame_needed = 1, uses_anonymous_args = 1
+ 2884 0000 0EB4     		push	{r1, r2, r3}
+ 2885              	.LCFI36:
+ 2886              		.cfi_def_cfa_offset 12
+ 2887 0002 80B5     		push	{r7, lr}
+ 2888              	.LCFI37:
+ 2889              		.cfi_def_cfa_offset 20
+ 2890 0004 85B0     		sub	sp, sp, #20
+ 2891              	.LCFI38:
+ 2892              		.cfi_def_cfa_offset 40
+ 2893 0006 00AF     		add	r7, sp, #0
+ 2894              		.cfi_offset 14, -16
+ 2895              		.cfi_offset 7, -20
+ 2896              		.cfi_offset 3, -4
+ 2897              		.cfi_offset 2, -8
+ 2898              		.cfi_offset 1, -12
+ 2899              	.LCFI39:
+ 2900              		.cfi_def_cfa_register 7
+ 2901 0008 7860     		str	r0, [r7, #4]
+ 2902              		.loc 1 525 0
+ 2903 000a 07F12003 		add	r3, r7, #32
+ 2904 000e BB60     		str	r3, [r7, #8]
+ 526:..//utils/printf/ee_printf-arg.c **** 	n = vsprintf(buf, fmt, args);
+ 2905              		.loc 1 526 0
+ 2906 0010 7868     		ldr	r0, [r7, #4]
+ 2907 0012 F969     		ldr	r1, [r7, #28]
+ 2908 0014 BA68     		ldr	r2, [r7, #8]
+ 2909 0016 40F20003 		movw	r3, #:lower16:vsprintf
+ 2910 001a C0F20003 		movt	r3, #:upper16:vsprintf
+ 2911 001e 9847     		blx	r3
+ 2912 0020 0346     		mov	r3, r0
+ 2913 0022 FB60     		str	r3, [r7, #12]
+ 527:..//utils/printf/ee_printf-arg.c **** 	va_end(args);
+ 528:..//utils/printf/ee_printf-arg.c **** 	
+ 529:..//utils/printf/ee_printf-arg.c **** 	return n;
+ 2914              		.loc 1 529 0
+ 2915 0024 FB68     		ldr	r3, [r7, #12]
+ 530:..//utils/printf/ee_printf-arg.c **** }
+ 2916              		.loc 1 530 0
+ 2917 0026 1846     		mov	r0, r3
+ 2918 0028 07F11407 		add	r7, r7, #20
+ 2919 002c BD46     		mov	sp, r7
+ 2920 002e BDE88040 		pop	{r7, lr}
+ 2921 0032 03B0     		add	sp, sp, #12
+ 2922 0034 7047     		bx	lr
+ 2923              		.cfi_endproc
+ 2924              	.LFE41:
+ 2926 0036 00BF     		.section	.text.printf,"ax",%progbits
+ 2927              		.align	2
+ 2928              		.global	printf
+ 2929              		.thumb
+ 2930              		.thumb_func
+ 2932              	printf:
+ 2933              	.LFB42:
+ 531:..//utils/printf/ee_printf-arg.c **** 
+ 532:..//utils/printf/ee_printf-arg.c **** int printf(const char *fmt, ...){
+ 533:..//utils/printf/ee_printf-arg.c **** 	char buf[15*80],*p;
+ 534:..//utils/printf/ee_printf-arg.c **** 	va_list args;
+ 535:..//utils/printf/ee_printf-arg.c **** 	int n=0;
+ 2934              		.loc 1 535 0
+ 2935              		.cfi_startproc
+ 2936              		@ args = 4, pretend = 16, frame = 1216
+ 2937              		@ frame_needed = 1, uses_anonymous_args = 1
+ 2938 0000 0FB4     		push	{r0, r1, r2, r3}
+ 2939              	.LCFI40:
+ 2940              		.cfi_def_cfa_offset 16
+ 2941 0002 80B5     		push	{r7, lr}
+ 2942              	.LCFI41:
+ 2943              		.cfi_def_cfa_offset 24
+ 2944 0004 ADF5986D 		sub	sp, sp, #1216
+ 2945              	.LCFI42:
+ 2946              		.cfi_def_cfa_offset 1240
+ 2947 0008 00AF     		add	r7, sp, #0
+ 2948              		.cfi_offset 14, -20
+ 2949              		.cfi_offset 7, -24
+ 2950              		.cfi_offset 3, -4
+ 2951              		.cfi_offset 2, -8
+ 2952              		.cfi_offset 1, -12
+ 2953              		.cfi_offset 0, -16
+ 2954              	.LCFI43:
+ 2955              		.cfi_def_cfa_register 7
+ 2956              		.loc 1 535 0
+ 2957 000a 4FF00003 		mov	r3, #0
+ 2958 000e C7F8BC34 		str	r3, [r7, #1212]
+ 536:..//utils/printf/ee_printf-arg.c **** 
+ 537:..//utils/printf/ee_printf-arg.c **** 	va_start(args, fmt);
+ 2959              		.loc 1 537 0
+ 2960 0012 07F59862 		add	r2, r7, #1216
+ 2961 0016 02F10C02 		add	r2, r2, #12
+ 2962 001a 07F11003 		add	r3, r7, #16
+ 2963 001e A3F10C03 		sub	r3, r3, #12
+ 2964 0022 1A60     		str	r2, [r3, #0]
+ 538:..//utils/printf/ee_printf-arg.c **** 	ee_vsprintf(buf, fmt, args);
+ 2965              		.loc 1 538 0
+ 2966 0024 07F10802 		add	r2, r7, #8
+ 2967 0028 07F11003 		add	r3, r7, #16
+ 2968 002c A3F10C03 		sub	r3, r3, #12
+ 2969 0030 1046     		mov	r0, r2
+ 2970 0032 D7F8C814 		ldr	r1, [r7, #1224]
+ 2971 0036 1A68     		ldr	r2, [r3, #0]
+ 2972 0038 40F20003 		movw	r3, #:lower16:ee_vsprintf
+ 2973 003c C0F20003 		movt	r3, #:upper16:ee_vsprintf
+ 2974 0040 9847     		blx	r3
+ 539:..//utils/printf/ee_printf-arg.c **** 	va_end(args);
+ 540:..//utils/printf/ee_printf-arg.c **** 	p=buf;
+ 2975              		.loc 1 540 0
+ 2976 0042 07F10803 		add	r3, r7, #8
+ 2977 0046 C7F8B834 		str	r3, [r7, #1208]
+ 541:..//utils/printf/ee_printf-arg.c **** 	while (*p) {
+ 2978              		.loc 1 541 0
+ 2979 004a 14E0     		b	.L226
+ 2980              	.L227:
+ 542:..//utils/printf/ee_printf-arg.c **** 		uart_send_char(*p);
+ 2981              		.loc 1 542 0
+ 2982 004c D7F8B834 		ldr	r3, [r7, #1208]
+ 2983 0050 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 2984 0052 1846     		mov	r0, r3
+ 2985 0054 40F20003 		movw	r3, #:lower16:uart_send_char
+ 2986 0058 C0F20003 		movt	r3, #:upper16:uart_send_char
+ 2987 005c 9847     		blx	r3
+ 543:..//utils/printf/ee_printf-arg.c **** 		n++;
+ 2988              		.loc 1 543 0
+ 2989 005e D7F8BC34 		ldr	r3, [r7, #1212]
+ 2990 0062 03F10103 		add	r3, r3, #1
+ 2991 0066 C7F8BC34 		str	r3, [r7, #1212]
+ 544:..//utils/printf/ee_printf-arg.c **** 		p++;
+ 2992              		.loc 1 544 0
+ 2993 006a D7F8B834 		ldr	r3, [r7, #1208]
+ 2994 006e 03F10103 		add	r3, r3, #1
+ 2995 0072 C7F8B834 		str	r3, [r7, #1208]
+ 2996              	.L226:
+ 2997              		.loc 1 541 0
+ 2998 0076 D7F8B834 		ldr	r3, [r7, #1208]
+ 2999 007a 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 3000 007c 002B     		cmp	r3, #0
+ 3001 007e E5D1     		bne	.L227
+ 545:..//utils/printf/ee_printf-arg.c **** 	}
+ 546:..//utils/printf/ee_printf-arg.c **** 
+ 547:..//utils/printf/ee_printf-arg.c **** 	return n;
+ 3002              		.loc 1 547 0
+ 3003 0080 D7F8BC34 		ldr	r3, [r7, #1212]
+ 548:..//utils/printf/ee_printf-arg.c **** }
+ 3004              		.loc 1 548 0
+ 3005 0084 1846     		mov	r0, r3
+ 3006 0086 07F59867 		add	r7, r7, #1216
+ 3007 008a BD46     		mov	sp, r7
+ 3008 008c BDE88040 		pop	{r7, lr}
+ 3009 0090 04B0     		add	sp, sp, #16
+ 3010 0092 7047     		bx	lr
+ 3011              		.cfi_endproc
+ 3012              	.LFE42:
+ 3014              		.text
+ 3015              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 ee_printf-arg.c
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:24     .rodata:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:28     .data.lower_digits:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:31     .data.lower_digits:00000000 lower_digits
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:38     .data.upper_digits:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:41     .data.upper_digits:00000000 upper_digits
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:44     .text.ee_strnlen:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:48     .text.ee_strnlen:00000000 ee_strnlen
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:107    .text.ee_skip_atoi:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:111    .text.ee_skip_atoi:00000000 ee_skip_atoi
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:174    .text.ee_number:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:178    .text.ee_number:00000000 ee_number
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:566    .text.eaddr:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:570    .text.eaddr:00000000 eaddr
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:752    .text.iaddr:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:756    .text.iaddr:00000000 iaddr
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:1039   .text.ee_bufcpy:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:1043   .text.ee_bufcpy:00000000 ee_bufcpy
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:1098   .text.parse_float:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:1102   .text.parse_float:00000000 parse_float
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:1592   .text.decimal_point:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:1596   .text.decimal_point:00000000 decimal_point
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:1710   .text.cropzeros:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:1714   .text.cropzeros:00000000 cropzeros
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:1833   .text.flt:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:1837   .text.flt:00000000 flt
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:2124   .rodata:00000050 .LC2
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:2127   .text.ee_vsprintf:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:2131   .text.ee_vsprintf:00000000 ee_vsprintf
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:2190   .text.ee_vsprintf:0000004c $d
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:2209   .text.ee_vsprintf:00000090 $t
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:2379   .text.ee_vsprintf:000001c4 $d
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:2437   .text.ee_vsprintf:000002a4 $t
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:2827   .text.uart_send_char:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:2832   .text.uart_send_char:00000000 uart_send_char
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:2873   .text.sprintf:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:2878   .text.sprintf:00000000 sprintf
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:2927   .text.printf:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc9R8M3J.s:2932   .text.printf:00000000 printf
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+__aeabi_dcmpeq
+ecvtbuf
+fcvtbuf
+__aeabi_dcmplt
+UARTPuts
+vsprintf

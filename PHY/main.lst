@@ -1,0 +1,1854 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"main.cpp"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.section	.text._ZN13State_MachineD2Ev,"axG",%progbits,_ZN13State_MachineD2Ev,comdat
+  24              		.align	2
+  25              		.weak	_ZN13State_MachineD2Ev
+  26              		.thumb
+  27              		.thumb_func
+  29              	_ZN13State_MachineD2Ev:
+  30              	.LFB30:
+  31              		.file 1 "..//utils/state_machine/state_machine.h"
+   1:..//utils/state_machine/state_machine.h **** #ifndef __STATE_MACHINE_H__
+   2:..//utils/state_machine/state_machine.h **** #define __STATE_MACHINE_H__
+   3:..//utils/state_machine/state_machine.h **** 
+   4:..//utils/state_machine/state_machine.h **** #define SM_START 1
+   5:..//utils/state_machine/state_machine.h **** #define SM_STOP 0
+   6:..//utils/state_machine/state_machine.h **** 
+   7:..//utils/state_machine/state_machine.h **** #define SM_OPERATION_AUTO			0
+   8:..//utils/state_machine/state_machine.h **** #define SM_OPERATION_MANUAL			1
+   9:..//utils/state_machine/state_machine.h **** 
+  10:..//utils/state_machine/state_machine.h **** /*Return codes for state machines...*/
+  11:..//utils/state_machine/state_machine.h **** enum SM_RET{
+  12:..//utils/state_machine/state_machine.h **** 	SM_RESET = 0,
+  13:..//utils/state_machine/state_machine.h **** 	SM_STARTED = 1,
+  14:..//utils/state_machine/state_machine.h **** 	SM_DONE = 2,
+  15:..//utils/state_machine/state_machine.h **** 	SM_ERROR = -1,
+  16:..//utils/state_machine/state_machine.h **** 	SM_ABORTED = 3,
+  17:..//utils/state_machine/state_machine.h **** };
+  18:..//utils/state_machine/state_machine.h **** 
+  19:..//utils/state_machine/state_machine.h **** #define SM_STATE_RESET	0
+  20:..//utils/state_machine/state_machine.h **** 
+  21:..//utils/state_machine/state_machine.h **** class State_Machine{
+  22:..//utils/state_machine/state_machine.h **** 	public:
+  23:..//utils/state_machine/state_machine.h **** 	volatile int state;
+  24:..//utils/state_machine/state_machine.h **** 	volatile int flag_start;
+  25:..//utils/state_machine/state_machine.h **** 	
+  26:..//utils/state_machine/state_machine.h **** 	// volatile int pause_cur_state;
+  27:..//utils/state_machine/state_machine.h **** 	// volatile int pause_next_state;
+  28:..//utils/state_machine/state_machine.h **** 	volatile int manual_flag;
+  29:..//utils/state_machine/state_machine.h **** 	volatile int paused;
+  30:..//utils/state_machine/state_machine.h **** 	
+  31:..//utils/state_machine/state_machine.h **** 	State_Machine(void);
+  32:..//utils/state_machine/state_machine.h **** 	State_Machine (int s); // consructor which calls the state machine..
+  33:..//utils/state_machine/state_machine.h **** 	int next_state(void);    	// incremen state by 1
+  34:..//utils/state_machine/state_machine.h **** 	int next_state(int s);  // set nex state to value state..
+  35:..//utils/state_machine/state_machine.h **** 	
+  36:..//utils/state_machine/state_machine.h **** 	// virtual functions return -1
+  37:..//utils/state_machine/state_machine.h **** 	virtual int update(void);
+  38:..//utils/state_machine/state_machine.h **** 	
+  39:..//utils/state_machine/state_machine.h **** 	// mealy machine with input...
+  40:..//utils/state_machine/state_machine.h **** 	virtual int update(int);
+  41:..//utils/state_machine/state_machine.h **** 	
+  42:..//utils/state_machine/state_machine.h **** 	virtual int reset(void);
+  43:..//utils/state_machine/state_machine.h **** 	
+  44:..//utils/state_machine/state_machine.h **** 	// this function returns 1 if state machine is started...
+  45:..//utils/state_machine/state_machine.h **** 	virtual int SM_started();
+  46:..//utils/state_machine/state_machine.h **** 	
+  47:..//utils/state_machine/state_machine.h **** 	virtual int SM_start();
+  48:..//utils/state_machine/state_machine.h **** 	virtual int SM_stop();
+  49:..//utils/state_machine/state_machine.h **** 	
+  50:..//utils/state_machine/state_machine.h **** 	// This will pause the state machine if manual is enabled..
+  51:..//utils/state_machine/state_machine.h **** 	// it will return if the machine has paused or not..
+  52:..//utils/state_machine/state_machine.h **** 	//virtual int SM_pause(void);
+  53:..//utils/state_machine/state_machine.h **** 	
+  54:..//utils/state_machine/state_machine.h **** 	virtual int SM_pause(int input);
+  55:..//utils/state_machine/state_machine.h **** 	
+  56:..//utils/state_machine/state_machine.h **** 	// this should be called in the pause state of the state machine...
+  57:..//utils/state_machine/state_machine.h **** 	// this will take an input and if input is 1 it will release from pause to the next state...
+  58:..//utils/state_machine/state_machine.h **** 	//virtual int SM_pause_update(int input);
+  59:..//utils/state_machine/state_machine.h **** 	
+  60:..//utils/state_machine/state_machine.h **** 	
+  61:..//utils/state_machine/state_machine.h **** 	virtual ~State_Machine(void){};
+  32              		.loc 1 61 0
+  33              		.cfi_startproc
+  34              		@ args = 0, pretend = 0, frame = 8
+  35              		@ frame_needed = 1, uses_anonymous_args = 0
+  36 0000 80B5     		push	{r7, lr}
+  37              	.LCFI0:
+  38              		.cfi_def_cfa_offset 8
+  39 0002 82B0     		sub	sp, sp, #8
+  40              	.LCFI1:
+  41              		.cfi_def_cfa_offset 16
+  42 0004 00AF     		add	r7, sp, #0
+  43              		.cfi_offset 14, -4
+  44              		.cfi_offset 7, -8
+  45              	.LCFI2:
+  46              		.cfi_def_cfa_register 7
+  47 0006 7860     		str	r0, [r7, #4]
+  48              		.loc 1 61 0
+  49 0008 7B68     		ldr	r3, [r7, #4]
+  50 000a 094A     		ldr	r2, .L5
+  51 000c 1A60     		str	r2, [r3, #0]
+  52 000e 4FF00003 		mov	r3, #0
+  53 0012 DBB2     		uxtb	r3, r3
+  54 0014 002B     		cmp	r3, #0
+  55 0016 05D0     		beq	.L3
+  56 0018 7868     		ldr	r0, [r7, #4]
+  57 001a 40F20003 		movw	r3, #:lower16:_ZdlPv
+  58 001e C0F20003 		movt	r3, #:upper16:_ZdlPv
+  59 0022 9847     		blx	r3
+  60              	.L3:
+  61 0024 7B68     		ldr	r3, [r7, #4]
+  62 0026 1846     		mov	r0, r3
+  63 0028 07F10807 		add	r7, r7, #8
+  64 002c BD46     		mov	sp, r7
+  65 002e 80BD     		pop	{r7, pc}
+  66              	.L6:
+  67              		.align	2
+  68              	.L5:
+  69 0030 08000000 		.word	_ZTV13State_Machine+8
+  70              		.cfi_endproc
+  71              	.LFE30:
+  73              		.global	delay_timer_32
+  74              		.section	.bss.delay_timer_32,"aw",%nobits
+  75              		.align	2
+  78              	delay_timer_32:
+  79 0000 00000000 		.space	4
+  80              		.global	modbus_retVal
+  81              		.section	.bss.modbus_retVal,"aw",%nobits
+  82              		.align	2
+  85              	modbus_retVal:
+  86 0000 00000000 		.space	4
+  87              		.global	holdingRegs
+  88              		.section	.bss.holdingRegs,"aw",%nobits
+  89              		.align	2
+  92              	holdingRegs:
+  93 0000 00000000 		.space	1648
+  93      00000000 
+  93      00000000 
+  93      00000000 
+  93      00000000 
+  94              		.global	holdingRegs_prev
+  95              		.section	.bss.holdingRegs_prev,"aw",%nobits
+  96              		.align	2
+  99              	holdingRegs_prev:
+ 100 0000 00000000 		.space	1648
+ 100      00000000 
+ 100      00000000 
+ 100      00000000 
+ 100      00000000 
+ 101              		.global	slave_id_select
+ 102              		.section	.bss.slave_id_select,"aw",%nobits
+ 103              		.align	2
+ 106              	slave_id_select:
+ 107 0000 00000000 		.space	4
+ 108              		.global	baud_rate_select
+ 109              		.section	.bss.baud_rate_select,"aw",%nobits
+ 110              		.align	2
+ 113              	baud_rate_select:
+ 114 0000 00000000 		.space	4
+ 115              		.global	parity_bit
+ 116              		.section	.bss.parity_bit,"aw",%nobits
+ 117              		.align	2
+ 120              	parity_bit:
+ 121 0000 00000000 		.space	4
+ 122              		.global	stop_bit
+ 123              		.section	.data.stop_bit,"aw",%progbits
+ 124              		.align	2
+ 127              	stop_bit:
+ 128 0000 01000000 		.word	1
+ 129              		.global	input_rise_debounce_time
+ 130              		.section	.data.input_rise_debounce_time,"aw",%progbits
+ 131              		.align	2
+ 134              	input_rise_debounce_time:
+ 135 0000 14000000 		.word	20
+ 136              		.global	input_fall_debounce_time
+ 137              		.section	.data.input_fall_debounce_time,"aw",%progbits
+ 138              		.align	2
+ 141              	input_fall_debounce_time:
+ 142 0000 14000000 		.word	20
+ 143              		.global	baud_value
+ 144              		.section	.bss.baud_value,"aw",%nobits
+ 145              		.align	2
+ 148              	baud_value:
+ 149 0000 00000000 		.space	4
+ 150              		.global	flash_write_allowed
+ 151              		.section	.bss.flash_write_allowed,"aw",%nobits
+ 152              		.align	2
+ 155              	flash_write_allowed:
+ 156 0000 00000000 		.space	4
+ 157              		.global	flash_write_now
+ 158              		.section	.bss.flash_write_now,"aw",%nobits
+ 159              		.align	2
+ 162              	flash_write_now:
+ 163 0000 00000000 		.space	4
+ 164              		.global	fw_major_version
+ 165              		.section	.bss.fw_major_version,"aw",%nobits
+ 168              	fw_major_version:
+ 169 0000 00       		.space	1
+ 170              		.global	fw_minor_version
+ 171              		.section	.bss.fw_minor_version,"aw",%nobits
+ 174              	fw_minor_version:
+ 175 0000 00       		.space	1
+ 176              		.global	sm_operation
+ 177              		.section	.bss.sm_operation,"aw",%nobits
+ 178              		.align	2
+ 181              	sm_operation:
+ 182 0000 00000000 		.space	88
+ 182      00000000 
+ 182      00000000 
+ 182      00000000 
+ 182      00000000 
+ 183              		.section	.rodata
+ 184              		.align	2
+ 185              	.LC0:
+ 186 0000 0A504143 		.ascii	"\012PACMAC SystemCoreClock = %d Hz\012\000"
+ 186      4D414320 
+ 186      53797374 
+ 186      656D436F 
+ 186      7265436C 
+ 187 0021 000000   		.align	2
+ 188              	.LC1:
+ 189 0024 0A726561 		.ascii	"\012read onfig data\000"
+ 189      64206F6E 
+ 189      66696720 
+ 189      64617461 
+ 189      00
+ 190 0035 000000   		.align	2
+ 191              	.LC2:
+ 192 0038 0A6F7574 		.ascii	"\012out of config read %d\012\000"
+ 192      206F6620 
+ 192      636F6E66 
+ 192      69672072 
+ 192      65616420 
+ 193              		.align	2
+ 194              	.LC3:
+ 195 0050 0A776869 		.ascii	"\012whil is starting 1\000"
+ 195      6C206973 
+ 195      20737461 
+ 195      7274696E 
+ 195      67203100 
+ 196              		.section	.text.main,"ax",%progbits
+ 197              		.align	2
+ 198              		.global	main
+ 199              		.thumb
+ 200              		.thumb_func
+ 202              	main:
+ 203              	.LFB33:
+ 204              		.file 2 "..//PHY/main.cpp"
+   1:..//PHY/main.cpp **** //!
+   2:..//PHY/main.cpp **** /*!
+   3:..//PHY/main.cpp ****  *Main file 
+   4:..//PHY/main.cpp ****  * All the various function are called inside the while loop of the main fucntion
+   5:..//PHY/main.cpp ****  * The various functions are polled using the Timer at regualr preset intervals set at the beginnin
+   6:..//PHY/main.cpp ****  */
+   7:..//PHY/main.cpp **** 
+   8:..//PHY/main.cpp **** #include <stdio.h>
+   9:..//PHY/main.cpp **** #include <string.h>
+  10:..//PHY/main.cpp **** #include <stdarg.h>
+  11:..//PHY/main.cpp **** #include <math.h>
+  12:..//PHY/main.cpp **** #include <stdlib.h>
+  13:..//PHY/main.cpp **** 
+  14:..//PHY/main.cpp **** #include "LPC17xx.h"
+  15:..//PHY/main.cpp **** #include "ring.h"
+  16:..//PHY/main.cpp **** #include "syscalls.h"
+  17:..//PHY/main.cpp **** #include "global.h"
+  18:..//PHY/main.cpp **** #include "config.h"
+  19:..//PHY/main.cpp **** #include "delay_timer.h"
+  20:..//PHY/main.cpp **** 
+  21:..//PHY/main.cpp **** #include "SimpleModbusSlave_1769.h"
+  22:..//PHY/main.cpp **** #include "state_machine.h"
+  23:..//PHY/main.cpp **** #include "config_data.h"
+  24:..//PHY/main.cpp **** 
+  25:..//PHY/main.cpp **** #include "SM_Operation.h"
+  26:..//PHY/main.cpp **** 
+  27:..//PHY/main.cpp **** extern "C" {	
+  28:..//PHY/main.cpp **** 	#include "lpc17xx_libcfg.h"
+  29:..//PHY/main.cpp **** 	#include "lpc17xx_ssp.h"
+  30:..//PHY/main.cpp **** 	#include "lpc17xx_spi.h"
+  31:..//PHY/main.cpp **** 	#include "lpc17xx_rtc.h"
+  32:..//PHY/main.cpp **** 	#include "lpc17xx_clkpwr.h"
+  33:..//PHY/main.cpp **** 	#include "lpc17xx_gpio.h"
+  34:..//PHY/main.cpp **** 	#include "lpc17xx_uart.h"
+  35:..//PHY/main.cpp **** 	#include "lpc17xx_pinsel.h"
+  36:..//PHY/main.cpp **** 	#include "debug_frmwrk.h"	
+  37:..//PHY/main.cpp **** 	#include "lpc17xx_nvic.h"
+  38:..//PHY/main.cpp **** 	#include "lpc17xx_emac.h"
+  39:..//PHY/main.cpp **** 
+  40:..//PHY/main.cpp **** 	#include "timer.h"
+  41:..//PHY/main.cpp **** 	#include "interrupts.h"
+  42:..//PHY/main.cpp **** 	#include "input_output.h"
+  43:..//PHY/main.cpp **** 	#include "i2c.h"
+  44:..//PHY/main.cpp **** 	#include "i2c_eeprom.h"
+  45:..//PHY/main.cpp **** 	#include "multi-steppers.h"
+  46:..//PHY/main.cpp **** 	#include "usbSerial.h"
+  47:..//PHY/main.cpp **** 	#include "iap_driver.h"
+  48:..//PHY/main.cpp **** }
+  49:..//PHY/main.cpp **** 
+  50:..//PHY/main.cpp **** /*!
+  51:..//PHY/main.cpp ****  *Main file!
+  52:..//PHY/main.cpp ****  *
+  53:..//PHY/main.cpp **** */
+  54:..//PHY/main.cpp **** /**#########################################################################################*/	
+  55:..//PHY/main.cpp **** extern "C"{	
+  56:..//PHY/main.cpp **** 	uint32_t delay_timer_32 = 0; 
+  57:..//PHY/main.cpp **** // uint8_t system_io_update();
+  58:..//PHY/main.cpp **** }
+  59:..//PHY/main.cpp **** /**#########################################################################################*/
+  60:..//PHY/main.cpp **** int modbus_exception_handler(int modbus_ret);
+  61:..//PHY/main.cpp **** int apply_modbus_values(int modbus_cnt);
+  62:..//PHY/main.cpp **** int set_holding_registers_values(int modbus_cnt);
+  63:..//PHY/main.cpp **** int start_state_machine(int num);
+  64:..//PHY/main.cpp **** int stop_state_machine(int num);
+  65:..//PHY/main.cpp **** void execute_eeprom_write(int flash_write);
+  66:..//PHY/main.cpp **** int modbus_retVal = 0;
+  67:..//PHY/main.cpp **** 
+  68:..//PHY/main.cpp **** /**#########################################################################################*/
+  69:..//PHY/main.cpp **** 
+  70:..//PHY/main.cpp **** /**#########################################################################################*/
+  71:..//PHY/main.cpp **** 
+  72:..//PHY/main.cpp **** unsigned int holdingRegs[HOLDING_REGS_SIZE]; // function 3 and 16 register array
+  73:..//PHY/main.cpp **** unsigned int holdingRegs_prev[HOLDING_REGS_SIZE]; // function 3 and 16 register array
+  74:..//PHY/main.cpp **** 
+  75:..//PHY/main.cpp **** int slave_id_select;
+  76:..//PHY/main.cpp **** 
+  77:..//PHY/main.cpp **** int baud_rate_select;
+  78:..//PHY/main.cpp **** int parity_bit = 0;
+  79:..//PHY/main.cpp **** int stop_bit = 1;
+  80:..//PHY/main.cpp **** 
+  81:..//PHY/main.cpp **** int input_rise_debounce_time = 20;
+  82:..//PHY/main.cpp **** int input_fall_debounce_time = 20;
+  83:..//PHY/main.cpp **** 
+  84:..//PHY/main.cpp **** uint32_t baud_value=0;
+  85:..//PHY/main.cpp **** 
+  86:..//PHY/main.cpp **** int flash_write_allowed = 0;
+  87:..//PHY/main.cpp **** int flash_write_now = 0;
+  88:..//PHY/main.cpp **** 
+  89:..//PHY/main.cpp **** uint8_t fw_major_version;
+  90:..//PHY/main.cpp **** uint8_t fw_minor_version;
+  91:..//PHY/main.cpp ****  
+  92:..//PHY/main.cpp **** SM_OPERATION sm_operation;
+  93:..//PHY/main.cpp **** 
+  94:..//PHY/main.cpp **** int main(void) {
+ 205              		.loc 2 94 0
+ 206              		.cfi_startproc
+ 207              		@ args = 0, pretend = 0, frame = 40
+ 208              		@ frame_needed = 1, uses_anonymous_args = 0
+ 209 0000 80B5     		push	{r7, lr}
+ 210              	.LCFI3:
+ 211              		.cfi_def_cfa_offset 8
+ 212 0002 8CB0     		sub	sp, sp, #48
+ 213              	.LCFI4:
+ 214              		.cfi_def_cfa_offset 56
+ 215 0004 02AF     		add	r7, sp, #8
+ 216              		.cfi_offset 14, -4
+ 217              		.cfi_offset 7, -8
+ 218              	.LCFI5:
+ 219              		.cfi_def_cfa 7, 48
+ 220              	.LBB2:
+  95:..//PHY/main.cpp **** 	uint32_t i,modbus_count=0;
+ 221              		.loc 2 95 0
+ 222 0006 4FF00003 		mov	r3, #0
+ 223 000a BB61     		str	r3, [r7, #24]
+  96:..//PHY/main.cpp **** 	int toggle = 0;
+ 224              		.loc 2 96 0
+ 225 000c 4FF00003 		mov	r3, #0
+ 226 0010 FB61     		str	r3, [r7, #28]
+  97:..//PHY/main.cpp **** 
+  98:..//PHY/main.cpp **** 	// memcpy(TCP_TX_BUF,transfer_accel_table,sizeof(transfer_accel_table));
+  99:..//PHY/main.cpp **** 
+ 100:..//PHY/main.cpp **** 	// printf("\n hi=%d",sizeof(transfer_accel_table));
+ 101:..//PHY/main.cpp **** 	/* Initialize debug via UART0
+ 102:..//PHY/main.cpp **** 		* – 115200bps
+ 103:..//PHY/main.cpp **** 		* – 8 data bit
+ 104:..//PHY/main.cpp **** 		* – No parity
+ 105:..//PHY/main.cpp **** 		* – 1 stop bit
+ 106:..//PHY/main.cpp **** 		* – No flow control
+ 107:..//PHY/main.cpp **** 	*/
+ 108:..//PHY/main.cpp **** 	// sprintf(data_string,"20.0,20.0,40.0,10.0,50.0,60.0,70.0,80.0");
+ 109:..//PHY/main.cpp **** 	debug_frmwrk_init();
+ 227              		.loc 2 109 0
+ 228 0012 40F20003 		movw	r3, #:lower16:debug_frmwrk_init
+ 229 0016 C0F20003 		movt	r3, #:upper16:debug_frmwrk_init
+ 230 001a 9847     		blx	r3
+ 110:..//PHY/main.cpp **** 	
+ 111:..//PHY/main.cpp **** 	
+ 112:..//PHY/main.cpp **** 	LPC_SC->PCONP |= ( 1 << 15 ); // power up GPIO		
+ 231              		.loc 2 112 0
+ 232 001c 4CF20003 		movw	r3, #:lower16:1074774016
+ 233 0020 C4F20F03 		movt	r3, #:upper16:1074774016
+ 234 0024 4CF20002 		movw	r2, #:lower16:1074774016
+ 235 0028 C4F20F02 		movt	r2, #:upper16:1074774016
+ 236 002c D2F8C420 		ldr	r2, [r2, #196]
+ 237 0030 42F40042 		orr	r2, r2, #32768
+ 238 0034 C3F8C420 		str	r2, [r3, #196]
+ 113:..//PHY/main.cpp **** 	printf("\nPACMAC SystemCoreClock = %d Hz\n", SystemCoreClock);
+ 239              		.loc 2 113 0
+ 240 0038 40F20003 		movw	r3, #:lower16:SystemCoreClock
+ 241 003c C0F20003 		movt	r3, #:upper16:SystemCoreClock
+ 242 0040 1B68     		ldr	r3, [r3, #0]
+ 243 0042 40F20000 		movw	r0, #:lower16:.LC0
+ 244 0046 C0F20000 		movt	r0, #:upper16:.LC0
+ 245 004a 1946     		mov	r1, r3
+ 246 004c 40F20003 		movw	r3, #:lower16:printf
+ 247 0050 C0F20003 		movt	r3, #:upper16:printf
+ 248 0054 9847     		blx	r3
+ 114:..//PHY/main.cpp **** /**#########################################################################################*/		
+ 115:..//PHY/main.cpp **** 	dt_set_delay(DELAY_HEARTBEAT, 5000);
+ 249              		.loc 2 115 0
+ 250 0056 4FF02C00 		mov	r0, #44
+ 251 005a 41F28831 		movw	r1, #5000
+ 252 005e 40F20003 		movw	r3, #:lower16:_Z12dt_set_delayim
+ 253 0062 C0F20003 		movt	r3, #:upper16:_Z12dt_set_delayim
+ 254 0066 9847     		blx	r3
+ 116:..//PHY/main.cpp **** 	// dt_set_delay(DELAY_IO_UPDATE, 100);
+ 117:..//PHY/main.cpp **** 	// dt_set_delay(DATA_RATE, 1000);
+ 118:..//PHY/main.cpp **** 	// dt_set_delay(DELAY_LSM6DS3, delay_val);
+ 119:..//PHY/main.cpp **** 
+ 120:..//PHY/main.cpp **** /**#########################################################################################*/		
+ 121:..//PHY/main.cpp **** #if 1
+ 122:..//PHY/main.cpp **** 	if(CONFIG_VERSION_OK != read_config_version(fw_major_version,fw_minor_version)){	
+ 255              		.loc 2 122 0
+ 256 0068 40F20000 		movw	r0, #:lower16:fw_major_version
+ 257 006c C0F20000 		movt	r0, #:upper16:fw_major_version
+ 258 0070 40F20001 		movw	r1, #:lower16:fw_minor_version
+ 259 0074 C0F20001 		movt	r1, #:upper16:fw_minor_version
+ 260 0078 40F20003 		movw	r3, #:lower16:_Z19read_config_versionRhS_
+ 261 007c C0F20003 		movt	r3, #:upper16:_Z19read_config_versionRhS_
+ 262 0080 9847     		blx	r3
+ 263 0082 0346     		mov	r3, r0
+ 264 0084 002B     		cmp	r3, #0
+ 265 0086 0CBF     		ite	eq
+ 266 0088 0023     		moveq	r3, #0
+ 267 008a 0123     		movne	r3, #1
+ 268 008c DBB2     		uxtb	r3, r3
+ 269 008e 002B     		cmp	r3, #0
+ 270 0090 1FD0     		beq	.L8
+ 123:..//PHY/main.cpp **** 		// now fw_major and fw_minor contain the config version...
+ 124:..//PHY/main.cpp **** 		fw_major_version=CURRENT_CONFIG_MAJOR_VERSION;
+ 271              		.loc 2 124 0
+ 272 0092 40F20003 		movw	r3, #:lower16:fw_major_version
+ 273 0096 C0F20003 		movt	r3, #:upper16:fw_major_version
+ 274 009a 4FF00102 		mov	r2, #1
+ 275 009e 1A70     		strb	r2, [r3, #0]
+ 125:..//PHY/main.cpp **** 		fw_minor_version=CURRENT_CONFIG_MINOR_VERSION;
+ 276              		.loc 2 125 0
+ 277 00a0 40F20003 		movw	r3, #:lower16:fw_minor_version
+ 278 00a4 C0F20003 		movt	r3, #:upper16:fw_minor_version
+ 279 00a8 4FF00002 		mov	r2, #0
+ 280 00ac 1A70     		strb	r2, [r3, #0]
+ 126:..//PHY/main.cpp **** 		// printf("\nread onfig data");
+ 127:..//PHY/main.cpp **** 		config_set_defaults(fw_major_version, fw_minor_version);
+ 281              		.loc 2 127 0
+ 282 00ae 40F20003 		movw	r3, #:lower16:fw_major_version
+ 283 00b2 C0F20003 		movt	r3, #:upper16:fw_major_version
+ 284 00b6 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 285 00b8 40F20003 		movw	r3, #:lower16:fw_minor_version
+ 286 00bc C0F20003 		movt	r3, #:upper16:fw_minor_version
+ 287 00c0 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 288 00c2 1046     		mov	r0, r2
+ 289 00c4 1946     		mov	r1, r3
+ 290 00c6 40F20003 		movw	r3, #:lower16:_Z19config_set_defaultshh
+ 291 00ca C0F20003 		movt	r3, #:upper16:_Z19config_set_defaultshh
+ 292 00ce 9847     		blx	r3
+ 293 00d0 0DE0     		b	.L9
+ 294              	.L8:
+ 128:..//PHY/main.cpp **** 	}else{	
+ 129:..//PHY/main.cpp **** 		// now fw_major and fw_minor contain the config version...
+ 130:..//PHY/main.cpp **** 		printf("\nread onfig data");
+ 295              		.loc 2 130 0
+ 296 00d2 40F20000 		movw	r0, #:lower16:.LC1
+ 297 00d6 C0F20000 		movt	r0, #:upper16:.LC1
+ 298 00da 40F20003 		movw	r3, #:lower16:printf
+ 299 00de C0F20003 		movt	r3, #:upper16:printf
+ 300 00e2 9847     		blx	r3
+ 131:..//PHY/main.cpp **** 		read_config_data();
+ 301              		.loc 2 131 0
+ 302 00e4 40F20003 		movw	r3, #:lower16:_Z16read_config_datav
+ 303 00e8 C0F20003 		movt	r3, #:upper16:_Z16read_config_datav
+ 304 00ec 9847     		blx	r3
+ 305              	.L9:
+ 132:..//PHY/main.cpp **** 	}
+ 133:..//PHY/main.cpp **** 	printf("\nout of config read %d\n",TRUE);
+ 306              		.loc 2 133 0
+ 307 00ee 40F20000 		movw	r0, #:lower16:.LC2
+ 308 00f2 C0F20000 		movt	r0, #:upper16:.LC2
+ 309 00f6 4FF00101 		mov	r1, #1
+ 310 00fa 40F20003 		movw	r3, #:lower16:printf
+ 311 00fe C0F20003 		movt	r3, #:upper16:printf
+ 312 0102 9847     		blx	r3
+ 134:..//PHY/main.cpp **** 	// config_set_defaults(fw_major_version, fw_minor_version);
+ 135:..//PHY/main.cpp **** #endif
+ 136:..//PHY/main.cpp **** /**#########################################################################################*/
+ 137:..//PHY/main.cpp **** 	// config_set_defaults(6,9);
+ 138:..//PHY/main.cpp **** 	// read_config_data();
+ 139:..//PHY/main.cpp **** 	unsigned int baud_val[5]={1200,9600,19200,38400,57600};
+ 313              		.loc 2 139 0
+ 314 0104 40F20003 		movw	r3, #:lower16:_ZZ4mainE4C.29
+ 315 0108 C0F20003 		movt	r3, #:upper16:_ZZ4mainE4C.29
+ 316 010c BC46     		mov	ip, r7
+ 317 010e 9E46     		mov	lr, r3
+ 318 0110 BEE80F00 		ldmia	lr!, {r0, r1, r2, r3}
+ 319 0114 ACE80F00 		stmia	ip!, {r0, r1, r2, r3}
+ 320 0118 DEF80030 		ldr	r3, [lr, #0]
+ 321 011c CCF80030 		str	r3, [ip, #0]
+ 140:..//PHY/main.cpp **** 	// printf("\n%d",baud_rate_select);
+ 141:..//PHY/main.cpp **** 	baud_rate_select = 1;
+ 322              		.loc 2 141 0
+ 323 0120 40F20003 		movw	r3, #:lower16:baud_rate_select
+ 324 0124 C0F20003 		movt	r3, #:upper16:baud_rate_select
+ 325 0128 4FF00102 		mov	r2, #1
+ 326 012c 1A60     		str	r2, [r3, #0]
+ 142:..//PHY/main.cpp **** 	baud_value=baud_val[baud_rate_select];
+ 327              		.loc 2 142 0
+ 328 012e 40F20003 		movw	r3, #:lower16:baud_rate_select
+ 329 0132 C0F20003 		movt	r3, #:upper16:baud_rate_select
+ 330 0136 1B68     		ldr	r3, [r3, #0]
+ 331 0138 4FEA8303 		lsl	r3, r3, #2
+ 332 013c 07F12802 		add	r2, r7, #40
+ 333 0140 1344     		add	r3, r3, r2
+ 334 0142 53F8282C 		ldr	r2, [r3, #-40]
+ 335 0146 40F20003 		movw	r3, #:lower16:baud_value
+ 336 014a C0F20003 		movt	r3, #:upper16:baud_value
+ 337 014e 1A60     		str	r2, [r3, #0]
+ 143:..//PHY/main.cpp **** 	// UART_Init2(baud_value);
+ 144:..//PHY/main.cpp **** 	usbSerialInit();
+ 338              		.loc 2 144 0
+ 339 0150 40F20003 		movw	r3, #:lower16:usbSerialInit
+ 340 0154 C0F20003 		movt	r3, #:upper16:usbSerialInit
+ 341 0158 9847     		blx	r3
+ 145:..//PHY/main.cpp **** 
+ 146:..//PHY/main.cpp **** 
+ 147:..//PHY/main.cpp **** 	// modbus_configure(&modbus2,(long)baud_value,slave_id_select,HOLDING_REGS_SIZE,holdingRegs); // M
+ 148:..//PHY/main.cpp **** 
+ 149:..//PHY/main.cpp **** #ifdef MOD_USB
+ 150:..//PHY/main.cpp **** 	modbus_configure(&modbusUSB,115200,1,HOLDING_REGS_SIZE,holdingRegs);
+ 342              		.loc 2 150 0
+ 343 015a 40F20003 		movw	r3, #:lower16:holdingRegs
+ 344 015e C0F20003 		movt	r3, #:upper16:holdingRegs
+ 345 0162 0093     		str	r3, [sp, #0]
+ 346 0164 40F20000 		movw	r0, #:lower16:modbusUSB
+ 347 0168 C0F20000 		movt	r0, #:upper16:modbusUSB
+ 348 016c 4FF4E131 		mov	r1, #115200
+ 349 0170 4FF00102 		mov	r2, #1
+ 350 0174 4FF4CE73 		mov	r3, #412
+ 351 0178 40F2000C 		movw	ip, #:lower16:_Z16modbus_configureP8modbus_tlijPj
+ 352 017c C0F2000C 		movt	ip, #:upper16:_Z16modbus_configureP8modbus_tlijPj
+ 353 0180 E047     		blx	ip
+ 151:..//PHY/main.cpp **** #endif
+ 152:..//PHY/main.cpp **** 	
+ 153:..//PHY/main.cpp **** /**#########################################################################################*/
+ 154:..//PHY/main.cpp **** 	dt_init();
+ 354              		.loc 2 154 0
+ 355 0182 40F20003 		movw	r3, #:lower16:_Z7dt_initv
+ 356 0186 C0F20003 		movt	r3, #:upper16:_Z7dt_initv
+ 357 018a 9847     		blx	r3
+ 155:..//PHY/main.cpp **** 	stepper_init();	
+ 358              		.loc 2 155 0
+ 359 018c 40F20003 		movw	r3, #:lower16:stepper_init
+ 360 0190 C0F20003 		movt	r3, #:upper16:stepper_init
+ 361 0194 9847     		blx	r3
+ 156:..//PHY/main.cpp **** 	init_timers();
+ 362              		.loc 2 156 0
+ 363 0196 40F20003 		movw	r3, #:lower16:init_timers
+ 364 019a C0F20003 		movt	r3, #:upper16:init_timers
+ 365 019e 9847     		blx	r3
+ 157:..//PHY/main.cpp **** 	stepper_update_freq();
+ 366              		.loc 2 157 0
+ 367 01a0 40F20003 		movw	r3, #:lower16:stepper_update_freq
+ 368 01a4 C0F20003 		movt	r3, #:upper16:stepper_update_freq
+ 369 01a8 9847     		blx	r3
+ 158:..//PHY/main.cpp **** 	io_init();
+ 370              		.loc 2 158 0
+ 371 01aa 40F20003 		movw	r3, #:lower16:io_init
+ 372 01ae C0F20003 		movt	r3, #:upper16:io_init
+ 373 01b2 9847     		blx	r3
+ 159:..//PHY/main.cpp **** 	iap_init();
+ 374              		.loc 2 159 0
+ 375 01b4 40F20003 		movw	r3, #:lower16:iap_init
+ 376 01b8 C0F20003 		movt	r3, #:upper16:iap_init
+ 377 01bc 9847     		blx	r3
+ 160:..//PHY/main.cpp **** 	// stepper_update_freq();
+ 161:..//PHY/main.cpp **** /**#########################################################################################*/		
+ 162:..//PHY/main.cpp **** 	/*Required for multi-steppers library*/
+ 163:..//PHY/main.cpp **** 	RESET_MODBUS_TIMER;
+ 378              		.loc 2 163 0
+ 379 01be 44F20000 		movw	r0, #:lower16:1073758208
+ 380 01c2 C4F20000 		movt	r0, #:upper16:1073758208
+ 381 01c6 40F20003 		movw	r3, #:lower16:reset_timer
+ 382 01ca C0F20003 		movt	r3, #:upper16:reset_timer
+ 383 01ce 9847     		blx	r3
+ 164:..//PHY/main.cpp **** 	start_timers();
+ 384              		.loc 2 164 0
+ 385 01d0 40F20003 		movw	r3, #:lower16:start_timers
+ 386 01d4 C0F20003 		movt	r3, #:upper16:start_timers
+ 387 01d8 9847     		blx	r3
+ 165:..//PHY/main.cpp **** 
+ 166:..//PHY/main.cpp **** /**#########################################################################################*/		
+ 167:..//PHY/main.cpp **** 	//SSP master init
+ 168:..//PHY/main.cpp **** 	// ssp_master_init();
+ 169:..//PHY/main.cpp **** 	// GPIO_SetDir(0, (1<<6), 1);
+ 170:..//PHY/main.cpp **** 	// GPIO_SetValue(0, (1<<6));
+ 171:..//PHY/main.cpp **** 	// GPIO_SetValue(0, (1<<6));
+ 172:..//PHY/main.cpp **** /**#########################################################################################*/			
+ 173:..//PHY/main.cpp **** 
+ 174:..//PHY/main.cpp **** 	for(i=0;i<DELAY_TOTAL_NUM;i++){
+ 388              		.loc 2 174 0
+ 389 01da 4FF00003 		mov	r3, #0
+ 390 01de 7B61     		str	r3, [r7, #20]
+ 391 01e0 0AE0     		b	.L10
+ 392              	.L11:
+ 175:..//PHY/main.cpp **** 		dt_reset(i);
+ 393              		.loc 2 175 0
+ 394 01e2 7B69     		ldr	r3, [r7, #20]
+ 395 01e4 1846     		mov	r0, r3
+ 396 01e6 40F20003 		movw	r3, #:lower16:_Z8dt_reseti
+ 397 01ea C0F20003 		movt	r3, #:upper16:_Z8dt_reseti
+ 398 01ee 9847     		blx	r3
+ 399              		.loc 2 174 0
+ 400 01f0 7B69     		ldr	r3, [r7, #20]
+ 401 01f2 03F10103 		add	r3, r3, #1
+ 402 01f6 7B61     		str	r3, [r7, #20]
+ 403              	.L10:
+ 404 01f8 7B69     		ldr	r3, [r7, #20]
+ 405 01fa 2D2B     		cmp	r3, #45
+ 406 01fc 8CBF     		ite	hi
+ 407 01fe 0023     		movhi	r3, #0
+ 408 0200 0123     		movls	r3, #1
+ 409 0202 DBB2     		uxtb	r3, r3
+ 410 0204 002B     		cmp	r3, #0
+ 411 0206 ECD1     		bne	.L11
+ 176:..//PHY/main.cpp **** 	}
+ 177:..//PHY/main.cpp **** 
+ 178:..//PHY/main.cpp **** /**#########################################################################################*/
+ 179:..//PHY/main.cpp **** 	toggle = 0;
+ 412              		.loc 2 179 0
+ 413 0208 4FF00003 		mov	r3, #0
+ 414 020c FB61     		str	r3, [r7, #28]
+ 180:..//PHY/main.cpp **** 	
+ 181:..//PHY/main.cpp **** 	// for(i=0;i<HOLDING_REGS_SIZE;i++){
+ 182:..//PHY/main.cpp **** 	// 	holdingRegs[i]=100;
+ 183:..//PHY/main.cpp **** 	// }
+ 184:..//PHY/main.cpp **** 	
+ 185:..//PHY/main.cpp **** 	// for(modbus_count=0;modbus_count<HOLDING_REGS_SIZE;modbus_count++){
+ 186:..//PHY/main.cpp **** 	// 	set_holding_registers_values(modbus_count);
+ 187:..//PHY/main.cpp **** 	// }
+ 188:..//PHY/main.cpp **** 
+ 189:..//PHY/main.cpp **** 
+ 190:..//PHY/main.cpp **** 	int mySlaveID = 1;
+ 415              		.loc 2 190 0
+ 416 020e 4FF00103 		mov	r3, #1
+ 417 0212 3B62     		str	r3, [r7, #32]
+ 191:..//PHY/main.cpp **** 	/**#########################################################################################*/	
+ 192:..//PHY/main.cpp **** #if 0
+ 193:..//PHY/main.cpp **** 	//TCP_INIT
+ 194:..//PHY/main.cpp **** 	printf("\nTCP init started %d",1);
+ 195:..//PHY/main.cpp **** 
+ 196:..//PHY/main.cpp **** 	int init_val = TCPLowLevelInit();
+ 197:..//PHY/main.cpp **** 	printf("\n init_val = %d",init_val);
+ 198:..//PHY/main.cpp **** 	// EMAC_Init_New();
+ 199:..//PHY/main.cpp **** 	HTTPStatus = 0;                                // clear HTTP-server's flag register
+ 200:..//PHY/main.cpp **** 	// modbusserver_init(holdingRegs,HOLDING_REGS_SIZE);
+ 201:..//PHY/main.cpp **** 	// TCPLocalPort = TCP_PORT_HTTP;                  // set port we want to listen to
+ 202:..//PHY/main.cpp **** 	TCPLocalPort = TCP_PORT_MODBUS;                  // set port we want to listen to
+ 203:..//PHY/main.cpp **** 	// CodeRed - added info message
+ 204:..//PHY/main.cpp **** 	// LPC_GPIO0->FIODIR |= TEST_LED;
+ 205:..//PHY/main.cpp **** 	LPC_GPIO3->FIODIR |= (1<<25);
+ 206:..//PHY/main.cpp **** #endif
+ 207:..//PHY/main.cpp **** /**#########################################################################################*/
+ 208:..//PHY/main.cpp **** 	printf("\nwhil is starting 1");
+ 418              		.loc 2 208 0
+ 419 0214 40F20000 		movw	r0, #:lower16:.LC3
+ 420 0218 C0F20000 		movt	r0, #:upper16:.LC3
+ 421 021c 40F20003 		movw	r3, #:lower16:printf
+ 422 0220 C0F20003 		movt	r3, #:upper16:printf
+ 423 0224 9847     		blx	r3
+ 209:..//PHY/main.cpp **** 	uint8_t done=0;
+ 424              		.loc 2 209 0
+ 425 0226 4FF00003 		mov	r3, #0
+ 426 022a 87F82730 		strb	r3, [r7, #39]
+ 210:..//PHY/main.cpp **** 
+ 211:..//PHY/main.cpp **** 	// LPC_GPIO1->FIOSET = (1<<27);
+ 212:..//PHY/main.cpp **** 	// memcpy(TCP_TX_BUF,transfer_accel_table,sizeof(transfer_accel_table));
+ 213:..//PHY/main.cpp **** 	// LPC_GPIO1->FIOCLR = (1<<27);
+ 214:..//PHY/main.cpp **** 	// stepper_set_new_profile(0,10,1,1);
+ 215:..//PHY/main.cpp **** 	// stepper_set_final_pos(0,5000);
+ 216:..//PHY/main.cpp **** 	io_set_output(YELLOW_LED,1);
+ 427              		.loc 2 216 0
+ 428 022e 4FF00600 		mov	r0, #6
+ 429 0232 4FF00101 		mov	r1, #1
+ 430 0236 40F20003 		movw	r3, #:lower16:io_set_output
+ 431 023a C0F20003 		movt	r3, #:upper16:io_set_output
+ 432 023e 9847     		blx	r3
+ 433 0240 00E0     		b	.L19
+ 434              	.L21:
+ 217:..//PHY/main.cpp **** 
+ 218:..//PHY/main.cpp **** 	while(1){
+ 435              		.loc 2 218 0
+ 436 0242 00BF     		nop
+ 437              	.L19:
+ 219:..//PHY/main.cpp **** 
+ 220:..//PHY/main.cpp **** 		if(input_rise_flag[MOTOR_ON]){
+ 438              		.loc 2 220 0
+ 439 0244 40F20003 		movw	r3, #:lower16:input_rise_flag
+ 440 0248 C0F20003 		movt	r3, #:upper16:input_rise_flag
+ 441 024c 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 442 024e 002B     		cmp	r3, #0
+ 443 0250 18D0     		beq	.L12
+ 221:..//PHY/main.cpp **** 			input_rise_flag[MOTOR_ON] = 0;
+ 444              		.loc 2 221 0
+ 445 0252 40F20003 		movw	r3, #:lower16:input_rise_flag
+ 446 0256 C0F20003 		movt	r3, #:upper16:input_rise_flag
+ 447 025a 4FF00002 		mov	r2, #0
+ 448 025e 1A70     		strb	r2, [r3, #0]
+ 222:..//PHY/main.cpp **** 			stepper_set_new_profile(MOTOR0,10.0,0.5,0.5);
+ 449              		.loc 2 222 0
+ 450 0260 4FF00000 		mov	r0, #0
+ 451 0264 4B49     		ldr	r1, .L22	@ float
+ 452 0266 4C4A     		ldr	r2, .L22+4	@ float
+ 453 0268 4B4B     		ldr	r3, .L22+4	@ float
+ 454 026a 40F2000C 		movw	ip, #:lower16:stepper_set_new_profile
+ 455 026e C0F2000C 		movt	ip, #:upper16:stepper_set_new_profile
+ 456 0272 E047     		blx	ip
+ 223:..//PHY/main.cpp **** 			stepper_set_final_pos(MOTOR0,0xFFFFFFF);
+ 457              		.loc 2 223 0
+ 458 0274 4FF00000 		mov	r0, #0
+ 459 0278 4849     		ldr	r1, .L22+8	@ float
+ 460 027a 40F20003 		movw	r3, #:lower16:stepper_set_final_pos
+ 461 027e C0F20003 		movt	r3, #:upper16:stepper_set_final_pos
+ 462 0282 9847     		blx	r3
+ 463              	.L12:
+ 224:..//PHY/main.cpp **** 		}
+ 225:..//PHY/main.cpp **** 
+ 226:..//PHY/main.cpp **** 		if(input_fall_flag[MOTOR_ON]){
+ 464              		.loc 2 226 0
+ 465 0284 40F20003 		movw	r3, #:lower16:input_fall_flag
+ 466 0288 C0F20003 		movt	r3, #:upper16:input_fall_flag
+ 467 028c 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 468 028e 002B     		cmp	r3, #0
+ 469 0290 0DD0     		beq	.L13
+ 227:..//PHY/main.cpp **** 			input_fall_flag[MOTOR_ON] = 0;
+ 470              		.loc 2 227 0
+ 471 0292 40F20003 		movw	r3, #:lower16:input_fall_flag
+ 472 0296 C0F20003 		movt	r3, #:upper16:input_fall_flag
+ 473 029a 4FF00002 		mov	r2, #0
+ 474 029e 1A70     		strb	r2, [r3, #0]
+ 228:..//PHY/main.cpp **** 			stepper_stop_motor(MOTOR0);
+ 475              		.loc 2 228 0
+ 476 02a0 4FF00000 		mov	r0, #0
+ 477 02a4 40F20003 		movw	r3, #:lower16:stepper_stop_motor
+ 478 02a8 C0F20003 		movt	r3, #:upper16:stepper_stop_motor
+ 479 02ac 9847     		blx	r3
+ 480              	.L13:
+ 229:..//PHY/main.cpp **** 		}
+ 230:..//PHY/main.cpp **** 
+ 231:..//PHY/main.cpp **** 		if(input_rise_flag[HOPPER_ON]){
+ 481              		.loc 2 231 0
+ 482 02ae 40F20003 		movw	r3, #:lower16:input_rise_flag
+ 483 02b2 C0F20003 		movt	r3, #:upper16:input_rise_flag
+ 484 02b6 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+ 485 02b8 002B     		cmp	r3, #0
+ 486 02ba 0FD0     		beq	.L14
+ 232:..//PHY/main.cpp **** 			input_rise_flag[HOPPER_ON] = 0;
+ 487              		.loc 2 232 0
+ 488 02bc 40F20003 		movw	r3, #:lower16:input_rise_flag
+ 489 02c0 C0F20003 		movt	r3, #:upper16:input_rise_flag
+ 490 02c4 4FF00002 		mov	r2, #0
+ 491 02c8 5A70     		strb	r2, [r3, #1]
+ 233:..//PHY/main.cpp **** 			io_set_output(HOPPER,1);
+ 492              		.loc 2 233 0
+ 493 02ca 4FF00400 		mov	r0, #4
+ 494 02ce 4FF00101 		mov	r1, #1
+ 495 02d2 40F20003 		movw	r3, #:lower16:io_set_output
+ 496 02d6 C0F20003 		movt	r3, #:upper16:io_set_output
+ 497 02da 9847     		blx	r3
+ 498              	.L14:
+ 234:..//PHY/main.cpp **** 		}
+ 235:..//PHY/main.cpp **** 
+ 236:..//PHY/main.cpp **** 		if(input_fall_flag[HOPPER_ON]){
+ 499              		.loc 2 236 0
+ 500 02dc 40F20003 		movw	r3, #:lower16:input_fall_flag
+ 501 02e0 C0F20003 		movt	r3, #:upper16:input_fall_flag
+ 502 02e4 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+ 503 02e6 002B     		cmp	r3, #0
+ 504 02e8 0FD0     		beq	.L15
+ 237:..//PHY/main.cpp **** 			input_fall_flag[HOPPER_ON] = 0;
+ 505              		.loc 2 237 0
+ 506 02ea 40F20003 		movw	r3, #:lower16:input_fall_flag
+ 507 02ee C0F20003 		movt	r3, #:upper16:input_fall_flag
+ 508 02f2 4FF00002 		mov	r2, #0
+ 509 02f6 5A70     		strb	r2, [r3, #1]
+ 238:..//PHY/main.cpp **** 			io_set_output(HOPPER,0);
+ 510              		.loc 2 238 0
+ 511 02f8 4FF00400 		mov	r0, #4
+ 512 02fc 4FF00001 		mov	r1, #0
+ 513 0300 40F20003 		movw	r3, #:lower16:io_set_output
+ 514 0304 C0F20003 		movt	r3, #:upper16:io_set_output
+ 515 0308 9847     		blx	r3
+ 516              	.L15:
+ 239:..//PHY/main.cpp **** 		}
+ 240:..//PHY/main.cpp **** 
+ 241:..//PHY/main.cpp **** 				
+ 242:..//PHY/main.cpp **** 		if(flash_write_now){
+ 517              		.loc 2 242 0
+ 518 030a 40F20003 		movw	r3, #:lower16:flash_write_now
+ 519 030e C0F20003 		movt	r3, #:upper16:flash_write_now
+ 520 0312 1B68     		ldr	r3, [r3, #0]
+ 521 0314 002B     		cmp	r3, #0
+ 522 0316 0AD0     		beq	.L16
+ 243:..//PHY/main.cpp **** 			// printf("\n write eeprom");
+ 244:..//PHY/main.cpp **** 			execute_eeprom_write(flash_write_now);
+ 523              		.loc 2 244 0
+ 524 0318 40F20003 		movw	r3, #:lower16:flash_write_now
+ 525 031c C0F20003 		movt	r3, #:upper16:flash_write_now
+ 526 0320 1B68     		ldr	r3, [r3, #0]
+ 527 0322 1846     		mov	r0, r3
+ 528 0324 40F20003 		movw	r3, #:lower16:_Z20execute_eeprom_writei
+ 529 0328 C0F20003 		movt	r3, #:upper16:_Z20execute_eeprom_writei
+ 530 032c 9847     		blx	r3
+ 531              	.L16:
+ 245:..//PHY/main.cpp **** 		}
+ 246:..//PHY/main.cpp **** 
+ 247:..//PHY/main.cpp **** 		// printf("\nwhil is starting 1");
+ 248:..//PHY/main.cpp **** 
+ 249:..//PHY/main.cpp **** 		/* update function for the modbus operation*/
+ 250:..//PHY/main.cpp **** 		// modbus_retVal = modbus_update(&modbus2);		
+ 251:..//PHY/main.cpp **** 		modbus_retVal = modbus_update(&modbusUSB);		
+ 532              		.loc 2 251 0
+ 533 032e 40F20000 		movw	r0, #:lower16:modbusUSB
+ 534 0332 C0F20000 		movt	r0, #:upper16:modbusUSB
+ 535 0336 40F20003 		movw	r3, #:lower16:modbus_update
+ 536 033a C0F20003 		movt	r3, #:upper16:modbus_update
+ 537 033e 9847     		blx	r3
+ 538 0340 0346     		mov	r3, r0
+ 539 0342 1A46     		mov	r2, r3
+ 540 0344 40F20003 		movw	r3, #:lower16:modbus_retVal
+ 541 0348 C0F20003 		movt	r3, #:upper16:modbus_retVal
+ 542 034c 1A60     		str	r2, [r3, #0]
+ 252:..//PHY/main.cpp **** 				
+ 253:..//PHY/main.cpp **** 
+ 254:..//PHY/main.cpp **** 		if(dt_is_timeup(DELAY_HEARTBEAT)){
+ 543              		.loc 2 254 0
+ 544 034e 4FF02C00 		mov	r0, #44
+ 545 0352 40F20003 		movw	r3, #:lower16:_Z12dt_is_timeupi
+ 546 0356 C0F20003 		movt	r3, #:upper16:_Z12dt_is_timeupi
+ 547 035a 9847     		blx	r3
+ 548 035c 0346     		mov	r3, r0
+ 549 035e 002B     		cmp	r3, #0
+ 550 0360 0CBF     		ite	eq
+ 551 0362 0023     		moveq	r3, #0
+ 552 0364 0123     		movne	r3, #1
+ 553 0366 DBB2     		uxtb	r3, r3
+ 554 0368 002B     		cmp	r3, #0
+ 555 036a 3FF46AAF 		beq	.L21
+ 255:..//PHY/main.cpp **** 			dt_reset(DELAY_HEARTBEAT);
+ 556              		.loc 2 255 0
+ 557 036e 4FF02C00 		mov	r0, #44
+ 558 0372 40F20003 		movw	r3, #:lower16:_Z8dt_reseti
+ 559 0376 C0F20003 		movt	r3, #:upper16:_Z8dt_reseti
+ 560 037a 9847     		blx	r3
+ 256:..//PHY/main.cpp **** 
+ 257:..//PHY/main.cpp **** 			if(toggle){
+ 561              		.loc 2 257 0
+ 562 037c FB69     		ldr	r3, [r7, #28]
+ 563 037e 002B     		cmp	r3, #0
+ 564 0380 03D0     		beq	.L18
+ 258:..//PHY/main.cpp **** 				toggle = 0;
+ 565              		.loc 2 258 0
+ 566 0382 4FF00003 		mov	r3, #0
+ 567 0386 FB61     		str	r3, [r7, #28]
+ 568              		.loc 2 218 0
+ 569 0388 5CE7     		b	.L19
+ 570              	.L18:
+ 259:..//PHY/main.cpp **** 				// printf("\ntog = 0 ");
+ 260:..//PHY/main.cpp **** 				// io_set_output(0,0);
+ 261:..//PHY/main.cpp **** 				// io_set_output(1,0);
+ 262:..//PHY/main.cpp **** 				// io_set_output(2,0);
+ 263:..//PHY/main.cpp **** 				// io_set_output(3,0);
+ 264:..//PHY/main.cpp **** 			}else{
+ 265:..//PHY/main.cpp **** 				toggle = 1;
+ 571              		.loc 2 265 0
+ 572 038a 4FF00103 		mov	r3, #1
+ 573 038e FB61     		str	r3, [r7, #28]
+ 574              		.loc 2 218 0
+ 575 0390 58E7     		b	.L19
+ 576              	.L23:
+ 577 0392 00BF     		.align	2
+ 578              	.L22:
+ 579 0394 00002041 		.word	1092616192
+ 580 0398 0000003F 		.word	1056964608
+ 581 039c 0000804D 		.word	1300234240
+ 582              	.LBE2:
+ 583              		.cfi_endproc
+ 584              	.LFE33:
+ 586              		.section	.text._Z24modbus_exception_handleri,"ax",%progbits
+ 587              		.align	2
+ 588              		.global	_Z24modbus_exception_handleri
+ 589              		.thumb
+ 590              		.thumb_func
+ 592              	_Z24modbus_exception_handleri:
+ 593              	.LFB34:
+ 266:..//PHY/main.cpp **** 				// printf("\ntog = 1");
+ 267:..//PHY/main.cpp **** 				// io_set_output(0,1);
+ 268:..//PHY/main.cpp **** 				// io_set_output(1,1);
+ 269:..//PHY/main.cpp **** 				// io_set_output(2,1);
+ 270:..//PHY/main.cpp **** 				// io_set_output(3,1);
+ 271:..//PHY/main.cpp **** 
+ 272:..//PHY/main.cpp **** 			}		
+ 273:..//PHY/main.cpp **** 		}		
+ 274:..//PHY/main.cpp **** 	}
+ 275:..//PHY/main.cpp **** 	return 0;
+ 276:..//PHY/main.cpp **** }
+ 277:..//PHY/main.cpp **** 
+ 278:..//PHY/main.cpp **** // extern "C"{
+ 279:..//PHY/main.cpp **** int modbus_exception_handler(int modbus_ret){
+ 594              		.loc 2 279 0
+ 595              		.cfi_startproc
+ 596              		@ args = 0, pretend = 0, frame = 8
+ 597              		@ frame_needed = 1, uses_anonymous_args = 0
+ 598              		@ link register save eliminated.
+ 599 0000 80B4     		push	{r7}
+ 600              	.LCFI6:
+ 601              		.cfi_def_cfa_offset 4
+ 602 0002 83B0     		sub	sp, sp, #12
+ 603              	.LCFI7:
+ 604              		.cfi_def_cfa_offset 16
+ 605 0004 00AF     		add	r7, sp, #0
+ 606              		.cfi_offset 7, -4
+ 607              	.LCFI8:
+ 608              		.cfi_def_cfa_register 7
+ 609 0006 7860     		str	r0, [r7, #4]
+ 280:..//PHY/main.cpp **** 	switch(modbus_ret){
+ 281:..//PHY/main.cpp **** 		case MB_OVERFLOW:
+ 282:..//PHY/main.cpp **** 			// do something here..
+ 283:..//PHY/main.cpp **** 		break;
+ 284:..//PHY/main.cpp **** 		case MB_DATA_WRITTEN:{
+ 285:..//PHY/main.cpp **** 			// printf("\n MB_DATA_WRITTEN");
+ 286:..//PHY/main.cpp **** 			// int modbus_count;
+ 287:..//PHY/main.cpp **** 			// copy the received data to local variables..
+ 288:..//PHY/main.cpp **** 			// for(modbus_count=0;modbus_count<HOLDING_REGS_SIZE;modbus_count++){
+ 289:..//PHY/main.cpp **** 				// apply_modbus_values(modbus_count);
+ 290:..//PHY/main.cpp **** 			// }
+ 291:..//PHY/main.cpp **** 			break;
+ 292:..//PHY/main.cpp **** 		}
+ 293:..//PHY/main.cpp **** 		case MB_CORRUPT_PACKET:
+ 294:..//PHY/main.cpp **** 			// printf("\n MB_CORRUPT_PACKET");
+ 295:..//PHY/main.cpp **** 			// do something here..
+ 296:..//PHY/main.cpp **** 		break;
+ 297:..//PHY/main.cpp **** 		case MB_CHECKSUM_FAILED:
+ 298:..//PHY/main.cpp **** 			// printf("\n MB_CHECKSUM_FAILED");
+ 299:..//PHY/main.cpp **** 			// do something here..
+ 300:..//PHY/main.cpp **** 		break;
+ 301:..//PHY/main.cpp **** 		case MB_INCORRECT_ID:
+ 302:..//PHY/main.cpp **** 			// printf("\n MB_INCORRECT_ID");
+ 303:..//PHY/main.cpp **** 			// do something here..
+ 304:..//PHY/main.cpp **** 		break;
+ 305:..//PHY/main.cpp **** 		case MB_DATA_READ:
+ 306:..//PHY/main.cpp **** 			// printf("\n MB_DATA_READ");
+ 307:..//PHY/main.cpp **** 			// do something here..
+ 308:..//PHY/main.cpp **** 		break;
+ 309:..//PHY/main.cpp **** 	}
+ 310:..//PHY/main.cpp **** 	return 1;
+ 610              		.loc 2 310 0
+ 611 0008 4FF00103 		mov	r3, #1
+ 311:..//PHY/main.cpp **** }
+ 612              		.loc 2 311 0
+ 613 000c 1846     		mov	r0, r3
+ 614 000e 07F10C07 		add	r7, r7, #12
+ 615 0012 BD46     		mov	sp, r7
+ 616 0014 80BC     		pop	{r7}
+ 617 0016 7047     		bx	lr
+ 618              		.cfi_endproc
+ 619              	.LFE34:
+ 621              		.section	.text._Z40set_holding_registers_values_accel_tableii,"ax",%progbits
+ 622              		.align	2
+ 623              		.global	_Z40set_holding_registers_values_accel_tableii
+ 624              		.thumb
+ 625              		.thumb_func
+ 627              	_Z40set_holding_registers_values_accel_tableii:
+ 628              	.LFB35:
+ 312:..//PHY/main.cpp **** 
+ 313:..//PHY/main.cpp **** int set_holding_registers_values_accel_table(int modbus_cnt , int index_offset){
+ 629              		.loc 2 313 0
+ 630              		.cfi_startproc
+ 631              		@ args = 0, pretend = 0, frame = 16
+ 632              		@ frame_needed = 1, uses_anonymous_args = 0
+ 633              		@ link register save eliminated.
+ 634 0000 80B4     		push	{r7}
+ 635              	.LCFI9:
+ 636              		.cfi_def_cfa_offset 4
+ 637 0002 85B0     		sub	sp, sp, #20
+ 638              	.LCFI10:
+ 639              		.cfi_def_cfa_offset 24
+ 640 0004 00AF     		add	r7, sp, #0
+ 641              		.cfi_offset 7, -4
+ 642              	.LCFI11:
+ 643              		.cfi_def_cfa_register 7
+ 644 0006 7860     		str	r0, [r7, #4]
+ 645 0008 3960     		str	r1, [r7, #0]
+ 646              	.LBB3:
+ 314:..//PHY/main.cpp **** 	unsigned int temp_int=0;
+ 647              		.loc 2 314 0
+ 648 000a 4FF00003 		mov	r3, #0
+ 649 000e FB60     		str	r3, [r7, #12]
+ 650              	.LBE3:
+ 315:..//PHY/main.cpp **** 	switch(modbus_cnt){
+ 316:..//PHY/main.cpp **** 
+ 317:..//PHY/main.cpp **** 		case MB_X_ACCEL:
+ 318:..//PHY/main.cpp **** 			// temp_int = (unsigned int)(accel_table[index_offset].read_datax);
+ 319:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[(modbus_cnt+(index_offset*ACCEL_REG_NUM))]){
+ 320:..//PHY/main.cpp **** 			// 	holdingRegs[(modbus_cnt+(index_offset*ACCEL_REG_NUM))] = temp_int;
+ 321:..//PHY/main.cpp **** 			// }
+ 322:..//PHY/main.cpp **** 			break;
+ 323:..//PHY/main.cpp **** 
+ 324:..//PHY/main.cpp **** 		case MB_Y_ACCEL:
+ 325:..//PHY/main.cpp **** 			// temp_int = (unsigned int)(accel_table[index_offset].read_datay);
+ 326:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[(modbus_cnt+(index_offset*ACCEL_REG_NUM))]){
+ 327:..//PHY/main.cpp **** 			// 	holdingRegs[(modbus_cnt+(index_offset*ACCEL_REG_NUM))] = temp_int;
+ 328:..//PHY/main.cpp **** 			// }
+ 329:..//PHY/main.cpp **** 			break;
+ 330:..//PHY/main.cpp **** 			
+ 331:..//PHY/main.cpp **** 		case MB_Z_ACCEL:
+ 332:..//PHY/main.cpp **** 			// temp_int = (unsigned int)(accel_table[index_offset].read_dataz);
+ 333:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[(modbus_cnt+(index_offset*ACCEL_REG_NUM))]){
+ 334:..//PHY/main.cpp **** 			// 	holdingRegs[(modbus_cnt+(index_offset*ACCEL_REG_NUM))] = temp_int;
+ 335:..//PHY/main.cpp **** 			// }
+ 336:..//PHY/main.cpp **** 			break;		
+ 337:..//PHY/main.cpp **** 	}
+ 338:..//PHY/main.cpp **** }
+ 651              		.loc 2 338 0
+ 652 0010 07F11407 		add	r7, r7, #20
+ 653 0014 BD46     		mov	sp, r7
+ 654 0016 80BC     		pop	{r7}
+ 655 0018 7047     		bx	lr
+ 656              		.cfi_endproc
+ 657              	.LFE35:
+ 659 001a 00BF     		.section	.text.set_holding_registers_values,"ax",%progbits
+ 660              		.align	2
+ 661              		.global	set_holding_registers_values
+ 662              		.thumb
+ 663              		.thumb_func
+ 665              	set_holding_registers_values:
+ 666              	.LFB36:
+ 339:..//PHY/main.cpp **** 
+ 340:..//PHY/main.cpp **** int set_holding_registers_values(int modbus_cnt){
+ 667              		.loc 2 340 0
+ 668              		.cfi_startproc
+ 669              		@ args = 0, pretend = 0, frame = 16
+ 670              		@ frame_needed = 1, uses_anonymous_args = 0
+ 671              		@ link register save eliminated.
+ 672 0000 80B4     		push	{r7}
+ 673              	.LCFI12:
+ 674              		.cfi_def_cfa_offset 4
+ 675 0002 85B0     		sub	sp, sp, #20
+ 676              	.LCFI13:
+ 677              		.cfi_def_cfa_offset 24
+ 678 0004 00AF     		add	r7, sp, #0
+ 679              		.cfi_offset 7, -4
+ 680              	.LCFI14:
+ 681              		.cfi_def_cfa_register 7
+ 682 0006 7860     		str	r0, [r7, #4]
+ 683              	.LBB4:
+ 341:..//PHY/main.cpp **** 	unsigned int temp_int=0;
+ 684              		.loc 2 341 0
+ 685 0008 4FF00003 		mov	r3, #0
+ 686 000c FB60     		str	r3, [r7, #12]
+ 342:..//PHY/main.cpp **** 	switch(modbus_cnt){
+ 343:..//PHY/main.cpp **** 		case MB_MY_IP1:
+ 344:..//PHY/main.cpp **** 			// temp_int = (unsigned int)MYIP_1;
+ 345:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[MB_MY_IP1]){
+ 346:..//PHY/main.cpp **** 			// 	holdingRegs[MB_MY_IP1] = temp_int;
+ 347:..//PHY/main.cpp **** 			// }
+ 348:..//PHY/main.cpp **** 			
+ 349:..//PHY/main.cpp **** 			break;
+ 350:..//PHY/main.cpp **** 
+ 351:..//PHY/main.cpp **** 		case MB_MY_IP2:
+ 352:..//PHY/main.cpp **** 			// temp_int = (unsigned int)MYIP_2;
+ 353:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[MB_MY_IP2])
+ 354:..//PHY/main.cpp **** 			// 	holdingRegs[MB_MY_IP2] = temp_int;
+ 355:..//PHY/main.cpp **** 			break;		
+ 356:..//PHY/main.cpp **** 
+ 357:..//PHY/main.cpp **** 		case MB_MY_IP3:
+ 358:..//PHY/main.cpp **** 			// temp_int = (unsigned int)MYIP_3;
+ 359:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[MB_MY_IP3])
+ 360:..//PHY/main.cpp **** 			// 	holdingRegs[MB_MY_IP3] = temp_int;
+ 361:..//PHY/main.cpp **** 			break;	
+ 362:..//PHY/main.cpp **** 
+ 363:..//PHY/main.cpp **** 		case MB_MY_IP4:
+ 364:..//PHY/main.cpp **** 			// temp_int = (unsigned int)MYIP_4;
+ 365:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[MYIP_4]){
+ 366:..//PHY/main.cpp **** 			// 	holdingRegs[MB_MY_IP4] = temp_int;
+ 367:..//PHY/main.cpp **** 			// }
+ 368:..//PHY/main.cpp **** 
+ 369:..//PHY/main.cpp **** 			break;
+ 370:..//PHY/main.cpp **** 
+ 371:..//PHY/main.cpp **** 		case SM_DELAY_SET:
+ 372:..//PHY/main.cpp **** 			// temp_int = (unsigned int)delay_val;
+ 373:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[SM_DELAY_SET])
+ 374:..//PHY/main.cpp **** 			// 	holdingRegs[SM_DELAY_SET] = temp_int;
+ 375:..//PHY/main.cpp **** 			break;			
+ 376:..//PHY/main.cpp **** 			
+ 377:..//PHY/main.cpp **** 		case SM_READ_DATA:
+ 378:..//PHY/main.cpp **** 			// temp_int = (unsigned int)read_data_lsm;
+ 379:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[SM_READ_DATA])
+ 380:..//PHY/main.cpp **** 			// 	holdingRegs[SM_READ_DATA] = temp_int;
+ 381:..//PHY/main.cpp **** 			
+ 382:..//PHY/main.cpp **** 		break;
+ 383:..//PHY/main.cpp **** 
+ 384:..//PHY/main.cpp **** 		default:
+ 385:..//PHY/main.cpp **** 
+ 386:..//PHY/main.cpp **** 			break;
+ 387:..//PHY/main.cpp **** 	}
+ 388:..//PHY/main.cpp **** 	return 1;
+ 687              		.loc 2 388 0
+ 688 000e 4FF00103 		mov	r3, #1
+ 689              	.LBE4:
+ 389:..//PHY/main.cpp **** 
+ 390:..//PHY/main.cpp **** }
+ 690              		.loc 2 390 0
+ 691 0012 1846     		mov	r0, r3
+ 692 0014 07F11407 		add	r7, r7, #20
+ 693 0018 BD46     		mov	sp, r7
+ 694 001a 80BC     		pop	{r7}
+ 695 001c 7047     		bx	lr
+ 696              		.cfi_endproc
+ 697              	.LFE36:
+ 699 001e 00BF     		.section	.text._Z20execute_eeprom_writei,"ax",%progbits
+ 700              		.align	2
+ 701              		.global	_Z20execute_eeprom_writei
+ 702              		.thumb
+ 703              		.thumb_func
+ 705              	_Z20execute_eeprom_writei:
+ 706              	.LFB37:
+ 391:..//PHY/main.cpp **** 
+ 392:..//PHY/main.cpp **** void execute_eeprom_write(int flash_write){
+ 707              		.loc 2 392 0
+ 708              		.cfi_startproc
+ 709              		@ args = 0, pretend = 0, frame = 8
+ 710              		@ frame_needed = 1, uses_anonymous_args = 0
+ 711 0000 80B5     		push	{r7, lr}
+ 712              	.LCFI15:
+ 713              		.cfi_def_cfa_offset 8
+ 714 0002 82B0     		sub	sp, sp, #8
+ 715              	.LCFI16:
+ 716              		.cfi_def_cfa_offset 16
+ 717 0004 00AF     		add	r7, sp, #0
+ 718              		.cfi_offset 14, -4
+ 719              		.cfi_offset 7, -8
+ 720              	.LCFI17:
+ 721              		.cfi_def_cfa_register 7
+ 722 0006 7860     		str	r0, [r7, #4]
+ 393:..//PHY/main.cpp **** 	switch(flash_write){
+ 723              		.loc 2 393 0
+ 724 0008 7B68     		ldr	r3, [r7, #4]
+ 725 000a 03F1FF33 		add	r3, r3, #-1
+ 726 000e 032B     		cmp	r3, #3
+ 727 0010 3ED8     		bhi	.L31
+ 728 0012 01A2     		adr	r2, .L36
+ 729 0014 52F823F0 		ldr	pc, [r2, r3, lsl #2]
+ 730              		.align	2
+ 731              	.L36:
+ 732 0018 29000000 		.word	.L32+1
+ 733 001c 43000000 		.word	.L33+1
+ 734 0020 5D000000 		.word	.L34+1
+ 735 0024 77000000 		.word	.L35+1
+ 736              	.L32:
+ 394:..//PHY/main.cpp **** 		case EEP_WRITE1:
+ 395:..//PHY/main.cpp **** 			// printf("\n write 1");
+ 396:..//PHY/main.cpp **** 			flash_write_now = 0;
+ 737              		.loc 2 396 0
+ 738 0028 40F20003 		movw	r3, #:lower16:flash_write_now
+ 739 002c C0F20003 		movt	r3, #:upper16:flash_write_now
+ 740 0030 4FF00002 		mov	r2, #0
+ 741 0034 1A60     		str	r2, [r3, #0]
+ 397:..//PHY/main.cpp **** 			write_config_data();		
+ 742              		.loc 2 397 0
+ 743 0036 40F20003 		movw	r3, #:lower16:_Z17write_config_datav
+ 744 003a C0F20003 		movt	r3, #:upper16:_Z17write_config_datav
+ 745 003e 9847     		blx	r3
+ 398:..//PHY/main.cpp **** 			break;
+ 746              		.loc 2 398 0
+ 747 0040 2DE0     		b	.L38
+ 748              	.L33:
+ 399:..//PHY/main.cpp **** 
+ 400:..//PHY/main.cpp **** 		case EEP_WRITE2:
+ 401:..//PHY/main.cpp **** 			// printf("\n write 2");
+ 402:..//PHY/main.cpp **** 			flash_write_now = 0;
+ 749              		.loc 2 402 0
+ 750 0042 40F20003 		movw	r3, #:lower16:flash_write_now
+ 751 0046 C0F20003 		movt	r3, #:upper16:flash_write_now
+ 752 004a 4FF00002 		mov	r2, #0
+ 753 004e 1A60     		str	r2, [r3, #0]
+ 403:..//PHY/main.cpp **** 			write_config_data_table_1();	
+ 754              		.loc 2 403 0
+ 755 0050 40F20003 		movw	r3, #:lower16:_Z25write_config_data_table_1v
+ 756 0054 C0F20003 		movt	r3, #:upper16:_Z25write_config_data_table_1v
+ 757 0058 9847     		blx	r3
+ 404:..//PHY/main.cpp **** 			break;
+ 758              		.loc 2 404 0
+ 759 005a 20E0     		b	.L38
+ 760              	.L34:
+ 405:..//PHY/main.cpp **** 
+ 406:..//PHY/main.cpp **** 		case EEP_WRITE3:
+ 407:..//PHY/main.cpp **** 			// printf("\n write 3");
+ 408:..//PHY/main.cpp **** 			flash_write_now = 0;
+ 761              		.loc 2 408 0
+ 762 005c 40F20003 		movw	r3, #:lower16:flash_write_now
+ 763 0060 C0F20003 		movt	r3, #:upper16:flash_write_now
+ 764 0064 4FF00002 		mov	r2, #0
+ 765 0068 1A60     		str	r2, [r3, #0]
+ 409:..//PHY/main.cpp **** 			write_config_data_table_2();	
+ 766              		.loc 2 409 0
+ 767 006a 40F20003 		movw	r3, #:lower16:_Z25write_config_data_table_2v
+ 768 006e C0F20003 		movt	r3, #:upper16:_Z25write_config_data_table_2v
+ 769 0072 9847     		blx	r3
+ 410:..//PHY/main.cpp **** 			break;
+ 770              		.loc 2 410 0
+ 771 0074 13E0     		b	.L38
+ 772              	.L35:
+ 411:..//PHY/main.cpp **** 			
+ 412:..//PHY/main.cpp **** 		case EEP_WRITE4:
+ 413:..//PHY/main.cpp **** 			flash_write_now = 0;
+ 773              		.loc 2 413 0
+ 774 0076 40F20003 		movw	r3, #:lower16:flash_write_now
+ 775 007a C0F20003 		movt	r3, #:upper16:flash_write_now
+ 776 007e 4FF00002 		mov	r2, #0
+ 777 0082 1A60     		str	r2, [r3, #0]
+ 414:..//PHY/main.cpp **** 			write_config_data_table_3();	
+ 778              		.loc 2 414 0
+ 779 0084 40F20003 		movw	r3, #:lower16:_Z25write_config_data_table_3v
+ 780 0088 C0F20003 		movt	r3, #:upper16:_Z25write_config_data_table_3v
+ 781 008c 9847     		blx	r3
+ 415:..//PHY/main.cpp **** 			break;
+ 782              		.loc 2 415 0
+ 783 008e 06E0     		b	.L38
+ 784              	.L31:
+ 416:..//PHY/main.cpp **** 		
+ 417:..//PHY/main.cpp **** 		default:
+ 418:..//PHY/main.cpp **** 			flash_write_now = 0;
+ 785              		.loc 2 418 0
+ 786 0090 40F20003 		movw	r3, #:lower16:flash_write_now
+ 787 0094 C0F20003 		movt	r3, #:upper16:flash_write_now
+ 788 0098 4FF00002 		mov	r2, #0
+ 789 009c 1A60     		str	r2, [r3, #0]
+ 790              	.L38:
+ 419:..//PHY/main.cpp **** 			break;
+ 420:..//PHY/main.cpp **** 	}
+ 421:..//PHY/main.cpp **** 
+ 422:..//PHY/main.cpp **** }
+ 791              		.loc 2 422 0
+ 792 009e 07F10807 		add	r7, r7, #8
+ 793 00a2 BD46     		mov	sp, r7
+ 794 00a4 80BD     		pop	{r7, pc}
+ 795              		.cfi_endproc
+ 796              	.LFE37:
+ 798 00a6 00BF     		.section	.text.apply_modbus_values,"ax",%progbits
+ 799              		.align	2
+ 800              		.global	apply_modbus_values
+ 801              		.thumb
+ 802              		.thumb_func
+ 804              	apply_modbus_values:
+ 805              	.LFB38:
+ 423:..//PHY/main.cpp **** 
+ 424:..//PHY/main.cpp **** 
+ 425:..//PHY/main.cpp **** #if 1
+ 426:..//PHY/main.cpp **** int apply_modbus_values(int modbus_cnt){
+ 806              		.loc 2 426 0
+ 807              		.cfi_startproc
+ 808              		@ args = 0, pretend = 0, frame = 8
+ 809              		@ frame_needed = 1, uses_anonymous_args = 0
+ 810              		@ link register save eliminated.
+ 811 0000 80B4     		push	{r7}
+ 812              	.LCFI18:
+ 813              		.cfi_def_cfa_offset 4
+ 814 0002 83B0     		sub	sp, sp, #12
+ 815              	.LCFI19:
+ 816              		.cfi_def_cfa_offset 16
+ 817 0004 00AF     		add	r7, sp, #0
+ 818              		.cfi_offset 7, -4
+ 819              	.LCFI20:
+ 820              		.cfi_def_cfa_register 7
+ 821 0006 7860     		str	r0, [r7, #4]
+ 427:..//PHY/main.cpp **** 	// if(holdingRegs_prev[modbus_cnt]!=holdingRegs[modbus_cnt]){
+ 428:..//PHY/main.cpp **** 		
+ 429:..//PHY/main.cpp **** 		switch(modbus_cnt){
+ 430:..//PHY/main.cpp **** 			case MB_MY_IP1:{
+ 431:..//PHY/main.cpp **** 				// MYIP_1 = (uint8_t)(holdingRegs[MB_MY_IP1]);
+ 432:..//PHY/main.cpp **** 				// flash_write_now = 1;		
+ 433:..//PHY/main.cpp **** 				break;
+ 434:..//PHY/main.cpp **** 			}	
+ 435:..//PHY/main.cpp **** 			case MB_MY_IP2:{
+ 436:..//PHY/main.cpp **** 				// MYIP_2 = (uint8_t)(holdingRegs[MB_MY_IP2]);
+ 437:..//PHY/main.cpp **** 				// flash_write_now = 1;
+ 438:..//PHY/main.cpp **** 				break;
+ 439:..//PHY/main.cpp **** 			}
+ 440:..//PHY/main.cpp **** 
+ 441:..//PHY/main.cpp **** 			case MB_MY_IP3:{
+ 442:..//PHY/main.cpp **** 				// MYIP_3 = (uint8_t)(holdingRegs[MB_MY_IP3]);
+ 443:..//PHY/main.cpp **** 				// flash_write_now = 1;				
+ 444:..//PHY/main.cpp **** 				break;
+ 445:..//PHY/main.cpp **** 			}
+ 446:..//PHY/main.cpp **** 		
+ 447:..//PHY/main.cpp **** 			case MB_MY_IP4:{
+ 448:..//PHY/main.cpp **** 				// MYIP_4 = (uint8_t)(holdingRegs[MB_MY_IP4]);
+ 449:..//PHY/main.cpp **** 				// flash_write_now = 1;
+ 450:..//PHY/main.cpp **** 			break;
+ 451:..//PHY/main.cpp **** 			}
+ 452:..//PHY/main.cpp **** 
+ 453:..//PHY/main.cpp **** 			case SM_DELAY_SET:{
+ 454:..//PHY/main.cpp **** 				// delay_val = (uint16_t)(holdingRegs[SM_DELAY_SET]);
+ 455:..//PHY/main.cpp **** 				// dt_set_delay(DELAY_LSM6DS3, delay_val);
+ 456:..//PHY/main.cpp **** 				// flash_write_now = 1;
+ 457:..//PHY/main.cpp **** 			break;	
+ 458:..//PHY/main.cpp **** 			}
+ 459:..//PHY/main.cpp **** 
+ 460:..//PHY/main.cpp **** 			case MB_READ_REQUEST:{
+ 461:..//PHY/main.cpp **** 				// addr_read = (uint8_t)(holdingRegs[MB_READ_REQUEST]);
+ 462:..//PHY/main.cpp **** 				// read_request = 1; 
+ 463:..//PHY/main.cpp **** 				
+ 464:..//PHY/main.cpp **** 			break;
+ 465:..//PHY/main.cpp **** 			}
+ 466:..//PHY/main.cpp **** 
+ 467:..//PHY/main.cpp **** 			case MB_WRITE_REQUEST:{
+ 468:..//PHY/main.cpp **** 				// addr_write = (uint8_t)(holdingRegs[MB_WRITE_REQUEST]);
+ 469:..//PHY/main.cpp **** 				// data_to_write = (uint8_t)(holdingRegs[MB_WRITE_REQUEST+ 1]);
+ 470:..//PHY/main.cpp **** 				// write_request = 1;
+ 471:..//PHY/main.cpp **** 
+ 472:..//PHY/main.cpp **** 			break;	
+ 473:..//PHY/main.cpp **** 			}
+ 474:..//PHY/main.cpp **** 
+ 475:..//PHY/main.cpp **** 			case MB_START_ACCEL_READ:{
+ 476:..//PHY/main.cpp **** 				// start_reading_acc = (uint8_t)(holdingRegs[MB_START_ACCEL_READ]);
+ 477:..//PHY/main.cpp **** 			break;
+ 478:..//PHY/main.cpp **** 			}
+ 479:..//PHY/main.cpp **** 
+ 480:..//PHY/main.cpp **** 			case MB_STOP_ACCEL_READ:{
+ 481:..//PHY/main.cpp **** 				// stop_reading_acc = (uint8_t)(holdingRegs[MB_STOP_ACCEL_READ]);
+ 482:..//PHY/main.cpp **** 			break;
+ 483:..//PHY/main.cpp **** 			}
+ 484:..//PHY/main.cpp **** 			
+ 485:..//PHY/main.cpp **** 		}
+ 486:..//PHY/main.cpp **** 	// }
+ 487:..//PHY/main.cpp **** 	return 1;
+ 822              		.loc 2 487 0
+ 823 0008 4FF00103 		mov	r3, #1
+ 488:..//PHY/main.cpp **** }
+ 824              		.loc 2 488 0
+ 825 000c 1846     		mov	r0, r3
+ 826 000e 07F10C07 		add	r7, r7, #12
+ 827 0012 BD46     		mov	sp, r7
+ 828 0014 80BC     		pop	{r7}
+ 829 0016 7047     		bx	lr
+ 830              		.cfi_endproc
+ 831              	.LFE38:
+ 833              		.section	.text.take_samples,"ax",%progbits
+ 834              		.align	2
+ 835              		.global	take_samples
+ 836              		.thumb
+ 837              		.thumb_func
+ 839              	take_samples:
+ 840              	.LFB39:
+ 489:..//PHY/main.cpp **** #endif
+ 490:..//PHY/main.cpp **** 	
+ 491:..//PHY/main.cpp **** extern "C"{
+ 492:..//PHY/main.cpp **** 	int take_samples(){
+ 841              		.loc 2 492 0
+ 842              		.cfi_startproc
+ 843              		@ args = 0, pretend = 0, frame = 0
+ 844              		@ frame_needed = 1, uses_anonymous_args = 0
+ 845              		@ link register save eliminated.
+ 846 0000 80B4     		push	{r7}
+ 847              	.LCFI21:
+ 848              		.cfi_def_cfa_offset 4
+ 849 0002 00AF     		add	r7, sp, #0
+ 850              		.cfi_offset 7, -4
+ 851              	.LCFI22:
+ 852              		.cfi_def_cfa_register 7
+ 493:..//PHY/main.cpp **** 		return 1;
+ 853              		.loc 2 493 0
+ 854 0004 4FF00103 		mov	r3, #1
+ 494:..//PHY/main.cpp **** 	}
+ 855              		.loc 2 494 0
+ 856 0008 1846     		mov	r0, r3
+ 857 000a BD46     		mov	sp, r7
+ 858 000c 80BC     		pop	{r7}
+ 859 000e 7047     		bx	lr
+ 860              		.cfi_endproc
+ 861              	.LFE39:
+ 863              		.section	.text.update_sm_operation_every_1ms,"ax",%progbits
+ 864              		.align	2
+ 865              		.global	update_sm_operation_every_1ms
+ 866              		.thumb
+ 867              		.thumb_func
+ 869              	update_sm_operation_every_1ms:
+ 870              	.LFB40:
+ 495:..//PHY/main.cpp **** 
+ 496:..//PHY/main.cpp **** 	int update_sm_operation_every_1ms(){
+ 871              		.loc 2 496 0
+ 872              		.cfi_startproc
+ 873              		@ args = 0, pretend = 0, frame = 0
+ 874              		@ frame_needed = 1, uses_anonymous_args = 0
+ 875 0000 80B5     		push	{r7, lr}
+ 876              	.LCFI23:
+ 877              		.cfi_def_cfa_offset 8
+ 878 0002 00AF     		add	r7, sp, #0
+ 879              		.cfi_offset 14, -4
+ 880              		.cfi_offset 7, -8
+ 881              	.LCFI24:
+ 882              		.cfi_def_cfa_register 7
+ 497:..//PHY/main.cpp **** 		if(SM_START == sm_operation.SM_started()){
+ 883              		.loc 2 497 0
+ 884 0004 40F20000 		movw	r0, #:lower16:sm_operation
+ 885 0008 C0F20000 		movt	r0, #:upper16:sm_operation
+ 886 000c 40F20003 		movw	r3, #:lower16:_ZN13State_Machine10SM_startedEv
+ 887 0010 C0F20003 		movt	r3, #:upper16:_ZN13State_Machine10SM_startedEv
+ 888 0014 9847     		blx	r3
+ 889 0016 0346     		mov	r3, r0
+ 890 0018 012B     		cmp	r3, #1
+ 891 001a 14BF     		ite	ne
+ 892 001c 0023     		movne	r3, #0
+ 893 001e 0123     		moveq	r3, #1
+ 894 0020 DBB2     		uxtb	r3, r3
+ 895 0022 002B     		cmp	r3, #0
+ 896 0024 08D0     		beq	.L46
+ 498:..//PHY/main.cpp **** 			sm_operation.update();
+ 897              		.loc 2 498 0
+ 898 0026 40F20000 		movw	r0, #:lower16:sm_operation
+ 899 002a C0F20000 		movt	r0, #:upper16:sm_operation
+ 900 002e 40F20003 		movw	r3, #:lower16:_ZN12SM_OPERATION6updateEv
+ 901 0032 C0F20003 		movt	r3, #:upper16:_ZN12SM_OPERATION6updateEv
+ 902 0036 9847     		blx	r3
+ 903              	.L46:
+ 499:..//PHY/main.cpp **** 		}
+ 500:..//PHY/main.cpp **** 	}
+ 904              		.loc 2 500 0
+ 905 0038 80BD     		pop	{r7, pc}
+ 906              		.cfi_endproc
+ 907              	.LFE40:
+ 909 003a 00BF     		.section	.text._Z19start_state_machinev,"ax",%progbits
+ 910              		.align	2
+ 911              		.global	_Z19start_state_machinev
+ 912              		.thumb
+ 913              		.thumb_func
+ 915              	_Z19start_state_machinev:
+ 916              	.LFB41:
+ 501:..//PHY/main.cpp **** }
+ 502:..//PHY/main.cpp **** 
+ 503:..//PHY/main.cpp **** 
+ 504:..//PHY/main.cpp **** 
+ 505:..//PHY/main.cpp **** 
+ 506:..//PHY/main.cpp **** 
+ 507:..//PHY/main.cpp **** // call this to start state machine
+ 508:..//PHY/main.cpp **** int start_state_machine(){
+ 917              		.loc 2 508 0
+ 918              		.cfi_startproc
+ 919              		@ args = 0, pretend = 0, frame = 0
+ 920              		@ frame_needed = 1, uses_anonymous_args = 0
+ 921 0000 80B5     		push	{r7, lr}
+ 922              	.LCFI25:
+ 923              		.cfi_def_cfa_offset 8
+ 924 0002 00AF     		add	r7, sp, #0
+ 925              		.cfi_offset 14, -4
+ 926              		.cfi_offset 7, -8
+ 927              	.LCFI26:
+ 928              		.cfi_def_cfa_register 7
+ 509:..//PHY/main.cpp **** 	if(SM_START != sm_operation.SM_started()){
+ 929              		.loc 2 509 0
+ 930 0004 40F20000 		movw	r0, #:lower16:sm_operation
+ 931 0008 C0F20000 		movt	r0, #:upper16:sm_operation
+ 932 000c 40F20003 		movw	r3, #:lower16:_ZN13State_Machine10SM_startedEv
+ 933 0010 C0F20003 		movt	r3, #:upper16:_ZN13State_Machine10SM_startedEv
+ 934 0014 9847     		blx	r3
+ 935 0016 0346     		mov	r3, r0
+ 936 0018 012B     		cmp	r3, #1
+ 937 001a 0CBF     		ite	eq
+ 938 001c 0023     		moveq	r3, #0
+ 939 001e 0123     		movne	r3, #1
+ 940 0020 DBB2     		uxtb	r3, r3
+ 941 0022 002B     		cmp	r3, #0
+ 942 0024 1AD0     		beq	.L50
+ 510:..//PHY/main.cpp **** 		sm_operation.SM_start();
+ 943              		.loc 2 510 0
+ 944 0026 40F20000 		movw	r0, #:lower16:sm_operation
+ 945 002a C0F20000 		movt	r0, #:upper16:sm_operation
+ 946 002e 40F20003 		movw	r3, #:lower16:_ZN13State_Machine8SM_startEv
+ 947 0032 C0F20003 		movt	r3, #:upper16:_ZN13State_Machine8SM_startEv
+ 948 0036 9847     		blx	r3
+ 511:..//PHY/main.cpp **** 		io_set_output(GREEN_LED,1);
+ 949              		.loc 2 511 0
+ 950 0038 4FF00500 		mov	r0, #5
+ 951 003c 4FF00101 		mov	r1, #1
+ 952 0040 40F20003 		movw	r3, #:lower16:io_set_output
+ 953 0044 C0F20003 		movt	r3, #:upper16:io_set_output
+ 954 0048 9847     		blx	r3
+ 512:..//PHY/main.cpp **** 		io_set_output(YELLOW_LED,0);
+ 955              		.loc 2 512 0
+ 956 004a 4FF00600 		mov	r0, #6
+ 957 004e 4FF00001 		mov	r1, #0
+ 958 0052 40F20003 		movw	r3, #:lower16:io_set_output
+ 959 0056 C0F20003 		movt	r3, #:upper16:io_set_output
+ 960 005a 9847     		blx	r3
+ 961              	.L50:
+ 513:..//PHY/main.cpp **** 	}
+ 514:..//PHY/main.cpp **** }
+ 962              		.loc 2 514 0
+ 963 005c 80BD     		pop	{r7, pc}
+ 964              		.cfi_endproc
+ 965              	.LFE41:
+ 967 005e 00BF     		.section	.text._Z18stop_state_machinev,"ax",%progbits
+ 968              		.align	2
+ 969              		.global	_Z18stop_state_machinev
+ 970              		.thumb
+ 971              		.thumb_func
+ 973              	_Z18stop_state_machinev:
+ 974              	.LFB42:
+ 515:..//PHY/main.cpp **** 
+ 516:..//PHY/main.cpp **** int stop_state_machine(){
+ 975              		.loc 2 516 0
+ 976              		.cfi_startproc
+ 977              		@ args = 0, pretend = 0, frame = 0
+ 978              		@ frame_needed = 1, uses_anonymous_args = 0
+ 979 0000 80B5     		push	{r7, lr}
+ 980              	.LCFI27:
+ 981              		.cfi_def_cfa_offset 8
+ 982 0002 00AF     		add	r7, sp, #0
+ 983              		.cfi_offset 14, -4
+ 984              		.cfi_offset 7, -8
+ 985              	.LCFI28:
+ 986              		.cfi_def_cfa_register 7
+ 517:..//PHY/main.cpp **** 	if(SM_START == sm_operation.SM_started()){
+ 987              		.loc 2 517 0
+ 988 0004 40F20000 		movw	r0, #:lower16:sm_operation
+ 989 0008 C0F20000 		movt	r0, #:upper16:sm_operation
+ 990 000c 40F20003 		movw	r3, #:lower16:_ZN13State_Machine10SM_startedEv
+ 991 0010 C0F20003 		movt	r3, #:upper16:_ZN13State_Machine10SM_startedEv
+ 992 0014 9847     		blx	r3
+ 993 0016 0346     		mov	r3, r0
+ 994 0018 012B     		cmp	r3, #1
+ 995 001a 14BF     		ite	ne
+ 996 001c 0023     		movne	r3, #0
+ 997 001e 0123     		moveq	r3, #1
+ 998 0020 DBB2     		uxtb	r3, r3
+ 999 0022 002B     		cmp	r3, #0
+ 1000 0024 1AD0     		beq	.L54
+ 518:..//PHY/main.cpp **** 		sm_operation.stop_now();
+ 1001              		.loc 2 518 0
+ 1002 0026 40F20000 		movw	r0, #:lower16:sm_operation
+ 1003 002a C0F20000 		movt	r0, #:upper16:sm_operation
+ 1004 002e 40F20003 		movw	r3, #:lower16:_ZN12SM_OPERATION8stop_nowEv
+ 1005 0032 C0F20003 		movt	r3, #:upper16:_ZN12SM_OPERATION8stop_nowEv
+ 1006 0036 9847     		blx	r3
+ 519:..//PHY/main.cpp **** 		io_set_output(GREEN_LED,0);
+ 1007              		.loc 2 519 0
+ 1008 0038 4FF00500 		mov	r0, #5
+ 1009 003c 4FF00001 		mov	r1, #0
+ 1010 0040 40F20003 		movw	r3, #:lower16:io_set_output
+ 1011 0044 C0F20003 		movt	r3, #:upper16:io_set_output
+ 1012 0048 9847     		blx	r3
+ 520:..//PHY/main.cpp **** 		io_set_output(YELLOW_LED,1);
+ 1013              		.loc 2 520 0
+ 1014 004a 4FF00600 		mov	r0, #6
+ 1015 004e 4FF00101 		mov	r1, #1
+ 1016 0052 40F20003 		movw	r3, #:lower16:io_set_output
+ 1017 0056 C0F20003 		movt	r3, #:upper16:io_set_output
+ 1018 005a 9847     		blx	r3
+ 1019              	.L54:
+ 521:..//PHY/main.cpp **** 	}
+ 522:..//PHY/main.cpp **** }...
+ 1020              		.loc 2 522 0
+ 1021 005c 80BD     		pop	{r7, pc}
+ 1022              		.cfi_endproc
+ 1023              	.LFE42:
+ 1025 005e 00BF     		.section	.text._ZN12SM_OPERATIOND1Ev,"axG",%progbits,_ZN12SM_OPERATIOND1Ev,comdat
+ 1026              		.align	2
+ 1027              		.weak	_ZN12SM_OPERATIOND1Ev
+ 1028              		.thumb
+ 1029              		.thumb_func
+ 1031              	_ZN12SM_OPERATIOND1Ev:
+ 1032              	.LFB46:
+ 1033              		.file 3 "..//PHY/state_machines/SM_Operation.h"
+   1:..//PHY/state_machines/SM_Operation.h **** #ifndef SM_OPERATION_H_
+   2:..//PHY/state_machines/SM_Operation.h **** #define SM_OPERATION_H_
+   3:..//PHY/state_machines/SM_Operation.h **** 
+   4:..//PHY/state_machines/SM_Operation.h **** 
+   5:..//PHY/state_machines/SM_Operation.h **** #include "state_machine.h"
+   6:..//PHY/state_machines/SM_Operation.h **** #include "lpc_types.h"
+   7:..//PHY/state_machines/SM_Operation.h **** 
+   8:..//PHY/state_machines/SM_Operation.h **** 
+   9:..//PHY/state_machines/SM_Operation.h **** extern "C"{
+  10:..//PHY/state_machines/SM_Operation.h **** 	#include "input_output.h"
+  11:..//PHY/state_machines/SM_Operation.h **** 	// #include "multi-steppers.h"
+  12:..//PHY/state_machines/SM_Operation.h **** }
+  13:..//PHY/state_machines/SM_Operation.h **** 
+  14:..//PHY/state_machines/SM_Operation.h **** class SM_OPERATION: public State_Machine{
+ 1034              		.loc 3 14 0
+ 1035              		.cfi_startproc
+ 1036              		@ args = 0, pretend = 0, frame = 8
+ 1037              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1038 0000 80B5     		push	{r7, lr}
+ 1039              	.LCFI29:
+ 1040              		.cfi_def_cfa_offset 8
+ 1041 0002 82B0     		sub	sp, sp, #8
+ 1042              	.LCFI30:
+ 1043              		.cfi_def_cfa_offset 16
+ 1044 0004 00AF     		add	r7, sp, #0
+ 1045              		.cfi_offset 14, -4
+ 1046              		.cfi_offset 7, -8
+ 1047              	.LCFI31:
+ 1048              		.cfi_def_cfa_register 7
+ 1049 0006 7860     		str	r0, [r7, #4]
+ 1050              		.loc 3 14 0
+ 1051 0008 7B68     		ldr	r3, [r7, #4]
+ 1052 000a 0D4A     		ldr	r2, .L59
+ 1053 000c 1A60     		str	r2, [r3, #0]
+ 1054 000e 7B68     		ldr	r3, [r7, #4]
+ 1055 0010 1846     		mov	r0, r3
+ 1056 0012 40F20003 		movw	r3, #:lower16:_ZN13State_MachineD2Ev
+ 1057 0016 C0F20003 		movt	r3, #:upper16:_ZN13State_MachineD2Ev
+ 1058 001a 9847     		blx	r3
+ 1059 001c 4FF00003 		mov	r3, #0
+ 1060 0020 DBB2     		uxtb	r3, r3
+ 1061 0022 002B     		cmp	r3, #0
+ 1062 0024 05D0     		beq	.L57
+ 1063 0026 7868     		ldr	r0, [r7, #4]
+ 1064 0028 40F20003 		movw	r3, #:lower16:_ZdlPv
+ 1065 002c C0F20003 		movt	r3, #:upper16:_ZdlPv
+ 1066 0030 9847     		blx	r3
+ 1067              	.L57:
+ 1068 0032 7B68     		ldr	r3, [r7, #4]
+ 1069 0034 1846     		mov	r0, r3
+ 1070 0036 07F10807 		add	r7, r7, #8
+ 1071 003a BD46     		mov	sp, r7
+ 1072 003c 80BD     		pop	{r7, pc}
+ 1073              	.L60:
+ 1074 003e 00BF     		.align	2
+ 1075              	.L59:
+ 1076 0040 08000000 		.word	_ZTV12SM_OPERATION+8
+ 1077              		.cfi_endproc
+ 1078              	.LFE46:
+ 1080              		.section	.text._Z41__static_initialization_and_destruction_0ii,"ax",%progbits
+ 1081              		.align	2
+ 1082              		.thumb
+ 1083              		.thumb_func
+ 1085              	_Z41__static_initialization_and_destruction_0ii:
+ 1086              	.LFB43:
+ 1087              		.loc 2 522 0
+ 1088              		.cfi_startproc
+ 1089              		@ args = 0, pretend = 0, frame = 8
+ 1090              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1091 0000 80B5     		push	{r7, lr}
+ 1092              	.LCFI32:
+ 1093              		.cfi_def_cfa_offset 8
+ 1094 0002 82B0     		sub	sp, sp, #8
+ 1095              	.LCFI33:
+ 1096              		.cfi_def_cfa_offset 16
+ 1097 0004 00AF     		add	r7, sp, #0
+ 1098              		.cfi_offset 14, -4
+ 1099              		.cfi_offset 7, -8
+ 1100              	.LCFI34:
+ 1101              		.cfi_def_cfa_register 7
+ 1102 0006 7860     		str	r0, [r7, #4]
+ 1103 0008 3960     		str	r1, [r7, #0]
+ 1104              		.loc 2 522 0
+ 1105 000a 7B68     		ldr	r3, [r7, #4]
+ 1106 000c 012B     		cmp	r3, #1
+ 1107 000e 1FD1     		bne	.L63
+ 1108 0010 3A68     		ldr	r2, [r7, #0]
+ 1109 0012 4FF6FF73 		movw	r3, #65535
+ 1110 0016 9A42     		cmp	r2, r3
+ 1111 0018 1AD1     		bne	.L63
+ 1112              		.loc 2 92 0
+ 1113 001a 40F20000 		movw	r0, #:lower16:sm_operation
+ 1114 001e C0F20000 		movt	r0, #:upper16:sm_operation
+ 1115 0022 40F20003 		movw	r3, #:lower16:_ZN12SM_OPERATIONC1Ev
+ 1116 0026 C0F20003 		movt	r3, #:upper16:_ZN12SM_OPERATIONC1Ev
+ 1117 002a 9847     		blx	r3
+ 1118 002c 40F20003 		movw	r3, #:lower16:_ZN12SM_OPERATIOND1Ev
+ 1119 0030 C0F20003 		movt	r3, #:upper16:_ZN12SM_OPERATIOND1Ev
+ 1120 0034 40F20000 		movw	r0, #:lower16:sm_operation
+ 1121 0038 C0F20000 		movt	r0, #:upper16:sm_operation
+ 1122 003c 1946     		mov	r1, r3
+ 1123 003e 40F20002 		movw	r2, #:lower16:__dso_handle
+ 1124 0042 C0F20002 		movt	r2, #:upper16:__dso_handle
+ 1125 0046 40F20003 		movw	r3, #:lower16:__aeabi_atexit
+ 1126 004a C0F20003 		movt	r3, #:upper16:__aeabi_atexit
+ 1127 004e 9847     		blx	r3
+ 1128              	.L63:
+ 1129              		.loc 2 522 0
+ 1130 0050 07F10807 		add	r7, r7, #8
+ 1131 0054 BD46     		mov	sp, r7
+ 1132 0056 80BD     		pop	{r7, pc}
+ 1133              		.cfi_endproc
+ 1134              	.LFE43:
+ 1136              		.section	.text._GLOBAL__I_delay_timer_32,"ax",%progbits
+ 1137              		.align	2
+ 1138              		.thumb
+ 1139              		.thumb_func
+ 1141              	_GLOBAL__I_delay_timer_32:
+ 1142              	.LFB48:
+ 1143              		.loc 2 522 0
+ 1144              		.cfi_startproc
+ 1145              		@ args = 0, pretend = 0, frame = 0
+ 1146              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1147 0000 80B5     		push	{r7, lr}
+ 1148              	.LCFI35:
+ 1149              		.cfi_def_cfa_offset 8
+ 1150 0002 00AF     		add	r7, sp, #0
+ 1151              		.cfi_offset 14, -4
+ 1152              		.cfi_offset 7, -8
+ 1153              	.LCFI36:
+ 1154              		.cfi_def_cfa_register 7
+ 1155              		.loc 2 522 0
+ 1156 0004 4FF00100 		mov	r0, #1
+ 1157 0008 4FF6FF71 		movw	r1, #65535
+ 1158 000c 40F20003 		movw	r3, #:lower16:_Z41__static_initialization_and_destruction_0ii
+ 1159 0010 C0F20003 		movt	r3, #:upper16:_Z41__static_initialization_and_destruction_0ii
+ 1160 0014 9847     		blx	r3
+ 1161 0016 80BD     		pop	{r7, pc}
+ 1162              		.cfi_endproc
+ 1163              	.LFE48:
+ 1165              		.section	.init_array,"aw",%init_array
+ 1166              		.align	2
+ 1167 0000 00000000 		.word	_GLOBAL__I_delay_timer_32(target1)
+ 1168              		.section	.rodata._ZZ4mainE4C.29,"a",%progbits
+ 1169              		.align	2
+ 1172              	_ZZ4mainE4C.29:
+ 1173 0000 B0040000 		.word	1200
+ 1174 0004 80250000 		.word	9600
+ 1175 0008 004B0000 		.word	19200
+ 1176 000c 00960000 		.word	38400
+ 1177 0010 00E10000 		.word	57600
+ 1178              		.text
+ 1179              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 main.cpp
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:24     .text._ZN13State_MachineD2Ev:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:29     .text._ZN13State_MachineD2Ev:00000000 _ZN13State_MachineD2Ev
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:69     .text._ZN13State_MachineD2Ev:00000030 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:78     .bss.delay_timer_32:00000000 delay_timer_32
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:75     .bss.delay_timer_32:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:85     .bss.modbus_retVal:00000000 modbus_retVal
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:82     .bss.modbus_retVal:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:92     .bss.holdingRegs:00000000 holdingRegs
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:89     .bss.holdingRegs:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:99     .bss.holdingRegs_prev:00000000 holdingRegs_prev
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:96     .bss.holdingRegs_prev:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:106    .bss.slave_id_select:00000000 slave_id_select
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:103    .bss.slave_id_select:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:113    .bss.baud_rate_select:00000000 baud_rate_select
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:110    .bss.baud_rate_select:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:120    .bss.parity_bit:00000000 parity_bit
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:117    .bss.parity_bit:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:127    .data.stop_bit:00000000 stop_bit
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:124    .data.stop_bit:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:134    .data.input_rise_debounce_time:00000000 input_rise_debounce_time
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:131    .data.input_rise_debounce_time:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:141    .data.input_fall_debounce_time:00000000 input_fall_debounce_time
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:138    .data.input_fall_debounce_time:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:148    .bss.baud_value:00000000 baud_value
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:145    .bss.baud_value:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:155    .bss.flash_write_allowed:00000000 flash_write_allowed
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:152    .bss.flash_write_allowed:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:162    .bss.flash_write_now:00000000 flash_write_now
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:159    .bss.flash_write_now:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:168    .bss.fw_major_version:00000000 fw_major_version
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:169    .bss.fw_major_version:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:174    .bss.fw_minor_version:00000000 fw_minor_version
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:175    .bss.fw_minor_version:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:181    .bss.sm_operation:00000000 sm_operation
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:178    .bss.sm_operation:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:184    .rodata:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:185    .rodata:00000000 .LC0
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:188    .rodata:00000024 .LC1
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:191    .rodata:00000038 .LC2
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:194    .rodata:00000050 .LC3
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:197    .text.main:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:202    .text.main:00000000 main
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:1172   .rodata._ZZ4mainE4C.29:00000000 _ZZ4mainE4C.29
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:705    .text._Z20execute_eeprom_writei:00000000 _Z20execute_eeprom_writei
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:579    .text.main:00000394 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:587    .text._Z24modbus_exception_handleri:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:592    .text._Z24modbus_exception_handleri:00000000 _Z24modbus_exception_handleri
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:622    .text._Z40set_holding_registers_values_accel_tableii:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:627    .text._Z40set_holding_registers_values_accel_tableii:00000000 _Z40set_holding_registers_values_accel_tableii
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:660    .text.set_holding_registers_values:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:665    .text.set_holding_registers_values:00000000 set_holding_registers_values
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:700    .text._Z20execute_eeprom_writei:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:732    .text._Z20execute_eeprom_writei:00000018 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:738    .text._Z20execute_eeprom_writei:00000028 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:799    .text.apply_modbus_values:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:804    .text.apply_modbus_values:00000000 apply_modbus_values
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:834    .text.take_samples:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:839    .text.take_samples:00000000 take_samples
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:864    .text.update_sm_operation_every_1ms:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:869    .text.update_sm_operation_every_1ms:00000000 update_sm_operation_every_1ms
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:910    .text._Z19start_state_machinev:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:915    .text._Z19start_state_machinev:00000000 _Z19start_state_machinev
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:968    .text._Z18stop_state_machinev:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:973    .text._Z18stop_state_machinev:00000000 _Z18stop_state_machinev
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:1026   .text._ZN12SM_OPERATIOND1Ev:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:1031   .text._ZN12SM_OPERATIOND1Ev:00000000 _ZN12SM_OPERATIOND1Ev
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:1076   .text._ZN12SM_OPERATIOND1Ev:00000040 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:1081   .text._Z41__static_initialization_and_destruction_0ii:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:1085   .text._Z41__static_initialization_and_destruction_0ii:00000000 _Z41__static_initialization_and_destruction_0ii
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:1137   .text._GLOBAL__I_delay_timer_32:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:1141   .text._GLOBAL__I_delay_timer_32:00000000 _GLOBAL__I_delay_timer_32
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:1166   .init_array:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:1169   .rodata._ZZ4mainE4C.29:00000000 $d
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+_ZdlPv
+_ZTV13State_Machine
+debug_frmwrk_init
+SystemCoreClock
+printf
+_Z12dt_set_delayim
+_Z19read_config_versionRhS_
+_Z19config_set_defaultshh
+_Z16read_config_datav
+usbSerialInit
+modbusUSB
+_Z16modbus_configureP8modbus_tlijPj
+_Z7dt_initv
+stepper_init
+init_timers
+stepper_update_freq
+io_init
+iap_init
+reset_timer
+start_timers
+_Z8dt_reseti
+io_set_output
+input_rise_flag
+stepper_set_new_profile
+stepper_set_final_pos
+input_fall_flag
+stepper_stop_motor
+modbus_update
+_Z12dt_is_timeupi
+_Z17write_config_datav
+_Z25write_config_data_table_1v
+_Z25write_config_data_table_2v
+_Z25write_config_data_table_3v
+_ZN13State_Machine10SM_startedEv
+_ZN12SM_OPERATION6updateEv
+_ZN13State_Machine8SM_startEv
+_ZN12SM_OPERATION8stop_nowEv
+_ZTV12SM_OPERATION
+_ZN12SM_OPERATIONC1Ev
+__dso_handle
+__aeabi_atexit

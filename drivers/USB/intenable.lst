@@ -1,0 +1,1607 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"intenable.c"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.section	.text.NVIC_EnableIRQ,"ax",%progbits
+  24              		.align	2
+  25              		.thumb
+  26              		.thumb_func
+  28              	NVIC_EnableIRQ:
+  29              	.LFB14:
+  30              		.file 1 "..//common/Core/CM3/core_cm3.h"
+   1:..//common/Core/CM3/core_cm3.h **** /**************************************************************************//**
+   2:..//common/Core/CM3/core_cm3.h ****  * @file     core_cm3.h
+   3:..//common/Core/CM3/core_cm3.h ****  * @brief    CMSIS Cortex-M3 Core Peripheral Access Layer Header File
+   4:..//common/Core/CM3/core_cm3.h ****  * @version  V1.30
+   5:..//common/Core/CM3/core_cm3.h ****  * @date     30. October 2009
+   6:..//common/Core/CM3/core_cm3.h ****  *
+   7:..//common/Core/CM3/core_cm3.h ****  * @note
+   8:..//common/Core/CM3/core_cm3.h ****  * Copyright (C) 2009 ARM Limited. All rights reserved.
+   9:..//common/Core/CM3/core_cm3.h ****  *
+  10:..//common/Core/CM3/core_cm3.h ****  * @par
+  11:..//common/Core/CM3/core_cm3.h ****  * ARM Limited (ARM) is supplying this software for use with Cortex-M 
+  12:..//common/Core/CM3/core_cm3.h ****  * processor based microcontrollers.  This file can be freely distributed 
+  13:..//common/Core/CM3/core_cm3.h ****  * within development tools that are supporting such ARM based processors. 
+  14:..//common/Core/CM3/core_cm3.h ****  *
+  15:..//common/Core/CM3/core_cm3.h ****  * @par
+  16:..//common/Core/CM3/core_cm3.h ****  * THIS SOFTWARE IS PROVIDED "AS IS".  NO WARRANTIES, WHETHER EXPRESS, IMPLIED
+  17:..//common/Core/CM3/core_cm3.h ****  * OR STATUTORY, INCLUDING, BUT NOT LIMITED TO, IMPLIED WARRANTIES OF
+  18:..//common/Core/CM3/core_cm3.h ****  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE.
+  19:..//common/Core/CM3/core_cm3.h ****  * ARM SHALL NOT, IN ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR
+  20:..//common/Core/CM3/core_cm3.h ****  * CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
+  21:..//common/Core/CM3/core_cm3.h ****  *
+  22:..//common/Core/CM3/core_cm3.h ****  ******************************************************************************/
+  23:..//common/Core/CM3/core_cm3.h **** 
+  24:..//common/Core/CM3/core_cm3.h **** #ifndef __CM3_CORE_H__
+  25:..//common/Core/CM3/core_cm3.h **** #define __CM3_CORE_H__
+  26:..//common/Core/CM3/core_cm3.h **** 
+  27:..//common/Core/CM3/core_cm3.h **** /** @addtogroup CMSIS_CM3_core_LintCinfiguration CMSIS CM3 Core Lint Configuration
+  28:..//common/Core/CM3/core_cm3.h ****  *
+  29:..//common/Core/CM3/core_cm3.h ****  * List of Lint messages which will be suppressed and not shown:
+  30:..//common/Core/CM3/core_cm3.h ****  *   - Error 10: \n
+  31:..//common/Core/CM3/core_cm3.h ****  *     register uint32_t __regBasePri         __asm("basepri"); \n
+  32:..//common/Core/CM3/core_cm3.h ****  *     Error 10: Expecting ';'
+  33:..//common/Core/CM3/core_cm3.h ****  * .
+  34:..//common/Core/CM3/core_cm3.h ****  *   - Error 530: \n
+  35:..//common/Core/CM3/core_cm3.h ****  *     return(__regBasePri); \n
+  36:..//common/Core/CM3/core_cm3.h ****  *     Warning 530: Symbol '__regBasePri' (line 264) not initialized
+  37:..//common/Core/CM3/core_cm3.h ****  * . 
+  38:..//common/Core/CM3/core_cm3.h ****  *   - Error 550: \n
+  39:..//common/Core/CM3/core_cm3.h ****  *     __regBasePri = (basePri & 0x1ff); \n
+  40:..//common/Core/CM3/core_cm3.h ****  *     Warning 550: Symbol '__regBasePri' (line 271) not accessed
+  41:..//common/Core/CM3/core_cm3.h ****  * .
+  42:..//common/Core/CM3/core_cm3.h ****  *   - Error 754: \n
+  43:..//common/Core/CM3/core_cm3.h ****  *     uint32_t RESERVED0[24]; \n
+  44:..//common/Core/CM3/core_cm3.h ****  *     Info 754: local structure member '<some, not used in the HAL>' (line 109, file ./cm3_core.h)
+  45:..//common/Core/CM3/core_cm3.h ****  * .
+  46:..//common/Core/CM3/core_cm3.h ****  *   - Error 750: \n
+  47:..//common/Core/CM3/core_cm3.h ****  *     #define __CM3_CORE_H__ \n
+  48:..//common/Core/CM3/core_cm3.h ****  *     Info 750: local macro '__CM3_CORE_H__' (line 43, file./cm3_core.h) not referenced
+  49:..//common/Core/CM3/core_cm3.h ****  * .
+  50:..//common/Core/CM3/core_cm3.h ****  *   - Error 528: \n
+  51:..//common/Core/CM3/core_cm3.h ****  *     static __INLINE void NVIC_DisableIRQ(uint32_t IRQn) \n
+  52:..//common/Core/CM3/core_cm3.h ****  *     Warning 528: Symbol 'NVIC_DisableIRQ(unsigned int)' (line 419, file ./cm3_core.h) not refere
+  53:..//common/Core/CM3/core_cm3.h ****  * .
+  54:..//common/Core/CM3/core_cm3.h ****  *   - Error 751: \n
+  55:..//common/Core/CM3/core_cm3.h ****  *     } InterruptType_Type; \n
+  56:..//common/Core/CM3/core_cm3.h ****  *     Info 751: local typedef 'InterruptType_Type' (line 170, file ./cm3_core.h) not referenced
+  57:..//common/Core/CM3/core_cm3.h ****  * .
+  58:..//common/Core/CM3/core_cm3.h ****  * Note:  To re-enable a Message, insert a space before 'lint' *
+  59:..//common/Core/CM3/core_cm3.h ****  *
+  60:..//common/Core/CM3/core_cm3.h ****  */
+  61:..//common/Core/CM3/core_cm3.h **** 
+  62:..//common/Core/CM3/core_cm3.h **** /*lint -save */
+  63:..//common/Core/CM3/core_cm3.h **** /*lint -e10  */
+  64:..//common/Core/CM3/core_cm3.h **** /*lint -e530 */
+  65:..//common/Core/CM3/core_cm3.h **** /*lint -e550 */
+  66:..//common/Core/CM3/core_cm3.h **** /*lint -e754 */
+  67:..//common/Core/CM3/core_cm3.h **** /*lint -e750 */
+  68:..//common/Core/CM3/core_cm3.h **** /*lint -e528 */
+  69:..//common/Core/CM3/core_cm3.h **** /*lint -e751 */
+  70:..//common/Core/CM3/core_cm3.h **** 
+  71:..//common/Core/CM3/core_cm3.h **** 
+  72:..//common/Core/CM3/core_cm3.h **** /** @addtogroup CMSIS_CM3_core_definitions CM3 Core Definitions
+  73:..//common/Core/CM3/core_cm3.h ****   This file defines all structures and symbols for CMSIS core:
+  74:..//common/Core/CM3/core_cm3.h ****     - CMSIS version number
+  75:..//common/Core/CM3/core_cm3.h ****     - Cortex-M core registers and bitfields
+  76:..//common/Core/CM3/core_cm3.h ****     - Cortex-M core peripheral base address
+  77:..//common/Core/CM3/core_cm3.h ****   @{
+  78:..//common/Core/CM3/core_cm3.h ****  */
+  79:..//common/Core/CM3/core_cm3.h **** 
+  80:..//common/Core/CM3/core_cm3.h **** #ifdef __cplusplus
+  81:..//common/Core/CM3/core_cm3.h ****  extern "C" {
+  82:..//common/Core/CM3/core_cm3.h **** #endif 
+  83:..//common/Core/CM3/core_cm3.h **** 
+  84:..//common/Core/CM3/core_cm3.h **** #define __CM3_CMSIS_VERSION_MAIN  (0x01)                                                       /*!<
+  85:..//common/Core/CM3/core_cm3.h **** #define __CM3_CMSIS_VERSION_SUB   (0x30)                                                       /*!<
+  86:..//common/Core/CM3/core_cm3.h **** #define __CM3_CMSIS_VERSION       ((__CM3_CMSIS_VERSION_MAIN << 16) | __CM3_CMSIS_VERSION_SUB) /*!<
+  87:..//common/Core/CM3/core_cm3.h **** 
+  88:..//common/Core/CM3/core_cm3.h **** #define __CORTEX_M                (0x03)                                                       /*!<
+  89:..//common/Core/CM3/core_cm3.h **** 
+  90:..//common/Core/CM3/core_cm3.h **** #include <stdint.h>                           /* Include standard types */
+  91:..//common/Core/CM3/core_cm3.h **** 
+  92:..//common/Core/CM3/core_cm3.h **** #if defined (__ICCARM__)
+  93:..//common/Core/CM3/core_cm3.h ****   #include <intrinsics.h>                     /* IAR Intrinsics   */
+  94:..//common/Core/CM3/core_cm3.h **** #endif
+  95:..//common/Core/CM3/core_cm3.h **** 
+  96:..//common/Core/CM3/core_cm3.h **** 
+  97:..//common/Core/CM3/core_cm3.h **** #ifndef __NVIC_PRIO_BITS
+  98:..//common/Core/CM3/core_cm3.h ****   #define __NVIC_PRIO_BITS    4               /*!< standard definition for NVIC Priority Bits */
+  99:..//common/Core/CM3/core_cm3.h **** #endif
+ 100:..//common/Core/CM3/core_cm3.h **** 
+ 101:..//common/Core/CM3/core_cm3.h **** 
+ 102:..//common/Core/CM3/core_cm3.h **** 
+ 103:..//common/Core/CM3/core_cm3.h **** 
+ 104:..//common/Core/CM3/core_cm3.h **** /**
+ 105:..//common/Core/CM3/core_cm3.h ****  * IO definitions
+ 106:..//common/Core/CM3/core_cm3.h ****  *
+ 107:..//common/Core/CM3/core_cm3.h ****  * define access restrictions to peripheral registers
+ 108:..//common/Core/CM3/core_cm3.h ****  */
+ 109:..//common/Core/CM3/core_cm3.h **** 
+ 110:..//common/Core/CM3/core_cm3.h **** #ifdef __cplusplus
+ 111:..//common/Core/CM3/core_cm3.h ****   #define     __I     volatile                /*!< defines 'read only' permissions      */
+ 112:..//common/Core/CM3/core_cm3.h **** #else
+ 113:..//common/Core/CM3/core_cm3.h ****   #define     __I     volatile const          /*!< defines 'read only' permissions      */
+ 114:..//common/Core/CM3/core_cm3.h **** #endif
+ 115:..//common/Core/CM3/core_cm3.h **** #define     __O     volatile                  /*!< defines 'write only' permissions     */
+ 116:..//common/Core/CM3/core_cm3.h **** #define     __IO    volatile                  /*!< defines 'read / write' permissions   */
+ 117:..//common/Core/CM3/core_cm3.h **** 
+ 118:..//common/Core/CM3/core_cm3.h **** 
+ 119:..//common/Core/CM3/core_cm3.h **** 
+ 120:..//common/Core/CM3/core_cm3.h **** /*******************************************************************************
+ 121:..//common/Core/CM3/core_cm3.h ****  *                 Register Abstraction
+ 122:..//common/Core/CM3/core_cm3.h ****  ******************************************************************************/
+ 123:..//common/Core/CM3/core_cm3.h **** /** @addtogroup CMSIS_CM3_core_register CMSIS CM3 Core Register
+ 124:..//common/Core/CM3/core_cm3.h ****  @{
+ 125:..//common/Core/CM3/core_cm3.h **** */
+ 126:..//common/Core/CM3/core_cm3.h **** 
+ 127:..//common/Core/CM3/core_cm3.h **** 
+ 128:..//common/Core/CM3/core_cm3.h **** /** @addtogroup CMSIS_CM3_NVIC CMSIS CM3 NVIC
+ 129:..//common/Core/CM3/core_cm3.h ****   memory mapped structure for Nested Vectored Interrupt Controller (NVIC)
+ 130:..//common/Core/CM3/core_cm3.h ****   @{
+ 131:..//common/Core/CM3/core_cm3.h ****  */
+ 132:..//common/Core/CM3/core_cm3.h **** typedef struct
+ 133:..//common/Core/CM3/core_cm3.h **** {
+ 134:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t ISER[8];                      /*!< Offset: 0x000  Interrupt Set Enable Register    
+ 135:..//common/Core/CM3/core_cm3.h ****        uint32_t RESERVED0[24];                                   
+ 136:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t ICER[8];                      /*!< Offset: 0x080  Interrupt Clear Enable Register  
+ 137:..//common/Core/CM3/core_cm3.h ****        uint32_t RSERVED1[24];                                    
+ 138:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t ISPR[8];                      /*!< Offset: 0x100  Interrupt Set Pending Register   
+ 139:..//common/Core/CM3/core_cm3.h ****        uint32_t RESERVED2[24];                                   
+ 140:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t ICPR[8];                      /*!< Offset: 0x180  Interrupt Clear Pending Register 
+ 141:..//common/Core/CM3/core_cm3.h ****        uint32_t RESERVED3[24];                                   
+ 142:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t IABR[8];                      /*!< Offset: 0x200  Interrupt Active bit Register    
+ 143:..//common/Core/CM3/core_cm3.h ****        uint32_t RESERVED4[56];                                   
+ 144:..//common/Core/CM3/core_cm3.h ****   __IO uint8_t  IP[240];                      /*!< Offset: 0x300  Interrupt Priority Register (8Bit
+ 145:..//common/Core/CM3/core_cm3.h ****        uint32_t RESERVED5[644];                                  
+ 146:..//common/Core/CM3/core_cm3.h ****   __O  uint32_t STIR;                         /*!< Offset: 0xE00  Software Trigger Interrupt Regist
+ 147:..//common/Core/CM3/core_cm3.h **** }  NVIC_Type;                                               
+ 148:..//common/Core/CM3/core_cm3.h **** /*@}*/ /* end of group CMSIS_CM3_NVIC */
+ 149:..//common/Core/CM3/core_cm3.h **** 
+ 150:..//common/Core/CM3/core_cm3.h **** 
+ 151:..//common/Core/CM3/core_cm3.h **** /** @addtogroup CMSIS_CM3_SCB CMSIS CM3 SCB
+ 152:..//common/Core/CM3/core_cm3.h ****   memory mapped structure for System Control Block (SCB)
+ 153:..//common/Core/CM3/core_cm3.h ****   @{
+ 154:..//common/Core/CM3/core_cm3.h ****  */
+ 155:..//common/Core/CM3/core_cm3.h **** typedef struct
+ 156:..//common/Core/CM3/core_cm3.h **** {
+ 157:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t CPUID;                        /*!< Offset: 0x00  CPU ID Base Register              
+ 158:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t ICSR;                         /*!< Offset: 0x04  Interrupt Control State Register  
+ 159:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t VTOR;                         /*!< Offset: 0x08  Vector Table Offset Register      
+ 160:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t AIRCR;                        /*!< Offset: 0x0C  Application Interrupt / Reset Cont
+ 161:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t SCR;                          /*!< Offset: 0x10  System Control Register           
+ 162:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t CCR;                          /*!< Offset: 0x14  Configuration Control Register    
+ 163:..//common/Core/CM3/core_cm3.h ****   __IO uint8_t  SHP[12];                      /*!< Offset: 0x18  System Handlers Priority Registers
+ 164:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t SHCSR;                        /*!< Offset: 0x24  System Handler Control and State R
+ 165:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t CFSR;                         /*!< Offset: 0x28  Configurable Fault Status Register
+ 166:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t HFSR;                         /*!< Offset: 0x2C  Hard Fault Status Register        
+ 167:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t DFSR;                         /*!< Offset: 0x30  Debug Fault Status Register       
+ 168:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t MMFAR;                        /*!< Offset: 0x34  Mem Manage Address Register       
+ 169:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t BFAR;                         /*!< Offset: 0x38  Bus Fault Address Register        
+ 170:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t AFSR;                         /*!< Offset: 0x3C  Auxiliary Fault Status Register   
+ 171:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t PFR[2];                       /*!< Offset: 0x40  Processor Feature Register        
+ 172:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t DFR;                          /*!< Offset: 0x48  Debug Feature Register            
+ 173:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t ADR;                          /*!< Offset: 0x4C  Auxiliary Feature Register        
+ 174:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t MMFR[4];                      /*!< Offset: 0x50  Memory Model Feature Register     
+ 175:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t ISAR[5];                      /*!< Offset: 0x60  ISA Feature Register              
+ 176:..//common/Core/CM3/core_cm3.h **** } SCB_Type;                                                
+ 177:..//common/Core/CM3/core_cm3.h **** 
+ 178:..//common/Core/CM3/core_cm3.h **** /* SCB CPUID Register Definitions */
+ 179:..//common/Core/CM3/core_cm3.h **** #define SCB_CPUID_IMPLEMENTER_Pos          24                                             /*!< SCB 
+ 180:..//common/Core/CM3/core_cm3.h **** #define SCB_CPUID_IMPLEMENTER_Msk          (0xFFul << SCB_CPUID_IMPLEMENTER_Pos)          /*!< SCB 
+ 181:..//common/Core/CM3/core_cm3.h **** 
+ 182:..//common/Core/CM3/core_cm3.h **** #define SCB_CPUID_VARIANT_Pos              20                                             /*!< SCB 
+ 183:..//common/Core/CM3/core_cm3.h **** #define SCB_CPUID_VARIANT_Msk              (0xFul << SCB_CPUID_VARIANT_Pos)               /*!< SCB 
+ 184:..//common/Core/CM3/core_cm3.h **** 
+ 185:..//common/Core/CM3/core_cm3.h **** #define SCB_CPUID_PARTNO_Pos                4                                             /*!< SCB 
+ 186:..//common/Core/CM3/core_cm3.h **** #define SCB_CPUID_PARTNO_Msk               (0xFFFul << SCB_CPUID_PARTNO_Pos)              /*!< SCB 
+ 187:..//common/Core/CM3/core_cm3.h **** 
+ 188:..//common/Core/CM3/core_cm3.h **** #define SCB_CPUID_REVISION_Pos              0                                             /*!< SCB 
+ 189:..//common/Core/CM3/core_cm3.h **** #define SCB_CPUID_REVISION_Msk             (0xFul << SCB_CPUID_REVISION_Pos)              /*!< SCB 
+ 190:..//common/Core/CM3/core_cm3.h **** 
+ 191:..//common/Core/CM3/core_cm3.h **** /* SCB Interrupt Control State Register Definitions */
+ 192:..//common/Core/CM3/core_cm3.h **** #define SCB_ICSR_NMIPENDSET_Pos            31                                             /*!< SCB 
+ 193:..//common/Core/CM3/core_cm3.h **** #define SCB_ICSR_NMIPENDSET_Msk            (1ul << SCB_ICSR_NMIPENDSET_Pos)               /*!< SCB 
+ 194:..//common/Core/CM3/core_cm3.h **** 
+ 195:..//common/Core/CM3/core_cm3.h **** #define SCB_ICSR_PENDSVSET_Pos             28                                             /*!< SCB 
+ 196:..//common/Core/CM3/core_cm3.h **** #define SCB_ICSR_PENDSVSET_Msk             (1ul << SCB_ICSR_PENDSVSET_Pos)                /*!< SCB 
+ 197:..//common/Core/CM3/core_cm3.h **** 
+ 198:..//common/Core/CM3/core_cm3.h **** #define SCB_ICSR_PENDSVCLR_Pos             27                                             /*!< SCB 
+ 199:..//common/Core/CM3/core_cm3.h **** #define SCB_ICSR_PENDSVCLR_Msk             (1ul << SCB_ICSR_PENDSVCLR_Pos)                /*!< SCB 
+ 200:..//common/Core/CM3/core_cm3.h **** 
+ 201:..//common/Core/CM3/core_cm3.h **** #define SCB_ICSR_PENDSTSET_Pos             26                                             /*!< SCB 
+ 202:..//common/Core/CM3/core_cm3.h **** #define SCB_ICSR_PENDSTSET_Msk             (1ul << SCB_ICSR_PENDSTSET_Pos)                /*!< SCB 
+ 203:..//common/Core/CM3/core_cm3.h **** 
+ 204:..//common/Core/CM3/core_cm3.h **** #define SCB_ICSR_PENDSTCLR_Pos             25                                             /*!< SCB 
+ 205:..//common/Core/CM3/core_cm3.h **** #define SCB_ICSR_PENDSTCLR_Msk             (1ul << SCB_ICSR_PENDSTCLR_Pos)                /*!< SCB 
+ 206:..//common/Core/CM3/core_cm3.h **** 
+ 207:..//common/Core/CM3/core_cm3.h **** #define SCB_ICSR_ISRPREEMPT_Pos            23                                             /*!< SCB 
+ 208:..//common/Core/CM3/core_cm3.h **** #define SCB_ICSR_ISRPREEMPT_Msk            (1ul << SCB_ICSR_ISRPREEMPT_Pos)               /*!< SCB 
+ 209:..//common/Core/CM3/core_cm3.h **** 
+ 210:..//common/Core/CM3/core_cm3.h **** #define SCB_ICSR_ISRPENDING_Pos            22                                             /*!< SCB 
+ 211:..//common/Core/CM3/core_cm3.h **** #define SCB_ICSR_ISRPENDING_Msk            (1ul << SCB_ICSR_ISRPENDING_Pos)               /*!< SCB 
+ 212:..//common/Core/CM3/core_cm3.h **** 
+ 213:..//common/Core/CM3/core_cm3.h **** #define SCB_ICSR_VECTPENDING_Pos           12                                             /*!< SCB 
+ 214:..//common/Core/CM3/core_cm3.h **** #define SCB_ICSR_VECTPENDING_Msk           (0x1FFul << SCB_ICSR_VECTPENDING_Pos)          /*!< SCB 
+ 215:..//common/Core/CM3/core_cm3.h **** 
+ 216:..//common/Core/CM3/core_cm3.h **** #define SCB_ICSR_RETTOBASE_Pos             11                                             /*!< SCB 
+ 217:..//common/Core/CM3/core_cm3.h **** #define SCB_ICSR_RETTOBASE_Msk             (1ul << SCB_ICSR_RETTOBASE_Pos)                /*!< SCB 
+ 218:..//common/Core/CM3/core_cm3.h **** 
+ 219:..//common/Core/CM3/core_cm3.h **** #define SCB_ICSR_VECTACTIVE_Pos             0                                             /*!< SCB 
+ 220:..//common/Core/CM3/core_cm3.h **** #define SCB_ICSR_VECTACTIVE_Msk            (0x1FFul << SCB_ICSR_VECTACTIVE_Pos)           /*!< SCB 
+ 221:..//common/Core/CM3/core_cm3.h **** 
+ 222:..//common/Core/CM3/core_cm3.h **** /* SCB Interrupt Control State Register Definitions */
+ 223:..//common/Core/CM3/core_cm3.h **** #define SCB_VTOR_TBLBASE_Pos               29                                             /*!< SCB 
+ 224:..//common/Core/CM3/core_cm3.h **** #define SCB_VTOR_TBLBASE_Msk               (0x1FFul << SCB_VTOR_TBLBASE_Pos)              /*!< SCB 
+ 225:..//common/Core/CM3/core_cm3.h **** 
+ 226:..//common/Core/CM3/core_cm3.h **** #define SCB_VTOR_TBLOFF_Pos                 7                                             /*!< SCB 
+ 227:..//common/Core/CM3/core_cm3.h **** #define SCB_VTOR_TBLOFF_Msk                (0x3FFFFFul << SCB_VTOR_TBLOFF_Pos)            /*!< SCB 
+ 228:..//common/Core/CM3/core_cm3.h **** 
+ 229:..//common/Core/CM3/core_cm3.h **** /* SCB Application Interrupt and Reset Control Register Definitions */
+ 230:..//common/Core/CM3/core_cm3.h **** #define SCB_AIRCR_VECTKEY_Pos              16                                             /*!< SCB 
+ 231:..//common/Core/CM3/core_cm3.h **** #define SCB_AIRCR_VECTKEY_Msk              (0xFFFFul << SCB_AIRCR_VECTKEY_Pos)            /*!< SCB 
+ 232:..//common/Core/CM3/core_cm3.h **** 
+ 233:..//common/Core/CM3/core_cm3.h **** #define SCB_AIRCR_VECTKEYSTAT_Pos          16                                             /*!< SCB 
+ 234:..//common/Core/CM3/core_cm3.h **** #define SCB_AIRCR_VECTKEYSTAT_Msk          (0xFFFFul << SCB_AIRCR_VECTKEYSTAT_Pos)        /*!< SCB 
+ 235:..//common/Core/CM3/core_cm3.h **** 
+ 236:..//common/Core/CM3/core_cm3.h **** #define SCB_AIRCR_ENDIANESS_Pos            15                                             /*!< SCB 
+ 237:..//common/Core/CM3/core_cm3.h **** #define SCB_AIRCR_ENDIANESS_Msk            (1ul << SCB_AIRCR_ENDIANESS_Pos)               /*!< SCB 
+ 238:..//common/Core/CM3/core_cm3.h **** 
+ 239:..//common/Core/CM3/core_cm3.h **** #define SCB_AIRCR_PRIGROUP_Pos              8                                             /*!< SCB 
+ 240:..//common/Core/CM3/core_cm3.h **** #define SCB_AIRCR_PRIGROUP_Msk             (7ul << SCB_AIRCR_PRIGROUP_Pos)                /*!< SCB 
+ 241:..//common/Core/CM3/core_cm3.h **** 
+ 242:..//common/Core/CM3/core_cm3.h **** #define SCB_AIRCR_SYSRESETREQ_Pos           2                                             /*!< SCB 
+ 243:..//common/Core/CM3/core_cm3.h **** #define SCB_AIRCR_SYSRESETREQ_Msk          (1ul << SCB_AIRCR_SYSRESETREQ_Pos)             /*!< SCB 
+ 244:..//common/Core/CM3/core_cm3.h **** 
+ 245:..//common/Core/CM3/core_cm3.h **** #define SCB_AIRCR_VECTCLRACTIVE_Pos         1                                             /*!< SCB 
+ 246:..//common/Core/CM3/core_cm3.h **** #define SCB_AIRCR_VECTCLRACTIVE_Msk        (1ul << SCB_AIRCR_VECTCLRACTIVE_Pos)           /*!< SCB 
+ 247:..//common/Core/CM3/core_cm3.h **** 
+ 248:..//common/Core/CM3/core_cm3.h **** #define SCB_AIRCR_VECTRESET_Pos             0                                             /*!< SCB 
+ 249:..//common/Core/CM3/core_cm3.h **** #define SCB_AIRCR_VECTRESET_Msk            (1ul << SCB_AIRCR_VECTRESET_Pos)               /*!< SCB 
+ 250:..//common/Core/CM3/core_cm3.h **** 
+ 251:..//common/Core/CM3/core_cm3.h **** /* SCB System Control Register Definitions */
+ 252:..//common/Core/CM3/core_cm3.h **** #define SCB_SCR_SEVONPEND_Pos               4                                             /*!< SCB 
+ 253:..//common/Core/CM3/core_cm3.h **** #define SCB_SCR_SEVONPEND_Msk              (1ul << SCB_SCR_SEVONPEND_Pos)                 /*!< SCB 
+ 254:..//common/Core/CM3/core_cm3.h **** 
+ 255:..//common/Core/CM3/core_cm3.h **** #define SCB_SCR_SLEEPDEEP_Pos               2                                             /*!< SCB 
+ 256:..//common/Core/CM3/core_cm3.h **** #define SCB_SCR_SLEEPDEEP_Msk              (1ul << SCB_SCR_SLEEPDEEP_Pos)                 /*!< SCB 
+ 257:..//common/Core/CM3/core_cm3.h **** 
+ 258:..//common/Core/CM3/core_cm3.h **** #define SCB_SCR_SLEEPONEXIT_Pos             1                                             /*!< SCB 
+ 259:..//common/Core/CM3/core_cm3.h **** #define SCB_SCR_SLEEPONEXIT_Msk            (1ul << SCB_SCR_SLEEPONEXIT_Pos)               /*!< SCB 
+ 260:..//common/Core/CM3/core_cm3.h **** 
+ 261:..//common/Core/CM3/core_cm3.h **** /* SCB Configuration Control Register Definitions */
+ 262:..//common/Core/CM3/core_cm3.h **** #define SCB_CCR_STKALIGN_Pos                9                                             /*!< SCB 
+ 263:..//common/Core/CM3/core_cm3.h **** #define SCB_CCR_STKALIGN_Msk               (1ul << SCB_CCR_STKALIGN_Pos)                  /*!< SCB 
+ 264:..//common/Core/CM3/core_cm3.h **** 
+ 265:..//common/Core/CM3/core_cm3.h **** #define SCB_CCR_BFHFNMIGN_Pos               8                                             /*!< SCB 
+ 266:..//common/Core/CM3/core_cm3.h **** #define SCB_CCR_BFHFNMIGN_Msk              (1ul << SCB_CCR_BFHFNMIGN_Pos)                 /*!< SCB 
+ 267:..//common/Core/CM3/core_cm3.h **** 
+ 268:..//common/Core/CM3/core_cm3.h **** #define SCB_CCR_DIV_0_TRP_Pos               4                                             /*!< SCB 
+ 269:..//common/Core/CM3/core_cm3.h **** #define SCB_CCR_DIV_0_TRP_Msk              (1ul << SCB_CCR_DIV_0_TRP_Pos)                 /*!< SCB 
+ 270:..//common/Core/CM3/core_cm3.h **** 
+ 271:..//common/Core/CM3/core_cm3.h **** #define SCB_CCR_UNALIGN_TRP_Pos             3                                             /*!< SCB 
+ 272:..//common/Core/CM3/core_cm3.h **** #define SCB_CCR_UNALIGN_TRP_Msk            (1ul << SCB_CCR_UNALIGN_TRP_Pos)               /*!< SCB 
+ 273:..//common/Core/CM3/core_cm3.h **** 
+ 274:..//common/Core/CM3/core_cm3.h **** #define SCB_CCR_USERSETMPEND_Pos            1                                             /*!< SCB 
+ 275:..//common/Core/CM3/core_cm3.h **** #define SCB_CCR_USERSETMPEND_Msk           (1ul << SCB_CCR_USERSETMPEND_Pos)              /*!< SCB 
+ 276:..//common/Core/CM3/core_cm3.h **** 
+ 277:..//common/Core/CM3/core_cm3.h **** #define SCB_CCR_NONBASETHRDENA_Pos          0                                             /*!< SCB 
+ 278:..//common/Core/CM3/core_cm3.h **** #define SCB_CCR_NONBASETHRDENA_Msk         (1ul << SCB_CCR_NONBASETHRDENA_Pos)            /*!< SCB 
+ 279:..//common/Core/CM3/core_cm3.h **** 
+ 280:..//common/Core/CM3/core_cm3.h **** /* SCB System Handler Control and State Register Definitions */
+ 281:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_USGFAULTENA_Pos          18                                             /*!< SCB 
+ 282:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_USGFAULTENA_Msk          (1ul << SCB_SHCSR_USGFAULTENA_Pos)             /*!< SCB 
+ 283:..//common/Core/CM3/core_cm3.h **** 
+ 284:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_BUSFAULTENA_Pos          17                                             /*!< SCB 
+ 285:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_BUSFAULTENA_Msk          (1ul << SCB_SHCSR_BUSFAULTENA_Pos)             /*!< SCB 
+ 286:..//common/Core/CM3/core_cm3.h **** 
+ 287:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_MEMFAULTENA_Pos          16                                             /*!< SCB 
+ 288:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_MEMFAULTENA_Msk          (1ul << SCB_SHCSR_MEMFAULTENA_Pos)             /*!< SCB 
+ 289:..//common/Core/CM3/core_cm3.h **** 
+ 290:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_SVCALLPENDED_Pos         15                                             /*!< SCB 
+ 291:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_SVCALLPENDED_Msk         (1ul << SCB_SHCSR_SVCALLPENDED_Pos)            /*!< SCB 
+ 292:..//common/Core/CM3/core_cm3.h **** 
+ 293:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_BUSFAULTPENDED_Pos       14                                             /*!< SCB 
+ 294:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_BUSFAULTPENDED_Msk       (1ul << SCB_SHCSR_BUSFAULTPENDED_Pos)          /*!< SCB 
+ 295:..//common/Core/CM3/core_cm3.h **** 
+ 296:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_MEMFAULTPENDED_Pos       13                                             /*!< SCB 
+ 297:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_MEMFAULTPENDED_Msk       (1ul << SCB_SHCSR_MEMFAULTPENDED_Pos)          /*!< SCB 
+ 298:..//common/Core/CM3/core_cm3.h **** 
+ 299:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_USGFAULTPENDED_Pos       12                                             /*!< SCB 
+ 300:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_USGFAULTPENDED_Msk       (1ul << SCB_SHCSR_USGFAULTPENDED_Pos)          /*!< SCB 
+ 301:..//common/Core/CM3/core_cm3.h **** 
+ 302:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_SYSTICKACT_Pos           11                                             /*!< SCB 
+ 303:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_SYSTICKACT_Msk           (1ul << SCB_SHCSR_SYSTICKACT_Pos)              /*!< SCB 
+ 304:..//common/Core/CM3/core_cm3.h **** 
+ 305:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_PENDSVACT_Pos            10                                             /*!< SCB 
+ 306:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_PENDSVACT_Msk            (1ul << SCB_SHCSR_PENDSVACT_Pos)               /*!< SCB 
+ 307:..//common/Core/CM3/core_cm3.h **** 
+ 308:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_MONITORACT_Pos            8                                             /*!< SCB 
+ 309:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_MONITORACT_Msk           (1ul << SCB_SHCSR_MONITORACT_Pos)              /*!< SCB 
+ 310:..//common/Core/CM3/core_cm3.h **** 
+ 311:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_SVCALLACT_Pos             7                                             /*!< SCB 
+ 312:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_SVCALLACT_Msk            (1ul << SCB_SHCSR_SVCALLACT_Pos)               /*!< SCB 
+ 313:..//common/Core/CM3/core_cm3.h ****                                      
+ 314:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_USGFAULTACT_Pos           3                                             /*!< SCB 
+ 315:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_USGFAULTACT_Msk          (1ul << SCB_SHCSR_USGFAULTACT_Pos)             /*!< SCB 
+ 316:..//common/Core/CM3/core_cm3.h **** 
+ 317:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_BUSFAULTACT_Pos           1                                             /*!< SCB 
+ 318:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_BUSFAULTACT_Msk          (1ul << SCB_SHCSR_BUSFAULTACT_Pos)             /*!< SCB 
+ 319:..//common/Core/CM3/core_cm3.h **** 
+ 320:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_MEMFAULTACT_Pos           0                                             /*!< SCB 
+ 321:..//common/Core/CM3/core_cm3.h **** #define SCB_SHCSR_MEMFAULTACT_Msk          (1ul << SCB_SHCSR_MEMFAULTACT_Pos)             /*!< SCB 
+ 322:..//common/Core/CM3/core_cm3.h **** 
+ 323:..//common/Core/CM3/core_cm3.h **** /* SCB Configurable Fault Status Registers Definitions */
+ 324:..//common/Core/CM3/core_cm3.h **** #define SCB_CFSR_USGFAULTSR_Pos            16                                             /*!< SCB 
+ 325:..//common/Core/CM3/core_cm3.h **** #define SCB_CFSR_USGFAULTSR_Msk            (0xFFFFul << SCB_CFSR_USGFAULTSR_Pos)          /*!< SCB 
+ 326:..//common/Core/CM3/core_cm3.h **** 
+ 327:..//common/Core/CM3/core_cm3.h **** #define SCB_CFSR_BUSFAULTSR_Pos             8                                             /*!< SCB 
+ 328:..//common/Core/CM3/core_cm3.h **** #define SCB_CFSR_BUSFAULTSR_Msk            (0xFFul << SCB_CFSR_BUSFAULTSR_Pos)            /*!< SCB 
+ 329:..//common/Core/CM3/core_cm3.h **** 
+ 330:..//common/Core/CM3/core_cm3.h **** #define SCB_CFSR_MEMFAULTSR_Pos             0                                             /*!< SCB 
+ 331:..//common/Core/CM3/core_cm3.h **** #define SCB_CFSR_MEMFAULTSR_Msk            (0xFFul << SCB_CFSR_MEMFAULTSR_Pos)            /*!< SCB 
+ 332:..//common/Core/CM3/core_cm3.h **** 
+ 333:..//common/Core/CM3/core_cm3.h **** /* SCB Hard Fault Status Registers Definitions */
+ 334:..//common/Core/CM3/core_cm3.h **** #define SCB_HFSR_DEBUGEVT_Pos              31                                             /*!< SCB 
+ 335:..//common/Core/CM3/core_cm3.h **** #define SCB_HFSR_DEBUGEVT_Msk              (1ul << SCB_HFSR_DEBUGEVT_Pos)                 /*!< SCB 
+ 336:..//common/Core/CM3/core_cm3.h **** 
+ 337:..//common/Core/CM3/core_cm3.h **** #define SCB_HFSR_FORCED_Pos                30                                             /*!< SCB 
+ 338:..//common/Core/CM3/core_cm3.h **** #define SCB_HFSR_FORCED_Msk                (1ul << SCB_HFSR_FORCED_Pos)                   /*!< SCB 
+ 339:..//common/Core/CM3/core_cm3.h **** 
+ 340:..//common/Core/CM3/core_cm3.h **** #define SCB_HFSR_VECTTBL_Pos                1                                             /*!< SCB 
+ 341:..//common/Core/CM3/core_cm3.h **** #define SCB_HFSR_VECTTBL_Msk               (1ul << SCB_HFSR_VECTTBL_Pos)                  /*!< SCB 
+ 342:..//common/Core/CM3/core_cm3.h **** 
+ 343:..//common/Core/CM3/core_cm3.h **** /* SCB Debug Fault Status Register Definitions */
+ 344:..//common/Core/CM3/core_cm3.h **** #define SCB_DFSR_EXTERNAL_Pos               4                                             /*!< SCB 
+ 345:..//common/Core/CM3/core_cm3.h **** #define SCB_DFSR_EXTERNAL_Msk              (1ul << SCB_DFSR_EXTERNAL_Pos)                 /*!< SCB 
+ 346:..//common/Core/CM3/core_cm3.h **** 
+ 347:..//common/Core/CM3/core_cm3.h **** #define SCB_DFSR_VCATCH_Pos                 3                                             /*!< SCB 
+ 348:..//common/Core/CM3/core_cm3.h **** #define SCB_DFSR_VCATCH_Msk                (1ul << SCB_DFSR_VCATCH_Pos)                   /*!< SCB 
+ 349:..//common/Core/CM3/core_cm3.h **** 
+ 350:..//common/Core/CM3/core_cm3.h **** #define SCB_DFSR_DWTTRAP_Pos                2                                             /*!< SCB 
+ 351:..//common/Core/CM3/core_cm3.h **** #define SCB_DFSR_DWTTRAP_Msk               (1ul << SCB_DFSR_DWTTRAP_Pos)                  /*!< SCB 
+ 352:..//common/Core/CM3/core_cm3.h **** 
+ 353:..//common/Core/CM3/core_cm3.h **** #define SCB_DFSR_BKPT_Pos                   1                                             /*!< SCB 
+ 354:..//common/Core/CM3/core_cm3.h **** #define SCB_DFSR_BKPT_Msk                  (1ul << SCB_DFSR_BKPT_Pos)                     /*!< SCB 
+ 355:..//common/Core/CM3/core_cm3.h **** 
+ 356:..//common/Core/CM3/core_cm3.h **** #define SCB_DFSR_HALTED_Pos                 0                                             /*!< SCB 
+ 357:..//common/Core/CM3/core_cm3.h **** #define SCB_DFSR_HALTED_Msk                (1ul << SCB_DFSR_HALTED_Pos)                   /*!< SCB 
+ 358:..//common/Core/CM3/core_cm3.h **** /*@}*/ /* end of group CMSIS_CM3_SCB */
+ 359:..//common/Core/CM3/core_cm3.h **** 
+ 360:..//common/Core/CM3/core_cm3.h **** 
+ 361:..//common/Core/CM3/core_cm3.h **** /** @addtogroup CMSIS_CM3_SysTick CMSIS CM3 SysTick
+ 362:..//common/Core/CM3/core_cm3.h ****   memory mapped structure for SysTick
+ 363:..//common/Core/CM3/core_cm3.h ****   @{
+ 364:..//common/Core/CM3/core_cm3.h ****  */
+ 365:..//common/Core/CM3/core_cm3.h **** typedef struct
+ 366:..//common/Core/CM3/core_cm3.h **** {
+ 367:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t CTRL;                         /*!< Offset: 0x00  SysTick Control and Status Registe
+ 368:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t LOAD;                         /*!< Offset: 0x04  SysTick Reload Value Register     
+ 369:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t VAL;                          /*!< Offset: 0x08  SysTick Current Value Register    
+ 370:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t CALIB;                        /*!< Offset: 0x0C  SysTick Calibration Register      
+ 371:..//common/Core/CM3/core_cm3.h **** } SysTick_Type;
+ 372:..//common/Core/CM3/core_cm3.h **** 
+ 373:..//common/Core/CM3/core_cm3.h **** /* SysTick Control / Status Register Definitions */
+ 374:..//common/Core/CM3/core_cm3.h **** #define SysTick_CTRL_COUNTFLAG_Pos         16                                             /*!< SysT
+ 375:..//common/Core/CM3/core_cm3.h **** #define SysTick_CTRL_COUNTFLAG_Msk         (1ul << SysTick_CTRL_COUNTFLAG_Pos)            /*!< SysT
+ 376:..//common/Core/CM3/core_cm3.h **** 
+ 377:..//common/Core/CM3/core_cm3.h **** #define SysTick_CTRL_CLKSOURCE_Pos          2                                             /*!< SysT
+ 378:..//common/Core/CM3/core_cm3.h **** #define SysTick_CTRL_CLKSOURCE_Msk         (1ul << SysTick_CTRL_CLKSOURCE_Pos)            /*!< SysT
+ 379:..//common/Core/CM3/core_cm3.h **** 
+ 380:..//common/Core/CM3/core_cm3.h **** #define SysTick_CTRL_TICKINT_Pos            1                                             /*!< SysT
+ 381:..//common/Core/CM3/core_cm3.h **** #define SysTick_CTRL_TICKINT_Msk           (1ul << SysTick_CTRL_TICKINT_Pos)              /*!< SysT
+ 382:..//common/Core/CM3/core_cm3.h **** 
+ 383:..//common/Core/CM3/core_cm3.h **** #define SysTick_CTRL_ENABLE_Pos             0                                             /*!< SysT
+ 384:..//common/Core/CM3/core_cm3.h **** #define SysTick_CTRL_ENABLE_Msk            (1ul << SysTick_CTRL_ENABLE_Pos)               /*!< SysT
+ 385:..//common/Core/CM3/core_cm3.h **** 
+ 386:..//common/Core/CM3/core_cm3.h **** /* SysTick Reload Register Definitions */
+ 387:..//common/Core/CM3/core_cm3.h **** #define SysTick_LOAD_RELOAD_Pos             0                                             /*!< SysT
+ 388:..//common/Core/CM3/core_cm3.h **** #define SysTick_LOAD_RELOAD_Msk            (0xFFFFFFul << SysTick_LOAD_RELOAD_Pos)        /*!< SysT
+ 389:..//common/Core/CM3/core_cm3.h **** 
+ 390:..//common/Core/CM3/core_cm3.h **** /* SysTick Current Register Definitions */
+ 391:..//common/Core/CM3/core_cm3.h **** #define SysTick_VAL_CURRENT_Pos             0                                             /*!< SysT
+ 392:..//common/Core/CM3/core_cm3.h **** #define SysTick_VAL_CURRENT_Msk            (0xFFFFFFul << SysTick_VAL_CURRENT_Pos)        /*!< SysT
+ 393:..//common/Core/CM3/core_cm3.h **** 
+ 394:..//common/Core/CM3/core_cm3.h **** /* SysTick Calibration Register Definitions */
+ 395:..//common/Core/CM3/core_cm3.h **** #define SysTick_CALIB_NOREF_Pos            31                                             /*!< SysT
+ 396:..//common/Core/CM3/core_cm3.h **** #define SysTick_CALIB_NOREF_Msk            (1ul << SysTick_CALIB_NOREF_Pos)               /*!< SysT
+ 397:..//common/Core/CM3/core_cm3.h **** 
+ 398:..//common/Core/CM3/core_cm3.h **** #define SysTick_CALIB_SKEW_Pos             30                                             /*!< SysT
+ 399:..//common/Core/CM3/core_cm3.h **** #define SysTick_CALIB_SKEW_Msk             (1ul << SysTick_CALIB_SKEW_Pos)                /*!< SysT
+ 400:..//common/Core/CM3/core_cm3.h **** 
+ 401:..//common/Core/CM3/core_cm3.h **** #define SysTick_CALIB_TENMS_Pos             0                                             /*!< SysT
+ 402:..//common/Core/CM3/core_cm3.h **** #define SysTick_CALIB_TENMS_Msk            (0xFFFFFFul << SysTick_VAL_CURRENT_Pos)        /*!< SysT
+ 403:..//common/Core/CM3/core_cm3.h **** /*@}*/ /* end of group CMSIS_CM3_SysTick */
+ 404:..//common/Core/CM3/core_cm3.h **** 
+ 405:..//common/Core/CM3/core_cm3.h **** 
+ 406:..//common/Core/CM3/core_cm3.h **** /** @addtogroup CMSIS_CM3_ITM CMSIS CM3 ITM
+ 407:..//common/Core/CM3/core_cm3.h ****   memory mapped structure for Instrumentation Trace Macrocell (ITM)
+ 408:..//common/Core/CM3/core_cm3.h ****   @{
+ 409:..//common/Core/CM3/core_cm3.h ****  */
+ 410:..//common/Core/CM3/core_cm3.h **** typedef struct
+ 411:..//common/Core/CM3/core_cm3.h **** {
+ 412:..//common/Core/CM3/core_cm3.h ****   __O  union  
+ 413:..//common/Core/CM3/core_cm3.h ****   {
+ 414:..//common/Core/CM3/core_cm3.h ****     __O  uint8_t    u8;                       /*!< Offset:       ITM Stimulus Port 8-bit           
+ 415:..//common/Core/CM3/core_cm3.h ****     __O  uint16_t   u16;                      /*!< Offset:       ITM Stimulus Port 16-bit          
+ 416:..//common/Core/CM3/core_cm3.h ****     __O  uint32_t   u32;                      /*!< Offset:       ITM Stimulus Port 32-bit          
+ 417:..//common/Core/CM3/core_cm3.h ****   }  PORT [32];                               /*!< Offset: 0x00  ITM Stimulus Port Registers       
+ 418:..//common/Core/CM3/core_cm3.h ****        uint32_t RESERVED0[864];                                 
+ 419:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t TER;                          /*!< Offset:       ITM Trace Enable Register         
+ 420:..//common/Core/CM3/core_cm3.h ****        uint32_t RESERVED1[15];                                  
+ 421:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t TPR;                          /*!< Offset:       ITM Trace Privilege Register      
+ 422:..//common/Core/CM3/core_cm3.h ****        uint32_t RESERVED2[15];                                  
+ 423:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t TCR;                          /*!< Offset:       ITM Trace Control Register        
+ 424:..//common/Core/CM3/core_cm3.h ****        uint32_t RESERVED3[29];                                  
+ 425:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t IWR;                          /*!< Offset:       ITM Integration Write Register    
+ 426:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t IRR;                          /*!< Offset:       ITM Integration Read Register     
+ 427:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t IMCR;                         /*!< Offset:       ITM Integration Mode Control Regis
+ 428:..//common/Core/CM3/core_cm3.h ****        uint32_t RESERVED4[43];                                  
+ 429:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t LAR;                          /*!< Offset:       ITM Lock Access Register          
+ 430:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t LSR;                          /*!< Offset:       ITM Lock Status Register          
+ 431:..//common/Core/CM3/core_cm3.h ****        uint32_t RESERVED5[6];                                   
+ 432:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t PID4;                         /*!< Offset:       ITM Peripheral Identification Regi
+ 433:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t PID5;                         /*!< Offset:       ITM Peripheral Identification Regi
+ 434:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t PID6;                         /*!< Offset:       ITM Peripheral Identification Regi
+ 435:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t PID7;                         /*!< Offset:       ITM Peripheral Identification Regi
+ 436:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t PID0;                         /*!< Offset:       ITM Peripheral Identification Regi
+ 437:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t PID1;                         /*!< Offset:       ITM Peripheral Identification Regi
+ 438:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t PID2;                         /*!< Offset:       ITM Peripheral Identification Regi
+ 439:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t PID3;                         /*!< Offset:       ITM Peripheral Identification Regi
+ 440:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t CID0;                         /*!< Offset:       ITM Component  Identification Regi
+ 441:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t CID1;                         /*!< Offset:       ITM Component  Identification Regi
+ 442:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t CID2;                         /*!< Offset:       ITM Component  Identification Regi
+ 443:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t CID3;                         /*!< Offset:       ITM Component  Identification Regi
+ 444:..//common/Core/CM3/core_cm3.h **** } ITM_Type;                                                
+ 445:..//common/Core/CM3/core_cm3.h **** 
+ 446:..//common/Core/CM3/core_cm3.h **** /* ITM Trace Privilege Register Definitions */
+ 447:..//common/Core/CM3/core_cm3.h **** #define ITM_TPR_PRIVMASK_Pos                0                                             /*!< ITM 
+ 448:..//common/Core/CM3/core_cm3.h **** #define ITM_TPR_PRIVMASK_Msk               (0xFul << ITM_TPR_PRIVMASK_Pos)                /*!< ITM 
+ 449:..//common/Core/CM3/core_cm3.h **** 
+ 450:..//common/Core/CM3/core_cm3.h **** /* ITM Trace Control Register Definitions */
+ 451:..//common/Core/CM3/core_cm3.h **** #define ITM_TCR_BUSY_Pos                   23                                             /*!< ITM 
+ 452:..//common/Core/CM3/core_cm3.h **** #define ITM_TCR_BUSY_Msk                   (1ul << ITM_TCR_BUSY_Pos)                      /*!< ITM 
+ 453:..//common/Core/CM3/core_cm3.h **** 
+ 454:..//common/Core/CM3/core_cm3.h **** #define ITM_TCR_ATBID_Pos                  16                                             /*!< ITM 
+ 455:..//common/Core/CM3/core_cm3.h **** #define ITM_TCR_ATBID_Msk                  (0x7Ful << ITM_TCR_ATBID_Pos)                  /*!< ITM 
+ 456:..//common/Core/CM3/core_cm3.h **** 
+ 457:..//common/Core/CM3/core_cm3.h **** #define ITM_TCR_TSPrescale_Pos              8                                             /*!< ITM 
+ 458:..//common/Core/CM3/core_cm3.h **** #define ITM_TCR_TSPrescale_Msk             (3ul << ITM_TCR_TSPrescale_Pos)                /*!< ITM 
+ 459:..//common/Core/CM3/core_cm3.h **** 
+ 460:..//common/Core/CM3/core_cm3.h **** #define ITM_TCR_SWOENA_Pos                  4                                             /*!< ITM 
+ 461:..//common/Core/CM3/core_cm3.h **** #define ITM_TCR_SWOENA_Msk                 (1ul << ITM_TCR_SWOENA_Pos)                    /*!< ITM 
+ 462:..//common/Core/CM3/core_cm3.h **** 
+ 463:..//common/Core/CM3/core_cm3.h **** #define ITM_TCR_DWTENA_Pos                  3                                             /*!< ITM 
+ 464:..//common/Core/CM3/core_cm3.h **** #define ITM_TCR_DWTENA_Msk                 (1ul << ITM_TCR_DWTENA_Pos)                    /*!< ITM 
+ 465:..//common/Core/CM3/core_cm3.h **** 
+ 466:..//common/Core/CM3/core_cm3.h **** #define ITM_TCR_SYNCENA_Pos                 2                                             /*!< ITM 
+ 467:..//common/Core/CM3/core_cm3.h **** #define ITM_TCR_SYNCENA_Msk                (1ul << ITM_TCR_SYNCENA_Pos)                   /*!< ITM 
+ 468:..//common/Core/CM3/core_cm3.h **** 
+ 469:..//common/Core/CM3/core_cm3.h **** #define ITM_TCR_TSENA_Pos                   1                                             /*!< ITM 
+ 470:..//common/Core/CM3/core_cm3.h **** #define ITM_TCR_TSENA_Msk                  (1ul << ITM_TCR_TSENA_Pos)                     /*!< ITM 
+ 471:..//common/Core/CM3/core_cm3.h **** 
+ 472:..//common/Core/CM3/core_cm3.h **** #define ITM_TCR_ITMENA_Pos                  0                                             /*!< ITM 
+ 473:..//common/Core/CM3/core_cm3.h **** #define ITM_TCR_ITMENA_Msk                 (1ul << ITM_TCR_ITMENA_Pos)                    /*!< ITM 
+ 474:..//common/Core/CM3/core_cm3.h **** 
+ 475:..//common/Core/CM3/core_cm3.h **** /* ITM Integration Write Register Definitions */
+ 476:..//common/Core/CM3/core_cm3.h **** #define ITM_IWR_ATVALIDM_Pos                0                                             /*!< ITM 
+ 477:..//common/Core/CM3/core_cm3.h **** #define ITM_IWR_ATVALIDM_Msk               (1ul << ITM_IWR_ATVALIDM_Pos)                  /*!< ITM 
+ 478:..//common/Core/CM3/core_cm3.h **** 
+ 479:..//common/Core/CM3/core_cm3.h **** /* ITM Integration Read Register Definitions */
+ 480:..//common/Core/CM3/core_cm3.h **** #define ITM_IRR_ATREADYM_Pos                0                                             /*!< ITM 
+ 481:..//common/Core/CM3/core_cm3.h **** #define ITM_IRR_ATREADYM_Msk               (1ul << ITM_IRR_ATREADYM_Pos)                  /*!< ITM 
+ 482:..//common/Core/CM3/core_cm3.h **** 
+ 483:..//common/Core/CM3/core_cm3.h **** /* ITM Integration Mode Control Register Definitions */
+ 484:..//common/Core/CM3/core_cm3.h **** #define ITM_IMCR_INTEGRATION_Pos            0                                             /*!< ITM 
+ 485:..//common/Core/CM3/core_cm3.h **** #define ITM_IMCR_INTEGRATION_Msk           (1ul << ITM_IMCR_INTEGRATION_Pos)              /*!< ITM 
+ 486:..//common/Core/CM3/core_cm3.h **** 
+ 487:..//common/Core/CM3/core_cm3.h **** /* ITM Lock Status Register Definitions */
+ 488:..//common/Core/CM3/core_cm3.h **** #define ITM_LSR_ByteAcc_Pos                 2                                             /*!< ITM 
+ 489:..//common/Core/CM3/core_cm3.h **** #define ITM_LSR_ByteAcc_Msk                (1ul << ITM_LSR_ByteAcc_Pos)                   /*!< ITM 
+ 490:..//common/Core/CM3/core_cm3.h **** 
+ 491:..//common/Core/CM3/core_cm3.h **** #define ITM_LSR_Access_Pos                  1                                             /*!< ITM 
+ 492:..//common/Core/CM3/core_cm3.h **** #define ITM_LSR_Access_Msk                 (1ul << ITM_LSR_Access_Pos)                    /*!< ITM 
+ 493:..//common/Core/CM3/core_cm3.h **** 
+ 494:..//common/Core/CM3/core_cm3.h **** #define ITM_LSR_Present_Pos                 0                                             /*!< ITM 
+ 495:..//common/Core/CM3/core_cm3.h **** #define ITM_LSR_Present_Msk                (1ul << ITM_LSR_Present_Pos)                   /*!< ITM 
+ 496:..//common/Core/CM3/core_cm3.h **** /*@}*/ /* end of group CMSIS_CM3_ITM */
+ 497:..//common/Core/CM3/core_cm3.h **** 
+ 498:..//common/Core/CM3/core_cm3.h **** 
+ 499:..//common/Core/CM3/core_cm3.h **** /** @addtogroup CMSIS_CM3_InterruptType CMSIS CM3 Interrupt Type
+ 500:..//common/Core/CM3/core_cm3.h ****   memory mapped structure for Interrupt Type
+ 501:..//common/Core/CM3/core_cm3.h ****   @{
+ 502:..//common/Core/CM3/core_cm3.h ****  */
+ 503:..//common/Core/CM3/core_cm3.h **** typedef struct
+ 504:..//common/Core/CM3/core_cm3.h **** {
+ 505:..//common/Core/CM3/core_cm3.h ****        uint32_t RESERVED0;
+ 506:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t ICTR;                         /*!< Offset: 0x04  Interrupt Control Type Register */
+ 507:..//common/Core/CM3/core_cm3.h **** #if ((defined __CM3_REV) && (__CM3_REV >= 0x200))
+ 508:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t ACTLR;                        /*!< Offset: 0x08  Auxiliary Control Register      */
+ 509:..//common/Core/CM3/core_cm3.h **** #else
+ 510:..//common/Core/CM3/core_cm3.h ****        uint32_t RESERVED1;
+ 511:..//common/Core/CM3/core_cm3.h **** #endif
+ 512:..//common/Core/CM3/core_cm3.h **** } InterruptType_Type;
+ 513:..//common/Core/CM3/core_cm3.h **** 
+ 514:..//common/Core/CM3/core_cm3.h **** /* Interrupt Controller Type Register Definitions */
+ 515:..//common/Core/CM3/core_cm3.h **** #define InterruptType_ICTR_INTLINESNUM_Pos  0                                             /*!< Inte
+ 516:..//common/Core/CM3/core_cm3.h **** #define InterruptType_ICTR_INTLINESNUM_Msk (0x1Ful << InterruptType_ICTR_INTLINESNUM_Pos) /*!< Inte
+ 517:..//common/Core/CM3/core_cm3.h **** 
+ 518:..//common/Core/CM3/core_cm3.h **** /* Auxiliary Control Register Definitions */
+ 519:..//common/Core/CM3/core_cm3.h **** #define InterruptType_ACTLR_DISFOLD_Pos     2                                             /*!< Inte
+ 520:..//common/Core/CM3/core_cm3.h **** #define InterruptType_ACTLR_DISFOLD_Msk    (1ul << InterruptType_ACTLR_DISFOLD_Pos)       /*!< Inte
+ 521:..//common/Core/CM3/core_cm3.h **** 
+ 522:..//common/Core/CM3/core_cm3.h **** #define InterruptType_ACTLR_DISDEFWBUF_Pos  1                                             /*!< Inte
+ 523:..//common/Core/CM3/core_cm3.h **** #define InterruptType_ACTLR_DISDEFWBUF_Msk (1ul << InterruptType_ACTLR_DISDEFWBUF_Pos)    /*!< Inte
+ 524:..//common/Core/CM3/core_cm3.h **** 
+ 525:..//common/Core/CM3/core_cm3.h **** #define InterruptType_ACTLR_DISMCYCINT_Pos  0                                             /*!< Inte
+ 526:..//common/Core/CM3/core_cm3.h **** #define InterruptType_ACTLR_DISMCYCINT_Msk (1ul << InterruptType_ACTLR_DISMCYCINT_Pos)    /*!< Inte
+ 527:..//common/Core/CM3/core_cm3.h **** /*@}*/ /* end of group CMSIS_CM3_InterruptType */
+ 528:..//common/Core/CM3/core_cm3.h **** 
+ 529:..//common/Core/CM3/core_cm3.h **** 
+ 530:..//common/Core/CM3/core_cm3.h **** #if defined (__MPU_PRESENT) && (__MPU_PRESENT == 1)
+ 531:..//common/Core/CM3/core_cm3.h **** /** @addtogroup CMSIS_CM3_MPU CMSIS CM3 MPU
+ 532:..//common/Core/CM3/core_cm3.h ****   memory mapped structure for Memory Protection Unit (MPU)
+ 533:..//common/Core/CM3/core_cm3.h ****   @{
+ 534:..//common/Core/CM3/core_cm3.h ****  */
+ 535:..//common/Core/CM3/core_cm3.h **** typedef struct
+ 536:..//common/Core/CM3/core_cm3.h **** {
+ 537:..//common/Core/CM3/core_cm3.h ****   __I  uint32_t TYPE;                         /*!< Offset: 0x00  MPU Type Register                 
+ 538:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t CTRL;                         /*!< Offset: 0x04  MPU Control Register              
+ 539:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t RNR;                          /*!< Offset: 0x08  MPU Region RNRber Register        
+ 540:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t RBAR;                         /*!< Offset: 0x0C  MPU Region Base Address Register  
+ 541:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t RASR;                         /*!< Offset: 0x10  MPU Region Attribute and Size Regi
+ 542:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t RBAR_A1;                      /*!< Offset: 0x14  MPU Alias 1 Region Base Address Re
+ 543:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t RASR_A1;                      /*!< Offset: 0x18  MPU Alias 1 Region Attribute and S
+ 544:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t RBAR_A2;                      /*!< Offset: 0x1C  MPU Alias 2 Region Base Address Re
+ 545:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t RASR_A2;                      /*!< Offset: 0x20  MPU Alias 2 Region Attribute and S
+ 546:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t RBAR_A3;                      /*!< Offset: 0x24  MPU Alias 3 Region Base Address Re
+ 547:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t RASR_A3;                      /*!< Offset: 0x28  MPU Alias 3 Region Attribute and S
+ 548:..//common/Core/CM3/core_cm3.h **** } MPU_Type;                                                
+ 549:..//common/Core/CM3/core_cm3.h **** 
+ 550:..//common/Core/CM3/core_cm3.h **** /* MPU Type Register */
+ 551:..//common/Core/CM3/core_cm3.h **** #define MPU_TYPE_IREGION_Pos               16                                             /*!< MPU 
+ 552:..//common/Core/CM3/core_cm3.h **** #define MPU_TYPE_IREGION_Msk               (0xFFul << MPU_TYPE_IREGION_Pos)               /*!< MPU 
+ 553:..//common/Core/CM3/core_cm3.h **** 
+ 554:..//common/Core/CM3/core_cm3.h **** #define MPU_TYPE_DREGION_Pos                8                                             /*!< MPU 
+ 555:..//common/Core/CM3/core_cm3.h **** #define MPU_TYPE_DREGION_Msk               (0xFFul << MPU_TYPE_DREGION_Pos)               /*!< MPU 
+ 556:..//common/Core/CM3/core_cm3.h **** 
+ 557:..//common/Core/CM3/core_cm3.h **** #define MPU_TYPE_SEPARATE_Pos               0                                             /*!< MPU 
+ 558:..//common/Core/CM3/core_cm3.h **** #define MPU_TYPE_SEPARATE_Msk              (1ul << MPU_TYPE_SEPARATE_Pos)                 /*!< MPU 
+ 559:..//common/Core/CM3/core_cm3.h **** 
+ 560:..//common/Core/CM3/core_cm3.h **** /* MPU Control Register */
+ 561:..//common/Core/CM3/core_cm3.h **** #define MPU_CTRL_PRIVDEFENA_Pos             2                                             /*!< MPU 
+ 562:..//common/Core/CM3/core_cm3.h **** #define MPU_CTRL_PRIVDEFENA_Msk            (1ul << MPU_CTRL_PRIVDEFENA_Pos)               /*!< MPU 
+ 563:..//common/Core/CM3/core_cm3.h **** 
+ 564:..//common/Core/CM3/core_cm3.h **** #define MPU_CTRL_HFNMIENA_Pos               1                                             /*!< MPU 
+ 565:..//common/Core/CM3/core_cm3.h **** #define MPU_CTRL_HFNMIENA_Msk              (1ul << MPU_CTRL_HFNMIENA_Pos)                 /*!< MPU 
+ 566:..//common/Core/CM3/core_cm3.h **** 
+ 567:..//common/Core/CM3/core_cm3.h **** #define MPU_CTRL_ENABLE_Pos                 0                                             /*!< MPU 
+ 568:..//common/Core/CM3/core_cm3.h **** #define MPU_CTRL_ENABLE_Msk                (1ul << MPU_CTRL_ENABLE_Pos)                   /*!< MPU 
+ 569:..//common/Core/CM3/core_cm3.h **** 
+ 570:..//common/Core/CM3/core_cm3.h **** /* MPU Region Number Register */
+ 571:..//common/Core/CM3/core_cm3.h **** #define MPU_RNR_REGION_Pos                  0                                             /*!< MPU 
+ 572:..//common/Core/CM3/core_cm3.h **** #define MPU_RNR_REGION_Msk                 (0xFFul << MPU_RNR_REGION_Pos)                 /*!< MPU 
+ 573:..//common/Core/CM3/core_cm3.h **** 
+ 574:..//common/Core/CM3/core_cm3.h **** /* MPU Region Base Address Register */
+ 575:..//common/Core/CM3/core_cm3.h **** #define MPU_RBAR_ADDR_Pos                   5                                             /*!< MPU 
+ 576:..//common/Core/CM3/core_cm3.h **** #define MPU_RBAR_ADDR_Msk                  (0x7FFFFFFul << MPU_RBAR_ADDR_Pos)             /*!< MPU 
+ 577:..//common/Core/CM3/core_cm3.h **** 
+ 578:..//common/Core/CM3/core_cm3.h **** #define MPU_RBAR_VALID_Pos                  4                                             /*!< MPU 
+ 579:..//common/Core/CM3/core_cm3.h **** #define MPU_RBAR_VALID_Msk                 (1ul << MPU_RBAR_VALID_Pos)                    /*!< MPU 
+ 580:..//common/Core/CM3/core_cm3.h **** 
+ 581:..//common/Core/CM3/core_cm3.h **** #define MPU_RBAR_REGION_Pos                 0                                             /*!< MPU 
+ 582:..//common/Core/CM3/core_cm3.h **** #define MPU_RBAR_REGION_Msk                (0xFul << MPU_RBAR_REGION_Pos)                 /*!< MPU 
+ 583:..//common/Core/CM3/core_cm3.h **** 
+ 584:..//common/Core/CM3/core_cm3.h **** /* MPU Region Attribute and Size Register */
+ 585:..//common/Core/CM3/core_cm3.h **** #define MPU_RASR_XN_Pos                    28                                             /*!< MPU 
+ 586:..//common/Core/CM3/core_cm3.h **** #define MPU_RASR_XN_Msk                    (1ul << MPU_RASR_XN_Pos)                       /*!< MPU 
+ 587:..//common/Core/CM3/core_cm3.h **** 
+ 588:..//common/Core/CM3/core_cm3.h **** #define MPU_RASR_AP_Pos                    24                                             /*!< MPU 
+ 589:..//common/Core/CM3/core_cm3.h **** #define MPU_RASR_AP_Msk                    (7ul << MPU_RASR_AP_Pos)                       /*!< MPU 
+ 590:..//common/Core/CM3/core_cm3.h **** 
+ 591:..//common/Core/CM3/core_cm3.h **** #define MPU_RASR_TEX_Pos                   19                                             /*!< MPU 
+ 592:..//common/Core/CM3/core_cm3.h **** #define MPU_RASR_TEX_Msk                   (7ul << MPU_RASR_TEX_Pos)                      /*!< MPU 
+ 593:..//common/Core/CM3/core_cm3.h **** 
+ 594:..//common/Core/CM3/core_cm3.h **** #define MPU_RASR_S_Pos                     18                                             /*!< MPU 
+ 595:..//common/Core/CM3/core_cm3.h **** #define MPU_RASR_S_Msk                     (1ul << MPU_RASR_S_Pos)                        /*!< MPU 
+ 596:..//common/Core/CM3/core_cm3.h **** 
+ 597:..//common/Core/CM3/core_cm3.h **** #define MPU_RASR_C_Pos                     17                                             /*!< MPU 
+ 598:..//common/Core/CM3/core_cm3.h **** #define MPU_RASR_C_Msk                     (1ul << MPU_RASR_C_Pos)                        /*!< MPU 
+ 599:..//common/Core/CM3/core_cm3.h **** 
+ 600:..//common/Core/CM3/core_cm3.h **** #define MPU_RASR_B_Pos                     16                                             /*!< MPU 
+ 601:..//common/Core/CM3/core_cm3.h **** #define MPU_RASR_B_Msk                     (1ul << MPU_RASR_B_Pos)                        /*!< MPU 
+ 602:..//common/Core/CM3/core_cm3.h **** 
+ 603:..//common/Core/CM3/core_cm3.h **** #define MPU_RASR_SRD_Pos                    8                                             /*!< MPU 
+ 604:..//common/Core/CM3/core_cm3.h **** #define MPU_RASR_SRD_Msk                   (0xFFul << MPU_RASR_SRD_Pos)                   /*!< MPU 
+ 605:..//common/Core/CM3/core_cm3.h **** 
+ 606:..//common/Core/CM3/core_cm3.h **** #define MPU_RASR_SIZE_Pos                   1                                             /*!< MPU 
+ 607:..//common/Core/CM3/core_cm3.h **** #define MPU_RASR_SIZE_Msk                  (0x1Ful << MPU_RASR_SIZE_Pos)                  /*!< MPU 
+ 608:..//common/Core/CM3/core_cm3.h **** 
+ 609:..//common/Core/CM3/core_cm3.h **** #define MPU_RASR_ENA_Pos                     0                                            /*!< MPU 
+ 610:..//common/Core/CM3/core_cm3.h **** #define MPU_RASR_ENA_Msk                    (0x1Ful << MPU_RASR_ENA_Pos)                  /*!< MPU 
+ 611:..//common/Core/CM3/core_cm3.h **** 
+ 612:..//common/Core/CM3/core_cm3.h **** /*@}*/ /* end of group CMSIS_CM3_MPU */
+ 613:..//common/Core/CM3/core_cm3.h **** #endif
+ 614:..//common/Core/CM3/core_cm3.h **** 
+ 615:..//common/Core/CM3/core_cm3.h **** 
+ 616:..//common/Core/CM3/core_cm3.h **** /** @addtogroup CMSIS_CM3_CoreDebug CMSIS CM3 Core Debug
+ 617:..//common/Core/CM3/core_cm3.h ****   memory mapped structure for Core Debug Register
+ 618:..//common/Core/CM3/core_cm3.h ****   @{
+ 619:..//common/Core/CM3/core_cm3.h ****  */
+ 620:..//common/Core/CM3/core_cm3.h **** typedef struct
+ 621:..//common/Core/CM3/core_cm3.h **** {
+ 622:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t DHCSR;                        /*!< Offset: 0x00  Debug Halting Control and Status R
+ 623:..//common/Core/CM3/core_cm3.h ****   __O  uint32_t DCRSR;                        /*!< Offset: 0x04  Debug Core Register Selector Regis
+ 624:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t DCRDR;                        /*!< Offset: 0x08  Debug Core Register Data Register 
+ 625:..//common/Core/CM3/core_cm3.h ****   __IO uint32_t DEMCR;                        /*!< Offset: 0x0C  Debug Exception and Monitor Contro
+ 626:..//common/Core/CM3/core_cm3.h **** } CoreDebug_Type;
+ 627:..//common/Core/CM3/core_cm3.h **** 
+ 628:..//common/Core/CM3/core_cm3.h **** /* Debug Halting Control and Status Register */
+ 629:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_DBGKEY_Pos         16                                             /*!< Core
+ 630:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_DBGKEY_Msk         (0xFFFFul << CoreDebug_DHCSR_DBGKEY_Pos)       /*!< Core
+ 631:..//common/Core/CM3/core_cm3.h **** 
+ 632:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_S_RESET_ST_Pos     25                                             /*!< Core
+ 633:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_S_RESET_ST_Msk     (1ul << CoreDebug_DHCSR_S_RESET_ST_Pos)        /*!< Core
+ 634:..//common/Core/CM3/core_cm3.h **** 
+ 635:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_S_RETIRE_ST_Pos    24                                             /*!< Core
+ 636:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_S_RETIRE_ST_Msk    (1ul << CoreDebug_DHCSR_S_RETIRE_ST_Pos)       /*!< Core
+ 637:..//common/Core/CM3/core_cm3.h **** 
+ 638:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_S_LOCKUP_Pos       19                                             /*!< Core
+ 639:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_S_LOCKUP_Msk       (1ul << CoreDebug_DHCSR_S_LOCKUP_Pos)          /*!< Core
+ 640:..//common/Core/CM3/core_cm3.h **** 
+ 641:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_S_SLEEP_Pos        18                                             /*!< Core
+ 642:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_S_SLEEP_Msk        (1ul << CoreDebug_DHCSR_S_SLEEP_Pos)           /*!< Core
+ 643:..//common/Core/CM3/core_cm3.h **** 
+ 644:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_S_HALT_Pos         17                                             /*!< Core
+ 645:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_S_HALT_Msk         (1ul << CoreDebug_DHCSR_S_HALT_Pos)            /*!< Core
+ 646:..//common/Core/CM3/core_cm3.h **** 
+ 647:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_S_REGRDY_Pos       16                                             /*!< Core
+ 648:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_S_REGRDY_Msk       (1ul << CoreDebug_DHCSR_S_REGRDY_Pos)          /*!< Core
+ 649:..//common/Core/CM3/core_cm3.h **** 
+ 650:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_C_SNAPSTALL_Pos     5                                             /*!< Core
+ 651:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_C_SNAPSTALL_Msk    (1ul << CoreDebug_DHCSR_C_SNAPSTALL_Pos)       /*!< Core
+ 652:..//common/Core/CM3/core_cm3.h **** 
+ 653:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_C_MASKINTS_Pos      3                                             /*!< Core
+ 654:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_C_MASKINTS_Msk     (1ul << CoreDebug_DHCSR_C_MASKINTS_Pos)        /*!< Core
+ 655:..//common/Core/CM3/core_cm3.h **** 
+ 656:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_C_STEP_Pos          2                                             /*!< Core
+ 657:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_C_STEP_Msk         (1ul << CoreDebug_DHCSR_C_STEP_Pos)            /*!< Core
+ 658:..//common/Core/CM3/core_cm3.h **** 
+ 659:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_C_HALT_Pos          1                                             /*!< Core
+ 660:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_C_HALT_Msk         (1ul << CoreDebug_DHCSR_C_HALT_Pos)            /*!< Core
+ 661:..//common/Core/CM3/core_cm3.h **** 
+ 662:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_C_DEBUGEN_Pos       0                                             /*!< Core
+ 663:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DHCSR_C_DEBUGEN_Msk      (1ul << CoreDebug_DHCSR_C_DEBUGEN_Pos)         /*!< Core
+ 664:..//common/Core/CM3/core_cm3.h **** 
+ 665:..//common/Core/CM3/core_cm3.h **** /* Debug Core Register Selector Register */
+ 666:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DCRSR_REGWnR_Pos         16                                             /*!< Core
+ 667:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DCRSR_REGWnR_Msk         (1ul << CoreDebug_DCRSR_REGWnR_Pos)            /*!< Core
+ 668:..//common/Core/CM3/core_cm3.h **** 
+ 669:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DCRSR_REGSEL_Pos          0                                             /*!< Core
+ 670:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DCRSR_REGSEL_Msk         (0x1Ful << CoreDebug_DCRSR_REGSEL_Pos)         /*!< Core
+ 671:..//common/Core/CM3/core_cm3.h **** 
+ 672:..//common/Core/CM3/core_cm3.h **** /* Debug Exception and Monitor Control Register */
+ 673:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_TRCENA_Pos         24                                             /*!< Core
+ 674:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_TRCENA_Msk         (1ul << CoreDebug_DEMCR_TRCENA_Pos)            /*!< Core
+ 675:..//common/Core/CM3/core_cm3.h **** 
+ 676:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_MON_REQ_Pos        19                                             /*!< Core
+ 677:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_MON_REQ_Msk        (1ul << CoreDebug_DEMCR_MON_REQ_Pos)           /*!< Core
+ 678:..//common/Core/CM3/core_cm3.h **** 
+ 679:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_MON_STEP_Pos       18                                             /*!< Core
+ 680:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_MON_STEP_Msk       (1ul << CoreDebug_DEMCR_MON_STEP_Pos)          /*!< Core
+ 681:..//common/Core/CM3/core_cm3.h **** 
+ 682:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_MON_PEND_Pos       17                                             /*!< Core
+ 683:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_MON_PEND_Msk       (1ul << CoreDebug_DEMCR_MON_PEND_Pos)          /*!< Core
+ 684:..//common/Core/CM3/core_cm3.h **** 
+ 685:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_MON_EN_Pos         16                                             /*!< Core
+ 686:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_MON_EN_Msk         (1ul << CoreDebug_DEMCR_MON_EN_Pos)            /*!< Core
+ 687:..//common/Core/CM3/core_cm3.h **** 
+ 688:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_VC_HARDERR_Pos     10                                             /*!< Core
+ 689:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_VC_HARDERR_Msk     (1ul << CoreDebug_DEMCR_VC_HARDERR_Pos)        /*!< Core
+ 690:..//common/Core/CM3/core_cm3.h **** 
+ 691:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_VC_INTERR_Pos       9                                             /*!< Core
+ 692:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_VC_INTERR_Msk      (1ul << CoreDebug_DEMCR_VC_INTERR_Pos)         /*!< Core
+ 693:..//common/Core/CM3/core_cm3.h **** 
+ 694:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_VC_BUSERR_Pos       8                                             /*!< Core
+ 695:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_VC_BUSERR_Msk      (1ul << CoreDebug_DEMCR_VC_BUSERR_Pos)         /*!< Core
+ 696:..//common/Core/CM3/core_cm3.h **** 
+ 697:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_VC_STATERR_Pos      7                                             /*!< Core
+ 698:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_VC_STATERR_Msk     (1ul << CoreDebug_DEMCR_VC_STATERR_Pos)        /*!< Core
+ 699:..//common/Core/CM3/core_cm3.h **** 
+ 700:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_VC_CHKERR_Pos       6                                             /*!< Core
+ 701:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_VC_CHKERR_Msk      (1ul << CoreDebug_DEMCR_VC_CHKERR_Pos)         /*!< Core
+ 702:..//common/Core/CM3/core_cm3.h **** 
+ 703:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_VC_NOCPERR_Pos      5                                             /*!< Core
+ 704:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_VC_NOCPERR_Msk     (1ul << CoreDebug_DEMCR_VC_NOCPERR_Pos)        /*!< Core
+ 705:..//common/Core/CM3/core_cm3.h **** 
+ 706:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_VC_MMERR_Pos        4                                             /*!< Core
+ 707:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_VC_MMERR_Msk       (1ul << CoreDebug_DEMCR_VC_MMERR_Pos)          /*!< Core
+ 708:..//common/Core/CM3/core_cm3.h **** 
+ 709:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_VC_CORERESET_Pos    0                                             /*!< Core
+ 710:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_DEMCR_VC_CORERESET_Msk   (1ul << CoreDebug_DEMCR_VC_CORERESET_Pos)      /*!< Core
+ 711:..//common/Core/CM3/core_cm3.h **** /*@}*/ /* end of group CMSIS_CM3_CoreDebug */
+ 712:..//common/Core/CM3/core_cm3.h **** 
+ 713:..//common/Core/CM3/core_cm3.h **** 
+ 714:..//common/Core/CM3/core_cm3.h **** /* Memory mapping of Cortex-M3 Hardware */
+ 715:..//common/Core/CM3/core_cm3.h **** #define SCS_BASE            (0xE000E000)                              /*!< System Control Space Bas
+ 716:..//common/Core/CM3/core_cm3.h **** #define ITM_BASE            (0xE0000000)                              /*!< ITM Base Address        
+ 717:..//common/Core/CM3/core_cm3.h **** #define CoreDebug_BASE      (0xE000EDF0)                              /*!< Core Debug Base Address 
+ 718:..//common/Core/CM3/core_cm3.h **** #define SysTick_BASE        (SCS_BASE +  0x0010)                      /*!< SysTick Base Address    
+ 719:..//common/Core/CM3/core_cm3.h **** #define NVIC_BASE           (SCS_BASE +  0x0100)                      /*!< NVIC Base Address       
+ 720:..//common/Core/CM3/core_cm3.h **** #define SCB_BASE            (SCS_BASE +  0x0D00)                      /*!< System Control Block Bas
+ 721:..//common/Core/CM3/core_cm3.h **** 
+ 722:..//common/Core/CM3/core_cm3.h **** #define InterruptType       ((InterruptType_Type *) SCS_BASE)         /*!< Interrupt Type Register 
+ 723:..//common/Core/CM3/core_cm3.h **** #define SCB                 ((SCB_Type *)           SCB_BASE)         /*!< SCB configuration struct
+ 724:..//common/Core/CM3/core_cm3.h **** #define SysTick             ((SysTick_Type *)       SysTick_BASE)     /*!< SysTick configuration st
+ 725:..//common/Core/CM3/core_cm3.h **** #define NVIC                ((NVIC_Type *)          NVIC_BASE)        /*!< NVIC configuration struc
+ 726:..//common/Core/CM3/core_cm3.h **** #define ITM                 ((ITM_Type *)           ITM_BASE)         /*!< ITM configuration struct
+ 727:..//common/Core/CM3/core_cm3.h **** #define CoreDebug           ((CoreDebug_Type *)     CoreDebug_BASE)   /*!< Core Debug configuration
+ 728:..//common/Core/CM3/core_cm3.h **** 
+ 729:..//common/Core/CM3/core_cm3.h **** #if defined (__MPU_PRESENT) && (__MPU_PRESENT == 1)
+ 730:..//common/Core/CM3/core_cm3.h ****   #define MPU_BASE          (SCS_BASE +  0x0D90)                      /*!< Memory Protection Unit  
+ 731:..//common/Core/CM3/core_cm3.h ****   #define MPU               ((MPU_Type*)            MPU_BASE)         /*!< Memory Protection Unit  
+ 732:..//common/Core/CM3/core_cm3.h **** #endif
+ 733:..//common/Core/CM3/core_cm3.h **** 
+ 734:..//common/Core/CM3/core_cm3.h **** /*@}*/ /* end of group CMSIS_CM3_core_register */
+ 735:..//common/Core/CM3/core_cm3.h **** 
+ 736:..//common/Core/CM3/core_cm3.h **** 
+ 737:..//common/Core/CM3/core_cm3.h **** /*******************************************************************************
+ 738:..//common/Core/CM3/core_cm3.h ****  *                Hardware Abstraction Layer
+ 739:..//common/Core/CM3/core_cm3.h ****  ******************************************************************************/
+ 740:..//common/Core/CM3/core_cm3.h **** 
+ 741:..//common/Core/CM3/core_cm3.h **** #if defined ( __CC_ARM   )
+ 742:..//common/Core/CM3/core_cm3.h ****   #define __ASM            __asm                                      /*!< asm keyword for ARM Comp
+ 743:..//common/Core/CM3/core_cm3.h ****   #define __INLINE         __inline                                   /*!< inline keyword for ARM C
+ 744:..//common/Core/CM3/core_cm3.h **** 
+ 745:..//common/Core/CM3/core_cm3.h **** #elif defined ( __ICCARM__ )
+ 746:..//common/Core/CM3/core_cm3.h ****   #define __ASM           __asm                                       /*!< asm keyword for IAR Comp
+ 747:..//common/Core/CM3/core_cm3.h ****   #define __INLINE        inline                                      /*!< inline keyword for IAR C
+ 748:..//common/Core/CM3/core_cm3.h **** 
+ 749:..//common/Core/CM3/core_cm3.h **** #elif defined   (  __GNUC__  )
+ 750:..//common/Core/CM3/core_cm3.h ****   #define __ASM            __asm                                      /*!< asm keyword for GNU Comp
+ 751:..//common/Core/CM3/core_cm3.h ****   #define __INLINE         inline                                     /*!< inline keyword for GNU C
+ 752:..//common/Core/CM3/core_cm3.h **** 
+ 753:..//common/Core/CM3/core_cm3.h **** #elif defined   (  __TASKING__  )
+ 754:..//common/Core/CM3/core_cm3.h ****   #define __ASM            __asm                                      /*!< asm keyword for TASKING 
+ 755:..//common/Core/CM3/core_cm3.h ****   #define __INLINE         inline                                     /*!< inline keyword for TASKI
+ 756:..//common/Core/CM3/core_cm3.h **** 
+ 757:..//common/Core/CM3/core_cm3.h **** #endif
+ 758:..//common/Core/CM3/core_cm3.h **** 
+ 759:..//common/Core/CM3/core_cm3.h **** 
+ 760:..//common/Core/CM3/core_cm3.h **** /* ###################  Compiler specific Intrinsics  ########################### */
+ 761:..//common/Core/CM3/core_cm3.h **** 
+ 762:..//common/Core/CM3/core_cm3.h **** #if defined ( __CC_ARM   ) /*------------------RealView Compiler -----------------*/
+ 763:..//common/Core/CM3/core_cm3.h **** /* ARM armcc specific functions */
+ 764:..//common/Core/CM3/core_cm3.h **** 
+ 765:..//common/Core/CM3/core_cm3.h **** #define __enable_fault_irq                __enable_fiq
+ 766:..//common/Core/CM3/core_cm3.h **** #define __disable_fault_irq               __disable_fiq
+ 767:..//common/Core/CM3/core_cm3.h **** 
+ 768:..//common/Core/CM3/core_cm3.h **** #define __NOP                             __nop
+ 769:..//common/Core/CM3/core_cm3.h **** #define __WFI                             __wfi
+ 770:..//common/Core/CM3/core_cm3.h **** #define __WFE                             __wfe
+ 771:..//common/Core/CM3/core_cm3.h **** #define __SEV                             __sev
+ 772:..//common/Core/CM3/core_cm3.h **** #define __ISB()                           __isb(0)
+ 773:..//common/Core/CM3/core_cm3.h **** #define __DSB()                           __dsb(0)
+ 774:..//common/Core/CM3/core_cm3.h **** #define __DMB()                           __dmb(0)
+ 775:..//common/Core/CM3/core_cm3.h **** #define __REV                             __rev
+ 776:..//common/Core/CM3/core_cm3.h **** #define __RBIT                            __rbit
+ 777:..//common/Core/CM3/core_cm3.h **** #define __LDREXB(ptr)                     ((unsigned char ) __ldrex(ptr))
+ 778:..//common/Core/CM3/core_cm3.h **** #define __LDREXH(ptr)                     ((unsigned short) __ldrex(ptr))
+ 779:..//common/Core/CM3/core_cm3.h **** #define __LDREXW(ptr)                     ((unsigned int  ) __ldrex(ptr))
+ 780:..//common/Core/CM3/core_cm3.h **** #define __STREXB(value, ptr)              __strex(value, ptr)
+ 781:..//common/Core/CM3/core_cm3.h **** #define __STREXH(value, ptr)              __strex(value, ptr)
+ 782:..//common/Core/CM3/core_cm3.h **** #define __STREXW(value, ptr)              __strex(value, ptr)
+ 783:..//common/Core/CM3/core_cm3.h **** 
+ 784:..//common/Core/CM3/core_cm3.h **** 
+ 785:..//common/Core/CM3/core_cm3.h **** /* intrinsic unsigned long long __ldrexd(volatile void *ptr) */
+ 786:..//common/Core/CM3/core_cm3.h **** /* intrinsic int __strexd(unsigned long long val, volatile void *ptr) */
+ 787:..//common/Core/CM3/core_cm3.h **** /* intrinsic void __enable_irq();     */
+ 788:..//common/Core/CM3/core_cm3.h **** /* intrinsic void __disable_irq();    */
+ 789:..//common/Core/CM3/core_cm3.h **** 
+ 790:..//common/Core/CM3/core_cm3.h **** 
+ 791:..//common/Core/CM3/core_cm3.h **** /**
+ 792:..//common/Core/CM3/core_cm3.h ****  * @brief  Return the Process Stack Pointer
+ 793:..//common/Core/CM3/core_cm3.h ****  *
+ 794:..//common/Core/CM3/core_cm3.h ****  * @return ProcessStackPointer
+ 795:..//common/Core/CM3/core_cm3.h ****  *
+ 796:..//common/Core/CM3/core_cm3.h ****  * Return the actual process stack pointer
+ 797:..//common/Core/CM3/core_cm3.h ****  */
+ 798:..//common/Core/CM3/core_cm3.h **** extern uint32_t __get_PSP(void);
+ 799:..//common/Core/CM3/core_cm3.h **** 
+ 800:..//common/Core/CM3/core_cm3.h **** /**
+ 801:..//common/Core/CM3/core_cm3.h ****  * @brief  Set the Process Stack Pointer
+ 802:..//common/Core/CM3/core_cm3.h ****  *
+ 803:..//common/Core/CM3/core_cm3.h ****  * @param  topOfProcStack  Process Stack Pointer
+ 804:..//common/Core/CM3/core_cm3.h ****  *
+ 805:..//common/Core/CM3/core_cm3.h ****  * Assign the value ProcessStackPointer to the MSP 
+ 806:..//common/Core/CM3/core_cm3.h ****  * (process stack pointer) Cortex processor register
+ 807:..//common/Core/CM3/core_cm3.h ****  */
+ 808:..//common/Core/CM3/core_cm3.h **** extern void __set_PSP(uint32_t topOfProcStack);
+ 809:..//common/Core/CM3/core_cm3.h **** 
+ 810:..//common/Core/CM3/core_cm3.h **** /**
+ 811:..//common/Core/CM3/core_cm3.h ****  * @brief  Return the Main Stack Pointer
+ 812:..//common/Core/CM3/core_cm3.h ****  *
+ 813:..//common/Core/CM3/core_cm3.h ****  * @return Main Stack Pointer
+ 814:..//common/Core/CM3/core_cm3.h ****  *
+ 815:..//common/Core/CM3/core_cm3.h ****  * Return the current value of the MSP (main stack pointer)
+ 816:..//common/Core/CM3/core_cm3.h ****  * Cortex processor register
+ 817:..//common/Core/CM3/core_cm3.h ****  */
+ 818:..//common/Core/CM3/core_cm3.h **** extern uint32_t __get_MSP(void);
+ 819:..//common/Core/CM3/core_cm3.h **** 
+ 820:..//common/Core/CM3/core_cm3.h **** /**
+ 821:..//common/Core/CM3/core_cm3.h ****  * @brief  Set the Main Stack Pointer
+ 822:..//common/Core/CM3/core_cm3.h ****  *
+ 823:..//common/Core/CM3/core_cm3.h ****  * @param  topOfMainStack  Main Stack Pointer
+ 824:..//common/Core/CM3/core_cm3.h ****  *
+ 825:..//common/Core/CM3/core_cm3.h ****  * Assign the value mainStackPointer to the MSP 
+ 826:..//common/Core/CM3/core_cm3.h ****  * (main stack pointer) Cortex processor register
+ 827:..//common/Core/CM3/core_cm3.h ****  */
+ 828:..//common/Core/CM3/core_cm3.h **** extern void __set_MSP(uint32_t topOfMainStack);
+ 829:..//common/Core/CM3/core_cm3.h **** 
+ 830:..//common/Core/CM3/core_cm3.h **** /**
+ 831:..//common/Core/CM3/core_cm3.h ****  * @brief  Reverse byte order in unsigned short value
+ 832:..//common/Core/CM3/core_cm3.h ****  *
+ 833:..//common/Core/CM3/core_cm3.h ****  * @param   value  value to reverse
+ 834:..//common/Core/CM3/core_cm3.h ****  * @return         reversed value
+ 835:..//common/Core/CM3/core_cm3.h ****  *
+ 836:..//common/Core/CM3/core_cm3.h ****  * Reverse byte order in unsigned short value
+ 837:..//common/Core/CM3/core_cm3.h ****  */
+ 838:..//common/Core/CM3/core_cm3.h **** extern uint32_t __REV16(uint16_t value);
+ 839:..//common/Core/CM3/core_cm3.h **** 
+ 840:..//common/Core/CM3/core_cm3.h **** /**
+ 841:..//common/Core/CM3/core_cm3.h ****  * @brief  Reverse byte order in signed short value with sign extension to integer
+ 842:..//common/Core/CM3/core_cm3.h ****  *
+ 843:..//common/Core/CM3/core_cm3.h ****  * @param   value  value to reverse
+ 844:..//common/Core/CM3/core_cm3.h ****  * @return         reversed value
+ 845:..//common/Core/CM3/core_cm3.h ****  *
+ 846:..//common/Core/CM3/core_cm3.h ****  * Reverse byte order in signed short value with sign extension to integer
+ 847:..//common/Core/CM3/core_cm3.h ****  */
+ 848:..//common/Core/CM3/core_cm3.h **** extern int32_t __REVSH(int16_t value);
+ 849:..//common/Core/CM3/core_cm3.h **** 
+ 850:..//common/Core/CM3/core_cm3.h **** 
+ 851:..//common/Core/CM3/core_cm3.h **** #if (__ARMCC_VERSION < 400000)
+ 852:..//common/Core/CM3/core_cm3.h **** 
+ 853:..//common/Core/CM3/core_cm3.h **** /**
+ 854:..//common/Core/CM3/core_cm3.h ****  * @brief  Remove the exclusive lock created by ldrex
+ 855:..//common/Core/CM3/core_cm3.h ****  *
+ 856:..//common/Core/CM3/core_cm3.h ****  * Removes the exclusive lock which is created by ldrex.
+ 857:..//common/Core/CM3/core_cm3.h ****  */
+ 858:..//common/Core/CM3/core_cm3.h **** extern void __CLREX(void);
+ 859:..//common/Core/CM3/core_cm3.h **** 
+ 860:..//common/Core/CM3/core_cm3.h **** /**
+ 861:..//common/Core/CM3/core_cm3.h ****  * @brief  Return the Base Priority value
+ 862:..//common/Core/CM3/core_cm3.h ****  *
+ 863:..//common/Core/CM3/core_cm3.h ****  * @return BasePriority
+ 864:..//common/Core/CM3/core_cm3.h ****  *
+ 865:..//common/Core/CM3/core_cm3.h ****  * Return the content of the base priority register
+ 866:..//common/Core/CM3/core_cm3.h ****  */
+ 867:..//common/Core/CM3/core_cm3.h **** extern uint32_t __get_BASEPRI(void);
+ 868:..//common/Core/CM3/core_cm3.h **** 
+ 869:..//common/Core/CM3/core_cm3.h **** /**
+ 870:..//common/Core/CM3/core_cm3.h ****  * @brief  Set the Base Priority value
+ 871:..//common/Core/CM3/core_cm3.h ****  *
+ 872:..//common/Core/CM3/core_cm3.h ****  * @param  basePri  BasePriority
+ 873:..//common/Core/CM3/core_cm3.h ****  *
+ 874:..//common/Core/CM3/core_cm3.h ****  * Set the base priority register
+ 875:..//common/Core/CM3/core_cm3.h ****  */
+ 876:..//common/Core/CM3/core_cm3.h **** extern void __set_BASEPRI(uint32_t basePri);
+ 877:..//common/Core/CM3/core_cm3.h **** 
+ 878:..//common/Core/CM3/core_cm3.h **** /**
+ 879:..//common/Core/CM3/core_cm3.h ****  * @brief  Return the Priority Mask value
+ 880:..//common/Core/CM3/core_cm3.h ****  *
+ 881:..//common/Core/CM3/core_cm3.h ****  * @return PriMask
+ 882:..//common/Core/CM3/core_cm3.h ****  *
+ 883:..//common/Core/CM3/core_cm3.h ****  * Return state of the priority mask bit from the priority mask register
+ 884:..//common/Core/CM3/core_cm3.h ****  */
+ 885:..//common/Core/CM3/core_cm3.h **** extern uint32_t __get_PRIMASK(void);
+ 886:..//common/Core/CM3/core_cm3.h **** 
+ 887:..//common/Core/CM3/core_cm3.h **** /**
+ 888:..//common/Core/CM3/core_cm3.h ****  * @brief  Set the Priority Mask value
+ 889:..//common/Core/CM3/core_cm3.h ****  *
+ 890:..//common/Core/CM3/core_cm3.h ****  * @param   priMask  PriMask
+ 891:..//common/Core/CM3/core_cm3.h ****  *
+ 892:..//common/Core/CM3/core_cm3.h ****  * Set the priority mask bit in the priority mask register
+ 893:..//common/Core/CM3/core_cm3.h ****  */
+ 894:..//common/Core/CM3/core_cm3.h **** extern void __set_PRIMASK(uint32_t priMask);
+ 895:..//common/Core/CM3/core_cm3.h **** 
+ 896:..//common/Core/CM3/core_cm3.h **** /**
+ 897:..//common/Core/CM3/core_cm3.h ****  * @brief  Return the Fault Mask value
+ 898:..//common/Core/CM3/core_cm3.h ****  *
+ 899:..//common/Core/CM3/core_cm3.h ****  * @return FaultMask
+ 900:..//common/Core/CM3/core_cm3.h ****  *
+ 901:..//common/Core/CM3/core_cm3.h ****  * Return the content of the fault mask register
+ 902:..//common/Core/CM3/core_cm3.h ****  */
+ 903:..//common/Core/CM3/core_cm3.h **** extern uint32_t __get_FAULTMASK(void);
+ 904:..//common/Core/CM3/core_cm3.h **** 
+ 905:..//common/Core/CM3/core_cm3.h **** /**
+ 906:..//common/Core/CM3/core_cm3.h ****  * @brief  Set the Fault Mask value
+ 907:..//common/Core/CM3/core_cm3.h ****  *
+ 908:..//common/Core/CM3/core_cm3.h ****  * @param  faultMask faultMask value
+ 909:..//common/Core/CM3/core_cm3.h ****  *
+ 910:..//common/Core/CM3/core_cm3.h ****  * Set the fault mask register
+ 911:..//common/Core/CM3/core_cm3.h ****  */
+ 912:..//common/Core/CM3/core_cm3.h **** extern void __set_FAULTMASK(uint32_t faultMask);
+ 913:..//common/Core/CM3/core_cm3.h **** 
+ 914:..//common/Core/CM3/core_cm3.h **** /**
+ 915:..//common/Core/CM3/core_cm3.h ****  * @brief  Return the Control Register value
+ 916:..//common/Core/CM3/core_cm3.h ****  * 
+ 917:..//common/Core/CM3/core_cm3.h ****  * @return Control value
+ 918:..//common/Core/CM3/core_cm3.h ****  *
+ 919:..//common/Core/CM3/core_cm3.h ****  * Return the content of the control register
+ 920:..//common/Core/CM3/core_cm3.h ****  */
+ 921:..//common/Core/CM3/core_cm3.h **** extern uint32_t __get_CONTROL(void);
+ 922:..//common/Core/CM3/core_cm3.h **** 
+ 923:..//common/Core/CM3/core_cm3.h **** /**
+ 924:..//common/Core/CM3/core_cm3.h ****  * @brief  Set the Control Register value
+ 925:..//common/Core/CM3/core_cm3.h ****  *
+ 926:..//common/Core/CM3/core_cm3.h ****  * @param  control  Control value
+ 927:..//common/Core/CM3/core_cm3.h ****  *
+ 928:..//common/Core/CM3/core_cm3.h ****  * Set the control register
+ 929:..//common/Core/CM3/core_cm3.h ****  */
+ 930:..//common/Core/CM3/core_cm3.h **** extern void __set_CONTROL(uint32_t control);
+ 931:..//common/Core/CM3/core_cm3.h **** 
+ 932:..//common/Core/CM3/core_cm3.h **** #else  /* (__ARMCC_VERSION >= 400000)  */
+ 933:..//common/Core/CM3/core_cm3.h **** 
+ 934:..//common/Core/CM3/core_cm3.h **** /**
+ 935:..//common/Core/CM3/core_cm3.h ****  * @brief  Remove the exclusive lock created by ldrex
+ 936:..//common/Core/CM3/core_cm3.h ****  *
+ 937:..//common/Core/CM3/core_cm3.h ****  * Removes the exclusive lock which is created by ldrex.
+ 938:..//common/Core/CM3/core_cm3.h ****  */
+ 939:..//common/Core/CM3/core_cm3.h **** #define __CLREX                           __clrex
+ 940:..//common/Core/CM3/core_cm3.h **** 
+ 941:..//common/Core/CM3/core_cm3.h **** /**
+ 942:..//common/Core/CM3/core_cm3.h ****  * @brief  Return the Base Priority value
+ 943:..//common/Core/CM3/core_cm3.h ****  *
+ 944:..//common/Core/CM3/core_cm3.h ****  * @return BasePriority
+ 945:..//common/Core/CM3/core_cm3.h ****  *
+ 946:..//common/Core/CM3/core_cm3.h ****  * Return the content of the base priority register
+ 947:..//common/Core/CM3/core_cm3.h ****  */
+ 948:..//common/Core/CM3/core_cm3.h **** static __INLINE uint32_t  __get_BASEPRI(void)
+ 949:..//common/Core/CM3/core_cm3.h **** {
+ 950:..//common/Core/CM3/core_cm3.h ****   register uint32_t __regBasePri         __ASM("basepri");
+ 951:..//common/Core/CM3/core_cm3.h ****   return(__regBasePri);
+ 952:..//common/Core/CM3/core_cm3.h **** }
+ 953:..//common/Core/CM3/core_cm3.h **** 
+ 954:..//common/Core/CM3/core_cm3.h **** /**
+ 955:..//common/Core/CM3/core_cm3.h ****  * @brief  Set the Base Priority value
+ 956:..//common/Core/CM3/core_cm3.h ****  *
+ 957:..//common/Core/CM3/core_cm3.h ****  * @param  basePri  BasePriority
+ 958:..//common/Core/CM3/core_cm3.h ****  *
+ 959:..//common/Core/CM3/core_cm3.h ****  * Set the base priority register
+ 960:..//common/Core/CM3/core_cm3.h ****  */
+ 961:..//common/Core/CM3/core_cm3.h **** static __INLINE void __set_BASEPRI(uint32_t basePri)
+ 962:..//common/Core/CM3/core_cm3.h **** {
+ 963:..//common/Core/CM3/core_cm3.h ****   register uint32_t __regBasePri         __ASM("basepri");
+ 964:..//common/Core/CM3/core_cm3.h ****   __regBasePri = (basePri & 0xff);
+ 965:..//common/Core/CM3/core_cm3.h **** }
+ 966:..//common/Core/CM3/core_cm3.h **** 
+ 967:..//common/Core/CM3/core_cm3.h **** /**
+ 968:..//common/Core/CM3/core_cm3.h ****  * @brief  Return the Priority Mask value
+ 969:..//common/Core/CM3/core_cm3.h ****  *
+ 970:..//common/Core/CM3/core_cm3.h ****  * @return PriMask
+ 971:..//common/Core/CM3/core_cm3.h ****  *
+ 972:..//common/Core/CM3/core_cm3.h ****  * Return state of the priority mask bit from the priority mask register
+ 973:..//common/Core/CM3/core_cm3.h ****  */
+ 974:..//common/Core/CM3/core_cm3.h **** static __INLINE uint32_t __get_PRIMASK(void)
+ 975:..//common/Core/CM3/core_cm3.h **** {
+ 976:..//common/Core/CM3/core_cm3.h ****   register uint32_t __regPriMask         __ASM("primask");
+ 977:..//common/Core/CM3/core_cm3.h ****   return(__regPriMask);
+ 978:..//common/Core/CM3/core_cm3.h **** }
+ 979:..//common/Core/CM3/core_cm3.h **** 
+ 980:..//common/Core/CM3/core_cm3.h **** /**
+ 981:..//common/Core/CM3/core_cm3.h ****  * @brief  Set the Priority Mask value
+ 982:..//common/Core/CM3/core_cm3.h ****  *
+ 983:..//common/Core/CM3/core_cm3.h ****  * @param  priMask  PriMask
+ 984:..//common/Core/CM3/core_cm3.h ****  *
+ 985:..//common/Core/CM3/core_cm3.h ****  * Set the priority mask bit in the priority mask register
+ 986:..//common/Core/CM3/core_cm3.h ****  */
+ 987:..//common/Core/CM3/core_cm3.h **** static __INLINE void __set_PRIMASK(uint32_t priMask)
+ 988:..//common/Core/CM3/core_cm3.h **** {
+ 989:..//common/Core/CM3/core_cm3.h ****   register uint32_t __regPriMask         __ASM("primask");
+ 990:..//common/Core/CM3/core_cm3.h ****   __regPriMask = (priMask);
+ 991:..//common/Core/CM3/core_cm3.h **** }
+ 992:..//common/Core/CM3/core_cm3.h **** 
+ 993:..//common/Core/CM3/core_cm3.h **** /**
+ 994:..//common/Core/CM3/core_cm3.h ****  * @brief  Return the Fault Mask value
+ 995:..//common/Core/CM3/core_cm3.h ****  *
+ 996:..//common/Core/CM3/core_cm3.h ****  * @return FaultMask
+ 997:..//common/Core/CM3/core_cm3.h ****  *
+ 998:..//common/Core/CM3/core_cm3.h ****  * Return the content of the fault mask register
+ 999:..//common/Core/CM3/core_cm3.h ****  */
+1000:..//common/Core/CM3/core_cm3.h **** static __INLINE uint32_t __get_FAULTMASK(void)
+1001:..//common/Core/CM3/core_cm3.h **** {
+1002:..//common/Core/CM3/core_cm3.h ****   register uint32_t __regFaultMask       __ASM("faultmask");
+1003:..//common/Core/CM3/core_cm3.h ****   return(__regFaultMask);
+1004:..//common/Core/CM3/core_cm3.h **** }
+1005:..//common/Core/CM3/core_cm3.h **** 
+1006:..//common/Core/CM3/core_cm3.h **** /**
+1007:..//common/Core/CM3/core_cm3.h ****  * @brief  Set the Fault Mask value
+1008:..//common/Core/CM3/core_cm3.h ****  *
+1009:..//common/Core/CM3/core_cm3.h ****  * @param  faultMask  faultMask value
+1010:..//common/Core/CM3/core_cm3.h ****  *
+1011:..//common/Core/CM3/core_cm3.h ****  * Set the fault mask register
+1012:..//common/Core/CM3/core_cm3.h ****  */
+1013:..//common/Core/CM3/core_cm3.h **** static __INLINE void __set_FAULTMASK(uint32_t faultMask)
+1014:..//common/Core/CM3/core_cm3.h **** {
+1015:..//common/Core/CM3/core_cm3.h ****   register uint32_t __regFaultMask       __ASM("faultmask");
+1016:..//common/Core/CM3/core_cm3.h ****   __regFaultMask = (faultMask & 1);
+1017:..//common/Core/CM3/core_cm3.h **** }
+1018:..//common/Core/CM3/core_cm3.h **** 
+1019:..//common/Core/CM3/core_cm3.h **** /**
+1020:..//common/Core/CM3/core_cm3.h ****  * @brief  Return the Control Register value
+1021:..//common/Core/CM3/core_cm3.h ****  * 
+1022:..//common/Core/CM3/core_cm3.h ****  * @return Control value
+1023:..//common/Core/CM3/core_cm3.h ****  *
+1024:..//common/Core/CM3/core_cm3.h ****  * Return the content of the control register
+1025:..//common/Core/CM3/core_cm3.h ****  */
+1026:..//common/Core/CM3/core_cm3.h **** static __INLINE uint32_t __get_CONTROL(void)
+1027:..//common/Core/CM3/core_cm3.h **** {
+1028:..//common/Core/CM3/core_cm3.h ****   register uint32_t __regControl         __ASM("control");
+1029:..//common/Core/CM3/core_cm3.h ****   return(__regControl);
+1030:..//common/Core/CM3/core_cm3.h **** }
+1031:..//common/Core/CM3/core_cm3.h **** 
+1032:..//common/Core/CM3/core_cm3.h **** /**
+1033:..//common/Core/CM3/core_cm3.h ****  * @brief  Set the Control Register value
+1034:..//common/Core/CM3/core_cm3.h ****  *
+1035:..//common/Core/CM3/core_cm3.h ****  * @param  control  Control value
+1036:..//common/Core/CM3/core_cm3.h ****  *
+1037:..//common/Core/CM3/core_cm3.h ****  * Set the control register
+1038:..//common/Core/CM3/core_cm3.h ****  */
+1039:..//common/Core/CM3/core_cm3.h **** static __INLINE void __set_CONTROL(uint32_t control)
+1040:..//common/Core/CM3/core_cm3.h **** {
+1041:..//common/Core/CM3/core_cm3.h ****   register uint32_t __regControl         __ASM("control");
+1042:..//common/Core/CM3/core_cm3.h ****   __regControl = control;
+1043:..//common/Core/CM3/core_cm3.h **** }
+1044:..//common/Core/CM3/core_cm3.h **** 
+1045:..//common/Core/CM3/core_cm3.h **** #endif /* __ARMCC_VERSION  */ 
+1046:..//common/Core/CM3/core_cm3.h **** 
+1047:..//common/Core/CM3/core_cm3.h **** 
+1048:..//common/Core/CM3/core_cm3.h **** 
+1049:..//common/Core/CM3/core_cm3.h **** #elif (defined (__ICCARM__)) /*------------------ ICC Compiler -------------------*/
+1050:..//common/Core/CM3/core_cm3.h **** /* IAR iccarm specific functions */
+1051:..//common/Core/CM3/core_cm3.h **** 
+1052:..//common/Core/CM3/core_cm3.h **** #define __enable_irq                              __enable_interrupt        /*!< global Interrupt e
+1053:..//common/Core/CM3/core_cm3.h **** #define __disable_irq                             __disable_interrupt       /*!< global Interrupt d
+1054:..//common/Core/CM3/core_cm3.h **** 
+1055:..//common/Core/CM3/core_cm3.h **** static __INLINE void __enable_fault_irq()         { __ASM ("cpsie f"); }
+1056:..//common/Core/CM3/core_cm3.h **** static __INLINE void __disable_fault_irq()        { __ASM ("cpsid f"); }
+1057:..//common/Core/CM3/core_cm3.h **** 
+1058:..//common/Core/CM3/core_cm3.h **** #define __NOP                                     __no_operation            /*!< no operation intri
+1059:..//common/Core/CM3/core_cm3.h **** static __INLINE  void __WFI()                     { __ASM ("wfi"); }
+1060:..//common/Core/CM3/core_cm3.h **** static __INLINE  void __WFE()                     { __ASM ("wfe"); }
+1061:..//common/Core/CM3/core_cm3.h **** static __INLINE  void __SEV()                     { __ASM ("sev"); }
+1062:..//common/Core/CM3/core_cm3.h **** static __INLINE  void __CLREX()                   { __ASM ("clrex"); }
+1063:..//common/Core/CM3/core_cm3.h **** 
+1064:..//common/Core/CM3/core_cm3.h **** /* intrinsic void __ISB(void)                                     */
+1065:..//common/Core/CM3/core_cm3.h **** /* intrinsic void __DSB(void)                                     */
+1066:..//common/Core/CM3/core_cm3.h **** /* intrinsic void __DMB(void)                                     */
+1067:..//common/Core/CM3/core_cm3.h **** /* intrinsic void __set_PRIMASK();                                */
+1068:..//common/Core/CM3/core_cm3.h **** /* intrinsic void __get_PRIMASK();                                */
+1069:..//common/Core/CM3/core_cm3.h **** /* intrinsic void __set_FAULTMASK();                              */
+1070:..//common/Core/CM3/core_cm3.h **** /* intrinsic void __get_FAULTMASK();                              */
+1071:..//common/Core/CM3/core_cm3.h **** /* intrinsic uint32_t __REV(uint32_t value);                      */
+1072:..//common/Core/CM3/core_cm3.h **** /* intrinsic uint32_t __REVSH(uint32_t value);                    */
+1073:..//common/Core/CM3/core_cm3.h **** /* intrinsic unsigned long __STREX(unsigned long, unsigned long); */
+1074:..//common/Core/CM3/core_cm3.h **** /* intrinsic unsigned long __LDREX(unsigned long *);              */
+1075:..//common/Core/CM3/core_cm3.h **** 
+1076:..//common/Core/CM3/core_cm3.h **** 
+1077:..//common/Core/CM3/core_cm3.h **** /**
+1078:..//common/Core/CM3/core_cm3.h ****  * @brief  Return the Process Stack Pointer
+1079:..//common/Core/CM3/core_cm3.h ****  *
+1080:..//common/Core/CM3/core_cm3.h ****  * @return ProcessStackPointer
+1081:..//common/Core/CM3/core_cm3.h ****  *
+1082:..//common/Core/CM3/core_cm3.h ****  * Return the actual process stack pointer
+1083:..//common/Core/CM3/core_cm3.h ****  */
+1084:..//common/Core/CM3/core_cm3.h **** extern uint32_t __get_PSP(void);
+1085:..//common/Core/CM3/core_cm3.h **** 
+1086:..//common/Core/CM3/core_cm3.h **** /**
+1087:..//common/Core/CM3/core_cm3.h ****  * @brief  Set the Process Stack Pointer
+1088:..//common/Core/CM3/core_cm3.h ****  *
+1089:..//common/Core/CM3/core_cm3.h ****  * @param  topOfProcStack  Process Stack Pointer
+1090:..//common/Core/CM3/core_cm3.h ****  *
+1091:..//common/Core/CM3/core_cm3.h ****  * Assign the value ProcessStackPointer to the MSP 
+1092:..//common/Core/CM3/core_cm3.h ****  * (process stack pointer) Cortex processor register
+1093:..//common/Core/CM3/core_cm3.h ****  */
+1094:..//common/Core/CM3/core_cm3.h **** extern void __set_PSP(uint32_t topOfProcStack);
+1095:..//common/Core/CM3/core_cm3.h **** 
+1096:..//common/Core/CM3/core_cm3.h **** /**
+1097:..//common/Core/CM3/core_cm3.h ****  * @brief  Return the Main Stack Pointer
+1098:..//common/Core/CM3/core_cm3.h ****  *
+1099:..//common/Core/CM3/core_cm3.h ****  * @return Main Stack Pointer
+1100:..//common/Core/CM3/core_cm3.h ****  *
+1101:..//common/Core/CM3/core_cm3.h ****  * Return the current value of the MSP (main stack pointer)
+1102:..//common/Core/CM3/core_cm3.h ****  * Cortex processor register
+1103:..//common/Core/CM3/core_cm3.h ****  */
+1104:..//common/Core/CM3/core_cm3.h **** extern uint32_t __get_MSP(void);
+1105:..//common/Core/CM3/core_cm3.h **** 
+1106:..//common/Core/CM3/core_cm3.h **** /**
+1107:..//common/Core/CM3/core_cm3.h ****  * @brief  Set the Main Stack Pointer
+1108:..//common/Core/CM3/core_cm3.h ****  *
+1109:..//common/Core/CM3/core_cm3.h ****  * @param  topOfMainStack  Main Stack Pointer
+1110:..//common/Core/CM3/core_cm3.h ****  *
+1111:..//common/Core/CM3/core_cm3.h ****  * Assign the value mainStackPointer to the MSP 
+1112:..//common/Core/CM3/core_cm3.h ****  * (main stack pointer) Cortex processor register
+1113:..//common/Core/CM3/core_cm3.h ****  */
+1114:..//common/Core/CM3/core_cm3.h **** extern void __set_MSP(uint32_t topOfMainStack);
+1115:..//common/Core/CM3/core_cm3.h **** 
+1116:..//common/Core/CM3/core_cm3.h **** /**
+1117:..//common/Core/CM3/core_cm3.h ****  * @brief  Reverse byte order in unsigned short value
+1118:..//common/Core/CM3/core_cm3.h ****  *
+1119:..//common/Core/CM3/core_cm3.h ****  * @param  value  value to reverse
+1120:..//common/Core/CM3/core_cm3.h ****  * @return        reversed value
+1121:..//common/Core/CM3/core_cm3.h ****  *
+1122:..//common/Core/CM3/core_cm3.h ****  * Reverse byte order in unsigned short value
+1123:..//common/Core/CM3/core_cm3.h ****  */
+1124:..//common/Core/CM3/core_cm3.h **** extern uint32_t __REV16(uint16_t value);
+1125:..//common/Core/CM3/core_cm3.h **** 
+1126:..//common/Core/CM3/core_cm3.h **** /**
+1127:..//common/Core/CM3/core_cm3.h ****  * @brief  Reverse bit order of value
+1128:..//common/Core/CM3/core_cm3.h ****  *
+1129:..//common/Core/CM3/core_cm3.h ****  * @param  value  value to reverse
+1130:..//common/Core/CM3/core_cm3.h ****  * @return        reversed value
+1131:..//common/Core/CM3/core_cm3.h ****  *
+1132:..//common/Core/CM3/core_cm3.h ****  * Reverse bit order of value
+1133:..//common/Core/CM3/core_cm3.h ****  */
+1134:..//common/Core/CM3/core_cm3.h **** extern uint32_t __RBIT(uint32_t value);
+1135:..//common/Core/CM3/core_cm3.h **** 
+1136:..//common/Core/CM3/core_cm3.h **** /**
+1137:..//common/Core/CM3/core_cm3.h ****  * @brief  LDR Exclusive (8 bit)
+1138:..//common/Core/CM3/core_cm3.h ****  *
+1139:..//common/Core/CM3/core_cm3.h ****  * @param  *addr  address pointer
+1140:..//common/Core/CM3/core_cm3.h ****  * @return        value of (*address)
+1141:..//common/Core/CM3/core_cm3.h ****  *
+1142:..//common/Core/CM3/core_cm3.h ****  * Exclusive LDR command for 8 bit values)
+1143:..//common/Core/CM3/core_cm3.h ****  */
+1144:..//common/Core/CM3/core_cm3.h **** extern uint8_t __LDREXB(uint8_t *addr);
+1145:..//common/Core/CM3/core_cm3.h **** 
+1146:..//common/Core/CM3/core_cm3.h **** /**
+1147:..//common/Core/CM3/core_cm3.h ****  * @brief  LDR Exclusive (16 bit)
+1148:..//common/Core/CM3/core_cm3.h ****  *
+1149:..//common/Core/CM3/core_cm3.h ****  * @param  *addr  address pointer
+1150:..//common/Core/CM3/core_cm3.h ****  * @return        value of (*address)
+1151:..//common/Core/CM3/core_cm3.h ****  *
+1152:..//common/Core/CM3/core_cm3.h ****  * Exclusive LDR command for 16 bit values
+1153:..//common/Core/CM3/core_cm3.h ****  */
+1154:..//common/Core/CM3/core_cm3.h **** extern uint16_t __LDREXH(uint16_t *addr);
+1155:..//common/Core/CM3/core_cm3.h **** 
+1156:..//common/Core/CM3/core_cm3.h **** /**
+1157:..//common/Core/CM3/core_cm3.h ****  * @brief  LDR Exclusive (32 bit)
+1158:..//common/Core/CM3/core_cm3.h ****  *
+1159:..//common/Core/CM3/core_cm3.h ****  * @param  *addr  address pointer
+1160:..//common/Core/CM3/core_cm3.h ****  * @return        value of (*address)
+1161:..//common/Core/CM3/core_cm3.h ****  *
+1162:..//common/Core/CM3/core_cm3.h ****  * Exclusive LDR command for 32 bit values
+1163:..//common/Core/CM3/core_cm3.h ****  */
+1164:..//common/Core/CM3/core_cm3.h **** extern uint32_t __LDREXW(uint32_t *addr);
+1165:..//common/Core/CM3/core_cm3.h **** 
+1166:..//common/Core/CM3/core_cm3.h **** /**
+1167:..//common/Core/CM3/core_cm3.h ****  * @brief  STR Exclusive (8 bit)
+1168:..//common/Core/CM3/core_cm3.h ****  *
+1169:..//common/Core/CM3/core_cm3.h ****  * @param  value  value to store
+1170:..//common/Core/CM3/core_cm3.h ****  * @param  *addr  address pointer
+1171:..//common/Core/CM3/core_cm3.h ****  * @return        successful / failed
+1172:..//common/Core/CM3/core_cm3.h ****  *
+1173:..//common/Core/CM3/core_cm3.h ****  * Exclusive STR command for 8 bit values
+1174:..//common/Core/CM3/core_cm3.h ****  */
+1175:..//common/Core/CM3/core_cm3.h **** extern uint32_t __STREXB(uint8_t value, uint8_t *addr);
+1176:..//common/Core/CM3/core_cm3.h **** 
+1177:..//common/Core/CM3/core_cm3.h **** /**
+1178:..//common/Core/CM3/core_cm3.h ****  * @brief  STR Exclusive (16 bit)
+1179:..//common/Core/CM3/core_cm3.h ****  *
+1180:..//common/Core/CM3/core_cm3.h ****  * @param  value  value to store
+1181:..//common/Core/CM3/core_cm3.h ****  * @param  *addr  address pointer
+1182:..//common/Core/CM3/core_cm3.h ****  * @return        successful / failed
+1183:..//common/Core/CM3/core_cm3.h ****  *
+1184:..//common/Core/CM3/core_cm3.h ****  * Exclusive STR command for 16 bit values
+1185:..//common/Core/CM3/core_cm3.h ****  */
+1186:..//common/Core/CM3/core_cm3.h **** extern uint32_t __STREXH(uint16_t value, uint16_t *addr);
+1187:..//common/Core/CM3/core_cm3.h **** 
+1188:..//common/Core/CM3/core_cm3.h **** /**
+1189:..//common/Core/CM3/core_cm3.h ****  * @brief  STR Exclusive (32 bit)
+1190:..//common/Core/CM3/core_cm3.h ****  *
+1191:..//common/Core/CM3/core_cm3.h ****  * @param  value  value to store
+1192:..//common/Core/CM3/core_cm3.h ****  * @param  *addr  address pointer
+1193:..//common/Core/CM3/core_cm3.h ****  * @return        successful / failed
+1194:..//common/Core/CM3/core_cm3.h ****  *
+1195:..//common/Core/CM3/core_cm3.h ****  * Exclusive STR command for 32 bit values
+1196:..//common/Core/CM3/core_cm3.h ****  */
+1197:..//common/Core/CM3/core_cm3.h **** extern uint32_t __STREXW(uint32_t value, uint32_t *addr);
+1198:..//common/Core/CM3/core_cm3.h **** 
+1199:..//common/Core/CM3/core_cm3.h **** 
+1200:..//common/Core/CM3/core_cm3.h **** 
+1201:..//common/Core/CM3/core_cm3.h **** #elif (defined (__GNUC__)) /*------------------ GNU Compiler ---------------------*/
+1202:..//common/Core/CM3/core_cm3.h **** /* GNU gcc specific functions */
+1203:..//common/Core/CM3/core_cm3.h **** 
+1204:..//common/Core/CM3/core_cm3.h **** static __INLINE void __enable_irq()               { __ASM volatile ("cpsie i"); }
+1205:..//common/Core/CM3/core_cm3.h **** static __INLINE void __disable_irq()              { __ASM volatile ("cpsid i"); }
+1206:..//common/Core/CM3/core_cm3.h **** 
+1207:..//common/Core/CM3/core_cm3.h **** static __INLINE void __enable_fault_irq()         { __ASM volatile ("cpsie f"); }
+1208:..//common/Core/CM3/core_cm3.h **** static __INLINE void __disable_fault_irq()        { __ASM volatile ("cpsid f"); }
+1209:..//common/Core/CM3/core_cm3.h **** 
+1210:..//common/Core/CM3/core_cm3.h **** static __INLINE void __NOP()                      { __ASM volatile ("nop"); }
+1211:..//common/Core/CM3/core_cm3.h **** static __INLINE void __WFI()                      { __ASM volatile ("wfi"); }
+1212:..//common/Core/CM3/core_cm3.h **** static __INLINE void __WFE()                      { __ASM volatile ("wfe"); }
+1213:..//common/Core/CM3/core_cm3.h **** static __INLINE void __SEV()                      { __ASM volatile ("sev"); }
+1214:..//common/Core/CM3/core_cm3.h **** static __INLINE void __ISB()                      { __ASM volatile ("isb"); }
+1215:..//common/Core/CM3/core_cm3.h **** static __INLINE void __DSB()                      { __ASM volatile ("dsb"); }
+1216:..//common/Core/CM3/core_cm3.h **** static __INLINE void __DMB()                      { __ASM volatile ("dmb"); }
+1217:..//common/Core/CM3/core_cm3.h **** static __INLINE void __CLREX()                    { __ASM volatile ("clrex"); }
+1218:..//common/Core/CM3/core_cm3.h **** 
+1219:..//common/Core/CM3/core_cm3.h **** 
+1220:..//common/Core/CM3/core_cm3.h **** /**
+1221:..//common/Core/CM3/core_cm3.h ****  * @brief  Return the Process Stack Pointer
+1222:..//common/Core/CM3/core_cm3.h ****  *
+1223:..//common/Core/CM3/core_cm3.h ****  * @return ProcessStackPointer
+1224:..//common/Core/CM3/core_cm3.h ****  *
+1225:..//common/Core/CM3/core_cm3.h ****  * Return the actual process stack pointer
+1226:..//common/Core/CM3/core_cm3.h ****  */
+1227:..//common/Core/CM3/core_cm3.h **** extern uint32_t __get_PSP(void);
+1228:..//common/Core/CM3/core_cm3.h **** 
+1229:..//common/Core/CM3/core_cm3.h **** /**
+1230:..//common/Core/CM3/core_cm3.h ****  * @brief  Set the Process Stack Pointer
+1231:..//common/Core/CM3/core_cm3.h ****  *
+1232:..//common/Core/CM3/core_cm3.h ****  * @param  topOfProcStack  Process Stack Pointer
+1233:..//common/Core/CM3/core_cm3.h ****  *
+1234:..//common/Core/CM3/core_cm3.h ****  * Assign the value ProcessStackPointer to the MSP 
+1235:..//common/Core/CM3/core_cm3.h ****  * (process stack pointer) Cortex processor register
+1236:..//common/Core/CM3/core_cm3.h ****  */
+1237:..//common/Core/CM3/core_cm3.h **** extern void __set_PSP(uint32_t topOfProcStack);
+1238:..//common/Core/CM3/core_cm3.h **** 
+1239:..//common/Core/CM3/core_cm3.h **** /**
+1240:..//common/Core/CM3/core_cm3.h ****  * @brief  Return the Main Stack Pointer
+1241:..//common/Core/CM3/core_cm3.h ****  *
+1242:..//common/Core/CM3/core_cm3.h ****  * @return Main Stack Pointer
+1243:..//common/Core/CM3/core_cm3.h ****  *
+1244:..//common/Core/CM3/core_cm3.h ****  * Return the current value of the MSP (main stack pointer)
+1245:..//common/Core/CM3/core_cm3.h ****  * Cortex processor register
+1246:..//common/Core/CM3/core_cm3.h ****  */
+1247:..//common/Core/CM3/core_cm3.h **** extern uint32_t __get_MSP(void);
+1248:..//common/Core/CM3/core_cm3.h **** 
+1249:..//common/Core/CM3/core_cm3.h **** /**
+1250:..//common/Core/CM3/core_cm3.h ****  * @brief  Set the Main Stack Pointer
+1251:..//common/Core/CM3/core_cm3.h ****  *
+1252:..//common/Core/CM3/core_cm3.h ****  * @param  topOfMainStack  Main Stack Pointer
+1253:..//common/Core/CM3/core_cm3.h ****  *
+1254:..//common/Core/CM3/core_cm3.h ****  * Assign the value mainStackPointer to the MSP 
+1255:..//common/Core/CM3/core_cm3.h ****  * (main stack pointer) Cortex processor register
+1256:..//common/Core/CM3/core_cm3.h ****  */
+1257:..//common/Core/CM3/core_cm3.h **** extern void __set_MSP(uint32_t topOfMainStack);
+1258:..//common/Core/CM3/core_cm3.h **** 
+1259:..//common/Core/CM3/core_cm3.h **** /**
+1260:..//common/Core/CM3/core_cm3.h ****  * @brief  Return the Base Priority value
+1261:..//common/Core/CM3/core_cm3.h ****  *
+1262:..//common/Core/CM3/core_cm3.h ****  * @return BasePriority
+1263:..//common/Core/CM3/core_cm3.h ****  *
+1264:..//common/Core/CM3/core_cm3.h ****  * Return the content of the base priority register
+1265:..//common/Core/CM3/core_cm3.h ****  */
+1266:..//common/Core/CM3/core_cm3.h **** extern uint32_t __get_BASEPRI(void);
+1267:..//common/Core/CM3/core_cm3.h **** 
+1268:..//common/Core/CM3/core_cm3.h **** /**
+1269:..//common/Core/CM3/core_cm3.h ****  * @brief  Set the Base Priority value
+1270:..//common/Core/CM3/core_cm3.h ****  *
+1271:..//common/Core/CM3/core_cm3.h ****  * @param  basePri  BasePriority
+1272:..//common/Core/CM3/core_cm3.h ****  *
+1273:..//common/Core/CM3/core_cm3.h ****  * Set the base priority register
+1274:..//common/Core/CM3/core_cm3.h ****  */
+1275:..//common/Core/CM3/core_cm3.h **** extern void __set_BASEPRI(uint32_t basePri);
+1276:..//common/Core/CM3/core_cm3.h **** 
+1277:..//common/Core/CM3/core_cm3.h **** /**
+1278:..//common/Core/CM3/core_cm3.h ****  * @brief  Return the Priority Mask value
+1279:..//common/Core/CM3/core_cm3.h ****  *
+1280:..//common/Core/CM3/core_cm3.h ****  * @return PriMask
+1281:..//common/Core/CM3/core_cm3.h ****  *
+1282:..//common/Core/CM3/core_cm3.h ****  * Return state of the priority mask bit from the priority mask register
+1283:..//common/Core/CM3/core_cm3.h ****  */
+1284:..//common/Core/CM3/core_cm3.h **** extern uint32_t  __get_PRIMASK(void);
+1285:..//common/Core/CM3/core_cm3.h **** 
+1286:..//common/Core/CM3/core_cm3.h **** /**
+1287:..//common/Core/CM3/core_cm3.h ****  * @brief  Set the Priority Mask value
+1288:..//common/Core/CM3/core_cm3.h ****  *
+1289:..//common/Core/CM3/core_cm3.h ****  * @param  priMask  PriMask
+1290:..//common/Core/CM3/core_cm3.h ****  *
+1291:..//common/Core/CM3/core_cm3.h ****  * Set the priority mask bit in the priority mask register
+1292:..//common/Core/CM3/core_cm3.h ****  */
+1293:..//common/Core/CM3/core_cm3.h **** extern void __set_PRIMASK(uint32_t priMask);
+1294:..//common/Core/CM3/core_cm3.h **** 
+1295:..//common/Core/CM3/core_cm3.h **** /**
+1296:..//common/Core/CM3/core_cm3.h ****  * @brief  Return the Fault Mask value
+1297:..//common/Core/CM3/core_cm3.h ****  *
+1298:..//common/Core/CM3/core_cm3.h ****  * @return FaultMask
+1299:..//common/Core/CM3/core_cm3.h ****  *
+1300:..//common/Core/CM3/core_cm3.h ****  * Return the content of the fault mask register
+1301:..//common/Core/CM3/core_cm3.h ****  */
+1302:..//common/Core/CM3/core_cm3.h **** extern uint32_t __get_FAULTMASK(void);
+1303:..//common/Core/CM3/core_cm3.h **** 
+1304:..//common/Core/CM3/core_cm3.h **** /**
+1305:..//common/Core/CM3/core_cm3.h ****  * @brief  Set the Fault Mask value
+1306:..//common/Core/CM3/core_cm3.h ****  *
+1307:..//common/Core/CM3/core_cm3.h ****  * @param  faultMask  faultMask value
+1308:..//common/Core/CM3/core_cm3.h ****  *
+1309:..//common/Core/CM3/core_cm3.h ****  * Set the fault mask register
+1310:..//common/Core/CM3/core_cm3.h ****  */
+1311:..//common/Core/CM3/core_cm3.h **** extern void __set_FAULTMASK(uint32_t faultMask);
+1312:..//common/Core/CM3/core_cm3.h **** 
+1313:..//common/Core/CM3/core_cm3.h **** /**
+1314:..//common/Core/CM3/core_cm3.h ****  * @brief  Return the Control Register value
+1315:..//common/Core/CM3/core_cm3.h **** * 
+1316:..//common/Core/CM3/core_cm3.h **** *  @return Control value
+1317:..//common/Core/CM3/core_cm3.h ****  *
+1318:..//common/Core/CM3/core_cm3.h ****  * Return the content of the control register
+1319:..//common/Core/CM3/core_cm3.h ****  */
+1320:..//common/Core/CM3/core_cm3.h **** extern uint32_t __get_CONTROL(void);
+1321:..//common/Core/CM3/core_cm3.h **** 
+1322:..//common/Core/CM3/core_cm3.h **** /**
+1323:..//common/Core/CM3/core_cm3.h ****  * @brief  Set the Control Register value
+1324:..//common/Core/CM3/core_cm3.h ****  *
+1325:..//common/Core/CM3/core_cm3.h ****  * @param  control  Control value
+1326:..//common/Core/CM3/core_cm3.h ****  *
+1327:..//common/Core/CM3/core_cm3.h ****  * Set the control register
+1328:..//common/Core/CM3/core_cm3.h ****  */
+1329:..//common/Core/CM3/core_cm3.h **** extern void __set_CONTROL(uint32_t control);
+1330:..//common/Core/CM3/core_cm3.h **** 
+1331:..//common/Core/CM3/core_cm3.h **** /**
+1332:..//common/Core/CM3/core_cm3.h ****  * @brief  Reverse byte order in integer value
+1333:..//common/Core/CM3/core_cm3.h ****  *
+1334:..//common/Core/CM3/core_cm3.h ****  * @param  value  value to reverse
+1335:..//common/Core/CM3/core_cm3.h ****  * @return        reversed value
+1336:..//common/Core/CM3/core_cm3.h ****  *
+1337:..//common/Core/CM3/core_cm3.h ****  * Reverse byte order in integer value
+1338:..//common/Core/CM3/core_cm3.h ****  */
+1339:..//common/Core/CM3/core_cm3.h **** extern uint32_t __REV(uint32_t value);
+1340:..//common/Core/CM3/core_cm3.h **** 
+1341:..//common/Core/CM3/core_cm3.h **** /**
+1342:..//common/Core/CM3/core_cm3.h ****  * @brief  Reverse byte order in unsigned short value
+1343:..//common/Core/CM3/core_cm3.h ****  *
+1344:..//common/Core/CM3/core_cm3.h ****  * @param  value  value to reverse
+1345:..//common/Core/CM3/core_cm3.h ****  * @return        reversed value
+1346:..//common/Core/CM3/core_cm3.h ****  *
+1347:..//common/Core/CM3/core_cm3.h ****  * Reverse byte order in unsigned short value
+1348:..//common/Core/CM3/core_cm3.h ****  */
+1349:..//common/Core/CM3/core_cm3.h **** extern uint32_t __REV16(uint16_t value);
+1350:..//common/Core/CM3/core_cm3.h **** 
+1351:..//common/Core/CM3/core_cm3.h **** /**
+1352:..//common/Core/CM3/core_cm3.h ****  * @brief  Reverse byte order in signed short value with sign extension to integer
+1353:..//common/Core/CM3/core_cm3.h ****  *
+1354:..//common/Core/CM3/core_cm3.h ****  * @param  value  value to reverse
+1355:..//common/Core/CM3/core_cm3.h ****  * @return        reversed value
+1356:..//common/Core/CM3/core_cm3.h ****  *
+1357:..//common/Core/CM3/core_cm3.h ****  * Reverse byte order in signed short value with sign extension to integer
+1358:..//common/Core/CM3/core_cm3.h ****  */
+1359:..//common/Core/CM3/core_cm3.h **** extern int32_t __REVSH(int16_t value);
+1360:..//common/Core/CM3/core_cm3.h **** 
+1361:..//common/Core/CM3/core_cm3.h **** /**
+1362:..//common/Core/CM3/core_cm3.h ****  * @brief  Reverse bit order of value
+1363:..//common/Core/CM3/core_cm3.h ****  *
+1364:..//common/Core/CM3/core_cm3.h ****  * @param  value  value to reverse
+1365:..//common/Core/CM3/core_cm3.h ****  * @return        reversed value
+1366:..//common/Core/CM3/core_cm3.h ****  *
+1367:..//common/Core/CM3/core_cm3.h ****  * Reverse bit order of value
+1368:..//common/Core/CM3/core_cm3.h ****  */
+1369:..//common/Core/CM3/core_cm3.h **** extern uint32_t __RBIT(uint32_t value);
+1370:..//common/Core/CM3/core_cm3.h **** 
+1371:..//common/Core/CM3/core_cm3.h **** /**
+1372:..//common/Core/CM3/core_cm3.h ****  * @brief  LDR Exclusive (8 bit)
+1373:..//common/Core/CM3/core_cm3.h ****  *
+1374:..//common/Core/CM3/core_cm3.h ****  * @param  *addr  address pointer
+1375:..//common/Core/CM3/core_cm3.h ****  * @return        value of (*address)
+1376:..//common/Core/CM3/core_cm3.h ****  *
+1377:..//common/Core/CM3/core_cm3.h ****  * Exclusive LDR command for 8 bit value
+1378:..//common/Core/CM3/core_cm3.h ****  */
+1379:..//common/Core/CM3/core_cm3.h **** extern uint8_t __LDREXB(uint8_t *addr);
+1380:..//common/Core/CM3/core_cm3.h **** 
+1381:..//common/Core/CM3/core_cm3.h **** /**
+1382:..//common/Core/CM3/core_cm3.h ****  * @brief  LDR Exclusive (16 bit)
+1383:..//common/Core/CM3/core_cm3.h ****  *
+1384:..//common/Core/CM3/core_cm3.h ****  * @param  *addr  address pointer
+1385:..//common/Core/CM3/core_cm3.h ****  * @return        value of (*address)
+1386:..//common/Core/CM3/core_cm3.h ****  *
+1387:..//common/Core/CM3/core_cm3.h ****  * Exclusive LDR command for 16 bit values
+1388:..//common/Core/CM3/core_cm3.h ****  */
+1389:..//common/Core/CM3/core_cm3.h **** extern uint16_t __LDREXH(uint16_t *addr);
+1390:..//common/Core/CM3/core_cm3.h **** 
+1391:..//common/Core/CM3/core_cm3.h **** /**
+1392:..//common/Core/CM3/core_cm3.h ****  * @brief  LDR Exclusive (32 bit)
+1393:..//common/Core/CM3/core_cm3.h ****  *
+1394:..//common/Core/CM3/core_cm3.h ****  * @param  *addr  address pointer
+1395:..//common/Core/CM3/core_cm3.h ****  * @return        value of (*address)
+1396:..//common/Core/CM3/core_cm3.h ****  *
+1397:..//common/Core/CM3/core_cm3.h ****  * Exclusive LDR command for 32 bit values
+1398:..//common/Core/CM3/core_cm3.h ****  */
+1399:..//common/Core/CM3/core_cm3.h **** extern uint32_t __LDREXW(uint32_t *addr);
+1400:..//common/Core/CM3/core_cm3.h **** 
+1401:..//common/Core/CM3/core_cm3.h **** /**
+1402:..//common/Core/CM3/core_cm3.h ****  * @brief  STR Exclusive (8 bit)
+1403:..//common/Core/CM3/core_cm3.h ****  *
+1404:..//common/Core/CM3/core_cm3.h ****  * @param  value  value to store
+1405:..//common/Core/CM3/core_cm3.h ****  * @param  *addr  address pointer
+1406:..//common/Core/CM3/core_cm3.h ****  * @return        successful / failed
+1407:..//common/Core/CM3/core_cm3.h ****  *
+1408:..//common/Core/CM3/core_cm3.h ****  * Exclusive STR command for 8 bit values
+1409:..//common/Core/CM3/core_cm3.h ****  */
+1410:..//common/Core/CM3/core_cm3.h **** extern uint32_t __STREXB(uint8_t value, uint8_t *addr);
+1411:..//common/Core/CM3/core_cm3.h **** 
+1412:..//common/Core/CM3/core_cm3.h **** /**
+1413:..//common/Core/CM3/core_cm3.h ****  * @brief  STR Exclusive (16 bit)
+1414:..//common/Core/CM3/core_cm3.h ****  *
+1415:..//common/Core/CM3/core_cm3.h ****  * @param  value  value to store
+1416:..//common/Core/CM3/core_cm3.h ****  * @param  *addr  address pointer
+1417:..//common/Core/CM3/core_cm3.h ****  * @return        successful / failed
+1418:..//common/Core/CM3/core_cm3.h ****  *
+1419:..//common/Core/CM3/core_cm3.h ****  * Exclusive STR command for 16 bit values
+1420:..//common/Core/CM3/core_cm3.h ****  */
+1421:..//common/Core/CM3/core_cm3.h **** extern uint32_t __STREXH(uint16_t value, uint16_t *addr);
+1422:..//common/Core/CM3/core_cm3.h **** 
+1423:..//common/Core/CM3/core_cm3.h **** /**
+1424:..//common/Core/CM3/core_cm3.h ****  * @brief  STR Exclusive (32 bit)
+1425:..//common/Core/CM3/core_cm3.h ****  *
+1426:..//common/Core/CM3/core_cm3.h ****  * @param  value  value to store
+1427:..//common/Core/CM3/core_cm3.h ****  * @param  *addr  address pointer
+1428:..//common/Core/CM3/core_cm3.h ****  * @return        successful / failed
+1429:..//common/Core/CM3/core_cm3.h ****  *
+1430:..//common/Core/CM3/core_cm3.h ****  * Exclusive STR command for 32 bit values
+1431:..//common/Core/CM3/core_cm3.h ****  */
+1432:..//common/Core/CM3/core_cm3.h **** extern uint32_t __STREXW(uint32_t value, uint32_t *addr);
+1433:..//common/Core/CM3/core_cm3.h **** 
+1434:..//common/Core/CM3/core_cm3.h **** 
+1435:..//common/Core/CM3/core_cm3.h **** #elif (defined (__TASKING__)) /*------------------ TASKING Compiler ---------------------*/
+1436:..//common/Core/CM3/core_cm3.h **** /* TASKING carm specific functions */
+1437:..//common/Core/CM3/core_cm3.h **** 
+1438:..//common/Core/CM3/core_cm3.h **** /*
+1439:..//common/Core/CM3/core_cm3.h ****  * The CMSIS functions have been implemented as intrinsics in the compiler.
+1440:..//common/Core/CM3/core_cm3.h ****  * Please use "carm -?i" to get an up to date list of all instrinsics,
+1441:..//common/Core/CM3/core_cm3.h ****  * Including the CMSIS ones.
+1442:..//common/Core/CM3/core_cm3.h ****  */
+1443:..//common/Core/CM3/core_cm3.h **** 
+1444:..//common/Core/CM3/core_cm3.h **** #endif
+1445:..//common/Core/CM3/core_cm3.h **** 
+1446:..//common/Core/CM3/core_cm3.h **** 
+1447:..//common/Core/CM3/core_cm3.h **** /** @addtogroup CMSIS_CM3_Core_FunctionInterface CMSIS CM3 Core Function Interface
+1448:..//common/Core/CM3/core_cm3.h ****   Core  Function Interface containing:
+1449:..//common/Core/CM3/core_cm3.h ****   - Core NVIC Functions
+1450:..//common/Core/CM3/core_cm3.h ****   - Core SysTick Functions
+1451:..//common/Core/CM3/core_cm3.h ****   - Core Reset Functions
+1452:..//common/Core/CM3/core_cm3.h **** */
+1453:..//common/Core/CM3/core_cm3.h **** /*@{*/
+1454:..//common/Core/CM3/core_cm3.h **** 
+1455:..//common/Core/CM3/core_cm3.h **** /* ##########################   NVIC functions  #################################### */
+1456:..//common/Core/CM3/core_cm3.h **** 
+1457:..//common/Core/CM3/core_cm3.h **** /**
+1458:..//common/Core/CM3/core_cm3.h ****  * @brief  Set the Priority Grouping in NVIC Interrupt Controller
+1459:..//common/Core/CM3/core_cm3.h ****  *
+1460:..//common/Core/CM3/core_cm3.h ****  * @param  PriorityGroup is priority grouping field
+1461:..//common/Core/CM3/core_cm3.h ****  *
+1462:..//common/Core/CM3/core_cm3.h ****  * Set the priority grouping field using the required unlock sequence.
+1463:..//common/Core/CM3/core_cm3.h ****  * The parameter priority_grouping is assigned to the field 
+1464:..//common/Core/CM3/core_cm3.h ****  * SCB->AIRCR [10:8] PRIGROUP field. Only values from 0..7 are used.
+1465:..//common/Core/CM3/core_cm3.h ****  * In case of a conflict between priority grouping and available
+1466:..//common/Core/CM3/core_cm3.h ****  * priority bits (__NVIC_PRIO_BITS) the smallest possible priority group is set.
+1467:..//common/Core/CM3/core_cm3.h ****  */
+1468:..//common/Core/CM3/core_cm3.h **** static __INLINE void NVIC_SetPriorityGrouping(uint32_t PriorityGroup)
+1469:..//common/Core/CM3/core_cm3.h **** {
+1470:..//common/Core/CM3/core_cm3.h ****   uint32_t reg_value;
+1471:..//common/Core/CM3/core_cm3.h ****   uint32_t PriorityGroupTmp = (PriorityGroup & 0x07);                         /* only values 0..7 a
+1472:..//common/Core/CM3/core_cm3.h ****   
+1473:..//common/Core/CM3/core_cm3.h ****   reg_value  =  SCB->AIRCR;                                                   /* read old register 
+1474:..//common/Core/CM3/core_cm3.h ****   reg_value &= ~(SCB_AIRCR_VECTKEY_Msk | SCB_AIRCR_PRIGROUP_Msk);             /* clear bits to chan
+1475:..//common/Core/CM3/core_cm3.h ****   reg_value  =  (reg_value                       |
+1476:..//common/Core/CM3/core_cm3.h ****                 (0x5FA << SCB_AIRCR_VECTKEY_Pos) | 
+1477:..//common/Core/CM3/core_cm3.h ****                 (PriorityGroupTmp << 8));                                     /* Insert write key a
+1478:..//common/Core/CM3/core_cm3.h ****   SCB->AIRCR =  reg_value;
+1479:..//common/Core/CM3/core_cm3.h **** }
+1480:..//common/Core/CM3/core_cm3.h **** 
+1481:..//common/Core/CM3/core_cm3.h **** /**
+1482:..//common/Core/CM3/core_cm3.h ****  * @brief  Get the Priority Grouping from NVIC Interrupt Controller
+1483:..//common/Core/CM3/core_cm3.h ****  *
+1484:..//common/Core/CM3/core_cm3.h ****  * @return priority grouping field 
+1485:..//common/Core/CM3/core_cm3.h ****  *
+1486:..//common/Core/CM3/core_cm3.h ****  * Get the priority grouping from NVIC Interrupt Controller.
+1487:..//common/Core/CM3/core_cm3.h ****  * priority grouping is SCB->AIRCR [10:8] PRIGROUP field.
+1488:..//common/Core/CM3/core_cm3.h ****  */
+1489:..//common/Core/CM3/core_cm3.h **** static __INLINE uint32_t NVIC_GetPriorityGrouping(void)
+1490:..//common/Core/CM3/core_cm3.h **** {
+1491:..//common/Core/CM3/core_cm3.h ****   return ((SCB->AIRCR & SCB_AIRCR_PRIGROUP_Msk) >> SCB_AIRCR_PRIGROUP_Pos);   /* read priority grou
+1492:..//common/Core/CM3/core_cm3.h **** }
+1493:..//common/Core/CM3/core_cm3.h **** 
+1494:..//common/Core/CM3/core_cm3.h **** /**
+1495:..//common/Core/CM3/core_cm3.h ****  * @brief  Enable Interrupt in NVIC Interrupt Controller
+1496:..//common/Core/CM3/core_cm3.h ****  *
+1497:..//common/Core/CM3/core_cm3.h ****  * @param  IRQn   The positive number of the external interrupt to enable
+1498:..//common/Core/CM3/core_cm3.h ****  *
+1499:..//common/Core/CM3/core_cm3.h ****  * Enable a device specific interupt in the NVIC interrupt controller.
+1500:..//common/Core/CM3/core_cm3.h ****  * The interrupt number cannot be a negative value.
+1501:..//common/Core/CM3/core_cm3.h ****  */
+1502:..//common/Core/CM3/core_cm3.h **** static __INLINE void NVIC_EnableIRQ(IRQn_Type IRQn)
+1503:..//common/Core/CM3/core_cm3.h **** {
+  31              		.loc 1 1503 0
+  32              		.cfi_startproc
+  33              		@ args = 0, pretend = 0, frame = 8
+  34              		@ frame_needed = 1, uses_anonymous_args = 0
+  35              		@ link register save eliminated.
+  36 0000 80B4     		push	{r7}
+  37              	.LCFI0:
+  38              		.cfi_def_cfa_offset 4
+  39 0002 83B0     		sub	sp, sp, #12
+  40              	.LCFI1:
+  41              		.cfi_def_cfa_offset 16
+  42 0004 00AF     		add	r7, sp, #0
+  43              		.cfi_offset 7, -4
+  44              	.LCFI2:
+  45              		.cfi_def_cfa_register 7
+  46 0006 0346     		mov	r3, r0
+  47 0008 FB71     		strb	r3, [r7, #7]
+1504:..//common/Core/CM3/core_cm3.h ****   NVIC->ISER[((uint32_t)(IRQn) >> 5)] = (1 << ((uint32_t)(IRQn) & 0x1F)); /* enable interrupt */
+  48              		.loc 1 1504 0
+  49 000a 4EF20013 		movw	r3, #:lower16:-536813312
+  50 000e CEF20003 		movt	r3, #:upper16:-536813312
+  51 0012 97F90720 		ldrsb	r2, [r7, #7]
+  52 0016 4FEA5212 		lsr	r2, r2, #5
+  53 001a F979     		ldrb	r1, [r7, #7]	@ zero_extendqisi2
+  54 001c 01F01F01 		and	r1, r1, #31
+  55 0020 4FF00100 		mov	r0, #1
+  56 0024 00FA01F1 		lsl	r1, r0, r1
+  57 0028 43F82210 		str	r1, [r3, r2, lsl #2]
+1505:..//common/Core/CM3/core_cm3.h **** }
+  58              		.loc 1 1505 0
+  59 002c 07F10C07 		add	r7, r7, #12
+  60 0030 BD46     		mov	sp, r7
+  61 0032 80BC     		pop	{r7}
+  62 0034 7047     		bx	lr
+  63              		.cfi_endproc
+  64              	.LFE14:
+  66 0036 00BF     		.section	.text.enable_USB_interrupts,"ax",%progbits
+  67              		.align	2
+  68              		.global	enable_USB_interrupts
+  69              		.thumb
+  70              		.thumb_func
+  72              	enable_USB_interrupts:
+  73              	.LFB29:
+  74              		.file 2 "..//drivers/USB/intenable.c"
+   1:..//drivers/USB/intenable.c **** #include "LPC17xx.h"
+   2:..//drivers/USB/intenable.c **** 
+   3:..//drivers/USB/intenable.c **** void enable_USB_interrupts(void)
+   4:..//drivers/USB/intenable.c **** {
+  75              		.loc 2 4 0
+  76              		.cfi_startproc
+  77              		@ args = 0, pretend = 0, frame = 0
+  78              		@ frame_needed = 1, uses_anonymous_args = 0
+  79 0000 80B5     		push	{r7, lr}
+  80              	.LCFI3:
+  81              		.cfi_def_cfa_offset 8
+  82 0002 00AF     		add	r7, sp, #0
+  83              		.cfi_offset 14, -4
+  84              		.cfi_offset 7, -8
+  85              	.LCFI4:
+  86              		.cfi_def_cfa_register 7
+   5:..//drivers/USB/intenable.c **** 	NVIC_EnableIRQ(USB_IRQn);	
+  87              		.loc 2 5 0
+  88 0004 4FF01800 		mov	r0, #24
+  89 0008 40F20003 		movw	r3, #:lower16:NVIC_EnableIRQ
+  90 000c C0F20003 		movt	r3, #:upper16:NVIC_EnableIRQ
+  91 0010 9847     		blx	r3
+   6:..//drivers/USB/intenable.c **** }
+  92              		.loc 2 6 0
+  93 0012 80BD     		pop	{r7, pc}
+  94              		.cfi_endproc
+  95              	.LFE29:
+  97              		.text
+  98              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 intenable.c
+C:\Users\hdhed\AppData\Local\Temp\cckwLoAb.s:24     .text.NVIC_EnableIRQ:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cckwLoAb.s:28     .text.NVIC_EnableIRQ:00000000 NVIC_EnableIRQ
+C:\Users\hdhed\AppData\Local\Temp\cckwLoAb.s:67     .text.enable_USB_interrupts:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cckwLoAb.s:72     .text.enable_USB_interrupts:00000000 enable_USB_interrupts
+                     .debug_frame:00000010 $d
+
+NO UNDEFINED SYMBOLS

@@ -1,0 +1,1273 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"delay_timer.cpp"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.global	delay_value
+  24              		.section	.bss.delay_value,"aw",%nobits
+  25              		.align	2
+  28              	delay_value:
+  29 0000 00000000 		.space	184
+  29      00000000 
+  29      00000000 
+  29      00000000 
+  29      00000000 
+  30              		.global	delay_const
+  31              		.section	.bss.delay_const,"aw",%nobits
+  32              		.align	2
+  35              	delay_const:
+  36 0000 00000000 		.space	184
+  36      00000000 
+  36      00000000 
+  36      00000000 
+  36      00000000 
+  37              		.section	.bss._ZL12delay_enable,"aw",%nobits
+  38              		.align	2
+  41              	_ZL12delay_enable:
+  42 0000 00000000 		.space	46
+  42      00000000 
+  42      00000000 
+  42      00000000 
+  42      00000000 
+  43              		.global	accum_update_a
+  44 002e 0000     		.section	.bss.accum_update_a,"aw",%nobits
+  45              		.align	2
+  48              	accum_update_a:
+  49 0000 00000000 		.space	4
+  50              		.global	accum_update_b
+  51              		.section	.bss.accum_update_b,"aw",%nobits
+  52              		.align	2
+  55              	accum_update_b:
+  56 0000 00000000 		.space	4
+  57              		.section	.text._Z7dt_initv,"ax",%progbits
+  58              		.align	2
+  59              		.global	_Z7dt_initv
+  60              		.thumb
+  61              		.thumb_func
+  63              	_Z7dt_initv:
+  64              	.LFB29:
+  65              		.file 1 "..//utils/delay_timer/delay_timer.cpp"
+   1:..//utils/delay_timer/delay_timer.cpp **** #include "delay_timer.h"
+   2:..//utils/delay_timer/delay_timer.cpp **** 
+   3:..//utils/delay_timer/delay_timer.cpp **** 
+   4:..//utils/delay_timer/delay_timer.cpp **** uint32_t delay_value[MAX_NUM_DELAY];
+   5:..//utils/delay_timer/delay_timer.cpp **** uint32_t delay_const[MAX_NUM_DELAY];
+   6:..//utils/delay_timer/delay_timer.cpp **** static char delay_enable[MAX_NUM_DELAY];
+   7:..//utils/delay_timer/delay_timer.cpp **** 
+   8:..//utils/delay_timer/delay_timer.cpp **** uint32_t accum_update_a;
+   9:..//utils/delay_timer/delay_timer.cpp **** uint32_t accum_update_b;
+  10:..//utils/delay_timer/delay_timer.cpp **** 
+  11:..//utils/delay_timer/delay_timer.cpp **** //-----------PWM DESCRIPTION-----------------------------
+  12:..//utils/delay_timer/delay_timer.cpp **** //PWMPR:prescalar  
+  13:..//utils/delay_timer/delay_timer.cpp **** //default timer working at 15Mhz
+  14:..//utils/delay_timer/delay_timer.cpp **** //after prescaling: 15Mhz/1000 =15 khz.
+  15:..//utils/delay_timer/delay_timer.cpp **** //		Timeperiod: 66.66usec
+  16:..//utils/delay_timer/delay_timer.cpp **** //		 max count: (2^32) * 66.66usec
+  17:..//utils/delay_timer/delay_timer.cpp **** //--------------------------------------------------------
+  18:..//utils/delay_timer/delay_timer.cpp **** 
+  19:..//utils/delay_timer/delay_timer.cpp **** void dt_init(){
+  66              		.loc 1 19 0
+  67              		.cfi_startproc
+  68              		@ args = 0, pretend = 0, frame = 0
+  69              		@ frame_needed = 1, uses_anonymous_args = 0
+  70              		@ link register save eliminated.
+  71 0000 80B4     		push	{r7}
+  72              	.LCFI0:
+  73              		.cfi_def_cfa_offset 4
+  74 0002 00AF     		add	r7, sp, #0
+  75              		.cfi_offset 7, -4
+  76              	.LCFI1:
+  77              		.cfi_def_cfa_register 7
+  20:..//utils/delay_timer/delay_timer.cpp **** 	delay_timer_32 = 0;
+  78              		.loc 1 20 0
+  79 0004 40F20003 		movw	r3, #:lower16:delay_timer_32
+  80 0008 C0F20003 		movt	r3, #:upper16:delay_timer_32
+  81 000c 4FF00002 		mov	r2, #0
+  82 0010 1A60     		str	r2, [r3, #0]
+  21:..//utils/delay_timer/delay_timer.cpp **** }
+  83              		.loc 1 21 0
+  84 0012 BD46     		mov	sp, r7
+  85 0014 80BC     		pop	{r7}
+  86 0016 7047     		bx	lr
+  87              		.cfi_endproc
+  88              	.LFE29:
+  90              		.section	.text._ZL11value_checkv,"ax",%progbits
+  91              		.align	2
+  92              		.thumb
+  93              		.thumb_func
+  95              	_ZL11value_checkv:
+  96              	.LFB30:
+  22:..//utils/delay_timer/delay_timer.cpp **** 
+  23:..//utils/delay_timer/delay_timer.cpp **** // extern "C" void timer_update (void){
+  24:..//utils/delay_timer/delay_timer.cpp **** 	// delay_timer_32++;
+  25:..//utils/delay_timer/delay_timer.cpp **** 	// TIM_ClearIntPending(LPC_TIM2, TIM_MR0_INT);
+  26:..//utils/delay_timer/delay_timer.cpp **** // }
+  27:..//utils/delay_timer/delay_timer.cpp **** 
+  28:..//utils/delay_timer/delay_timer.cpp **** /*
+  29:..//utils/delay_timer/delay_timer.cpp **** sec mul is the number of divisions of a second allowed...
+  30:..//utils/delay_timer/delay_timer.cpp **** i.e., for secmul = 15000 and VPB_DIV = 4 and CCLK = 60MHz, PWMPR = 999 
+  31:..//utils/delay_timer/delay_timer.cpp **** 
+  32:..//utils/delay_timer/delay_timer.cpp **** 
+  33:..//utils/delay_timer/delay_timer.cpp **** */
+  34:..//utils/delay_timer/delay_timer.cpp **** #if 0
+  35:..//utils/delay_timer/delay_timer.cpp **** void dt_init(uint32_t sec_mul){
+  36:..//utils/delay_timer/delay_timer.cpp **** 	delay_timer_32 = 0;
+  37:..//utils/delay_timer/delay_timer.cpp **** 	for (int i=0;i<MAX_NUM_DELAY;i++){
+  38:..//utils/delay_timer/delay_timer.cpp **** 		delay_value[i] = 0;
+  39:..//utils/delay_timer/delay_timer.cpp **** 		delay_enable[i] = 0;
+  40:..//utils/delay_timer/delay_timer.cpp **** 	}
+  41:..//utils/delay_timer/delay_timer.cpp **** 	LPC_SC -> PCONP |= 1 << 22; // Power up Timer 2	
+  42:..//utils/delay_timer/delay_timer.cpp ****     LPC_SC -> PCLKSEL1 |= 1 << 12; // Clock for timer = CCLK
+  43:..//utils/delay_timer/delay_timer.cpp **** 	LPC_TIM2 -> PR = ((SystemCoreClock / 1000000) * 0.5) - 1; // prescalar value for 500us	
+  44:..//utils/delay_timer/delay_timer.cpp **** 	LPC_TIM2 -> MR0 = sec_mul;
+  45:..//utils/delay_timer/delay_timer.cpp **** 	LPC_TIM2 -> MCR |= (1 << 0) | (1 << 1); // all values zero for continuous operation
+  46:..//utils/delay_timer/delay_timer.cpp **** 	LPC_TIM2 -> TCR |= 1 << 1; // Manually Reset Timer0 ( forced )
+  47:..//utils/delay_timer/delay_timer.cpp **** 	LPC_TIM2 -> TCR &= ~(1 << 1); // stop resetting the timer.
+  48:..//utils/delay_timer/delay_timer.cpp **** 	NVIC_EnableIRQ((IRQn_Type)TIMER2_IRQn);	
+  49:..//utils/delay_timer/delay_timer.cpp **** 	NVIC_SetPriority((IRQn_Type)TIMER2_IRQn, 3);
+  50:..//utils/delay_timer/delay_timer.cpp **** 	LPC_TIM2 -> TCR |= 1 << 0; // Start timer
+  51:..//utils/delay_timer/delay_timer.cpp **** 	printf("Delay Timer \n");
+  52:..//utils/delay_timer/delay_timer.cpp **** 	// init_timer2((void *)TIMER2_IRQn);
+  53:..//utils/delay_timer/delay_timer.cpp **** }
+  54:..//utils/delay_timer/delay_timer.cpp **** #endif
+  55:..//utils/delay_timer/delay_timer.cpp **** 
+  56:..//utils/delay_timer/delay_timer.cpp **** static uint32_t value_check(){
+  97              		.loc 1 56 0
+  98              		.cfi_startproc
+  99              		@ args = 0, pretend = 0, frame = 0
+ 100              		@ frame_needed = 1, uses_anonymous_args = 0
+ 101              		@ link register save eliminated.
+ 102 0000 80B4     		push	{r7}
+ 103              	.LCFI2:
+ 104              		.cfi_def_cfa_offset 4
+ 105 0002 00AF     		add	r7, sp, #0
+ 106              		.cfi_offset 7, -4
+ 107              	.LCFI3:
+ 108              		.cfi_def_cfa_register 7
+ 109              	.L4:
+  57:..//utils/delay_timer/delay_timer.cpp **** 	do{
+  58:..//utils/delay_timer/delay_timer.cpp **** 		accum_update_a = delay_timer_32;
+ 110              		.loc 1 58 0
+ 111 0004 40F20003 		movw	r3, #:lower16:delay_timer_32
+ 112 0008 C0F20003 		movt	r3, #:upper16:delay_timer_32
+ 113 000c 1A68     		ldr	r2, [r3, #0]
+ 114 000e 40F20003 		movw	r3, #:lower16:accum_update_a
+ 115 0012 C0F20003 		movt	r3, #:upper16:accum_update_a
+ 116 0016 1A60     		str	r2, [r3, #0]
+  59:..//utils/delay_timer/delay_timer.cpp **** 		accum_update_b = delay_timer_32;
+ 117              		.loc 1 59 0
+ 118 0018 40F20003 		movw	r3, #:lower16:delay_timer_32
+ 119 001c C0F20003 		movt	r3, #:upper16:delay_timer_32
+ 120 0020 1A68     		ldr	r2, [r3, #0]
+ 121 0022 40F20003 		movw	r3, #:lower16:accum_update_b
+ 122 0026 C0F20003 		movt	r3, #:upper16:accum_update_b
+ 123 002a 1A60     		str	r2, [r3, #0]
+ 124              		.loc 1 57 0
+ 125 002c 40F20003 		movw	r3, #:lower16:accum_update_a
+ 126 0030 C0F20003 		movt	r3, #:upper16:accum_update_a
+ 127 0034 1A68     		ldr	r2, [r3, #0]
+ 128 0036 40F20003 		movw	r3, #:lower16:accum_update_b
+ 129 003a C0F20003 		movt	r3, #:upper16:accum_update_b
+ 130 003e 1B68     		ldr	r3, [r3, #0]
+ 131 0040 9A42     		cmp	r2, r3
+ 132 0042 0CBF     		ite	eq
+ 133 0044 0023     		moveq	r3, #0
+ 134 0046 0123     		movne	r3, #1
+ 135 0048 DBB2     		uxtb	r3, r3
+ 136 004a 002B     		cmp	r3, #0
+ 137 004c DAD1     		bne	.L4
+  60:..//utils/delay_timer/delay_timer.cpp **** 	}while(accum_update_a != accum_update_b);
+  61:..//utils/delay_timer/delay_timer.cpp **** 	return accum_update_a;
+ 138              		.loc 1 61 0
+ 139 004e 40F20003 		movw	r3, #:lower16:accum_update_a
+ 140 0052 C0F20003 		movt	r3, #:upper16:accum_update_a
+ 141 0056 1B68     		ldr	r3, [r3, #0]
+  62:..//utils/delay_timer/delay_timer.cpp **** }
+ 142              		.loc 1 62 0
+ 143 0058 1846     		mov	r0, r3
+ 144 005a BD46     		mov	sp, r7
+ 145 005c 80BC     		pop	{r7}
+ 146 005e 7047     		bx	lr
+ 147              		.cfi_endproc
+ 148              	.LFE30:
+ 150              		.section	.text._ZL9is_timeupmm,"ax",%progbits
+ 151              		.align	2
+ 152              		.thumb
+ 153              		.thumb_func
+ 155              	_ZL9is_timeupmm:
+ 156              	.LFB31:
+  63:..//utils/delay_timer/delay_timer.cpp **** 
+  64:..//utils/delay_timer/delay_timer.cpp **** static int is_timeup(uint32_t start_time, uint32_t time_delay){
+ 157              		.loc 1 64 0
+ 158              		.cfi_startproc
+ 159              		@ args = 0, pretend = 0, frame = 16
+ 160              		@ frame_needed = 1, uses_anonymous_args = 0
+ 161 0000 80B5     		push	{r7, lr}
+ 162              	.LCFI4:
+ 163              		.cfi_def_cfa_offset 8
+ 164 0002 84B0     		sub	sp, sp, #16
+ 165              	.LCFI5:
+ 166              		.cfi_def_cfa_offset 24
+ 167 0004 00AF     		add	r7, sp, #0
+ 168              		.cfi_offset 14, -4
+ 169              		.cfi_offset 7, -8
+ 170              	.LCFI6:
+ 171              		.cfi_def_cfa_register 7
+ 172 0006 7860     		str	r0, [r7, #4]
+ 173 0008 3960     		str	r1, [r7, #0]
+ 174              	.LBB2:
+  65:..//utils/delay_timer/delay_timer.cpp **** 
+  66:..//utils/delay_timer/delay_timer.cpp **** 	uint32_t l_delay_timer_32 = value_check();	
+ 175              		.loc 1 66 0
+ 176 000a 40F20003 		movw	r3, #:lower16:_ZL11value_checkv
+ 177 000e C0F20003 		movt	r3, #:upper16:_ZL11value_checkv
+ 178 0012 9847     		blx	r3
+ 179 0014 0346     		mov	r3, r0
+ 180 0016 BB60     		str	r3, [r7, #8]
+  67:..//utils/delay_timer/delay_timer.cpp **** 	int32_t time_diff = l_delay_timer_32 - start_time;
+ 181              		.loc 1 67 0
+ 182 0018 BA68     		ldr	r2, [r7, #8]
+ 183 001a 7B68     		ldr	r3, [r7, #4]
+ 184 001c C3EB0203 		rsb	r3, r3, r2
+ 185 0020 FB60     		str	r3, [r7, #12]
+  68:..//utils/delay_timer/delay_timer.cpp **** 
+  69:..//utils/delay_timer/delay_timer.cpp **** 	if (0 > time_diff){
+ 186              		.loc 1 69 0
+ 187 0022 FB68     		ldr	r3, [r7, #12]
+ 188 0024 002B     		cmp	r3, #0
+ 189 0026 03DA     		bge	.L7
+  70:..//utils/delay_timer/delay_timer.cpp **** 	// add 0xffffffff for -ve values for the 32 bit timer...
+  71:..//utils/delay_timer/delay_timer.cpp **** 		time_diff += 0xFFFFFFFF;
+ 190              		.loc 1 71 0
+ 191 0028 FB68     		ldr	r3, [r7, #12]
+ 192 002a 03F1FF33 		add	r3, r3, #-1
+ 193 002e FB60     		str	r3, [r7, #12]
+ 194              	.L7:
+  72:..//utils/delay_timer/delay_timer.cpp **** 	}
+  73:..//utils/delay_timer/delay_timer.cpp **** 	// printf("\ndelay_timer32: %d",l_delay_timer_32);
+  74:..//utils/delay_timer/delay_timer.cpp **** 	
+  75:..//utils/delay_timer/delay_timer.cpp **** 	// printf("\nstart_time: %d",start_time);
+  76:..//utils/delay_timer/delay_timer.cpp **** 	
+  77:..//utils/delay_timer/delay_timer.cpp **** 	// printf("\ntime_diff: %d",time_diff);
+  78:..//utils/delay_timer/delay_timer.cpp **** 	
+  79:..//utils/delay_timer/delay_timer.cpp **** 	if ((uint32_t)time_diff > time_delay)
+ 195              		.loc 1 79 0
+ 196 0030 FA68     		ldr	r2, [r7, #12]
+ 197 0032 3B68     		ldr	r3, [r7, #0]
+ 198 0034 9A42     		cmp	r2, r3
+ 199 0036 02D9     		bls	.L8
+  80:..//utils/delay_timer/delay_timer.cpp **** 		return 1;
+ 200              		.loc 1 80 0
+ 201 0038 4FF00103 		mov	r3, #1
+ 202 003c 01E0     		b	.L9
+ 203              	.L8:
+  81:..//utils/delay_timer/delay_timer.cpp **** 	else
+  82:..//utils/delay_timer/delay_timer.cpp **** 		return 0;
+ 204              		.loc 1 82 0
+ 205 003e 4FF00003 		mov	r3, #0
+ 206              	.L9:
+ 207              	.LBE2:
+  83:..//utils/delay_timer/delay_timer.cpp **** }
+ 208              		.loc 1 83 0
+ 209 0042 1846     		mov	r0, r3
+ 210 0044 07F11007 		add	r7, r7, #16
+ 211 0048 BD46     		mov	sp, r7
+ 212 004a 80BD     		pop	{r7, pc}
+ 213              		.cfi_endproc
+ 214              	.LFE31:
+ 216              		.section	.text._ZL9time_leftmm,"ax",%progbits
+ 217              		.align	2
+ 218              		.thumb
+ 219              		.thumb_func
+ 221              	_ZL9time_leftmm:
+ 222              	.LFB32:
+  84:..//utils/delay_timer/delay_timer.cpp **** 
+  85:..//utils/delay_timer/delay_timer.cpp **** static uint32_t time_left(uint32_t start_time, uint32_t time_delay){
+ 223              		.loc 1 85 0
+ 224              		.cfi_startproc
+ 225              		@ args = 0, pretend = 0, frame = 16
+ 226              		@ frame_needed = 1, uses_anonymous_args = 0
+ 227 0000 80B5     		push	{r7, lr}
+ 228              	.LCFI7:
+ 229              		.cfi_def_cfa_offset 8
+ 230 0002 84B0     		sub	sp, sp, #16
+ 231              	.LCFI8:
+ 232              		.cfi_def_cfa_offset 24
+ 233 0004 00AF     		add	r7, sp, #0
+ 234              		.cfi_offset 14, -4
+ 235              		.cfi_offset 7, -8
+ 236              	.LCFI9:
+ 237              		.cfi_def_cfa_register 7
+ 238 0006 7860     		str	r0, [r7, #4]
+ 239 0008 3960     		str	r1, [r7, #0]
+ 240              	.LBB3:
+  86:..//utils/delay_timer/delay_timer.cpp **** 	
+  87:..//utils/delay_timer/delay_timer.cpp **** 	uint32_t l_delay_timer_32 = value_check();
+ 241              		.loc 1 87 0
+ 242 000a 40F20003 		movw	r3, #:lower16:_ZL11value_checkv
+ 243 000e C0F20003 		movt	r3, #:upper16:_ZL11value_checkv
+ 244 0012 9847     		blx	r3
+ 245 0014 0346     		mov	r3, r0
+ 246 0016 BB60     		str	r3, [r7, #8]
+  88:..//utils/delay_timer/delay_timer.cpp **** 	int32_t time_diff = l_delay_timer_32 - start_time;
+ 247              		.loc 1 88 0
+ 248 0018 BA68     		ldr	r2, [r7, #8]
+ 249 001a 7B68     		ldr	r3, [r7, #4]
+ 250 001c C3EB0203 		rsb	r3, r3, r2
+ 251 0020 FB60     		str	r3, [r7, #12]
+  89:..//utils/delay_timer/delay_timer.cpp **** 	
+  90:..//utils/delay_timer/delay_timer.cpp **** 	if (time_diff < 0){
+ 252              		.loc 1 90 0
+ 253 0022 FB68     		ldr	r3, [r7, #12]
+ 254 0024 002B     		cmp	r3, #0
+ 255 0026 03DA     		bge	.L12
+  91:..//utils/delay_timer/delay_timer.cpp **** 		// add 0xffffffff for -ve values for the 32 bit timer...
+  92:..//utils/delay_timer/delay_timer.cpp **** 		time_diff += 0xFFFFFFFF;
+ 256              		.loc 1 92 0
+ 257 0028 FB68     		ldr	r3, [r7, #12]
+ 258 002a 03F1FF33 		add	r3, r3, #-1
+ 259 002e FB60     		str	r3, [r7, #12]
+ 260              	.L12:
+  93:..//utils/delay_timer/delay_timer.cpp **** 	}
+  94:..//utils/delay_timer/delay_timer.cpp **** 	
+  95:..//utils/delay_timer/delay_timer.cpp **** 	// printf("\ndelay_timer32: %ld",delay_timer_32);
+  96:..//utils/delay_timer/delay_timer.cpp **** 	
+  97:..//utils/delay_timer/delay_timer.cpp **** 	// printf("\nstart_time: %ld",start_time);
+  98:..//utils/delay_timer/delay_timer.cpp **** 	
+  99:..//utils/delay_timer/delay_timer.cpp **** 	// printf("\ntime_diff: %ld",time_diff);
+ 100:..//utils/delay_timer/delay_timer.cpp **** 	
+ 101:..//utils/delay_timer/delay_timer.cpp **** 	if ((uint32_t)time_diff > time_delay){
+ 261              		.loc 1 101 0
+ 262 0030 FA68     		ldr	r2, [r7, #12]
+ 263 0032 3B68     		ldr	r3, [r7, #0]
+ 264 0034 9A42     		cmp	r2, r3
+ 265 0036 02D9     		bls	.L13
+ 102:..//utils/delay_timer/delay_timer.cpp **** 		return 0;
+ 266              		.loc 1 102 0
+ 267 0038 4FF00003 		mov	r3, #0
+ 268 003c 03E0     		b	.L14
+ 269              	.L13:
+ 103:..//utils/delay_timer/delay_timer.cpp **** 	} else{
+ 104:..//utils/delay_timer/delay_timer.cpp **** 		return (time_delay - time_diff);
+ 270              		.loc 1 104 0
+ 271 003e FB68     		ldr	r3, [r7, #12]
+ 272 0040 3A68     		ldr	r2, [r7, #0]
+ 273 0042 C3EB0203 		rsb	r3, r3, r2
+ 274              	.L14:
+ 275              	.LBE3:
+ 105:..//utils/delay_timer/delay_timer.cpp **** 	}
+ 106:..//utils/delay_timer/delay_timer.cpp **** }
+ 276              		.loc 1 106 0
+ 277 0046 1846     		mov	r0, r3
+ 278 0048 07F11007 		add	r7, r7, #16
+ 279 004c BD46     		mov	sp, r7
+ 280 004e 80BD     		pop	{r7, pc}
+ 281              		.cfi_endproc
+ 282              	.LFE32:
+ 284              		.section	.text._Z8my_delayl,"ax",%progbits
+ 285              		.align	2
+ 286              		.global	_Z8my_delayl
+ 287              		.thumb
+ 288              		.thumb_func
+ 290              	_Z8my_delayl:
+ 291              	.LFB33:
+ 107:..//utils/delay_timer/delay_timer.cpp **** 
+ 108:..//utils/delay_timer/delay_timer.cpp **** void my_delay(long d)
+ 109:..//utils/delay_timer/delay_timer.cpp **** {
+ 292              		.loc 1 109 0
+ 293              		.cfi_startproc
+ 294              		@ args = 0, pretend = 0, frame = 16
+ 295              		@ frame_needed = 1, uses_anonymous_args = 0
+ 296 0000 80B5     		push	{r7, lr}
+ 297              	.LCFI10:
+ 298              		.cfi_def_cfa_offset 8
+ 299 0002 84B0     		sub	sp, sp, #16
+ 300              	.LCFI11:
+ 301              		.cfi_def_cfa_offset 24
+ 302 0004 00AF     		add	r7, sp, #0
+ 303              		.cfi_offset 14, -4
+ 304              		.cfi_offset 7, -8
+ 305              	.LCFI12:
+ 306              		.cfi_def_cfa_register 7
+ 307 0006 7860     		str	r0, [r7, #4]
+ 308              	.LBB4:
+ 110:..//utils/delay_timer/delay_timer.cpp **** 	long t_val;
+ 111:..//utils/delay_timer/delay_timer.cpp **** 	uint32_t l_delay_timer_32 = value_check();
+ 309              		.loc 1 111 0
+ 310 0008 40F20003 		movw	r3, #:lower16:_ZL11value_checkv
+ 311 000c C0F20003 		movt	r3, #:upper16:_ZL11value_checkv
+ 312 0010 9847     		blx	r3
+ 313 0012 0346     		mov	r3, r0
+ 314 0014 FB60     		str	r3, [r7, #12]
+ 112:..//utils/delay_timer/delay_timer.cpp **** 	
+ 113:..//utils/delay_timer/delay_timer.cpp **** 	t_val = l_delay_timer_32;
+ 315              		.loc 1 113 0
+ 316 0016 FB68     		ldr	r3, [r7, #12]
+ 317 0018 BB60     		str	r3, [r7, #8]
+ 318 001a 00E0     		b	.L18
+ 319              	.L20:
+ 114:..//utils/delay_timer/delay_timer.cpp **** 		while (1){
+ 320              		.loc 1 114 0
+ 321 001c 00BF     		nop
+ 322              	.L18:
+ 115:..//utils/delay_timer/delay_timer.cpp **** 			if (!is_timeup(t_val, d));
+ 323              		.loc 1 115 0
+ 324 001e BA68     		ldr	r2, [r7, #8]
+ 325 0020 7B68     		ldr	r3, [r7, #4]
+ 326 0022 1046     		mov	r0, r2
+ 327 0024 1946     		mov	r1, r3
+ 328 0026 40F20003 		movw	r3, #:lower16:_ZL9is_timeupmm
+ 329 002a C0F20003 		movt	r3, #:upper16:_ZL9is_timeupmm
+ 330 002e 9847     		blx	r3
+ 331 0030 0346     		mov	r3, r0
+ 332 0032 002B     		cmp	r3, #0
+ 333 0034 14BF     		ite	ne
+ 334 0036 0023     		movne	r3, #0
+ 335 0038 0123     		moveq	r3, #1
+ 336 003a DBB2     		uxtb	r3, r3
+ 337 003c 002B     		cmp	r3, #0
+ 338 003e EDD1     		bne	.L20
+ 339              	.L19:
+ 340              	.LBE4:
+ 116:..//utils/delay_timer/delay_timer.cpp **** 			//	update_32bit_counter_value();
+ 117:..//utils/delay_timer/delay_timer.cpp **** 			//	delay_timer_32 = PWMTC;
+ 118:..//utils/delay_timer/delay_timer.cpp **** 			else
+ 119:..//utils/delay_timer/delay_timer.cpp **** 				break;
+ 120:..//utils/delay_timer/delay_timer.cpp **** 	}
+ 121:..//utils/delay_timer/delay_timer.cpp **** }
+ 341              		.loc 1 121 0
+ 342 0040 07F11007 		add	r7, r7, #16
+ 343 0044 BD46     		mov	sp, r7
+ 344 0046 80BD     		pop	{r7, pc}
+ 345              		.cfi_endproc
+ 346              	.LFE33:
+ 348              		.section	.text._Z12dt_is_timeupi,"ax",%progbits
+ 349              		.align	2
+ 350              		.global	_Z12dt_is_timeupi
+ 351              		.thumb
+ 352              		.thumb_func
+ 354              	_Z12dt_is_timeupi:
+ 355              	.LFB34:
+ 122:..//utils/delay_timer/delay_timer.cpp **** 
+ 123:..//utils/delay_timer/delay_timer.cpp **** int dt_is_timeup(int i)
+ 124:..//utils/delay_timer/delay_timer.cpp **** {
+ 356              		.loc 1 124 0
+ 357              		.cfi_startproc
+ 358              		@ args = 0, pretend = 0, frame = 8
+ 359              		@ frame_needed = 1, uses_anonymous_args = 0
+ 360 0000 80B5     		push	{r7, lr}
+ 361              	.LCFI13:
+ 362              		.cfi_def_cfa_offset 8
+ 363 0002 82B0     		sub	sp, sp, #8
+ 364              	.LCFI14:
+ 365              		.cfi_def_cfa_offset 16
+ 366 0004 00AF     		add	r7, sp, #0
+ 367              		.cfi_offset 14, -4
+ 368              		.cfi_offset 7, -8
+ 369              	.LCFI15:
+ 370              		.cfi_def_cfa_register 7
+ 371 0006 7860     		str	r0, [r7, #4]
+ 125:..//utils/delay_timer/delay_timer.cpp **** 	// printf("\ndelay_value=%d ,delay_const=%d",delay_value[i],delay_const[i]);
+ 126:..//utils/delay_timer/delay_timer.cpp **** 
+ 127:..//utils/delay_timer/delay_timer.cpp **** 	return is_timeup(delay_value[i], delay_const[i]);
+ 372              		.loc 1 127 0
+ 373 0008 7A68     		ldr	r2, [r7, #4]
+ 374 000a 40F20003 		movw	r3, #:lower16:delay_value
+ 375 000e C0F20003 		movt	r3, #:upper16:delay_value
+ 376 0012 53F82220 		ldr	r2, [r3, r2, lsl #2]
+ 377 0016 7968     		ldr	r1, [r7, #4]
+ 378 0018 40F20003 		movw	r3, #:lower16:delay_const
+ 379 001c C0F20003 		movt	r3, #:upper16:delay_const
+ 380 0020 53F82130 		ldr	r3, [r3, r1, lsl #2]
+ 381 0024 1046     		mov	r0, r2
+ 382 0026 1946     		mov	r1, r3
+ 383 0028 40F20003 		movw	r3, #:lower16:_ZL9is_timeupmm
+ 384 002c C0F20003 		movt	r3, #:upper16:_ZL9is_timeupmm
+ 385 0030 9847     		blx	r3
+ 386 0032 0346     		mov	r3, r0
+ 128:..//utils/delay_timer/delay_timer.cpp **** 
+ 129:..//utils/delay_timer/delay_timer.cpp **** }
+ 387              		.loc 1 129 0
+ 388 0034 1846     		mov	r0, r3
+ 389 0036 07F10807 		add	r7, r7, #8
+ 390 003a BD46     		mov	sp, r7
+ 391 003c 80BD     		pop	{r7, pc}
+ 392              		.cfi_endproc
+ 393              	.LFE34:
+ 395 003e 00BF     		.section	.text._Z15dt_timeup_reseti,"ax",%progbits
+ 396              		.align	2
+ 397              		.global	_Z15dt_timeup_reseti
+ 398              		.thumb
+ 399              		.thumb_func
+ 401              	_Z15dt_timeup_reseti:
+ 402              	.LFB35:
+ 130:..//utils/delay_timer/delay_timer.cpp **** 
+ 131:..//utils/delay_timer/delay_timer.cpp **** // this function is not working... not sure why...
+ 132:..//utils/delay_timer/delay_timer.cpp **** int dt_timeup_reset(int i)
+ 133:..//utils/delay_timer/delay_timer.cpp **** {
+ 403              		.loc 1 133 0
+ 404              		.cfi_startproc
+ 405              		@ args = 0, pretend = 0, frame = 16
+ 406              		@ frame_needed = 1, uses_anonymous_args = 0
+ 407 0000 80B5     		push	{r7, lr}
+ 408              	.LCFI16:
+ 409              		.cfi_def_cfa_offset 8
+ 410 0002 84B0     		sub	sp, sp, #16
+ 411              	.LCFI17:
+ 412              		.cfi_def_cfa_offset 24
+ 413 0004 00AF     		add	r7, sp, #0
+ 414              		.cfi_offset 14, -4
+ 415              		.cfi_offset 7, -8
+ 416              	.LCFI18:
+ 417              		.cfi_def_cfa_register 7
+ 418 0006 7860     		str	r0, [r7, #4]
+ 419              	.LBB5:
+ 134:..//utils/delay_timer/delay_timer.cpp **** 	int retVal;
+ 135:..//utils/delay_timer/delay_timer.cpp **** 	retVal=is_timeup(delay_value[i], delay_const[i]);
+ 420              		.loc 1 135 0
+ 421 0008 7A68     		ldr	r2, [r7, #4]
+ 422 000a 40F20003 		movw	r3, #:lower16:delay_value
+ 423 000e C0F20003 		movt	r3, #:upper16:delay_value
+ 424 0012 53F82220 		ldr	r2, [r3, r2, lsl #2]
+ 425 0016 7968     		ldr	r1, [r7, #4]
+ 426 0018 40F20003 		movw	r3, #:lower16:delay_const
+ 427 001c C0F20003 		movt	r3, #:upper16:delay_const
+ 428 0020 53F82130 		ldr	r3, [r3, r1, lsl #2]
+ 429 0024 1046     		mov	r0, r2
+ 430 0026 1946     		mov	r1, r3
+ 431 0028 40F20003 		movw	r3, #:lower16:_ZL9is_timeupmm
+ 432 002c C0F20003 		movt	r3, #:upper16:_ZL9is_timeupmm
+ 433 0030 9847     		blx	r3
+ 434 0032 0346     		mov	r3, r0
+ 435 0034 FB60     		str	r3, [r7, #12]
+ 136:..//utils/delay_timer/delay_timer.cpp **** 	dt_reset(i);
+ 436              		.loc 1 136 0
+ 437 0036 7868     		ldr	r0, [r7, #4]
+ 438 0038 40F20003 		movw	r3, #:lower16:_Z8dt_reseti
+ 439 003c C0F20003 		movt	r3, #:upper16:_Z8dt_reseti
+ 440 0040 9847     		blx	r3
+ 137:..//utils/delay_timer/delay_timer.cpp **** 	return retVal;
+ 441              		.loc 1 137 0
+ 442 0042 FB68     		ldr	r3, [r7, #12]
+ 443              	.LBE5:
+ 138:..//utils/delay_timer/delay_timer.cpp **** }
+ 444              		.loc 1 138 0
+ 445 0044 1846     		mov	r0, r3
+ 446 0046 07F11007 		add	r7, r7, #16
+ 447 004a BD46     		mov	sp, r7
+ 448 004c 80BD     		pop	{r7, pc}
+ 449              		.cfi_endproc
+ 450              	.LFE35:
+ 452 004e 00BF     		.section	.text._Z8dt_reseti,"ax",%progbits
+ 453              		.align	2
+ 454              		.global	_Z8dt_reseti
+ 455              		.thumb
+ 456              		.thumb_func
+ 458              	_Z8dt_reseti:
+ 459              	.LFB36:
+ 139:..//utils/delay_timer/delay_timer.cpp **** 
+ 140:..//utils/delay_timer/delay_timer.cpp **** int dt_reset(int i)
+ 141:..//utils/delay_timer/delay_timer.cpp **** {
+ 460              		.loc 1 141 0
+ 461              		.cfi_startproc
+ 462              		@ args = 0, pretend = 0, frame = 16
+ 463              		@ frame_needed = 1, uses_anonymous_args = 0
+ 464 0000 80B5     		push	{r7, lr}
+ 465              	.LCFI19:
+ 466              		.cfi_def_cfa_offset 8
+ 467 0002 84B0     		sub	sp, sp, #16
+ 468              	.LCFI20:
+ 469              		.cfi_def_cfa_offset 24
+ 470 0004 00AF     		add	r7, sp, #0
+ 471              		.cfi_offset 14, -4
+ 472              		.cfi_offset 7, -8
+ 473              	.LCFI21:
+ 474              		.cfi_def_cfa_register 7
+ 475 0006 7860     		str	r0, [r7, #4]
+ 476              	.LBB6:
+ 142:..//utils/delay_timer/delay_timer.cpp **** 	uint32_t l_delay_timer_32 = value_check();
+ 477              		.loc 1 142 0
+ 478 0008 40F20003 		movw	r3, #:lower16:_ZL11value_checkv
+ 479 000c C0F20003 		movt	r3, #:upper16:_ZL11value_checkv
+ 480 0010 9847     		blx	r3
+ 481 0012 0346     		mov	r3, r0
+ 482 0014 FB60     		str	r3, [r7, #12]
+ 143:..//utils/delay_timer/delay_timer.cpp **** 	
+ 144:..//utils/delay_timer/delay_timer.cpp **** 	delay_value[i] = l_delay_timer_32;
+ 483              		.loc 1 144 0
+ 484 0016 7A68     		ldr	r2, [r7, #4]
+ 485 0018 40F20003 		movw	r3, #:lower16:delay_value
+ 486 001c C0F20003 		movt	r3, #:upper16:delay_value
+ 487 0020 F968     		ldr	r1, [r7, #12]
+ 488 0022 43F82210 		str	r1, [r3, r2, lsl #2]
+ 145:..//utils/delay_timer/delay_timer.cpp **** 	return 1;
+ 489              		.loc 1 145 0
+ 490 0026 4FF00103 		mov	r3, #1
+ 491              	.LBE6:
+ 146:..//utils/delay_timer/delay_timer.cpp **** }
+ 492              		.loc 1 146 0
+ 493 002a 1846     		mov	r0, r3
+ 494 002c 07F11007 		add	r7, r7, #16
+ 495 0030 BD46     		mov	sp, r7
+ 496 0032 80BD     		pop	{r7, pc}
+ 497              		.cfi_endproc
+ 498              	.LFE36:
+ 500              		.section	.text._Z12dt_time_lefti,"ax",%progbits
+ 501              		.align	2
+ 502              		.global	_Z12dt_time_lefti
+ 503              		.thumb
+ 504              		.thumb_func
+ 506              	_Z12dt_time_lefti:
+ 507              	.LFB37:
+ 147:..//utils/delay_timer/delay_timer.cpp **** 
+ 148:..//utils/delay_timer/delay_timer.cpp **** uint32_t dt_time_left(int i)
+ 149:..//utils/delay_timer/delay_timer.cpp **** {
+ 508              		.loc 1 149 0
+ 509              		.cfi_startproc
+ 510              		@ args = 0, pretend = 0, frame = 8
+ 511              		@ frame_needed = 1, uses_anonymous_args = 0
+ 512 0000 80B5     		push	{r7, lr}
+ 513              	.LCFI22:
+ 514              		.cfi_def_cfa_offset 8
+ 515 0002 82B0     		sub	sp, sp, #8
+ 516              	.LCFI23:
+ 517              		.cfi_def_cfa_offset 16
+ 518 0004 00AF     		add	r7, sp, #0
+ 519              		.cfi_offset 14, -4
+ 520              		.cfi_offset 7, -8
+ 521              	.LCFI24:
+ 522              		.cfi_def_cfa_register 7
+ 523 0006 7860     		str	r0, [r7, #4]
+ 150:..//utils/delay_timer/delay_timer.cpp **** 	return time_left(delay_value[i],delay_const[i]);
+ 524              		.loc 1 150 0
+ 525 0008 7A68     		ldr	r2, [r7, #4]
+ 526 000a 40F20003 		movw	r3, #:lower16:delay_value
+ 527 000e C0F20003 		movt	r3, #:upper16:delay_value
+ 528 0012 53F82220 		ldr	r2, [r3, r2, lsl #2]
+ 529 0016 7968     		ldr	r1, [r7, #4]
+ 530 0018 40F20003 		movw	r3, #:lower16:delay_const
+ 531 001c C0F20003 		movt	r3, #:upper16:delay_const
+ 532 0020 53F82130 		ldr	r3, [r3, r1, lsl #2]
+ 533 0024 1046     		mov	r0, r2
+ 534 0026 1946     		mov	r1, r3
+ 535 0028 40F20003 		movw	r3, #:lower16:_ZL9time_leftmm
+ 536 002c C0F20003 		movt	r3, #:upper16:_ZL9time_leftmm
+ 537 0030 9847     		blx	r3
+ 538 0032 0346     		mov	r3, r0
+ 151:..//utils/delay_timer/delay_timer.cpp **** }
+ 539              		.loc 1 151 0
+ 540 0034 1846     		mov	r0, r3
+ 541 0036 07F10807 		add	r7, r7, #8
+ 542 003a BD46     		mov	sp, r7
+ 543 003c 80BD     		pop	{r7, pc}
+ 544              		.cfi_endproc
+ 545              	.LFE37:
+ 547 003e 00BF     		.section	.text._Z12dt_set_delayim,"ax",%progbits
+ 548              		.align	2
+ 549              		.global	_Z12dt_set_delayim
+ 550              		.thumb
+ 551              		.thumb_func
+ 553              	_Z12dt_set_delayim:
+ 554              	.LFB38:
+ 152:..//utils/delay_timer/delay_timer.cpp **** 
+ 153:..//utils/delay_timer/delay_timer.cpp **** void dt_set_delay(int i, uint32_t d)
+ 154:..//utils/delay_timer/delay_timer.cpp **** {
+ 555              		.loc 1 154 0
+ 556              		.cfi_startproc
+ 557              		@ args = 0, pretend = 0, frame = 8
+ 558              		@ frame_needed = 1, uses_anonymous_args = 0
+ 559              		@ link register save eliminated.
+ 560 0000 80B4     		push	{r7}
+ 561              	.LCFI25:
+ 562              		.cfi_def_cfa_offset 4
+ 563 0002 83B0     		sub	sp, sp, #12
+ 564              	.LCFI26:
+ 565              		.cfi_def_cfa_offset 16
+ 566 0004 00AF     		add	r7, sp, #0
+ 567              		.cfi_offset 7, -4
+ 568              	.LCFI27:
+ 569              		.cfi_def_cfa_register 7
+ 570 0006 7860     		str	r0, [r7, #4]
+ 571 0008 3960     		str	r1, [r7, #0]
+ 155:..//utils/delay_timer/delay_timer.cpp **** 	delay_const[i] = d;
+ 572              		.loc 1 155 0
+ 573 000a 7A68     		ldr	r2, [r7, #4]
+ 574 000c 40F20003 		movw	r3, #:lower16:delay_const
+ 575 0010 C0F20003 		movt	r3, #:upper16:delay_const
+ 576 0014 3968     		ldr	r1, [r7, #0]
+ 577 0016 43F82210 		str	r1, [r3, r2, lsl #2]
+ 156:..//utils/delay_timer/delay_timer.cpp **** }
+ 578              		.loc 1 156 0
+ 579 001a 07F10C07 		add	r7, r7, #12
+ 580 001e BD46     		mov	sp, r7
+ 581 0020 80BC     		pop	{r7}
+ 582 0022 7047     		bx	lr
+ 583              		.cfi_endproc
+ 584              	.LFE38:
+ 586              		.section	.text._Z12dt_get_delayi,"ax",%progbits
+ 587              		.align	2
+ 588              		.global	_Z12dt_get_delayi
+ 589              		.thumb
+ 590              		.thumb_func
+ 592              	_Z12dt_get_delayi:
+ 593              	.LFB39:
+ 157:..//utils/delay_timer/delay_timer.cpp **** 
+ 158:..//utils/delay_timer/delay_timer.cpp **** uint32_t dt_get_delay(int i)
+ 159:..//utils/delay_timer/delay_timer.cpp **** {
+ 594              		.loc 1 159 0
+ 595              		.cfi_startproc
+ 596              		@ args = 0, pretend = 0, frame = 8
+ 597              		@ frame_needed = 1, uses_anonymous_args = 0
+ 598              		@ link register save eliminated.
+ 599 0000 80B4     		push	{r7}
+ 600              	.LCFI28:
+ 601              		.cfi_def_cfa_offset 4
+ 602 0002 83B0     		sub	sp, sp, #12
+ 603              	.LCFI29:
+ 604              		.cfi_def_cfa_offset 16
+ 605 0004 00AF     		add	r7, sp, #0
+ 606              		.cfi_offset 7, -4
+ 607              	.LCFI30:
+ 608              		.cfi_def_cfa_register 7
+ 609 0006 7860     		str	r0, [r7, #4]
+ 160:..//utils/delay_timer/delay_timer.cpp **** 	return delay_const[i];
+ 610              		.loc 1 160 0
+ 611 0008 7A68     		ldr	r2, [r7, #4]
+ 612 000a 40F20003 		movw	r3, #:lower16:delay_const
+ 613 000e C0F20003 		movt	r3, #:upper16:delay_const
+ 614 0012 53F82230 		ldr	r3, [r3, r2, lsl #2]
+ 161:..//utils/delay_timer/delay_timer.cpp **** }
+ 615              		.loc 1 161 0
+ 616 0016 1846     		mov	r0, r3
+ 617 0018 07F10C07 		add	r7, r7, #12
+ 618 001c BD46     		mov	sp, r7
+ 619 001e 80BC     		pop	{r7}
+ 620 0020 7047     		bx	lr
+ 621              		.cfi_endproc
+ 622              	.LFE39:
+ 624              		.global	__aeabi_uldivmod
+ 625 0022 00BF     		.section	.text._Z10dt_get_hmsmm,"ax",%progbits
+ 626              		.align	2
+ 627              		.global	_Z10dt_get_hmsmm
+ 628              		.thumb
+ 629              		.thumb_func
+ 631              	_Z10dt_get_hmsmm:
+ 632              	.LFB40:
+ 162:..//utils/delay_timer/delay_timer.cpp **** 
+ 163:..//utils/delay_timer/delay_timer.cpp **** DT_HMS dt_get_hms(uint32_t time_left, uint32_t sec_mul)
+ 164:..//utils/delay_timer/delay_timer.cpp **** {
+ 633              		.loc 1 164 0
+ 634              		.cfi_startproc
+ 635              		@ args = 0, pretend = 0, frame = 48
+ 636              		@ frame_needed = 1, uses_anonymous_args = 0
+ 637 0000 90B5     		push	{r4, r7, lr}
+ 638              	.LCFI31:
+ 639              		.cfi_def_cfa_offset 12
+ 640 0002 8DB0     		sub	sp, sp, #52
+ 641              	.LCFI32:
+ 642              		.cfi_def_cfa_offset 64
+ 643 0004 00AF     		add	r7, sp, #0
+ 644              		.cfi_offset 14, -4
+ 645              		.cfi_offset 7, -8
+ 646              		.cfi_offset 4, -12
+ 647              	.LCFI33:
+ 648              		.cfi_def_cfa_register 7
+ 649 0006 0446     		mov	r4, r0
+ 650 0008 7960     		str	r1, [r7, #4]
+ 651 000a 3A60     		str	r2, [r7, #0]
+ 652              	.LBB7:
+ 165:..//utils/delay_timer/delay_timer.cpp **** 	// char str [35];
+ 166:..//utils/delay_timer/delay_timer.cpp **** 	DT_HMS l_hms;
+ 167:..//utils/delay_timer/delay_timer.cpp **** 	int32_t total_secs_left ,temp;
+ 168:..//utils/delay_timer/delay_timer.cpp **** 	// total_msec_left is the total milisecs in time_left
+ 169:..//utils/delay_timer/delay_timer.cpp **** 
+ 170:..//utils/delay_timer/delay_timer.cpp **** 	// print_string("\nsec_mul ");
+ 171:..//utils/delay_timer/delay_timer.cpp **** 	// print_long(SEC_MUL);
+ 172:..//utils/delay_timer/delay_timer.cpp **** 	// print_string("\ntime_left ");
+ 173:..//utils/delay_timer/delay_timer.cpp **** 	// print_long(time_left);
+ 174:..//utils/delay_timer/delay_timer.cpp **** 	// time_left = time_left / sec_mul;//thid gives the time in milliseconds
+ 175:..//utils/delay_timer/delay_timer.cpp **** 	total_secs_left = time_left / sec_mul;//this gives the time in seconds
+ 653              		.loc 1 175 0
+ 654 000c 7A68     		ldr	r2, [r7, #4]
+ 655 000e 3B68     		ldr	r3, [r7, #0]
+ 656 0010 B2FBF3F3 		udiv	r3, r2, r3
+ 657 0014 BB61     		str	r3, [r7, #24]
+ 176:..//utils/delay_timer/delay_timer.cpp **** 	uint64_t t64 = (uint64_t) time_left * 1000;
+ 658              		.loc 1 176 0
+ 659 0016 7B68     		ldr	r3, [r7, #4]
+ 660 0018 1A46     		mov	r2, r3
+ 661 001a 4FF00003 		mov	r3, #0
+ 662 001e 4FF47A71 		mov	r1, #1000
+ 663 0022 01FB03F1 		mul	r1, r1, r3
+ 664 0026 4FF00000 		mov	r0, #0
+ 665 002a 00FB02F0 		mul	r0, r0, r2
+ 666 002e 0144     		add	r1, r1, r0
+ 667 0030 4FF47A70 		mov	r0, #1000
+ 668 0034 A2FB0023 		umull	r2, r3, r2, r0
+ 669 0038 1944     		add	r1, r1, r3
+ 670 003a 0B46     		mov	r3, r1
+ 671 003c C7E90823 		strd	r2, [r7, #32]
+ 672 0040 C7E90823 		strd	r2, [r7, #32]
+ 177:..//utils/delay_timer/delay_timer.cpp **** 	t64 /= sec_mul;
+ 673              		.loc 1 177 0
+ 674 0044 3B68     		ldr	r3, [r7, #0]
+ 675 0046 1A46     		mov	r2, r3
+ 676 0048 4FF00003 		mov	r3, #0
+ 677 004c 40F2000C 		movw	ip, #:lower16:__aeabi_uldivmod
+ 678 0050 C0F2000C 		movt	ip, #:upper16:__aeabi_uldivmod
+ 679 0054 D7E90801 		ldrd	r0, [r7, #32]
+ 680 0058 E047     		blx	ip
+ 681 005a 0246     		mov	r2, r0
+ 682 005c 0B46     		mov	r3, r1
+ 683 005e C7E90823 		strd	r2, [r7, #32]
+ 178:..//utils/delay_timer/delay_timer.cpp **** 	uint32_t total_msec_left = (uint32_t) t64;
+ 684              		.loc 1 178 0
+ 685 0062 3B6A     		ldr	r3, [r7, #32]
+ 686 0064 FB62     		str	r3, [r7, #44]
+ 179:..//utils/delay_timer/delay_timer.cpp **** 	
+ 180:..//utils/delay_timer/delay_timer.cpp **** 	// print_string("\ntotal_msec_left");
+ 181:..//utils/delay_timer/delay_timer.cpp **** 	// print_long(total_msec_left);
+ 182:..//utils/delay_timer/delay_timer.cpp **** 	
+ 183:..//utils/delay_timer/delay_timer.cpp **** 	
+ 184:..//utils/delay_timer/delay_timer.cpp **** 	l_hms.hrs =  ( total_secs_left / 3600 );//time left in hours
+ 687              		.loc 1 184 0
+ 688 0066 BB69     		ldr	r3, [r7, #24]
+ 689 0068 4BF2C532 		movw	r2, #:lower16:-1851608123
+ 690 006c C9F2A212 		movt	r2, #:upper16:-1851608123
+ 691 0070 82FB0312 		smull	r1, r2, r2, r3
+ 692 0074 1A44     		add	r2, r2, r3
+ 693 0076 4FEAE222 		asr	r2, r2, #11
+ 694 007a 4FEAE373 		asr	r3, r3, #31
+ 695 007e C3EB0203 		rsb	r3, r3, r2
+ 696 0082 2360     		str	r3, [r4, #0]
+ 185:..//utils/delay_timer/delay_timer.cpp **** 	total_secs_left %= 3600;//time left after conversion into hours
+ 697              		.loc 1 185 0
+ 698 0084 BB69     		ldr	r3, [r7, #24]
+ 699 0086 4BF2C532 		movw	r2, #:lower16:-1851608123
+ 700 008a C9F2A212 		movt	r2, #:upper16:-1851608123
+ 701 008e 82FB0312 		smull	r1, r2, r2, r3
+ 702 0092 1A44     		add	r2, r2, r3
+ 703 0094 4FEAE221 		asr	r1, r2, #11
+ 704 0098 4FEAE372 		asr	r2, r3, #31
+ 705 009c C2EB0102 		rsb	r2, r2, r1
+ 706 00a0 4FF46161 		mov	r1, #3600
+ 707 00a4 01FB02F2 		mul	r2, r1, r2
+ 708 00a8 C2EB0303 		rsb	r3, r2, r3
+ 709 00ac BB61     		str	r3, [r7, #24]
+ 186:..//utils/delay_timer/delay_timer.cpp **** 	l_hms.min = total_secs_left / 60;
+ 710              		.loc 1 186 0
+ 711 00ae BB69     		ldr	r3, [r7, #24]
+ 712 00b0 48F68902 		movw	r2, #:lower16:-2004318071
+ 713 00b4 C8F68802 		movt	r2, #:upper16:-2004318071
+ 714 00b8 82FB0312 		smull	r1, r2, r2, r3
+ 715 00bc 1A44     		add	r2, r2, r3
+ 716 00be 4FEA6212 		asr	r2, r2, #5
+ 717 00c2 4FEAE373 		asr	r3, r3, #31
+ 718 00c6 C3EB0203 		rsb	r3, r3, r2
+ 719 00ca 6360     		str	r3, [r4, #4]
+ 187:..//utils/delay_timer/delay_timer.cpp **** 	// total_msec_left = (total_msec_left % 3600);
+ 188:..//utils/delay_timer/delay_timer.cpp **** 	total_secs_left = total_secs_left % 60;
+ 720              		.loc 1 188 0
+ 721 00cc BA69     		ldr	r2, [r7, #24]
+ 722 00ce 48F68903 		movw	r3, #:lower16:-2004318071
+ 723 00d2 C8F68803 		movt	r3, #:upper16:-2004318071
+ 724 00d6 83FB0213 		smull	r1, r3, r3, r2
+ 725 00da 1344     		add	r3, r3, r2
+ 726 00dc 4FEA6311 		asr	r1, r3, #5
+ 727 00e0 4FEAE273 		asr	r3, r2, #31
+ 728 00e4 C3EB0101 		rsb	r1, r3, r1
+ 729 00e8 0B46     		mov	r3, r1
+ 730 00ea 4FEA0313 		lsl	r3, r3, #4
+ 731 00ee C1EB0303 		rsb	r3, r1, r3
+ 732 00f2 4FEA8303 		lsl	r3, r3, #2
+ 733 00f6 C3EB0203 		rsb	r3, r3, r2
+ 734 00fa BB61     		str	r3, [r7, #24]
+ 189:..//utils/delay_timer/delay_timer.cpp **** 	l_hms.sec = total_secs_left;
+ 735              		.loc 1 189 0
+ 736 00fc BB69     		ldr	r3, [r7, #24]
+ 737 00fe A360     		str	r3, [r4, #8]
+ 190:..//utils/delay_timer/delay_timer.cpp **** 	
+ 191:..//utils/delay_timer/delay_timer.cpp **** 	total_secs_left = ((l_hms.hrs*60)+l_hms.min)*60 + l_hms.sec;
+ 738              		.loc 1 191 0
+ 739 0100 2268     		ldr	r2, [r4, #0]
+ 740 0102 1346     		mov	r3, r2
+ 741 0104 4FEA0313 		lsl	r3, r3, #4
+ 742 0108 C2EB0303 		rsb	r3, r2, r3
+ 743 010c 4FEA8303 		lsl	r3, r3, #2
+ 744 0110 1A46     		mov	r2, r3
+ 745 0112 6368     		ldr	r3, [r4, #4]
+ 746 0114 1A44     		add	r2, r2, r3
+ 747 0116 1346     		mov	r3, r2
+ 748 0118 4FEA0313 		lsl	r3, r3, #4
+ 749 011c C2EB0303 		rsb	r3, r2, r3
+ 750 0120 4FEA8303 		lsl	r3, r3, #2
+ 751 0124 1A46     		mov	r2, r3
+ 752 0126 A368     		ldr	r3, [r4, #8]
+ 753 0128 1344     		add	r3, r2, r3
+ 754 012a BB61     		str	r3, [r7, #24]
+ 192:..//utils/delay_timer/delay_timer.cpp **** 	
+ 193:..//utils/delay_timer/delay_timer.cpp **** 	
+ 194:..//utils/delay_timer/delay_timer.cpp **** 	
+ 195:..//utils/delay_timer/delay_timer.cpp **** 	// print_string("\ntotal secs ");
+ 196:..//utils/delay_timer/delay_timer.cpp **** 	// print_long(total_msecs_left);
+ 197:..//utils/delay_timer/delay_timer.cpp **** 	
+ 198:..//utils/delay_timer/delay_timer.cpp **** 	temp = total_msec_left - total_secs_left*1000;
+ 755              		.loc 1 198 0
+ 756 012c BA69     		ldr	r2, [r7, #24]
+ 757 012e 4FF61843 		movw	r3, #:lower16:-1000
+ 758 0132 CFF6FF73 		movt	r3, #:upper16:-1000
+ 759 0136 03FB02F3 		mul	r3, r3, r2
+ 760 013a 1A46     		mov	r2, r3
+ 761 013c FB6A     		ldr	r3, [r7, #44]
+ 762 013e 1344     		add	r3, r2, r3
+ 763 0140 FB61     		str	r3, [r7, #28]
+ 199:..//utils/delay_timer/delay_timer.cpp **** 	// print_string("\ntemp");
+ 200:..//utils/delay_timer/delay_timer.cpp **** 	// print_long(temp);
+ 201:..//utils/delay_timer/delay_timer.cpp **** 	if (temp > 0) {
+ 764              		.loc 1 201 0
+ 765 0142 FB69     		ldr	r3, [r7, #28]
+ 766 0144 002B     		cmp	r3, #0
+ 767 0146 02DD     		ble	.L34
+ 202:..//utils/delay_timer/delay_timer.cpp **** 		l_hms.msec = (int)temp;
+ 768              		.loc 1 202 0
+ 769 0148 FB69     		ldr	r3, [r7, #28]
+ 770 014a E360     		str	r3, [r4, #12]
+ 771 014c 02E0     		b	.L33
+ 772              	.L34:
+ 203:..//utils/delay_timer/delay_timer.cpp **** 		// print_string("\n\nmsec ");
+ 204:..//utils/delay_timer/delay_timer.cpp **** 		// print_long(l_hms.msec);
+ 205:..//utils/delay_timer/delay_timer.cpp **** 	} else {
+ 206:..//utils/delay_timer/delay_timer.cpp **** 		l_hms.msec = 0;
+ 773              		.loc 1 206 0
+ 774 014e 4FF00003 		mov	r3, #0
+ 775 0152 E360     		str	r3, [r4, #12]
+ 776              	.L33:
+ 777              	.LBE7:
+ 207:..//utils/delay_timer/delay_timer.cpp **** 		// print_string("\n\nmsec ");
+ 208:..//utils/delay_timer/delay_timer.cpp **** 		// print_long(l_hms.msec);
+ 209:..//utils/delay_timer/delay_timer.cpp **** 		// print_string("\n\nThere is a error in DTgethms");
+ 210:..//utils/delay_timer/delay_timer.cpp **** 	}
+ 211:..//utils/delay_timer/delay_timer.cpp **** 	
+ 212:..//utils/delay_timer/delay_timer.cpp **** 	return l_hms;
+ 213:..//utils/delay_timer/delay_timer.cpp **** 	
+ 214:..//utils/delay_timer/delay_timer.cpp **** }
+ 778              		.loc 1 214 0
+ 779 0154 2046     		mov	r0, r4
+ 780 0156 07F13407 		add	r7, r7, #52
+ 781 015a BD46     		mov	sp, r7
+ 782 015c 90BD     		pop	{r4, r7, pc}
+ 783              		.cfi_endproc
+ 784              	.LFE40:
+ 786 015e 00BF     		.section	.text._Z14dt_convert_hms6DT_HMSm,"ax",%progbits
+ 787              		.align	2
+ 788              		.global	_Z14dt_convert_hms6DT_HMSm
+ 789              		.thumb
+ 790              		.thumb_func
+ 792              	_Z14dt_convert_hms6DT_HMSm:
+ 793              	.LFB41:
+ 215:..//utils/delay_timer/delay_timer.cpp **** 
+ 216:..//utils/delay_timer/delay_timer.cpp **** uint32_t dt_convert_hms(DT_HMS hms, uint32_t sec_mul)
+ 217:..//utils/delay_timer/delay_timer.cpp **** {
+ 794              		.loc 1 217 0
+ 795              		.cfi_startproc
+ 796              		@ args = 4, pretend = 0, frame = 24
+ 797              		@ frame_needed = 1, uses_anonymous_args = 0
+ 798              		@ link register save eliminated.
+ 799 0000 80B4     		push	{r7}
+ 800              	.LCFI34:
+ 801              		.cfi_def_cfa_offset 4
+ 802 0002 87B0     		sub	sp, sp, #28
+ 803              	.LCFI35:
+ 804              		.cfi_def_cfa_offset 32
+ 805 0004 00AF     		add	r7, sp, #0
+ 806              		.cfi_offset 7, -4
+ 807              	.LCFI36:
+ 808              		.cfi_def_cfa_register 7
+ 809 0006 BC46     		mov	ip, r7
+ 810 0008 8CE80F00 		stmia	ip, {r0, r1, r2, r3}
+ 811              	.LBB8:
+ 218:..//utils/delay_timer/delay_timer.cpp **** 	uint32_t cnt_time;
+ 219:..//utils/delay_timer/delay_timer.cpp **** 	
+ 220:..//utils/delay_timer/delay_timer.cpp **** 	cnt_time = (hms.hrs *3600 + hms.min*60 + hms.sec) * sec_mul;
+ 812              		.loc 1 220 0
+ 813 000c 3B68     		ldr	r3, [r7, #0]
+ 814 000e 4FF46162 		mov	r2, #3600
+ 815 0012 02FB03F1 		mul	r1, r2, r3
+ 816 0016 7A68     		ldr	r2, [r7, #4]
+ 817 0018 1346     		mov	r3, r2
+ 818 001a 4FEA0313 		lsl	r3, r3, #4
+ 819 001e C2EB0303 		rsb	r3, r2, r3
+ 820 0022 4FEA8303 		lsl	r3, r3, #2
+ 821 0026 01EB0302 		add	r2, r1, r3
+ 822 002a BB68     		ldr	r3, [r7, #8]
+ 823 002c 1344     		add	r3, r2, r3
+ 824 002e 3A6A     		ldr	r2, [r7, #32]
+ 825 0030 02FB03F3 		mul	r3, r2, r3
+ 826 0034 3B61     		str	r3, [r7, #16]
+ 221:..//utils/delay_timer/delay_timer.cpp **** 	
+ 222:..//utils/delay_timer/delay_timer.cpp **** 	uint32_t msec_time = (hms.msec *sec_mul);
+ 827              		.loc 1 222 0
+ 828 0036 FB68     		ldr	r3, [r7, #12]
+ 829 0038 3A6A     		ldr	r2, [r7, #32]
+ 830 003a 02FB03F3 		mul	r3, r2, r3
+ 831 003e 7B61     		str	r3, [r7, #20]
+ 223:..//utils/delay_timer/delay_timer.cpp **** 	msec_time /= 1000;
+ 832              		.loc 1 223 0
+ 833 0040 7A69     		ldr	r2, [r7, #20]
+ 834 0042 44F6D353 		movw	r3, #:lower16:274877907
+ 835 0046 C1F26203 		movt	r3, #:upper16:274877907
+ 836 004a A3FB0213 		umull	r1, r3, r3, r2
+ 837 004e 4FEA9313 		lsr	r3, r3, #6
+ 838 0052 7B61     		str	r3, [r7, #20]
+ 224:..//utils/delay_timer/delay_timer.cpp **** 	cnt_time += msec_time;
+ 839              		.loc 1 224 0
+ 840 0054 3A69     		ldr	r2, [r7, #16]
+ 841 0056 7B69     		ldr	r3, [r7, #20]
+ 842 0058 1344     		add	r3, r2, r3
+ 843 005a 3B61     		str	r3, [r7, #16]
+ 225:..//utils/delay_timer/delay_timer.cpp **** 	return cnt_time;
+ 844              		.loc 1 225 0
+ 845 005c 3B69     		ldr	r3, [r7, #16]
+ 846              	.LBE8:
+ 226:..//utils/delay_timer/delay_timer.cpp **** }
+ 847              		.loc 1 226 0
+ 848 005e 1846     		mov	r0, r3
+ 849 0060 07F11C07 		add	r7, r7, #28
+ 850 0064 BD46     		mov	sp, r7
+ 851 0066 80BC     		pop	{r7}
+ 852 0068 7047     		bx	lr
+ 853              		.cfi_endproc
+ 854              	.LFE41:
+ 856 006a 00BF     		.section	.text._Z8dt_starti,"ax",%progbits
+ 857              		.align	2
+ 858              		.global	_Z8dt_starti
+ 859              		.thumb
+ 860              		.thumb_func
+ 862              	_Z8dt_starti:
+ 863              	.LFB42:
+ 227:..//utils/delay_timer/delay_timer.cpp **** 
+ 228:..//utils/delay_timer/delay_timer.cpp **** int dt_start(int i){
+ 864              		.loc 1 228 0
+ 865              		.cfi_startproc
+ 866              		@ args = 0, pretend = 0, frame = 16
+ 867              		@ frame_needed = 1, uses_anonymous_args = 0
+ 868 0000 80B5     		push	{r7, lr}
+ 869              	.LCFI37:
+ 870              		.cfi_def_cfa_offset 8
+ 871 0002 84B0     		sub	sp, sp, #16
+ 872              	.LCFI38:
+ 873              		.cfi_def_cfa_offset 24
+ 874 0004 00AF     		add	r7, sp, #0
+ 875              		.cfi_offset 14, -4
+ 876              		.cfi_offset 7, -8
+ 877              	.LCFI39:
+ 878              		.cfi_def_cfa_register 7
+ 879 0006 7860     		str	r0, [r7, #4]
+ 880              	.LBB9:
+ 229:..//utils/delay_timer/delay_timer.cpp **** 	
+ 230:..//utils/delay_timer/delay_timer.cpp **** 	uint32_t l_delay_timer_32 = value_check();
+ 881              		.loc 1 230 0
+ 882 0008 40F20003 		movw	r3, #:lower16:_ZL11value_checkv
+ 883 000c C0F20003 		movt	r3, #:upper16:_ZL11value_checkv
+ 884 0010 9847     		blx	r3
+ 885 0012 0346     		mov	r3, r0
+ 886 0014 FB60     		str	r3, [r7, #12]
+ 231:..//utils/delay_timer/delay_timer.cpp **** 	delay_value[i] = l_delay_timer_32;
+ 887              		.loc 1 231 0
+ 888 0016 7A68     		ldr	r2, [r7, #4]
+ 889 0018 40F20003 		movw	r3, #:lower16:delay_value
+ 890 001c C0F20003 		movt	r3, #:upper16:delay_value
+ 891 0020 F968     		ldr	r1, [r7, #12]
+ 892 0022 43F82210 		str	r1, [r3, r2, lsl #2]
+ 232:..//utils/delay_timer/delay_timer.cpp **** 	delay_enable[i] = 1;
+ 893              		.loc 1 232 0
+ 894 0026 7A68     		ldr	r2, [r7, #4]
+ 895 0028 40F20003 		movw	r3, #:lower16:_ZL12delay_enable
+ 896 002c C0F20003 		movt	r3, #:upper16:_ZL12delay_enable
+ 897 0030 4FF00101 		mov	r1, #1
+ 898 0034 9954     		strb	r1, [r3, r2]
+ 233:..//utils/delay_timer/delay_timer.cpp **** 	
+ 234:..//utils/delay_timer/delay_timer.cpp **** 	return 1;
+ 899              		.loc 1 234 0
+ 900 0036 4FF00103 		mov	r3, #1
+ 901              	.LBE9:
+ 235:..//utils/delay_timer/delay_timer.cpp **** }
+ 902              		.loc 1 235 0
+ 903 003a 1846     		mov	r0, r3
+ 904 003c 07F11007 		add	r7, r7, #16
+ 905 0040 BD46     		mov	sp, r7
+ 906 0042 80BD     		pop	{r7, pc}
+ 907              		.cfi_endproc
+ 908              	.LFE42:
+ 910              		.section	.text._Z7dt_stopi,"ax",%progbits
+ 911              		.align	2
+ 912              		.global	_Z7dt_stopi
+ 913              		.thumb
+ 914              		.thumb_func
+ 916              	_Z7dt_stopi:
+ 917              	.LFB43:
+ 236:..//utils/delay_timer/delay_timer.cpp **** 
+ 237:..//utils/delay_timer/delay_timer.cpp **** int dt_stop(int i){
+ 918              		.loc 1 237 0
+ 919              		.cfi_startproc
+ 920              		@ args = 0, pretend = 0, frame = 8
+ 921              		@ frame_needed = 1, uses_anonymous_args = 0
+ 922              		@ link register save eliminated.
+ 923 0000 80B4     		push	{r7}
+ 924              	.LCFI40:
+ 925              		.cfi_def_cfa_offset 4
+ 926 0002 83B0     		sub	sp, sp, #12
+ 927              	.LCFI41:
+ 928              		.cfi_def_cfa_offset 16
+ 929 0004 00AF     		add	r7, sp, #0
+ 930              		.cfi_offset 7, -4
+ 931              	.LCFI42:
+ 932              		.cfi_def_cfa_register 7
+ 933 0006 7860     		str	r0, [r7, #4]
+ 238:..//utils/delay_timer/delay_timer.cpp **** 	delay_enable[i] = 0;
+ 934              		.loc 1 238 0
+ 935 0008 7A68     		ldr	r2, [r7, #4]
+ 936 000a 40F20003 		movw	r3, #:lower16:_ZL12delay_enable
+ 937 000e C0F20003 		movt	r3, #:upper16:_ZL12delay_enable
+ 938 0012 4FF00001 		mov	r1, #0
+ 939 0016 9954     		strb	r1, [r3, r2]
+ 239:..//utils/delay_timer/delay_timer.cpp **** 	
+ 240:..//utils/delay_timer/delay_timer.cpp **** 	return 1;
+ 940              		.loc 1 240 0
+ 941 0018 4FF00103 		mov	r3, #1
+ 241:..//utils/delay_timer/delay_timer.cpp **** }	
+ 942              		.loc 1 241 0
+ 943 001c 1846     		mov	r0, r3
+ 944 001e 07F10C07 		add	r7, r7, #12
+ 945 0022 BD46     		mov	sp, r7
+ 946 0024 80BC     		pop	{r7}
+ 947 0026 7047     		bx	lr
+ 948              		.cfi_endproc
+ 949              	.LFE43:
+ 951              		.section	.text._Z24dt_is_timeup_with_enablei,"ax",%progbits
+ 952              		.align	2
+ 953              		.global	_Z24dt_is_timeup_with_enablei
+ 954              		.thumb
+ 955              		.thumb_func
+ 957              	_Z24dt_is_timeup_with_enablei:
+ 958              	.LFB44:
+ 242:..//utils/delay_timer/delay_timer.cpp **** 	
+ 243:..//utils/delay_timer/delay_timer.cpp **** int dt_is_timeup_with_enable(int i){
+ 959              		.loc 1 243 0
+ 960              		.cfi_startproc
+ 961              		@ args = 0, pretend = 0, frame = 8
+ 962              		@ frame_needed = 1, uses_anonymous_args = 0
+ 963 0000 80B5     		push	{r7, lr}
+ 964              	.LCFI43:
+ 965              		.cfi_def_cfa_offset 8
+ 966 0002 82B0     		sub	sp, sp, #8
+ 967              	.LCFI44:
+ 968              		.cfi_def_cfa_offset 16
+ 969 0004 00AF     		add	r7, sp, #0
+ 970              		.cfi_offset 14, -4
+ 971              		.cfi_offset 7, -8
+ 972              	.LCFI45:
+ 973              		.cfi_def_cfa_register 7
+ 974 0006 7860     		str	r0, [r7, #4]
+ 244:..//utils/delay_timer/delay_timer.cpp **** 	if (delay_enable[i] == 1){
+ 975              		.loc 1 244 0
+ 976 0008 7A68     		ldr	r2, [r7, #4]
+ 977 000a 40F20003 		movw	r3, #:lower16:_ZL12delay_enable
+ 978 000e C0F20003 		movt	r3, #:upper16:_ZL12delay_enable
+ 979 0012 9B5C     		ldrb	r3, [r3, r2]	@ zero_extendqisi2
+ 980 0014 012B     		cmp	r3, #1
+ 981 0016 16D1     		bne	.L44
+ 245:..//utils/delay_timer/delay_timer.cpp **** 		return is_timeup(delay_value[i], delay_const[i]);
+ 982              		.loc 1 245 0
+ 983 0018 7A68     		ldr	r2, [r7, #4]
+ 984 001a 40F20003 		movw	r3, #:lower16:delay_value
+ 985 001e C0F20003 		movt	r3, #:upper16:delay_value
+ 986 0022 53F82220 		ldr	r2, [r3, r2, lsl #2]
+ 987 0026 7968     		ldr	r1, [r7, #4]
+ 988 0028 40F20003 		movw	r3, #:lower16:delay_const
+ 989 002c C0F20003 		movt	r3, #:upper16:delay_const
+ 990 0030 53F82130 		ldr	r3, [r3, r1, lsl #2]
+ 991 0034 1046     		mov	r0, r2
+ 992 0036 1946     		mov	r1, r3
+ 993 0038 40F20003 		movw	r3, #:lower16:_ZL9is_timeupmm
+ 994 003c C0F20003 		movt	r3, #:upper16:_ZL9is_timeupmm
+ 995 0040 9847     		blx	r3
+ 996 0042 0346     		mov	r3, r0
+ 997 0044 01E0     		b	.L45
+ 998              	.L44:
+ 246:..//utils/delay_timer/delay_timer.cpp **** 	}
+ 247:..//utils/delay_timer/delay_timer.cpp **** 	else{
+ 248:..//utils/delay_timer/delay_timer.cpp **** 		return 0;
+ 999              		.loc 1 248 0
+ 1000 0046 4FF00003 		mov	r3, #0
+ 1001              	.L45:
+ 249:..//utils/delay_timer/delay_timer.cpp **** 	}
+ 250:..//utils/delay_timer/delay_timer.cpp **** }	
+ 1002              		.loc 1 250 0
+ 1003 004a 1846     		mov	r0, r3
+ 1004 004c 07F10807 		add	r7, r7, #8
+ 1005 0050 BD46     		mov	sp, r7
+ 1006 0052 80BD     		pop	{r7, pc}
+ 1007              		.cfi_endproc
+ 1008              	.LFE44:
+ 1010              		.text
+ 1011              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 delay_timer.cpp
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:28     .bss.delay_value:00000000 delay_value
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:25     .bss.delay_value:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:35     .bss.delay_const:00000000 delay_const
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:32     .bss.delay_const:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:38     .bss._ZL12delay_enable:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:41     .bss._ZL12delay_enable:00000000 _ZL12delay_enable
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:48     .bss.accum_update_a:00000000 accum_update_a
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:45     .bss.accum_update_a:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:55     .bss.accum_update_b:00000000 accum_update_b
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:52     .bss.accum_update_b:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:58     .text._Z7dt_initv:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:63     .text._Z7dt_initv:00000000 _Z7dt_initv
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:91     .text._ZL11value_checkv:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:95     .text._ZL11value_checkv:00000000 _ZL11value_checkv
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:151    .text._ZL9is_timeupmm:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:155    .text._ZL9is_timeupmm:00000000 _ZL9is_timeupmm
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:217    .text._ZL9time_leftmm:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:221    .text._ZL9time_leftmm:00000000 _ZL9time_leftmm
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:285    .text._Z8my_delayl:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:290    .text._Z8my_delayl:00000000 _Z8my_delayl
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:349    .text._Z12dt_is_timeupi:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:354    .text._Z12dt_is_timeupi:00000000 _Z12dt_is_timeupi
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:396    .text._Z15dt_timeup_reseti:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:401    .text._Z15dt_timeup_reseti:00000000 _Z15dt_timeup_reseti
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:458    .text._Z8dt_reseti:00000000 _Z8dt_reseti
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:453    .text._Z8dt_reseti:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:501    .text._Z12dt_time_lefti:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:506    .text._Z12dt_time_lefti:00000000 _Z12dt_time_lefti
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:548    .text._Z12dt_set_delayim:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:553    .text._Z12dt_set_delayim:00000000 _Z12dt_set_delayim
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:587    .text._Z12dt_get_delayi:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:592    .text._Z12dt_get_delayi:00000000 _Z12dt_get_delayi
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:626    .text._Z10dt_get_hmsmm:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:631    .text._Z10dt_get_hmsmm:00000000 _Z10dt_get_hmsmm
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:787    .text._Z14dt_convert_hms6DT_HMSm:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:792    .text._Z14dt_convert_hms6DT_HMSm:00000000 _Z14dt_convert_hms6DT_HMSm
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:857    .text._Z8dt_starti:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:862    .text._Z8dt_starti:00000000 _Z8dt_starti
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:911    .text._Z7dt_stopi:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:916    .text._Z7dt_stopi:00000000 _Z7dt_stopi
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:952    .text._Z24dt_is_timeup_with_enablei:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cchnCbJ8.s:957    .text._Z24dt_is_timeup_with_enablei:00000000 _Z24dt_is_timeup_with_enablei
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+delay_timer_32
+__aeabi_uldivmod

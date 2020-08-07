@@ -1,0 +1,1282 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"i2c.c"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.global	I2CMasterState
+  24              		.section	.bss.I2CMasterState,"aw",%nobits
+  25              		.align	2
+  28              	I2CMasterState:
+  29 0000 00000000 		.space	4
+  30              		.global	I2CSlaveState
+  31              		.section	.bss.I2CSlaveState,"aw",%nobits
+  32              		.align	2
+  35              	I2CSlaveState:
+  36 0000 00000000 		.space	4
+  37              		.comm	I2CMasterBuffer,18,4
+  38              		.comm	I2CSlaveBuffer,16,4
+  39              		.comm	I2CReadLength,4,4
+  40              		.comm	I2CWriteLength,4,4
+  41              		.global	I2CRdIndex
+  42              		.section	.bss.I2CRdIndex,"aw",%nobits
+  43              		.align	2
+  46              	I2CRdIndex:
+  47 0000 00000000 		.space	4
+  48              		.global	I2CWrIndex
+  49              		.section	.bss.I2CWrIndex,"aw",%nobits
+  50              		.align	2
+  53              	I2CWrIndex:
+  54 0000 00000000 		.space	4
+  55              		.global	incr
+  56              		.section	.bss.incr,"aw",%nobits
+  57              		.align	2
+  60              	incr:
+  61 0000 00000000 		.space	4
+  62              		.section	.text.I2C0_IRQHandler,"ax",%progbits
+  63              		.align	2
+  64              		.global	I2C0_IRQHandler
+  65              		.thumb
+  66              		.thumb_func
+  68              	I2C0_IRQHandler:
+  69              	.LFB29:
+  70              		.file 1 "..//utils/i2ceeprom/i2c.c"
+   1:..//utils/i2ceeprom/i2c.c **** /*****************************************************************************
+   2:..//utils/i2ceeprom/i2c.c ****  *   i2c.c:  I2C C file for NXP LPC11xx Family Microprocessors
+   3:..//utils/i2ceeprom/i2c.c ****  *
+   4:..//utils/i2ceeprom/i2c.c ****  *   Copyright(C) 2008, NXP Semiconductor
+   5:..//utils/i2ceeprom/i2c.c ****  *   parts of this code are (C) 2010, MyVoice CAD/CAM Services
+   6:..//utils/i2ceeprom/i2c.c ****  *   All rights reserved.
+   7:..//utils/i2ceeprom/i2c.c ****  *
+   8:..//utils/i2ceeprom/i2c.c ****  *   History
+   9:..//utils/i2ceeprom/i2c.c ****  *   2009.12.07  ver 1.00    Preliminary version, first Release
+  10:..//utils/i2ceeprom/i2c.c ****  *   2010.07.19  ver 1.10    Rob Jansen - MyVoice CAD/CAM Services:
+  11:..//utils/i2ceeprom/i2c.c ****  *                           Major cleaning an a rewrite of some functions
+  12:..//utils/i2ceeprom/i2c.c ****  *                           - adding ACK/NACK handling to the state machine
+  13:..//utils/i2ceeprom/i2c.c ****  *                           - adding a return result to the I2CEngine()
+  14:..//utils/i2ceeprom/i2c.c ****  *   2011.02.08	 ver 1.200   J. Harwood - ported to LPC17xx
+  15:..//utils/i2ceeprom/i2c.c ****  *   2011.03.07  ver 1.210   Larry Viesse - Corrected Buffer Sizes to accommodate writing 32 data b
+  16:..//utils/i2ceeprom/i2c.c ****  *
+  17:..//utils/i2ceeprom/i2c.c **** *****************************************************************************/
+  18:..//utils/i2ceeprom/i2c.c **** #include "LPC17xx.h"			/* LPC17xx Peripheral Registers */
+  19:..//utils/i2ceeprom/i2c.c **** #include "i2c.h"
+  20:..//utils/i2ceeprom/i2c.c **** #include "lpc17xx_libcfg.h"
+  21:..//utils/i2ceeprom/i2c.c **** #include "lpc17xx_pinsel.h"
+  22:..//utils/i2ceeprom/i2c.c **** #include "lpc17xx_clkpwr.h"
+  23:..//utils/i2ceeprom/i2c.c **** #include "lpc17xx_i2c.h"
+  24:..//utils/i2ceeprom/i2c.c **** 
+  25:..//utils/i2ceeprom/i2c.c **** volatile uint32_t I2CMasterState = I2CSTATE_IDLE;
+  26:..//utils/i2ceeprom/i2c.c **** volatile uint32_t I2CSlaveState = I2CSTATE_IDLE;
+  27:..//utils/i2ceeprom/i2c.c **** 
+  28:..//utils/i2ceeprom/i2c.c **** volatile uint8_t I2CMasterBuffer[I2C_MASTER_BUFSIZE];
+  29:..//utils/i2ceeprom/i2c.c **** volatile uint8_t I2CSlaveBuffer[I2C_SLAVE_BUFSIZE];
+  30:..//utils/i2ceeprom/i2c.c **** volatile uint32_t I2CReadLength;
+  31:..//utils/i2ceeprom/i2c.c **** volatile uint32_t I2CWriteLength;
+  32:..//utils/i2ceeprom/i2c.c **** 
+  33:..//utils/i2ceeprom/i2c.c **** volatile uint32_t I2CRdIndex = 0;
+  34:..//utils/i2ceeprom/i2c.c **** volatile uint32_t I2CWrIndex = 0;
+  35:..//utils/i2ceeprom/i2c.c **** int incr=0;
+  36:..//utils/i2ceeprom/i2c.c **** 
+  37:..//utils/i2ceeprom/i2c.c **** /*****************************************************************************
+  38:..//utils/i2ceeprom/i2c.c **** ** Function name:		I2C_IRQHandler
+  39:..//utils/i2ceeprom/i2c.c **** **
+  40:..//utils/i2ceeprom/i2c.c **** ** Descriptions:		I2C interrupt handler, deal with master mode only.
+  41:..//utils/i2ceeprom/i2c.c **** **
+  42:..//utils/i2ceeprom/i2c.c **** ** parameters:			None
+  43:..//utils/i2ceeprom/i2c.c **** ** Returned value:		None
+  44:..//utils/i2ceeprom/i2c.c **** ** 
+  45:..//utils/i2ceeprom/i2c.c **** *****************************************************************************/
+  46:..//utils/i2ceeprom/i2c.c **** void I2C0_IRQHandler(void)
+  47:..//utils/i2ceeprom/i2c.c **** {
+  71              		.loc 1 47 0
+  72              		.cfi_startproc
+  73              		@ args = 0, pretend = 0, frame = 8
+  74              		@ frame_needed = 1, uses_anonymous_args = 0
+  75              		@ link register save eliminated.
+  76 0000 80B4     		push	{r7}
+  77              	.LCFI0:
+  78              		.cfi_def_cfa_offset 4
+  79 0002 83B0     		sub	sp, sp, #12
+  80              	.LCFI1:
+  81              		.cfi_def_cfa_offset 16
+  82 0004 00AF     		add	r7, sp, #0
+  83              		.cfi_offset 7, -4
+  84              	.LCFI2:
+  85              		.cfi_def_cfa_register 7
+  48:..//utils/i2ceeprom/i2c.c **** 	uint8_t StatValue;
+  49:..//utils/i2ceeprom/i2c.c **** 
+  50:..//utils/i2ceeprom/i2c.c **** 	/* this handler deals with master read and master write only */
+  51:..//utils/i2ceeprom/i2c.c **** 	StatValue = LPC_I2C0->I2STAT;
+  86              		.loc 1 51 0
+  87 0006 4CF20003 		movw	r3, #:lower16:1073856512
+  88 000a C4F20103 		movt	r3, #:upper16:1073856512
+  89 000e 5B68     		ldr	r3, [r3, #4]
+  90 0010 FB71     		strb	r3, [r7, #7]
+  52:..//utils/i2ceeprom/i2c.c **** 	// printf("\n%x",StatValue);
+  53:..//utils/i2ceeprom/i2c.c **** 	switch ( StatValue )
+  91              		.loc 1 53 0
+  92 0012 FB79     		ldrb	r3, [r7, #7]	@ zero_extendqisi2
+  93 0014 A3F10803 		sub	r3, r3, #8
+  94 0018 502B     		cmp	r3, #80
+  95 001a 00F24782 		bhi	.L2
+  96 001e 01A2     		adr	r2, .L14
+  97 0020 52F823F0 		ldr	pc, [r2, r3, lsl #2]
+  98              		.align	2
+  99              	.L14:
+ 100 0024 69010000 		.word	.L3+1
+ 101 0028 AD040000 		.word	.L2+1
+ 102 002c AD040000 		.word	.L2+1
+ 103 0030 AD040000 		.word	.L2+1
+ 104 0034 AD040000 		.word	.L2+1
+ 105 0038 AD040000 		.word	.L2+1
+ 106 003c AD040000 		.word	.L2+1
+ 107 0040 AD040000 		.word	.L2+1
+ 108 0044 C3010000 		.word	.L4+1
+ 109 0048 AD040000 		.word	.L2+1
+ 110 004c AD040000 		.word	.L2+1
+ 111 0050 AD040000 		.word	.L2+1
+ 112 0054 AD040000 		.word	.L2+1
+ 113 0058 AD040000 		.word	.L2+1
+ 114 005c AD040000 		.word	.L2+1
+ 115 0060 AD040000 		.word	.L2+1
+ 116 0064 0F020000 		.word	.L5+1
+ 117 0068 AD040000 		.word	.L2+1
+ 118 006c AD040000 		.word	.L2+1
+ 119 0070 AD040000 		.word	.L2+1
+ 120 0074 AD040000 		.word	.L2+1
+ 121 0078 AD040000 		.word	.L2+1
+ 122 007c AD040000 		.word	.L2+1
+ 123 0080 AD040000 		.word	.L2+1
+ 124 0084 6B020000 		.word	.L6+1
+ 125 0088 AD040000 		.word	.L2+1
+ 126 008c AD040000 		.word	.L2+1
+ 127 0090 AD040000 		.word	.L2+1
+ 128 0094 AD040000 		.word	.L2+1
+ 129 0098 AD040000 		.word	.L2+1
+ 130 009c AD040000 		.word	.L2+1
+ 131 00a0 AD040000 		.word	.L2+1
+ 132 00a4 97020000 		.word	.L7+1
+ 133 00a8 AD040000 		.word	.L2+1
+ 134 00ac AD040000 		.word	.L2+1
+ 135 00b0 AD040000 		.word	.L2+1
+ 136 00b4 AD040000 		.word	.L2+1
+ 137 00b8 AD040000 		.word	.L2+1
+ 138 00bc AD040000 		.word	.L2+1
+ 139 00c0 AD040000 		.word	.L2+1
+ 140 00c4 29030000 		.word	.L8+1
+ 141 00c8 AD040000 		.word	.L2+1
+ 142 00cc AD040000 		.word	.L2+1
+ 143 00d0 AD040000 		.word	.L2+1
+ 144 00d4 AD040000 		.word	.L2+1
+ 145 00d8 AD040000 		.word	.L2+1
+ 146 00dc AD040000 		.word	.L2+1
+ 147 00e0 AD040000 		.word	.L2+1
+ 148 00e4 55030000 		.word	.L9+1
+ 149 00e8 AD040000 		.word	.L2+1
+ 150 00ec AD040000 		.word	.L2+1
+ 151 00f0 AD040000 		.word	.L2+1
+ 152 00f4 AD040000 		.word	.L2+1
+ 153 00f8 AD040000 		.word	.L2+1
+ 154 00fc AD040000 		.word	.L2+1
+ 155 0100 AD040000 		.word	.L2+1
+ 156 0104 73030000 		.word	.L10+1
+ 157 0108 AD040000 		.word	.L2+1
+ 158 010c AD040000 		.word	.L2+1
+ 159 0110 AD040000 		.word	.L2+1
+ 160 0114 AD040000 		.word	.L2+1
+ 161 0118 AD040000 		.word	.L2+1
+ 162 011c AD040000 		.word	.L2+1
+ 163 0120 AD040000 		.word	.L2+1
+ 164 0124 AF030000 		.word	.L11+1
+ 165 0128 AD040000 		.word	.L2+1
+ 166 012c AD040000 		.word	.L2+1
+ 167 0130 AD040000 		.word	.L2+1
+ 168 0134 AD040000 		.word	.L2+1
+ 169 0138 AD040000 		.word	.L2+1
+ 170 013c AD040000 		.word	.L2+1
+ 171 0140 AD040000 		.word	.L2+1
+ 172 0144 DB030000 		.word	.L12+1
+ 173 0148 AD040000 		.word	.L2+1
+ 174 014c AD040000 		.word	.L2+1
+ 175 0150 AD040000 		.word	.L2+1
+ 176 0154 AD040000 		.word	.L2+1
+ 177 0158 AD040000 		.word	.L2+1
+ 178 015c AD040000 		.word	.L2+1
+ 179 0160 AD040000 		.word	.L2+1
+ 180 0164 53040000 		.word	.L13+1
+ 181              	.L3:
+  54:..//utils/i2ceeprom/i2c.c **** 	{
+  55:..//utils/i2ceeprom/i2c.c **** 	case 0x08:
+  56:..//utils/i2ceeprom/i2c.c **** 		/*
+  57:..//utils/i2ceeprom/i2c.c **** 		 * A START condition has been transmitted.
+  58:..//utils/i2ceeprom/i2c.c **** 		 * We now send the slave address and initialize
+  59:..//utils/i2ceeprom/i2c.c **** 		 * the write buffer
+  60:..//utils/i2ceeprom/i2c.c **** 		 * (we always start with a write after START+SLA)
+  61:..//utils/i2ceeprom/i2c.c **** 		 */
+  62:..//utils/i2ceeprom/i2c.c **** 		I2CWrIndex = 0;
+ 182              		.loc 1 62 0
+ 183 0168 40F20003 		movw	r3, #:lower16:I2CWrIndex
+ 184 016c C0F20003 		movt	r3, #:upper16:I2CWrIndex
+ 185 0170 4FF00002 		mov	r2, #0
+ 186 0174 1A60     		str	r2, [r3, #0]
+  63:..//utils/i2ceeprom/i2c.c **** 		LPC_I2C0->I2DAT = I2CMasterBuffer[I2CWrIndex++];
+ 187              		.loc 1 63 0
+ 188 0176 4CF20003 		movw	r3, #:lower16:1073856512
+ 189 017a C4F20103 		movt	r3, #:upper16:1073856512
+ 190 017e 40F20002 		movw	r2, #:lower16:I2CWrIndex
+ 191 0182 C0F20002 		movt	r2, #:upper16:I2CWrIndex
+ 192 0186 1168     		ldr	r1, [r2, #0]
+ 193 0188 40F20002 		movw	r2, #:lower16:I2CMasterBuffer
+ 194 018c C0F20002 		movt	r2, #:upper16:I2CMasterBuffer
+ 195 0190 525C     		ldrb	r2, [r2, r1]
+ 196 0192 D2B2     		uxtb	r2, r2
+ 197 0194 9A60     		str	r2, [r3, #8]
+ 198 0196 01F10102 		add	r2, r1, #1
+ 199 019a 40F20003 		movw	r3, #:lower16:I2CWrIndex
+ 200 019e C0F20003 		movt	r3, #:upper16:I2CWrIndex
+ 201 01a2 1A60     		str	r2, [r3, #0]
+  64:..//utils/i2ceeprom/i2c.c **** 		// printf("\t%d",I2CMasterBuffer[I2CWrIndex-1]);
+  65:..//utils/i2ceeprom/i2c.c **** 		//LPC_I2C0->I2CONSET = I2CONSET_AA;
+  66:..//utils/i2ceeprom/i2c.c **** 		LPC_I2C0->I2CONCLR = (I2CONCLR_SIC | I2CONCLR_STAC);
+ 202              		.loc 1 66 0
+ 203 01a4 4CF20003 		movw	r3, #:lower16:1073856512
+ 204 01a8 C4F20103 		movt	r3, #:upper16:1073856512
+ 205 01ac 4FF02802 		mov	r2, #40
+ 206 01b0 9A61     		str	r2, [r3, #24]
+  67:..//utils/i2ceeprom/i2c.c **** 		I2CMasterState = I2CSTATE_PENDING;
+ 207              		.loc 1 67 0
+ 208 01b2 40F20003 		movw	r3, #:lower16:I2CMasterState
+ 209 01b6 C0F20003 		movt	r3, #:upper16:I2CMasterState
+ 210 01ba 4FF00102 		mov	r2, #1
+ 211 01be 1A60     		str	r2, [r3, #0]
+  68:..//utils/i2ceeprom/i2c.c **** 		break;
+ 212              		.loc 1 68 0
+ 213 01c0 7BE1     		b	.L25
+ 214              	.L4:
+  69:..//utils/i2ceeprom/i2c.c **** 	
+  70:..//utils/i2ceeprom/i2c.c **** 	case 0x10:
+  71:..//utils/i2ceeprom/i2c.c **** 		/*
+  72:..//utils/i2ceeprom/i2c.c **** 		 * A repeated START condition has been transmitted.
+  73:..//utils/i2ceeprom/i2c.c **** 		 * Now a second, read, transaction follows so we
+  74:..//utils/i2ceeprom/i2c.c **** 		 * initialize the read buffer.
+  75:..//utils/i2ceeprom/i2c.c **** 		 */
+  76:..//utils/i2ceeprom/i2c.c **** 		I2CRdIndex = 0;
+ 215              		.loc 1 76 0
+ 216 01c2 40F20003 		movw	r3, #:lower16:I2CRdIndex
+ 217 01c6 C0F20003 		movt	r3, #:upper16:I2CRdIndex
+ 218 01ca 4FF00002 		mov	r2, #0
+ 219 01ce 1A60     		str	r2, [r3, #0]
+  77:..//utils/i2ceeprom/i2c.c **** 		/* Send SLA with R bit set, */
+  78:..//utils/i2ceeprom/i2c.c **** 		LPC_I2C0->I2DAT = I2CMasterBuffer[I2CWrIndex++];
+ 220              		.loc 1 78 0
+ 221 01d0 4CF20003 		movw	r3, #:lower16:1073856512
+ 222 01d4 C4F20103 		movt	r3, #:upper16:1073856512
+ 223 01d8 40F20002 		movw	r2, #:lower16:I2CWrIndex
+ 224 01dc C0F20002 		movt	r2, #:upper16:I2CWrIndex
+ 225 01e0 1168     		ldr	r1, [r2, #0]
+ 226 01e2 40F20002 		movw	r2, #:lower16:I2CMasterBuffer
+ 227 01e6 C0F20002 		movt	r2, #:upper16:I2CMasterBuffer
+ 228 01ea 525C     		ldrb	r2, [r2, r1]
+ 229 01ec D2B2     		uxtb	r2, r2
+ 230 01ee 9A60     		str	r2, [r3, #8]
+ 231 01f0 01F10102 		add	r2, r1, #1
+ 232 01f4 40F20003 		movw	r3, #:lower16:I2CWrIndex
+ 233 01f8 C0F20003 		movt	r3, #:upper16:I2CWrIndex
+ 234 01fc 1A60     		str	r2, [r3, #0]
+  79:..//utils/i2ceeprom/i2c.c **** 		//LPC_I2C0->I2CONSET = I2CONSET_AA;
+  80:..//utils/i2ceeprom/i2c.c **** 		LPC_I2C0->I2CONCLR = (I2CONCLR_SIC | I2CONCLR_STAC);
+ 235              		.loc 1 80 0
+ 236 01fe 4CF20003 		movw	r3, #:lower16:1073856512
+ 237 0202 C4F20103 		movt	r3, #:upper16:1073856512
+ 238 0206 4FF02802 		mov	r2, #40
+ 239 020a 9A61     		str	r2, [r3, #24]
+  81:..//utils/i2ceeprom/i2c.c **** 	break;
+ 240              		.loc 1 81 0
+ 241 020c 55E1     		b	.L25
+ 242              	.L5:
+  82:..//utils/i2ceeprom/i2c.c **** 	
+  83:..//utils/i2ceeprom/i2c.c **** 	case 0x18:
+  84:..//utils/i2ceeprom/i2c.c **** 		/*
+  85:..//utils/i2ceeprom/i2c.c **** 		 * SLA+W has been transmitted; ACK has been received.
+  86:..//utils/i2ceeprom/i2c.c **** 		 * We now start writing bytes.
+  87:..//utils/i2ceeprom/i2c.c **** 		 */
+  88:..//utils/i2ceeprom/i2c.c **** 		if ( I2CWriteLength == 1 ){
+ 243              		.loc 1 88 0
+ 244 020e 40F20003 		movw	r3, #:lower16:I2CWriteLength
+ 245 0212 C0F20003 		movt	r3, #:upper16:I2CWriteLength
+ 246 0216 1B68     		ldr	r3, [r3, #0]
+ 247 0218 012B     		cmp	r3, #1
+ 248 021a 07D1     		bne	.L16
+  89:..//utils/i2ceeprom/i2c.c **** 			LPC_I2C0->I2CONSET = I2CONSET_STO;      /* Set Stop flag */
+ 249              		.loc 1 89 0
+ 250 021c 4CF20003 		movw	r3, #:lower16:1073856512
+ 251 0220 C4F20103 		movt	r3, #:upper16:1073856512
+ 252 0224 4FF01002 		mov	r2, #16
+ 253 0228 1A60     		str	r2, [r3, #0]
+ 254 022a 16E0     		b	.L17
+ 255              	.L16:
+  90:..//utils/i2ceeprom/i2c.c **** 		}else{
+  91:..//utils/i2ceeprom/i2c.c **** 			LPC_I2C0->I2DAT = I2CMasterBuffer[I2CWrIndex++];
+ 256              		.loc 1 91 0
+ 257 022c 4CF20003 		movw	r3, #:lower16:1073856512
+ 258 0230 C4F20103 		movt	r3, #:upper16:1073856512
+ 259 0234 40F20002 		movw	r2, #:lower16:I2CWrIndex
+ 260 0238 C0F20002 		movt	r2, #:upper16:I2CWrIndex
+ 261 023c 1168     		ldr	r1, [r2, #0]
+ 262 023e 40F20002 		movw	r2, #:lower16:I2CMasterBuffer
+ 263 0242 C0F20002 		movt	r2, #:upper16:I2CMasterBuffer
+ 264 0246 525C     		ldrb	r2, [r2, r1]
+ 265 0248 D2B2     		uxtb	r2, r2
+ 266 024a 9A60     		str	r2, [r3, #8]
+ 267 024c 01F10102 		add	r2, r1, #1
+ 268 0250 40F20003 		movw	r3, #:lower16:I2CWrIndex
+ 269 0254 C0F20003 		movt	r3, #:upper16:I2CWrIndex
+ 270 0258 1A60     		str	r2, [r3, #0]
+ 271              	.L17:
+  92:..//utils/i2ceeprom/i2c.c **** 			// printf("\t%d",I2CMasterBuffer[I2CWrIndex-1]);
+  93:..//utils/i2ceeprom/i2c.c **** 			
+  94:..//utils/i2ceeprom/i2c.c **** 			//LPC_I2C0->I2CONSET = I2CONSET_AA;
+  95:..//utils/i2ceeprom/i2c.c **** 		}	
+  96:..//utils/i2ceeprom/i2c.c **** 		LPC_I2C0->I2CONCLR = I2CONCLR_SIC;			
+ 272              		.loc 1 96 0
+ 273 025a 4CF20003 		movw	r3, #:lower16:1073856512
+ 274 025e C4F20103 		movt	r3, #:upper16:1073856512
+ 275 0262 4FF00802 		mov	r2, #8
+ 276 0266 9A61     		str	r2, [r3, #24]
+  97:..//utils/i2ceeprom/i2c.c **** 		break;
+ 277              		.loc 1 97 0
+ 278 0268 27E1     		b	.L25
+ 279              	.L6:
+  98:..//utils/i2ceeprom/i2c.c **** 
+  99:..//utils/i2ceeprom/i2c.c **** 	case 0x20:
+ 100:..//utils/i2ceeprom/i2c.c **** 		/*
+ 101:..//utils/i2ceeprom/i2c.c **** 		 * SLA+W has been transmitted; NOT ACK has been received.
+ 102:..//utils/i2ceeprom/i2c.c **** 		 * Send a stop condition to terminate the transaction
+ 103:..//utils/i2ceeprom/i2c.c **** 		 * and signal I2CEngine the transaction is aborted.
+ 104:..//utils/i2ceeprom/i2c.c **** 		 */
+ 105:..//utils/i2ceeprom/i2c.c **** 		LPC_I2C0->I2CONSET = I2CONSET_STO;
+ 280              		.loc 1 105 0
+ 281 026a 4CF20003 		movw	r3, #:lower16:1073856512
+ 282 026e C4F20103 		movt	r3, #:upper16:1073856512
+ 283 0272 4FF01002 		mov	r2, #16
+ 284 0276 1A60     		str	r2, [r3, #0]
+ 106:..//utils/i2ceeprom/i2c.c **** 		LPC_I2C0->I2CONCLR = I2CONCLR_SIC;
+ 285              		.loc 1 106 0
+ 286 0278 4CF20003 		movw	r3, #:lower16:1073856512
+ 287 027c C4F20103 		movt	r3, #:upper16:1073856512
+ 288 0280 4FF00802 		mov	r2, #8
+ 289 0284 9A61     		str	r2, [r3, #24]
+ 107:..//utils/i2ceeprom/i2c.c **** 		I2CMasterState = I2CSTATE_SLA_NACK;
+ 290              		.loc 1 107 0
+ 291 0286 40F20003 		movw	r3, #:lower16:I2CMasterState
+ 292 028a C0F20003 		movt	r3, #:upper16:I2CMasterState
+ 293 028e 40F20312 		movw	r2, #259
+ 294 0292 1A60     		str	r2, [r3, #0]
+ 108:..//utils/i2ceeprom/i2c.c **** 		break;
+ 295              		.loc 1 108 0
+ 296 0294 11E1     		b	.L25
+ 297              	.L7:
+ 109:..//utils/i2ceeprom/i2c.c **** 
+ 110:..//utils/i2ceeprom/i2c.c **** 	case 0x28:
+ 111:..//utils/i2ceeprom/i2c.c **** 		/*
+ 112:..//utils/i2ceeprom/i2c.c **** 		 * Data in I2DAT has been transmitted; ACK has been received.
+ 113:..//utils/i2ceeprom/i2c.c **** 		 * Continue sending more bytes as long as there are bytes to send
+ 114:..//utils/i2ceeprom/i2c.c **** 		 * and after this check if a read transaction should follow.
+ 115:..//utils/i2ceeprom/i2c.c **** 		 */
+ 116:..//utils/i2ceeprom/i2c.c **** 		if ( I2CWrIndex < I2CWriteLength )
+ 298              		.loc 1 116 0
+ 299 0296 40F20003 		movw	r3, #:lower16:I2CWrIndex
+ 300 029a C0F20003 		movt	r3, #:upper16:I2CWrIndex
+ 301 029e 1A68     		ldr	r2, [r3, #0]
+ 302 02a0 40F20003 		movw	r3, #:lower16:I2CWriteLength
+ 303 02a4 C0F20003 		movt	r3, #:upper16:I2CWriteLength
+ 304 02a8 1B68     		ldr	r3, [r3, #0]
+ 305 02aa 9A42     		cmp	r2, r3
+ 306 02ac 17D2     		bcs	.L18
+ 117:..//utils/i2ceeprom/i2c.c **** 		{
+ 118:..//utils/i2ceeprom/i2c.c **** 			/* Keep writing as long as bytes avail */
+ 119:..//utils/i2ceeprom/i2c.c **** 			LPC_I2C0->I2DAT = I2CMasterBuffer[I2CWrIndex++];
+ 307              		.loc 1 119 0
+ 308 02ae 4CF20003 		movw	r3, #:lower16:1073856512
+ 309 02b2 C4F20103 		movt	r3, #:upper16:1073856512
+ 310 02b6 40F20002 		movw	r2, #:lower16:I2CWrIndex
+ 311 02ba C0F20002 		movt	r2, #:upper16:I2CWrIndex
+ 312 02be 1168     		ldr	r1, [r2, #0]
+ 313 02c0 40F20002 		movw	r2, #:lower16:I2CMasterBuffer
+ 314 02c4 C0F20002 		movt	r2, #:upper16:I2CMasterBuffer
+ 315 02c8 525C     		ldrb	r2, [r2, r1]
+ 316 02ca D2B2     		uxtb	r2, r2
+ 317 02cc 9A60     		str	r2, [r3, #8]
+ 318 02ce 01F10102 		add	r2, r1, #1
+ 319 02d2 40F20003 		movw	r3, #:lower16:I2CWrIndex
+ 320 02d6 C0F20003 		movt	r3, #:upper16:I2CWrIndex
+ 321 02da 1A60     		str	r2, [r3, #0]
+ 322 02dc 1CE0     		b	.L19
+ 323              	.L18:
+ 120:..//utils/i2ceeprom/i2c.c **** 			// LPC_I2C0->I2DAT = incr;
+ 121:..//utils/i2ceeprom/i2c.c **** 			// incr++;
+ 122:..//utils/i2ceeprom/i2c.c **** 			// I2CWrIndex++;
+ 123:..//utils/i2ceeprom/i2c.c **** 			// printf("\t%d %d",I2CWrIndex-1,I2CMasterBuffer[I2CWrIndex-1]);
+ 124:..//utils/i2ceeprom/i2c.c **** 		}
+ 125:..//utils/i2ceeprom/i2c.c **** 		else
+ 126:..//utils/i2ceeprom/i2c.c **** 		{
+ 127:..//utils/i2ceeprom/i2c.c **** 			if ( I2CReadLength != 0 )
+ 324              		.loc 1 127 0
+ 325 02de 40F20003 		movw	r3, #:lower16:I2CReadLength
+ 326 02e2 C0F20003 		movt	r3, #:upper16:I2CReadLength
+ 327 02e6 1B68     		ldr	r3, [r3, #0]
+ 328 02e8 002B     		cmp	r3, #0
+ 329 02ea 07D0     		beq	.L20
+ 128:..//utils/i2ceeprom/i2c.c **** 			{
+ 129:..//utils/i2ceeprom/i2c.c **** 				/* Send a Repeated START to initialize a read transaction */
+ 130:..//utils/i2ceeprom/i2c.c **** 				/* (handled in state 0x10)                                */
+ 131:..//utils/i2ceeprom/i2c.c **** 				LPC_I2C0->I2CONSET = I2CONSET_STA;	/* Set Repeated-start flag */
+ 330              		.loc 1 131 0
+ 331 02ec 4CF20003 		movw	r3, #:lower16:1073856512
+ 332 02f0 C4F20103 		movt	r3, #:upper16:1073856512
+ 333 02f4 4FF02002 		mov	r2, #32
+ 334 02f8 1A60     		str	r2, [r3, #0]
+ 335 02fa 0DE0     		b	.L19
+ 336              	.L20:
+ 132:..//utils/i2ceeprom/i2c.c **** 			}
+ 133:..//utils/i2ceeprom/i2c.c **** 			else
+ 134:..//utils/i2ceeprom/i2c.c **** 			{
+ 135:..//utils/i2ceeprom/i2c.c **** 				I2CMasterState = I2CSTATE_ACK;
+ 337              		.loc 1 135 0
+ 338 02fc 40F20003 		movw	r3, #:lower16:I2CMasterState
+ 339 0300 C0F20003 		movt	r3, #:upper16:I2CMasterState
+ 340 0304 40F20112 		movw	r2, #257
+ 341 0308 1A60     		str	r2, [r3, #0]
+ 136:..//utils/i2ceeprom/i2c.c **** 				LPC_I2C0->I2CONSET = I2CONSET_STO;      /* Set Stop flag */
+ 342              		.loc 1 136 0
+ 343 030a 4CF20003 		movw	r3, #:lower16:1073856512
+ 344 030e C4F20103 		movt	r3, #:upper16:1073856512
+ 345 0312 4FF01002 		mov	r2, #16
+ 346 0316 1A60     		str	r2, [r3, #0]
+ 347              	.L19:
+ 137:..//utils/i2ceeprom/i2c.c **** 				// printf("\nstoPPP");
+ 138:..//utils/i2ceeprom/i2c.c **** 			}
+ 139:..//utils/i2ceeprom/i2c.c **** 		}
+ 140:..//utils/i2ceeprom/i2c.c **** 		LPC_I2C0->I2CONCLR = I2CONCLR_SIC;
+ 348              		.loc 1 140 0
+ 349 0318 4CF20003 		movw	r3, #:lower16:1073856512
+ 350 031c C4F20103 		movt	r3, #:upper16:1073856512
+ 351 0320 4FF00802 		mov	r2, #8
+ 352 0324 9A61     		str	r2, [r3, #24]
+ 141:..//utils/i2ceeprom/i2c.c **** 		break;
+ 353              		.loc 1 141 0
+ 354 0326 C8E0     		b	.L25
+ 355              	.L8:
+ 142:..//utils/i2ceeprom/i2c.c **** 
+ 143:..//utils/i2ceeprom/i2c.c **** 	case 0x30:
+ 144:..//utils/i2ceeprom/i2c.c **** 		/*
+ 145:..//utils/i2ceeprom/i2c.c **** 		 * Data byte in I2DAT has been transmitted; NOT ACK has been received
+ 146:..//utils/i2ceeprom/i2c.c **** 		 * Send a STOP condition to terminate the transaction and inform the
+ 147:..//utils/i2ceeprom/i2c.c **** 		 * I2CEngine that the transaction failed.
+ 148:..//utils/i2ceeprom/i2c.c **** 		 */
+ 149:..//utils/i2ceeprom/i2c.c **** 		LPC_I2C0->I2CONSET = I2CONSET_STO;
+ 356              		.loc 1 149 0
+ 357 0328 4CF20003 		movw	r3, #:lower16:1073856512
+ 358 032c C4F20103 		movt	r3, #:upper16:1073856512
+ 359 0330 4FF01002 		mov	r2, #16
+ 360 0334 1A60     		str	r2, [r3, #0]
+ 150:..//utils/i2ceeprom/i2c.c **** 		LPC_I2C0->I2CONCLR = I2CONCLR_SIC;
+ 361              		.loc 1 150 0
+ 362 0336 4CF20003 		movw	r3, #:lower16:1073856512
+ 363 033a C4F20103 		movt	r3, #:upper16:1073856512
+ 364 033e 4FF00802 		mov	r2, #8
+ 365 0342 9A61     		str	r2, [r3, #24]
+ 151:..//utils/i2ceeprom/i2c.c **** 		I2CMasterState = I2CSTATE_NACK;
+ 366              		.loc 1 151 0
+ 367 0344 40F20003 		movw	r3, #:lower16:I2CMasterState
+ 368 0348 C0F20003 		movt	r3, #:upper16:I2CMasterState
+ 369 034c 4FF48172 		mov	r2, #258
+ 370 0350 1A60     		str	r2, [r3, #0]
+ 152:..//utils/i2ceeprom/i2c.c **** 		break;
+ 371              		.loc 1 152 0
+ 372 0352 B2E0     		b	.L25
+ 373              	.L9:
+ 153:..//utils/i2ceeprom/i2c.c **** 
+ 154:..//utils/i2ceeprom/i2c.c **** 	case 0x38:
+ 155:..//utils/i2ceeprom/i2c.c **** 		/*
+ 156:..//utils/i2ceeprom/i2c.c **** 		 * Arbitration loss in SLA+R/W or Data bytes.
+ 157:..//utils/i2ceeprom/i2c.c **** 		 * This is a fatal condition, the transaction did not complete due
+ 158:..//utils/i2ceeprom/i2c.c **** 		 * to external reasons (e.g. hardware system failure).
+ 159:..//utils/i2ceeprom/i2c.c **** 		 * Inform the I2CEngine of this and cancel the transaction
+ 160:..//utils/i2ceeprom/i2c.c **** 		 * (this is automatically done by the I2C hardware)
+ 161:..//utils/i2ceeprom/i2c.c **** 		 */
+ 162:..//utils/i2ceeprom/i2c.c **** 		I2CMasterState = I2CSTATE_ARB_LOSS;
+ 374              		.loc 1 162 0
+ 375 0354 40F20003 		movw	r3, #:lower16:I2CMasterState
+ 376 0358 C0F20003 		movt	r3, #:upper16:I2CMasterState
+ 377 035c 4FF48272 		mov	r2, #260
+ 378 0360 1A60     		str	r2, [r3, #0]
+ 163:..//utils/i2ceeprom/i2c.c **** 		LPC_I2C0->I2CONCLR = I2CONCLR_SIC;
+ 379              		.loc 1 163 0
+ 380 0362 4CF20003 		movw	r3, #:lower16:1073856512
+ 381 0366 C4F20103 		movt	r3, #:upper16:1073856512
+ 382 036a 4FF00802 		mov	r2, #8
+ 383 036e 9A61     		str	r2, [r3, #24]
+ 164:..//utils/i2ceeprom/i2c.c **** 		break;
+ 384              		.loc 1 164 0
+ 385 0370 A3E0     		b	.L25
+ 386              	.L10:
+ 165:..//utils/i2ceeprom/i2c.c **** 
+ 166:..//utils/i2ceeprom/i2c.c **** 	case 0x40:
+ 167:..//utils/i2ceeprom/i2c.c **** 		/*
+ 168:..//utils/i2ceeprom/i2c.c **** 		 * SLA+R has been transmitted; ACK has been received.
+ 169:..//utils/i2ceeprom/i2c.c **** 		 * Initialize a read.
+ 170:..//utils/i2ceeprom/i2c.c **** 		 * Since a NOT ACK is sent after reading the last byte,
+ 171:..//utils/i2ceeprom/i2c.c **** 		 * we need to prepare a NOT ACK in case we only read 1 byte.
+ 172:..//utils/i2ceeprom/i2c.c **** 		 */
+ 173:..//utils/i2ceeprom/i2c.c **** 		if ( I2CReadLength == 1 )
+ 387              		.loc 1 173 0
+ 388 0372 40F20003 		movw	r3, #:lower16:I2CReadLength
+ 389 0376 C0F20003 		movt	r3, #:upper16:I2CReadLength
+ 390 037a 1B68     		ldr	r3, [r3, #0]
+ 391 037c 012B     		cmp	r3, #1
+ 392 037e 07D1     		bne	.L21
+ 174:..//utils/i2ceeprom/i2c.c **** 		{
+ 175:..//utils/i2ceeprom/i2c.c **** 			/* last (and only) byte: send a NACK after data is received */
+ 176:..//utils/i2ceeprom/i2c.c **** 			LPC_I2C0->I2CONCLR = I2CONCLR_AAC;
+ 393              		.loc 1 176 0
+ 394 0380 4CF20003 		movw	r3, #:lower16:1073856512
+ 395 0384 C4F20103 		movt	r3, #:upper16:1073856512
+ 396 0388 4FF00402 		mov	r2, #4
+ 397 038c 9A61     		str	r2, [r3, #24]
+ 398 038e 06E0     		b	.L22
+ 399              	.L21:
+ 177:..//utils/i2ceeprom/i2c.c **** 		}
+ 178:..//utils/i2ceeprom/i2c.c **** 		else
+ 179:..//utils/i2ceeprom/i2c.c **** 		{
+ 180:..//utils/i2ceeprom/i2c.c **** 			/* more bytes to follow: send an ACK after data is received */
+ 181:..//utils/i2ceeprom/i2c.c **** 			LPC_I2C0->I2CONSET = I2CONSET_AA;
+ 400              		.loc 1 181 0
+ 401 0390 4CF20003 		movw	r3, #:lower16:1073856512
+ 402 0394 C4F20103 		movt	r3, #:upper16:1073856512
+ 403 0398 4FF00402 		mov	r2, #4
+ 404 039c 1A60     		str	r2, [r3, #0]
+ 405              	.L22:
+ 182:..//utils/i2ceeprom/i2c.c **** 		}
+ 183:..//utils/i2ceeprom/i2c.c **** 		LPC_I2C0->I2CONCLR = I2CONCLR_SIC;
+ 406              		.loc 1 183 0
+ 407 039e 4CF20003 		movw	r3, #:lower16:1073856512
+ 408 03a2 C4F20103 		movt	r3, #:upper16:1073856512
+ 409 03a6 4FF00802 		mov	r2, #8
+ 410 03aa 9A61     		str	r2, [r3, #24]
+ 184:..//utils/i2ceeprom/i2c.c **** 		break;
+ 411              		.loc 1 184 0
+ 412 03ac 85E0     		b	.L25
+ 413              	.L11:
+ 185:..//utils/i2ceeprom/i2c.c **** 
+ 186:..//utils/i2ceeprom/i2c.c **** 	case 0x48:
+ 187:..//utils/i2ceeprom/i2c.c **** 		/*
+ 188:..//utils/i2ceeprom/i2c.c **** 		 * SLA+R has been transmitted; NOT ACK has been received.
+ 189:..//utils/i2ceeprom/i2c.c **** 		 * Send a stop condition to terminate the transaction
+ 190:..//utils/i2ceeprom/i2c.c **** 		 * and signal I2CEngine the transaction is aborted.
+ 191:..//utils/i2ceeprom/i2c.c **** 		 */
+ 192:..//utils/i2ceeprom/i2c.c **** 		LPC_I2C0->I2CONSET = I2CONSET_STO;
+ 414              		.loc 1 192 0
+ 415 03ae 4CF20003 		movw	r3, #:lower16:1073856512
+ 416 03b2 C4F20103 		movt	r3, #:upper16:1073856512
+ 417 03b6 4FF01002 		mov	r2, #16
+ 418 03ba 1A60     		str	r2, [r3, #0]
+ 193:..//utils/i2ceeprom/i2c.c **** 		LPC_I2C0->I2CONCLR = I2CONCLR_SIC;
+ 419              		.loc 1 193 0
+ 420 03bc 4CF20003 		movw	r3, #:lower16:1073856512
+ 421 03c0 C4F20103 		movt	r3, #:upper16:1073856512
+ 422 03c4 4FF00802 		mov	r2, #8
+ 423 03c8 9A61     		str	r2, [r3, #24]
+ 194:..//utils/i2ceeprom/i2c.c **** 		I2CMasterState = I2CSTATE_SLA_NACK;
+ 424              		.loc 1 194 0
+ 425 03ca 40F20003 		movw	r3, #:lower16:I2CMasterState
+ 426 03ce C0F20003 		movt	r3, #:upper16:I2CMasterState
+ 427 03d2 40F20312 		movw	r2, #259
+ 428 03d6 1A60     		str	r2, [r3, #0]
+ 195:..//utils/i2ceeprom/i2c.c **** 		break;
+ 429              		.loc 1 195 0
+ 430 03d8 6FE0     		b	.L25
+ 431              	.L12:
+ 196:..//utils/i2ceeprom/i2c.c **** 
+ 197:..//utils/i2ceeprom/i2c.c **** 	case 0x50:
+ 198:..//utils/i2ceeprom/i2c.c **** 		/*
+ 199:..//utils/i2ceeprom/i2c.c **** 		 * Data byte has been received; ACK has been returned.
+ 200:..//utils/i2ceeprom/i2c.c **** 		 * Read the byte and check for more bytes to read.
+ 201:..//utils/i2ceeprom/i2c.c **** 		 * Send a NOT ACK after the last byte is received
+ 202:..//utils/i2ceeprom/i2c.c **** 		 */
+ 203:..//utils/i2ceeprom/i2c.c **** 		I2CSlaveBuffer[I2CRdIndex++] = LPC_I2C0->I2DAT;
+ 432              		.loc 1 203 0
+ 433 03da 40F20003 		movw	r3, #:lower16:I2CRdIndex
+ 434 03de C0F20003 		movt	r3, #:upper16:I2CRdIndex
+ 435 03e2 1A68     		ldr	r2, [r3, #0]
+ 436 03e4 4CF20003 		movw	r3, #:lower16:1073856512
+ 437 03e8 C4F20103 		movt	r3, #:upper16:1073856512
+ 438 03ec 9B68     		ldr	r3, [r3, #8]
+ 439 03ee D9B2     		uxtb	r1, r3
+ 440 03f0 40F20003 		movw	r3, #:lower16:I2CSlaveBuffer
+ 441 03f4 C0F20003 		movt	r3, #:upper16:I2CSlaveBuffer
+ 442 03f8 9954     		strb	r1, [r3, r2]
+ 443 03fa 02F10102 		add	r2, r2, #1
+ 444 03fe 40F20003 		movw	r3, #:lower16:I2CRdIndex
+ 445 0402 C0F20003 		movt	r3, #:upper16:I2CRdIndex
+ 446 0406 1A60     		str	r2, [r3, #0]
+ 204:..//utils/i2ceeprom/i2c.c **** 		// printf("\t%d",I2CSlaveBuffer[I2CRdIndex-1]);
+ 205:..//utils/i2ceeprom/i2c.c **** 		if ( I2CRdIndex < (I2CReadLength-1) )
+ 447              		.loc 1 205 0
+ 448 0408 40F20003 		movw	r3, #:lower16:I2CReadLength
+ 449 040c C0F20003 		movt	r3, #:upper16:I2CReadLength
+ 450 0410 1B68     		ldr	r3, [r3, #0]
+ 451 0412 03F1FF32 		add	r2, r3, #-1
+ 452 0416 40F20003 		movw	r3, #:lower16:I2CRdIndex
+ 453 041a C0F20003 		movt	r3, #:upper16:I2CRdIndex
+ 454 041e 1B68     		ldr	r3, [r3, #0]
+ 455 0420 9A42     		cmp	r2, r3
+ 456 0422 07D9     		bls	.L23
+ 206:..//utils/i2ceeprom/i2c.c **** 		{
+ 207:..//utils/i2ceeprom/i2c.c **** 			/* lmore bytes to follow: send an ACK after data is received */
+ 208:..//utils/i2ceeprom/i2c.c **** 			LPC_I2C0->I2CONSET = I2CONSET_AA;
+ 457              		.loc 1 208 0
+ 458 0424 4CF20003 		movw	r3, #:lower16:1073856512
+ 459 0428 C4F20103 		movt	r3, #:upper16:1073856512
+ 460 042c 4FF00402 		mov	r2, #4
+ 461 0430 1A60     		str	r2, [r3, #0]
+ 462 0432 06E0     		b	.L24
+ 463              	.L23:
+ 209:..//utils/i2ceeprom/i2c.c **** 		}
+ 210:..//utils/i2ceeprom/i2c.c **** 		else
+ 211:..//utils/i2ceeprom/i2c.c **** 		{
+ 212:..//utils/i2ceeprom/i2c.c **** 			/* last byte: send a NACK after data is received */
+ 213:..//utils/i2ceeprom/i2c.c **** 			LPC_I2C0->I2CONCLR = I2CONCLR_AAC;
+ 464              		.loc 1 213 0
+ 465 0434 4CF20003 		movw	r3, #:lower16:1073856512
+ 466 0438 C4F20103 		movt	r3, #:upper16:1073856512
+ 467 043c 4FF00402 		mov	r2, #4
+ 468 0440 9A61     		str	r2, [r3, #24]
+ 469              	.L24:
+ 214:..//utils/i2ceeprom/i2c.c **** 		}
+ 215:..//utils/i2ceeprom/i2c.c **** 		LPC_I2C0->I2CONCLR = I2CONCLR_SIC;
+ 470              		.loc 1 215 0
+ 471 0442 4CF20003 		movw	r3, #:lower16:1073856512
+ 472 0446 C4F20103 		movt	r3, #:upper16:1073856512
+ 473 044a 4FF00802 		mov	r2, #8
+ 474 044e 9A61     		str	r2, [r3, #24]
+ 216:..//utils/i2ceeprom/i2c.c **** 		break;
+ 475              		.loc 1 216 0
+ 476 0450 33E0     		b	.L25
+ 477              	.L13:
+ 217:..//utils/i2ceeprom/i2c.c **** 	
+ 218:..//utils/i2ceeprom/i2c.c **** 	case 0x58:
+ 219:..//utils/i2ceeprom/i2c.c **** 		/*
+ 220:..//utils/i2ceeprom/i2c.c **** 		 * Data byte has been received; NOT ACK has been returned.
+ 221:..//utils/i2ceeprom/i2c.c **** 		 * This is the last byte to read.
+ 222:..//utils/i2ceeprom/i2c.c **** 		 * Generate a STOP condition and flag the I2CEngine that the
+ 223:..//utils/i2ceeprom/i2c.c **** 		 * transaction is finished.
+ 224:..//utils/i2ceeprom/i2c.c **** 		 */
+ 225:..//utils/i2ceeprom/i2c.c **** 		I2CSlaveBuffer[I2CRdIndex++] = LPC_I2C0->I2DAT;
+ 478              		.loc 1 225 0
+ 479 0452 40F20003 		movw	r3, #:lower16:I2CRdIndex
+ 480 0456 C0F20003 		movt	r3, #:upper16:I2CRdIndex
+ 481 045a 1A68     		ldr	r2, [r3, #0]
+ 482 045c 4CF20003 		movw	r3, #:lower16:1073856512
+ 483 0460 C4F20103 		movt	r3, #:upper16:1073856512
+ 484 0464 9B68     		ldr	r3, [r3, #8]
+ 485 0466 D9B2     		uxtb	r1, r3
+ 486 0468 40F20003 		movw	r3, #:lower16:I2CSlaveBuffer
+ 487 046c C0F20003 		movt	r3, #:upper16:I2CSlaveBuffer
+ 488 0470 9954     		strb	r1, [r3, r2]
+ 489 0472 02F10102 		add	r2, r2, #1
+ 490 0476 40F20003 		movw	r3, #:lower16:I2CRdIndex
+ 491 047a C0F20003 		movt	r3, #:upper16:I2CRdIndex
+ 492 047e 1A60     		str	r2, [r3, #0]
+ 226:..//utils/i2ceeprom/i2c.c **** 		I2CMasterState = I2CSTATE_ACK;
+ 493              		.loc 1 226 0
+ 494 0480 40F20003 		movw	r3, #:lower16:I2CMasterState
+ 495 0484 C0F20003 		movt	r3, #:upper16:I2CMasterState
+ 496 0488 40F20112 		movw	r2, #257
+ 497 048c 1A60     		str	r2, [r3, #0]
+ 227:..//utils/i2ceeprom/i2c.c **** 		LPC_I2C0->I2CONSET = I2CONSET_STO;	/* Set Stop flag */
+ 498              		.loc 1 227 0
+ 499 048e 4CF20003 		movw	r3, #:lower16:1073856512
+ 500 0492 C4F20103 		movt	r3, #:upper16:1073856512
+ 501 0496 4FF01002 		mov	r2, #16
+ 502 049a 1A60     		str	r2, [r3, #0]
+ 228:..//utils/i2ceeprom/i2c.c **** 		LPC_I2C0->I2CONCLR = I2CONCLR_SIC;	/* Clear SI flag */
+ 503              		.loc 1 228 0
+ 504 049c 4CF20003 		movw	r3, #:lower16:1073856512
+ 505 04a0 C4F20103 		movt	r3, #:upper16:1073856512
+ 506 04a4 4FF00802 		mov	r2, #8
+ 507 04a8 9A61     		str	r2, [r3, #24]
+ 229:..//utils/i2ceeprom/i2c.c **** 		break;
+ 508              		.loc 1 229 0
+ 509 04aa 06E0     		b	.L25
+ 510              	.L2:
+ 230:..//utils/i2ceeprom/i2c.c **** 
+ 231:..//utils/i2ceeprom/i2c.c **** 	
+ 232:..//utils/i2ceeprom/i2c.c **** 	default:
+ 233:..//utils/i2ceeprom/i2c.c **** 		LPC_I2C0->I2CONCLR = I2CONCLR_SIC;
+ 511              		.loc 1 233 0
+ 512 04ac 4CF20003 		movw	r3, #:lower16:1073856512
+ 513 04b0 C4F20103 		movt	r3, #:upper16:1073856512
+ 514 04b4 4FF00802 		mov	r2, #8
+ 515 04b8 9A61     		str	r2, [r3, #24]
+ 516              	.L25:
+ 234:..//utils/i2ceeprom/i2c.c **** 	break;
+ 235:..//utils/i2ceeprom/i2c.c ****   }
+ 236:..//utils/i2ceeprom/i2c.c ****   return;
+ 237:..//utils/i2ceeprom/i2c.c **** }
+ 517              		.loc 1 237 0
+ 518 04ba 07F10C07 		add	r7, r7, #12
+ 519 04be BD46     		mov	sp, r7
+ 520 04c0 80BC     		pop	{r7}
+ 521 04c2 7047     		bx	lr
+ 522              		.cfi_endproc
+ 523              	.LFE29:
+ 525              		.section	.text.I2CStart,"ax",%progbits
+ 526              		.align	2
+ 527              		.thumb
+ 528              		.thumb_func
+ 530              	I2CStart:
+ 531              	.LFB30:
+ 238:..//utils/i2ceeprom/i2c.c **** 
+ 239:..//utils/i2ceeprom/i2c.c **** /*****************************************************************************
+ 240:..//utils/i2ceeprom/i2c.c **** ** Function name:	I2CStart
+ 241:..//utils/i2ceeprom/i2c.c **** **
+ 242:..//utils/i2ceeprom/i2c.c **** ** Descriptions:	Create I2C start condition, a timeout
+ 243:..//utils/i2ceeprom/i2c.c **** **					value is set if the I2C never gets started,
+ 244:..//utils/i2ceeprom/i2c.c **** **					and timed out. It's a fatal error.
+ 245:..//utils/i2ceeprom/i2c.c **** **
+ 246:..//utils/i2ceeprom/i2c.c **** ** parameters:		None
+ 247:..//utils/i2ceeprom/i2c.c **** ** Returned value:	true or false, return false if timed out
+ 248:..//utils/i2ceeprom/i2c.c **** ** 
+ 249:..//utils/i2ceeprom/i2c.c **** *****************************************************************************/
+ 250:..//utils/i2ceeprom/i2c.c **** static uint32_t I2CStart( void )
+ 251:..//utils/i2ceeprom/i2c.c **** {
+ 532              		.loc 1 251 0
+ 533              		.cfi_startproc
+ 534              		@ args = 0, pretend = 0, frame = 8
+ 535              		@ frame_needed = 1, uses_anonymous_args = 0
+ 536              		@ link register save eliminated.
+ 537 0000 80B4     		push	{r7}
+ 538              	.LCFI3:
+ 539              		.cfi_def_cfa_offset 4
+ 540 0002 83B0     		sub	sp, sp, #12
+ 541              	.LCFI4:
+ 542              		.cfi_def_cfa_offset 16
+ 543 0004 00AF     		add	r7, sp, #0
+ 544              		.cfi_offset 7, -4
+ 545              	.LCFI5:
+ 546              		.cfi_def_cfa_register 7
+ 252:..//utils/i2ceeprom/i2c.c **** 	uint32_t timeout = 0;
+ 547              		.loc 1 252 0
+ 548 0006 4FF00003 		mov	r3, #0
+ 549 000a 7B60     		str	r3, [r7, #4]
+ 253:..//utils/i2ceeprom/i2c.c **** 
+ 254:..//utils/i2ceeprom/i2c.c **** 	/*--- Issue a start condition ---*/
+ 255:..//utils/i2ceeprom/i2c.c **** 	LPC_I2C0->I2CONSET = I2CONSET_STA;	/* Set Start flag */
+ 550              		.loc 1 255 0
+ 551 000c 4CF20003 		movw	r3, #:lower16:1073856512
+ 552 0010 C4F20103 		movt	r3, #:upper16:1073856512
+ 553 0014 4FF02002 		mov	r2, #32
+ 554 0018 1A60     		str	r2, [r3, #0]
+ 256:..//utils/i2ceeprom/i2c.c ****     
+ 257:..//utils/i2ceeprom/i2c.c **** 	while((I2CMasterState != I2CSTATE_PENDING) && (timeout < MAX_TIMEOUT))
+ 555              		.loc 1 257 0
+ 556 001a 03E0     		b	.L27
+ 557              	.L29:
+ 258:..//utils/i2ceeprom/i2c.c **** 	{
+ 259:..//utils/i2ceeprom/i2c.c **** 		timeout++;
+ 558              		.loc 1 259 0
+ 559 001c 7B68     		ldr	r3, [r7, #4]
+ 560 001e 03F10103 		add	r3, r3, #1
+ 561 0022 7B60     		str	r3, [r7, #4]
+ 562              	.L27:
+ 563              		.loc 1 257 0
+ 564 0024 40F20003 		movw	r3, #:lower16:I2CMasterState
+ 565 0028 C0F20003 		movt	r3, #:upper16:I2CMasterState
+ 566 002c 1B68     		ldr	r3, [r3, #0]
+ 567 002e 012B     		cmp	r3, #1
+ 568 0030 06D0     		beq	.L28
+ 569 0032 7A68     		ldr	r2, [r7, #4]
+ 570 0034 4FF6FE73 		movw	r3, #:lower16:268435454
+ 571 0038 C0F6FF73 		movt	r3, #:upper16:268435454
+ 572 003c 9A42     		cmp	r2, r3
+ 573 003e EDD9     		bls	.L29
+ 574              	.L28:
+ 260:..//utils/i2ceeprom/i2c.c **** 	}
+ 261:..//utils/i2ceeprom/i2c.c **** 
+ 262:..//utils/i2ceeprom/i2c.c **** 	return (timeout < MAX_TIMEOUT);
+ 575              		.loc 1 262 0
+ 576 0040 7A68     		ldr	r2, [r7, #4]
+ 577 0042 4FF6FE73 		movw	r3, #:lower16:268435454
+ 578 0046 C0F6FF73 		movt	r3, #:upper16:268435454
+ 579 004a 9A42     		cmp	r2, r3
+ 580 004c 8CBF     		ite	hi
+ 581 004e 0023     		movhi	r3, #0
+ 582 0050 0123     		movls	r3, #1
+ 263:..//utils/i2ceeprom/i2c.c **** }
+ 583              		.loc 1 263 0
+ 584 0052 1846     		mov	r0, r3
+ 585 0054 07F10C07 		add	r7, r7, #12
+ 586 0058 BD46     		mov	sp, r7
+ 587 005a 80BC     		pop	{r7}
+ 588 005c 7047     		bx	lr
+ 589              		.cfi_endproc
+ 590              	.LFE30:
+ 592 005e 00BF     		.section	.text.I2CStop,"ax",%progbits
+ 593              		.align	2
+ 594              		.thumb
+ 595              		.thumb_func
+ 597              	I2CStop:
+ 598              	.LFB31:
+ 264:..//utils/i2ceeprom/i2c.c **** 
+ 265:..//utils/i2ceeprom/i2c.c **** /*****************************************************************************
+ 266:..//utils/i2ceeprom/i2c.c **** ** Function name:	I2CStop
+ 267:..//utils/i2ceeprom/i2c.c **** **
+ 268:..//utils/i2ceeprom/i2c.c **** ** Descriptions:	Set the I2C stop condition
+ 269:..//utils/i2ceeprom/i2c.c **** **
+ 270:..//utils/i2ceeprom/i2c.c **** ** parameters:		None
+ 271:..//utils/i2ceeprom/i2c.c **** ** Returned value:	true or never return
+ 272:..//utils/i2ceeprom/i2c.c **** ** 
+ 273:..//utils/i2ceeprom/i2c.c **** *****************************************************************************/
+ 274:..//utils/i2ceeprom/i2c.c **** static uint32_t I2CStop( void )
+ 275:..//utils/i2ceeprom/i2c.c **** {
+ 599              		.loc 1 275 0
+ 600              		.cfi_startproc
+ 601              		@ args = 0, pretend = 0, frame = 8
+ 602              		@ frame_needed = 1, uses_anonymous_args = 0
+ 603              		@ link register save eliminated.
+ 604 0000 80B4     		push	{r7}
+ 605              	.LCFI6:
+ 606              		.cfi_def_cfa_offset 4
+ 607 0002 83B0     		sub	sp, sp, #12
+ 608              	.LCFI7:
+ 609              		.cfi_def_cfa_offset 16
+ 610 0004 00AF     		add	r7, sp, #0
+ 611              		.cfi_offset 7, -4
+ 612              	.LCFI8:
+ 613              		.cfi_def_cfa_register 7
+ 276:..//utils/i2ceeprom/i2c.c **** 	uint32_t timeout = 0;
+ 614              		.loc 1 276 0
+ 615 0006 4FF00003 		mov	r3, #0
+ 616 000a 7B60     		str	r3, [r7, #4]
+ 277:..//utils/i2ceeprom/i2c.c **** 
+ 278:..//utils/i2ceeprom/i2c.c **** 	LPC_I2C0->I2CONSET = I2CONSET_STO;      /* Set Stop flag */
+ 617              		.loc 1 278 0
+ 618 000c 4CF20003 		movw	r3, #:lower16:1073856512
+ 619 0010 C4F20103 		movt	r3, #:upper16:1073856512
+ 620 0014 4FF01002 		mov	r2, #16
+ 621 0018 1A60     		str	r2, [r3, #0]
+ 279:..//utils/i2ceeprom/i2c.c **** 	LPC_I2C0->I2CONCLR = I2CONCLR_SIC;  /* Clear SI flag */
+ 622              		.loc 1 279 0
+ 623 001a 4CF20003 		movw	r3, #:lower16:1073856512
+ 624 001e C4F20103 		movt	r3, #:upper16:1073856512
+ 625 0022 4FF00802 		mov	r2, #8
+ 626 0026 9A61     		str	r2, [r3, #24]
+ 280:..//utils/i2ceeprom/i2c.c **** 
+ 281:..//utils/i2ceeprom/i2c.c **** 	/*--- Wait for STOP detected ---*/
+ 282:..//utils/i2ceeprom/i2c.c **** 	while((LPC_I2C0->I2CONSET & I2CONSET_STO) && (timeout < MAX_TIMEOUT))
+ 627              		.loc 1 282 0
+ 628 0028 03E0     		b	.L32
+ 629              	.L34:
+ 283:..//utils/i2ceeprom/i2c.c **** 	{
+ 284:..//utils/i2ceeprom/i2c.c **** 		timeout++;
+ 630              		.loc 1 284 0
+ 631 002a 7B68     		ldr	r3, [r7, #4]
+ 632 002c 03F10103 		add	r3, r3, #1
+ 633 0030 7B60     		str	r3, [r7, #4]
+ 634              	.L32:
+ 635              		.loc 1 282 0
+ 636 0032 4CF20003 		movw	r3, #:lower16:1073856512
+ 637 0036 C4F20103 		movt	r3, #:upper16:1073856512
+ 638 003a 1B68     		ldr	r3, [r3, #0]
+ 639 003c 03F01003 		and	r3, r3, #16
+ 640 0040 002B     		cmp	r3, #0
+ 641 0042 06D0     		beq	.L33
+ 642 0044 7A68     		ldr	r2, [r7, #4]
+ 643 0046 4FF6FE73 		movw	r3, #:lower16:268435454
+ 644 004a C0F6FF73 		movt	r3, #:upper16:268435454
+ 645 004e 9A42     		cmp	r2, r3
+ 646 0050 EBD9     		bls	.L34
+ 647              	.L33:
+ 285:..//utils/i2ceeprom/i2c.c **** 	}
+ 286:..//utils/i2ceeprom/i2c.c **** 	return (timeout >= MAX_TIMEOUT);
+ 648              		.loc 1 286 0
+ 649 0052 7A68     		ldr	r2, [r7, #4]
+ 650 0054 4FF6FE73 		movw	r3, #:lower16:268435454
+ 651 0058 C0F6FF73 		movt	r3, #:upper16:268435454
+ 652 005c 9A42     		cmp	r2, r3
+ 653 005e 94BF     		ite	ls
+ 654 0060 0023     		movls	r3, #0
+ 655 0062 0123     		movhi	r3, #1
+ 287:..//utils/i2ceeprom/i2c.c **** }
+ 656              		.loc 1 287 0
+ 657 0064 1846     		mov	r0, r3
+ 658 0066 07F10C07 		add	r7, r7, #12
+ 659 006a BD46     		mov	sp, r7
+ 660 006c 80BC     		pop	{r7}
+ 661 006e 7047     		bx	lr
+ 662              		.cfi_endproc
+ 663              	.LFE31:
+ 665              		.section	.text.I2CInit,"ax",%progbits
+ 666              		.align	2
+ 667              		.global	I2CInit
+ 668              		.thumb
+ 669              		.thumb_func
+ 671              	I2CInit:
+ 672              	.LFB32:
+ 288:..//utils/i2ceeprom/i2c.c **** 
+ 289:..//utils/i2ceeprom/i2c.c **** /*****************************************************************************
+ 290:..//utils/i2ceeprom/i2c.c **** ** Function name:	I2CInit
+ 291:..//utils/i2ceeprom/i2c.c **** **
+ 292:..//utils/i2ceeprom/i2c.c **** ** Descriptions:	Initialize I2C controller
+ 293:..//utils/i2ceeprom/i2c.c **** **
+ 294:..//utils/i2ceeprom/i2c.c **** ** parameters:		I2c mode is either MASTER or SLAVE
+ 295:..//utils/i2ceeprom/i2c.c **** ** Returned value:	true or false, return false if the I2C
+ 296:..//utils/i2ceeprom/i2c.c **** **					interrupt handler was not installed correctly
+ 297:..//utils/i2ceeprom/i2c.c **** ** 
+ 298:..//utils/i2ceeprom/i2c.c **** *****************************************************************************/
+ 299:..//utils/i2ceeprom/i2c.c **** uint32_t I2CInit( uint32_t I2cMode ) 
+ 300:..//utils/i2ceeprom/i2c.c **** {
+ 673              		.loc 1 300 0
+ 674              		.cfi_startproc
+ 675              		@ args = 0, pretend = 0, frame = 8
+ 676              		@ frame_needed = 1, uses_anonymous_args = 0
+ 677 0000 80B5     		push	{r7, lr}
+ 678              	.LCFI9:
+ 679              		.cfi_def_cfa_offset 8
+ 680 0002 82B0     		sub	sp, sp, #8
+ 681              	.LCFI10:
+ 682              		.cfi_def_cfa_offset 16
+ 683 0004 00AF     		add	r7, sp, #0
+ 684              		.cfi_offset 14, -4
+ 685              		.cfi_offset 7, -8
+ 686              	.LCFI11:
+ 687              		.cfi_def_cfa_register 7
+ 688 0006 7860     		str	r0, [r7, #4]
+ 301:..//utils/i2ceeprom/i2c.c **** 	LPC_SC->PCONP |= (1 << 7);
+ 689              		.loc 1 301 0
+ 690 0008 4CF20003 		movw	r3, #:lower16:1074774016
+ 691 000c C4F20F03 		movt	r3, #:upper16:1074774016
+ 692 0010 4CF20002 		movw	r2, #:lower16:1074774016
+ 693 0014 C4F20F02 		movt	r2, #:upper16:1074774016
+ 694 0018 D2F8C420 		ldr	r2, [r2, #196]
+ 695 001c 42F08002 		orr	r2, r2, #128
+ 696 0020 C3F8C420 		str	r2, [r3, #196]
+ 302:..//utils/i2ceeprom/i2c.c **** 
+ 303:..//utils/i2ceeprom/i2c.c **** 	/* set PIO0.27 and PIO0.28 to I2C0 SDA and SCL */
+ 304:..//utils/i2ceeprom/i2c.c **** 	/* function to 01 on both SDA and SCL. */
+ 305:..//utils/i2ceeprom/i2c.c **** 	LPC_PINCON->PINSEL1 &= ~((0x03<<22)|(0x03<<24));
+ 697              		.loc 1 305 0
+ 698 0024 4CF20003 		movw	r3, #:lower16:1073922048
+ 699 0028 C4F20203 		movt	r3, #:upper16:1073922048
+ 700 002c 4CF20002 		movw	r2, #:lower16:1073922048
+ 701 0030 C4F20202 		movt	r2, #:upper16:1073922048
+ 702 0034 5268     		ldr	r2, [r2, #4]
+ 703 0036 22F07072 		bic	r2, r2, #62914560
+ 704 003a 5A60     		str	r2, [r3, #4]
+ 306:..//utils/i2ceeprom/i2c.c **** 	LPC_PINCON->PINSEL1 |= ((0x01<<22)|(0x01<<24));	
+ 705              		.loc 1 306 0
+ 706 003c 4CF20003 		movw	r3, #:lower16:1073922048
+ 707 0040 C4F20203 		movt	r3, #:upper16:1073922048
+ 708 0044 4CF20002 		movw	r2, #:lower16:1073922048
+ 709 0048 C4F20202 		movt	r2, #:upper16:1073922048
+ 710 004c 5268     		ldr	r2, [r2, #4]
+ 711 004e 42F0A072 		orr	r2, r2, #20971520
+ 712 0052 5A60     		str	r2, [r3, #4]
+ 307:..//utils/i2ceeprom/i2c.c **** 		
+ 308:..//utils/i2ceeprom/i2c.c **** 	// Set up clock and power for I2C0 module
+ 309:..//utils/i2ceeprom/i2c.c **** 	CLKPWR_ConfigPPWR (CLKPWR_PCONP_PCI2C0, ENABLE);
+ 713              		.loc 1 309 0
+ 714 0054 4FF08000 		mov	r0, #128
+ 715 0058 4FF00101 		mov	r1, #1
+ 716 005c 40F20003 		movw	r3, #:lower16:CLKPWR_ConfigPPWR
+ 717 0060 C0F20003 		movt	r3, #:upper16:CLKPWR_ConfigPPWR
+ 718 0064 9847     		blx	r3
+ 310:..//utils/i2ceeprom/i2c.c **** 	
+ 311:..//utils/i2ceeprom/i2c.c **** 	LPC_SC->PCLKSEL0 |= (0x3 << 14);  // cclk/8
+ 719              		.loc 1 311 0
+ 720 0066 4CF20003 		movw	r3, #:lower16:1074774016
+ 721 006a C4F20F03 		movt	r3, #:upper16:1074774016
+ 722 006e 4CF20002 		movw	r2, #:lower16:1074774016
+ 723 0072 C4F20F02 		movt	r2, #:upper16:1074774016
+ 724 0076 D2F8A821 		ldr	r2, [r2, #424]
+ 725 007a 42F44042 		orr	r2, r2, #49152
+ 726 007e C3F8A821 		str	r2, [r3, #424]
+ 312:..//utils/i2ceeprom/i2c.c **** 	
+ 313:..//utils/i2ceeprom/i2c.c **** 	/*--- Clear flags ---*/
+ 314:..//utils/i2ceeprom/i2c.c **** 	LPC_I2C0->I2CONCLR = I2CONCLR_AAC | I2CONCLR_SIC | I2CONCLR_STAC | I2CONCLR_I2ENC;
+ 727              		.loc 1 314 0
+ 728 0082 4CF20003 		movw	r3, #:lower16:1073856512
+ 729 0086 C4F20103 		movt	r3, #:upper16:1073856512
+ 730 008a 4FF06C02 		mov	r2, #108
+ 731 008e 9A61     		str	r2, [r3, #24]
+ 315:..//utils/i2ceeprom/i2c.c **** 
+ 316:..//utils/i2ceeprom/i2c.c ****   /*--- Reset registers ---*/
+ 317:..//utils/i2ceeprom/i2c.c **** #if FAST_MODE_PLUS
+ 318:..//utils/i2ceeprom/i2c.c **** 	LPC_PINCON->I2CPADCFG |= ((0x1<<0)|(0x1<<2));
+ 319:..//utils/i2ceeprom/i2c.c **** 	LPC_I2C0->I2SCLL   = I2SCLL_HS_SCLL;
+ 320:..//utils/i2ceeprom/i2c.c **** 	LPC_I2C0->I2SCLH   = I2SCLH_HS_SCLH;
+ 321:..//utils/i2ceeprom/i2c.c **** #else
+ 322:..//utils/i2ceeprom/i2c.c **** 	LPC_PINCON->I2CPADCFG &= ~((0x1<<0)|(0x1<<2));
+ 732              		.loc 1 322 0
+ 733 0090 4CF20003 		movw	r3, #:lower16:1073922048
+ 734 0094 C4F20203 		movt	r3, #:upper16:1073922048
+ 735 0098 4CF20002 		movw	r2, #:lower16:1073922048
+ 736 009c C4F20202 		movt	r2, #:upper16:1073922048
+ 737 00a0 D26F     		ldr	r2, [r2, #124]
+ 738 00a2 22F00502 		bic	r2, r2, #5
+ 739 00a6 DA67     		str	r2, [r3, #124]
+ 323:..//utils/i2ceeprom/i2c.c **** 	LPC_I2C0->I2SCLL   = I2SCLL_SCLL;
+ 740              		.loc 1 323 0
+ 741 00a8 4CF20003 		movw	r3, #:lower16:1073856512
+ 742 00ac C4F20103 		movt	r3, #:upper16:1073856512
+ 743 00b0 4FF03902 		mov	r2, #57
+ 744 00b4 5A61     		str	r2, [r3, #20]
+ 324:..//utils/i2ceeprom/i2c.c **** 	LPC_I2C0->I2SCLH   = I2SCLH_SCLH;
+ 745              		.loc 1 324 0
+ 746 00b6 4CF20003 		movw	r3, #:lower16:1073856512
+ 747 00ba C4F20103 		movt	r3, #:upper16:1073856512
+ 748 00be 4FF03A02 		mov	r2, #58
+ 749 00c2 1A61     		str	r2, [r3, #16]
+ 325:..//utils/i2ceeprom/i2c.c **** #endif
+ 326:..//utils/i2ceeprom/i2c.c **** 
+ 327:..//utils/i2ceeprom/i2c.c **** 	if ( I2cMode == I2CSLAVE )
+ 750              		.loc 1 327 0
+ 751 00c4 7B68     		ldr	r3, [r7, #4]
+ 752 00c6 022B     		cmp	r3, #2
+ 753 00c8 06D1     		bne	.L37
+ 328:..//utils/i2ceeprom/i2c.c **** 	{
+ 329:..//utils/i2ceeprom/i2c.c **** 		LPC_I2C0->I2ADR0 = PCF8594_ADDR;
+ 754              		.loc 1 329 0
+ 755 00ca 4CF20003 		movw	r3, #:lower16:1073856512
+ 756 00ce C4F20103 		movt	r3, #:upper16:1073856512
+ 757 00d2 4FF0A002 		mov	r2, #160
+ 758 00d6 DA60     		str	r2, [r3, #12]
+ 759              	.L37:
+ 330:..//utils/i2ceeprom/i2c.c **** 	}
+ 331:..//utils/i2ceeprom/i2c.c **** 
+ 332:..//utils/i2ceeprom/i2c.c **** 	/* Enable the I2C Interrupt */
+ 333:..//utils/i2ceeprom/i2c.c **** 	I2C_IntCmd(LPC_I2C0, ENABLE);
+ 760              		.loc 1 333 0
+ 761 00d8 4CF20000 		movw	r0, #:lower16:1073856512
+ 762 00dc C4F20100 		movt	r0, #:upper16:1073856512
+ 763 00e0 4FF00101 		mov	r1, #1
+ 764 00e4 40F20003 		movw	r3, #:lower16:I2C_IntCmd
+ 765 00e8 C0F20003 		movt	r3, #:upper16:I2C_IntCmd
+ 766 00ec 9847     		blx	r3
+ 334:..//utils/i2ceeprom/i2c.c **** 
+ 335:..//utils/i2ceeprom/i2c.c **** 	/* Enable Slave I2C operation */
+ 336:..//utils/i2ceeprom/i2c.c **** 	I2C_Cmd(LPC_I2C0, ENABLE);
+ 767              		.loc 1 336 0
+ 768 00ee 4CF20000 		movw	r0, #:lower16:1073856512
+ 769 00f2 C4F20100 		movt	r0, #:upper16:1073856512
+ 770 00f6 4FF00101 		mov	r1, #1
+ 771 00fa 40F20003 		movw	r3, #:lower16:I2C_Cmd
+ 772 00fe C0F20003 		movt	r3, #:upper16:I2C_Cmd
+ 773 0102 9847     		blx	r3
+ 337:..//utils/i2ceeprom/i2c.c **** 	return( 1 );
+ 774              		.loc 1 337 0
+ 775 0104 4FF00103 		mov	r3, #1
+ 338:..//utils/i2ceeprom/i2c.c **** }
+ 776              		.loc 1 338 0
+ 777 0108 1846     		mov	r0, r3
+ 778 010a 07F10807 		add	r7, r7, #8
+ 779 010e BD46     		mov	sp, r7
+ 780 0110 80BD     		pop	{r7, pc}
+ 781              		.cfi_endproc
+ 782              	.LFE32:
+ 784 0112 00BF     		.section	.text.I2CDeinit,"ax",%progbits
+ 785              		.align	2
+ 786              		.global	I2CDeinit
+ 787              		.thumb
+ 788              		.thumb_func
+ 790              	I2CDeinit:
+ 791              	.LFB33:
+ 339:..//utils/i2ceeprom/i2c.c **** 
+ 340:..//utils/i2ceeprom/i2c.c **** /*****************************************************************************
+ 341:..//utils/i2ceeprom/i2c.c **** ** Function name:	I2CDeinit
+ 342:..//utils/i2ceeprom/i2c.c **** **
+ 343:..//utils/i2ceeprom/i2c.c **** ** Descriptions:	stop i2c peripheral
+ 344:..//utils/i2ceeprom/i2c.c **** **
+ 345:..//utils/i2ceeprom/i2c.c **** ** parameters:		None
+ 346:..//utils/i2ceeprom/i2c.c **** ** Returned value:	Any of the I2CSTATE_... values. See i2c.h
+ 347:..//utils/i2ceeprom/i2c.c **** ** 
+ 348:..//utils/i2ceeprom/i2c.c **** *****************************************************************************/
+ 349:..//utils/i2ceeprom/i2c.c **** 
+ 350:..//utils/i2ceeprom/i2c.c **** int I2CDeinit( void ){
+ 792              		.loc 1 350 0
+ 793              		.cfi_startproc
+ 794              		@ args = 0, pretend = 0, frame = 0
+ 795              		@ frame_needed = 1, uses_anonymous_args = 0
+ 796 0000 80B5     		push	{r7, lr}
+ 797              	.LCFI12:
+ 798              		.cfi_def_cfa_offset 8
+ 799 0002 00AF     		add	r7, sp, #0
+ 800              		.cfi_offset 14, -4
+ 801              		.cfi_offset 7, -8
+ 802              	.LCFI13:
+ 803              		.cfi_def_cfa_register 7
+ 351:..//utils/i2ceeprom/i2c.c **** 	I2C_DeInit(LPC_I2C0);
+ 804              		.loc 1 351 0
+ 805 0004 4CF20000 		movw	r0, #:lower16:1073856512
+ 806 0008 C4F20100 		movt	r0, #:upper16:1073856512
+ 807 000c 40F20003 		movw	r3, #:lower16:I2C_DeInit
+ 808 0010 C0F20003 		movt	r3, #:upper16:I2C_DeInit
+ 809 0014 9847     		blx	r3
+ 352:..//utils/i2ceeprom/i2c.c **** 	// LPC_I2C0->I2CONCLR = I2CONCLR_I2ENC;
+ 353:..//utils/i2ceeprom/i2c.c **** 	// CLKPWR_ConfigPPWR (CLKPWR_PCONP_PCI2C1, DISABLE);
+ 354:..//utils/i2ceeprom/i2c.c **** 	// LPC_PINCON->PINSEL1 &= ~(0x3 << 6);
+ 355:..//utils/i2ceeprom/i2c.c **** 	// LPC_PINCON->PINSEL1 &= ~(0x3 << 8);
+ 356:..//utils/i2ceeprom/i2c.c **** 	return 1;
+ 810              		.loc 1 356 0
+ 811 0016 4FF00103 		mov	r3, #1
+ 357:..//utils/i2ceeprom/i2c.c **** }
+ 812              		.loc 1 357 0
+ 813 001a 1846     		mov	r0, r3
+ 814 001c 80BD     		pop	{r7, pc}
+ 815              		.cfi_endproc
+ 816              	.LFE33:
+ 818 001e 00BF     		.section	.text.I2CEngine,"ax",%progbits
+ 819              		.align	2
+ 820              		.global	I2CEngine
+ 821              		.thumb
+ 822              		.thumb_func
+ 824              	I2CEngine:
+ 825              	.LFB34:
+ 358:..//utils/i2ceeprom/i2c.c **** 
+ 359:..//utils/i2ceeprom/i2c.c **** /*****************************************************************************
+ 360:..//utils/i2ceeprom/i2c.c **** ** Function name:	I2CEngine
+ 361:..//utils/i2ceeprom/i2c.c **** **
+ 362:..//utils/i2ceeprom/i2c.c **** ** Descriptions:	The routine to complete a I2C transaction
+ 363:..//utils/i2ceeprom/i2c.c **** **					from start to stop. All the intervening
+ 364:..//utils/i2ceeprom/i2c.c **** **					steps are handled in the interrupt handler.
+ 365:..//utils/i2ceeprom/i2c.c **** **					Before this routine is called, the read
+ 366:..//utils/i2ceeprom/i2c.c **** **					length, write length and I2C master buffer
+ 367:..//utils/i2ceeprom/i2c.c **** **					need to be filled.
+ 368:..//utils/i2ceeprom/i2c.c **** **
+ 369:..//utils/i2ceeprom/i2c.c **** ** parameters:		None
+ 370:..//utils/i2ceeprom/i2c.c **** ** Returned value:	Any of the I2CSTATE_... values. See i2c.h
+ 371:..//utils/i2ceeprom/i2c.c **** ** 
+ 372:..//utils/i2ceeprom/i2c.c **** *****************************************************************************/
+ 373:..//utils/i2ceeprom/i2c.c **** uint32_t I2CEngine( void ) 
+ 374:..//utils/i2ceeprom/i2c.c **** {
+ 826              		.loc 1 374 0
+ 827              		.cfi_startproc
+ 828              		@ args = 0, pretend = 0, frame = 0
+ 829              		@ frame_needed = 1, uses_anonymous_args = 0
+ 830 0000 80B5     		push	{r7, lr}
+ 831              	.LCFI14:
+ 832              		.cfi_def_cfa_offset 8
+ 833 0002 00AF     		add	r7, sp, #0
+ 834              		.cfi_offset 14, -4
+ 835              		.cfi_offset 7, -8
+ 836              	.LCFI15:
+ 837              		.cfi_def_cfa_register 7
+ 375:..//utils/i2ceeprom/i2c.c ****   I2CMasterState = I2CSTATE_IDLE;
+ 838              		.loc 1 375 0
+ 839 0004 40F20003 		movw	r3, #:lower16:I2CMasterState
+ 840 0008 C0F20003 		movt	r3, #:upper16:I2CMasterState
+ 841 000c 4FF00002 		mov	r2, #0
+ 842 0010 1A60     		str	r2, [r3, #0]
+ 376:..//utils/i2ceeprom/i2c.c ****   I2CRdIndex = 0;
+ 843              		.loc 1 376 0
+ 844 0012 40F20003 		movw	r3, #:lower16:I2CRdIndex
+ 845 0016 C0F20003 		movt	r3, #:upper16:I2CRdIndex
+ 846 001a 4FF00002 		mov	r2, #0
+ 847 001e 1A60     		str	r2, [r3, #0]
+ 377:..//utils/i2ceeprom/i2c.c ****   I2CWrIndex = 0;
+ 848              		.loc 1 377 0
+ 849 0020 40F20003 		movw	r3, #:lower16:I2CWrIndex
+ 850 0024 C0F20003 		movt	r3, #:upper16:I2CWrIndex
+ 851 0028 4FF00002 		mov	r2, #0
+ 852 002c 1A60     		str	r2, [r3, #0]
+ 378:..//utils/i2ceeprom/i2c.c ****   if ( I2CStart() == 0 )
+ 853              		.loc 1 378 0
+ 854 002e 40F20003 		movw	r3, #:lower16:I2CStart
+ 855 0032 C0F20003 		movt	r3, #:upper16:I2CStart
+ 856 0036 9847     		blx	r3
+ 857 0038 0346     		mov	r3, r0
+ 858 003a 002B     		cmp	r3, #0
+ 859 003c 07D1     		bne	.L42
+ 379:..//utils/i2ceeprom/i2c.c ****   {
+ 380:..//utils/i2ceeprom/i2c.c **** 	I2CStop();
+ 860              		.loc 1 380 0
+ 861 003e 40F20003 		movw	r3, #:lower16:I2CStop
+ 862 0042 C0F20003 		movt	r3, #:upper16:I2CStop
+ 863 0046 9847     		blx	r3
+ 381:..//utils/i2ceeprom/i2c.c **** 	return ( 0 );
+ 864              		.loc 1 381 0
+ 865 0048 4FF00003 		mov	r3, #0
+ 866 004c 0BE0     		b	.L43
+ 867              	.L42:
+ 382:..//utils/i2ceeprom/i2c.c ****   }
+ 383:..//utils/i2ceeprom/i2c.c **** 
+ 384:..//utils/i2ceeprom/i2c.c ****   /* wait until the state is a terminal state */
+ 385:..//utils/i2ceeprom/i2c.c ****   while (I2CMasterState < 0x100);
+ 868              		.loc 1 385 0
+ 869 004e 40F20003 		movw	r3, #:lower16:I2CMasterState
+ 870 0052 C0F20003 		movt	r3, #:upper16:I2CMasterState
+ 871 0056 1B68     		ldr	r3, [r3, #0]
+ 872 0058 FF2B     		cmp	r3, #255
+ 873 005a F8D9     		bls	.L42
+ 386:..//utils/i2ceeprom/i2c.c **** 
+ 387:..//utils/i2ceeprom/i2c.c ****   return ( I2CMasterState );
+ 874              		.loc 1 387 0
+ 875 005c 40F20003 		movw	r3, #:lower16:I2CMasterState
+ 876 0060 C0F20003 		movt	r3, #:upper16:I2CMasterState
+ 877 0064 1B68     		ldr	r3, [r3, #0]
+ 878              	.L43:
+ 388:..//utils/i2ceeprom/i2c.c **** }
+ 879              		.loc 1 388 0
+ 880 0066 1846     		mov	r0, r3
+ 881 0068 80BD     		pop	{r7, pc}
+ 882              		.cfi_endproc
+ 883              	.LFE34:
+ 885 006a 00BF     		.text
+ 886              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 i2c.c
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:28     .bss.I2CMasterState:00000000 I2CMasterState
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:25     .bss.I2CMasterState:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:35     .bss.I2CSlaveState:00000000 I2CSlaveState
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:32     .bss.I2CSlaveState:00000000 $d
+                            *COM*:00000012 I2CMasterBuffer
+                            *COM*:00000010 I2CSlaveBuffer
+                            *COM*:00000004 I2CReadLength
+                            *COM*:00000004 I2CWriteLength
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:46     .bss.I2CRdIndex:00000000 I2CRdIndex
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:43     .bss.I2CRdIndex:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:53     .bss.I2CWrIndex:00000000 I2CWrIndex
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:50     .bss.I2CWrIndex:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:60     .bss.incr:00000000 incr
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:57     .bss.incr:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:63     .text.I2C0_IRQHandler:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:68     .text.I2C0_IRQHandler:00000000 I2C0_IRQHandler
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:100    .text.I2C0_IRQHandler:00000024 $d
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:183    .text.I2C0_IRQHandler:00000168 $t
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:526    .text.I2CStart:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:530    .text.I2CStart:00000000 I2CStart
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:593    .text.I2CStop:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:597    .text.I2CStop:00000000 I2CStop
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:666    .text.I2CInit:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:671    .text.I2CInit:00000000 I2CInit
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:785    .text.I2CDeinit:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:790    .text.I2CDeinit:00000000 I2CDeinit
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:819    .text.I2CEngine:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccM15tdt.s:824    .text.I2CEngine:00000000 I2CEngine
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+CLKPWR_ConfigPPWR
+I2C_IntCmd
+I2C_Cmd
+I2C_DeInit

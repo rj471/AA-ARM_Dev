@@ -1,0 +1,344 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"modbus.c"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.global	fixedData
+  24              		.section	.data.fixedData,"aw",%progbits
+  27              	fixedData:
+  28 0000 09       		.byte	9
+  29              		.section	.text.getUartdata,"ax",%progbits
+  30              		.align	2
+  31              		.global	getUartdata
+  32              		.thumb
+  33              		.thumb_func
+  35              	getUartdata:
+  36              	.LFB29:
+  37              		.file 1 "..//utils/modbus/modbus.c"
+   1:..//utils/modbus/modbus.c **** #include "modbus.h"
+   2:..//utils/modbus/modbus.c **** #include "interrupts.h"
+   3:..//utils/modbus/modbus.c **** #include "usbSerial.h"
+   4:..//utils/modbus/modbus.c **** 
+   5:..//utils/modbus/modbus.c **** uint8_t fixedData = 9; // slave address(1), function code(1), start address(2), Qty(2),Byte Count(1
+   6:..//utils/modbus/modbus.c **** 
+   7:..//utils/modbus/modbus.c **** unsigned char getUartdata(modbus_t* mbus){ //read only modbusPacketSize number of bytes
+  38              		.loc 1 7 0
+  39              		.cfi_startproc
+  40              		@ args = 0, pretend = 0, frame = 16
+  41              		@ frame_needed = 1, uses_anonymous_args = 0
+  42 0000 90B5     		push	{r4, r7, lr}
+  43              	.LCFI0:
+  44              		.cfi_def_cfa_offset 12
+  45 0002 85B0     		sub	sp, sp, #20
+  46              	.LCFI1:
+  47              		.cfi_def_cfa_offset 32
+  48 0004 00AF     		add	r7, sp, #0
+  49              		.cfi_offset 14, -4
+  50              		.cfi_offset 7, -8
+  51              		.cfi_offset 4, -12
+  52              	.LCFI2:
+  53              		.cfi_def_cfa_register 7
+  54 0006 7860     		str	r0, [r7, #4]
+   8:..//utils/modbus/modbus.c **** 	unsigned char buffer = 1; //first char (slaveID) already removed from ring during interrupt
+  55              		.loc 1 8 0
+  56 0008 4FF00103 		mov	r3, #1
+  57 000c FB73     		strb	r3, [r7, #15]
+   9:..//utils/modbus/modbus.c **** 	// mbus->frame[0] = ring_slaveID;
+  10:..//utils/modbus/modbus.c **** 	switch(mbus->uart_port){
+  58              		.loc 1 10 0
+  59 000e 7B68     		ldr	r3, [r7, #4]
+  60 0010 1B7B     		ldrb	r3, [r3, #12]	@ zero_extendqisi2
+  61 0012 022B     		cmp	r3, #2
+  62 0014 25D0     		beq	.L14
+  63 0016 042B     		cmp	r3, #4
+  64 0018 2DD0     		beq	.L4
+  65 001a 5AE0     		b	.L2
+  66              	.L8:
+  11:..//utils/modbus/modbus.c **** 		case 2: //uart 2
+  12:..//utils/modbus/modbus.c **** 			while (!Uart_ChkRcv2()){	//
+  13:..//utils/modbus/modbus.c **** 				// The maximum number of bytes is limited to the serial buffer size of 128 bytes
+  14:..//utils/modbus/modbus.c **** 				// If more bytes is received than the BUFFER_SIZE the overflow flag will be set and the 
+  15:..//utils/modbus/modbus.c **** 				// serial buffer will be red untill all the data is cleared from the receive buffer.
+  16:..//utils/modbus/modbus.c **** 				if (mbus->ovrflw) 
+  67              		.loc 1 16 0
+  68 001c 7B68     		ldr	r3, [r7, #4]
+  69 001e 93F8B030 		ldrb	r3, [r3, #176]	@ zero_extendqisi2
+  70 0022 002B     		cmp	r3, #0
+  71 0024 05D0     		beq	.L6
+  17:..//utils/modbus/modbus.c **** 					Uart_GetC2();
+  72              		.loc 1 17 0
+  73 0026 40F20003 		movw	r3, #:lower16:Uart_GetC2
+  74 002a C0F20003 		movt	r3, #:upper16:Uart_GetC2
+  75 002e 9847     		blx	r3
+  76 0030 18E0     		b	.L5
+  77              	.L6:
+  18:..//utils/modbus/modbus.c **** 				else{
+  19:..//utils/modbus/modbus.c **** 					if (buffer == BUFFER_SIZE)
+  78              		.loc 1 19 0
+  79 0032 FB7B     		ldrb	r3, [r7, #15]	@ zero_extendqisi2
+  80 0034 802B     		cmp	r3, #128
+  81 0036 04D1     		bne	.L7
+  20:..//utils/modbus/modbus.c **** 						mbus->ovrflw = 1;
+  82              		.loc 1 20 0
+  83 0038 7B68     		ldr	r3, [r7, #4]
+  84 003a 4FF00102 		mov	r2, #1
+  85 003e 83F8B020 		strb	r2, [r3, #176]
+  86              	.L7:
+  21:..//utils/modbus/modbus.c **** 					mbus->frame[buffer] = Uart_GetC2();
+  87              		.loc 1 21 0
+  88 0042 FC7B     		ldrb	r4, [r7, #15]	@ zero_extendqisi2
+  89 0044 40F20003 		movw	r3, #:lower16:Uart_GetC2
+  90 0048 C0F20003 		movt	r3, #:upper16:Uart_GetC2
+  91 004c 9847     		blx	r3
+  92 004e 0346     		mov	r3, r0
+  93 0050 DAB2     		uxtb	r2, r3
+  94 0052 7B68     		ldr	r3, [r7, #4]
+  95 0054 2344     		add	r3, r4, r3
+  96 0056 9A75     		strb	r2, [r3, #22]
+  22:..//utils/modbus/modbus.c **** 					buffer++;
+  97              		.loc 1 22 0
+  98 0058 FB7B     		ldrb	r3, [r7, #15]
+  99 005a 03F10103 		add	r3, r3, #1
+ 100 005e FB73     		strb	r3, [r7, #15]
+ 101 0060 00E0     		b	.L5
+ 102              	.L14:
+ 103              		.loc 1 12 0
+ 104 0062 00BF     		nop
+ 105              	.L5:
+ 106 0064 40F20003 		movw	r3, #:lower16:Uart_ChkRcv2
+ 107 0068 C0F20003 		movt	r3, #:upper16:Uart_ChkRcv2
+ 108 006c 9847     		blx	r3
+ 109 006e 0346     		mov	r3, r0
+ 110 0070 002B     		cmp	r3, #0
+ 111 0072 D3D0     		beq	.L8
+  23:..//utils/modbus/modbus.c **** 				}
+  24:..//utils/modbus/modbus.c **** 			}
+  25:..//utils/modbus/modbus.c **** 			break;
+ 112              		.loc 1 25 0
+ 113 0074 2DE0     		b	.L2
+ 114              	.L4:
+  26:..//utils/modbus/modbus.c **** 
+  27:..//utils/modbus/modbus.c **** 		case MOD_USB:
+  28:..//utils/modbus/modbus.c **** 			buffer = 1;
+ 115              		.loc 1 28 0
+ 116 0076 4FF00103 		mov	r3, #1
+ 117 007a FB73     		strb	r3, [r7, #15]
+  29:..//utils/modbus/modbus.c **** 			while(!VCOM_ChkRcv()){
+ 118              		.loc 1 29 0
+ 119 007c 21E0     		b	.L9
+ 120              	.L12:
+  30:..//utils/modbus/modbus.c **** 				if (mbus->ovrflw){
+ 121              		.loc 1 30 0
+ 122 007e 7B68     		ldr	r3, [r7, #4]
+ 123 0080 93F8B030 		ldrb	r3, [r3, #176]	@ zero_extendqisi2
+ 124 0084 002B     		cmp	r3, #0
+ 125 0086 05D0     		beq	.L10
+  31:..//utils/modbus/modbus.c **** 					VCOM_GetCh();
+ 126              		.loc 1 31 0
+ 127 0088 40F20003 		movw	r3, #:lower16:VCOM_GetCh
+ 128 008c C0F20003 		movt	r3, #:upper16:VCOM_GetCh
+ 129 0090 9847     		blx	r3
+ 130 0092 16E0     		b	.L9
+ 131              	.L10:
+  32:..//utils/modbus/modbus.c **** 				}
+  33:..//utils/modbus/modbus.c **** 				else{
+  34:..//utils/modbus/modbus.c **** 					if (buffer == BUFFER_SIZE){
+ 132              		.loc 1 34 0
+ 133 0094 FB7B     		ldrb	r3, [r7, #15]	@ zero_extendqisi2
+ 134 0096 802B     		cmp	r3, #128
+ 135 0098 04D1     		bne	.L11
+  35:..//utils/modbus/modbus.c **** 						mbus->ovrflw = 1;
+ 136              		.loc 1 35 0
+ 137 009a 7B68     		ldr	r3, [r7, #4]
+ 138 009c 4FF00102 		mov	r2, #1
+ 139 00a0 83F8B020 		strb	r2, [r3, #176]
+ 140              	.L11:
+  36:..//utils/modbus/modbus.c **** 						// printf("\nOverflow1");
+  37:..//utils/modbus/modbus.c **** 					}
+  38:..//utils/modbus/modbus.c **** 					mbus->frame[buffer] = VCOM_GetCh();
+ 141              		.loc 1 38 0
+ 142 00a4 FC7B     		ldrb	r4, [r7, #15]	@ zero_extendqisi2
+ 143 00a6 40F20003 		movw	r3, #:lower16:VCOM_GetCh
+ 144 00aa C0F20003 		movt	r3, #:upper16:VCOM_GetCh
+ 145 00ae 9847     		blx	r3
+ 146 00b0 0346     		mov	r3, r0
+ 147 00b2 1A46     		mov	r2, r3
+ 148 00b4 7B68     		ldr	r3, [r7, #4]
+ 149 00b6 2344     		add	r3, r4, r3
+ 150 00b8 9A75     		strb	r2, [r3, #22]
+  39:..//utils/modbus/modbus.c **** 					// printf("\n%d  %d",mbus->frame[buf],buf);
+  40:..//utils/modbus/modbus.c **** 					buffer++;
+ 151              		.loc 1 40 0
+ 152 00ba FB7B     		ldrb	r3, [r7, #15]
+ 153 00bc 03F10103 		add	r3, r3, #1
+ 154 00c0 FB73     		strb	r3, [r7, #15]
+ 155              	.L9:
+ 156              		.loc 1 29 0
+ 157 00c2 40F20003 		movw	r3, #:lower16:VCOM_ChkRcv
+ 158 00c6 C0F20003 		movt	r3, #:upper16:VCOM_ChkRcv
+ 159 00ca 9847     		blx	r3
+ 160 00cc 0346     		mov	r3, r0
+ 161 00ce 002B     		cmp	r3, #0
+ 162 00d0 D5D0     		beq	.L12
+ 163              	.L2:
+  41:..//utils/modbus/modbus.c **** 				}
+  42:..//utils/modbus/modbus.c **** 			}
+  43:..//utils/modbus/modbus.c **** 		break;	
+  44:..//utils/modbus/modbus.c **** 	}
+  45:..//utils/modbus/modbus.c **** 	return buffer;
+ 164              		.loc 1 45 0
+ 165 00d2 FB7B     		ldrb	r3, [r7, #15]	@ zero_extendqisi2
+  46:..//utils/modbus/modbus.c **** }
+ 166              		.loc 1 46 0
+ 167 00d4 1846     		mov	r0, r3
+ 168 00d6 07F11407 		add	r7, r7, #20
+ 169 00da BD46     		mov	sp, r7
+ 170 00dc 90BD     		pop	{r4, r7, pc}
+ 171              		.cfi_endproc
+ 172              	.LFE29:
+ 174 00de 00BF     		.section	.text.checkModbusData,"ax",%progbits
+ 175              		.align	2
+ 176              		.global	checkModbusData
+ 177              		.thumb
+ 178              		.thumb_func
+ 180              	checkModbusData:
+ 181              	.LFB30:
+  47:..//utils/modbus/modbus.c **** 
+  48:..//utils/modbus/modbus.c **** int checkModbusData(modbus_t* modbus, uint8_t c){
+ 182              		.loc 1 48 0
+ 183              		.cfi_startproc
+ 184              		@ args = 0, pretend = 0, frame = 8
+ 185              		@ frame_needed = 1, uses_anonymous_args = 0
+ 186 0000 80B5     		push	{r7, lr}
+ 187              	.LCFI3:
+ 188              		.cfi_def_cfa_offset 8
+ 189 0002 82B0     		sub	sp, sp, #8
+ 190              	.LCFI4:
+ 191              		.cfi_def_cfa_offset 16
+ 192 0004 00AF     		add	r7, sp, #0
+ 193              		.cfi_offset 14, -4
+ 194              		.cfi_offset 7, -8
+ 195              	.LCFI5:
+ 196              		.cfi_def_cfa_register 7
+ 197 0006 7860     		str	r0, [r7, #4]
+ 198 0008 0B46     		mov	r3, r1
+ 199 000a FB70     		strb	r3, [r7, #3]
+  49:..//utils/modbus/modbus.c **** 	// MODBUS_PACKET_TIMER_RESET;
+  50:..//utils/modbus/modbus.c **** 	// MODBUS_PACKET_TIMER; //start timer
+  51:..//utils/modbus/modbus.c **** 	modbus->modbusTimerCount = 0;
+ 200              		.loc 1 51 0
+ 201 000c 7B68     		ldr	r3, [r7, #4]
+ 202 000e 4FF00002 		mov	r2, #0
+ 203 0012 5A60     		str	r2, [r3, #4]
+  52:..//utils/modbus/modbus.c **** 	ring_putc(modbus->ring_address,c);
+ 204              		.loc 1 52 0
+ 205 0014 7B68     		ldr	r3, [r7, #4]
+ 206 0016 9A68     		ldr	r2, [r3, #8]
+ 207 0018 FB78     		ldrb	r3, [r7, #3]	@ zero_extendqisi2
+ 208 001a 1046     		mov	r0, r2
+ 209 001c 1946     		mov	r1, r3
+ 210 001e 40F20003 		movw	r3, #:lower16:ring_putc
+ 211 0022 C0F20003 		movt	r3, #:upper16:ring_putc
+ 212 0026 9847     		blx	r3
+  53:..//utils/modbus/modbus.c **** 	// modbus->processed = 0;
+  54:..//utils/modbus/modbus.c **** 	return 1;
+ 213              		.loc 1 54 0
+ 214 0028 4FF00103 		mov	r3, #1
+  55:..//utils/modbus/modbus.c **** }
+ 215              		.loc 1 55 0
+ 216 002c 1846     		mov	r0, r3
+ 217 002e 07F10807 		add	r7, r7, #8
+ 218 0032 BD46     		mov	sp, r7
+ 219 0034 80BD     		pop	{r7, pc}
+ 220              		.cfi_endproc
+ 221              	.LFE30:
+ 223 0036 00BF     		.section	.text.modInit,"ax",%progbits
+ 224              		.align	2
+ 225              		.global	modInit
+ 226              		.thumb
+ 227              		.thumb_func
+ 229              	modInit:
+ 230              	.LFB31:
+  56:..//utils/modbus/modbus.c **** 
+  57:..//utils/modbus/modbus.c **** int modInit(modbus_t* modbus, ring_t* ring, uint8_t num){
+ 231              		.loc 1 57 0
+ 232              		.cfi_startproc
+ 233              		@ args = 0, pretend = 0, frame = 16
+ 234              		@ frame_needed = 1, uses_anonymous_args = 0
+ 235              		@ link register save eliminated.
+ 236 0000 80B4     		push	{r7}
+ 237              	.LCFI6:
+ 238              		.cfi_def_cfa_offset 4
+ 239 0002 85B0     		sub	sp, sp, #20
+ 240              	.LCFI7:
+ 241              		.cfi_def_cfa_offset 24
+ 242 0004 00AF     		add	r7, sp, #0
+ 243              		.cfi_offset 7, -4
+ 244              	.LCFI8:
+ 245              		.cfi_def_cfa_register 7
+ 246 0006 F860     		str	r0, [r7, #12]
+ 247 0008 B960     		str	r1, [r7, #8]
+ 248 000a 1346     		mov	r3, r2
+ 249 000c FB71     		strb	r3, [r7, #7]
+  58:..//utils/modbus/modbus.c **** 	modbus->ring_address = ring; //ring_address contains the address of the pointer.
+ 250              		.loc 1 58 0
+ 251 000e FB68     		ldr	r3, [r7, #12]
+ 252 0010 BA68     		ldr	r2, [r7, #8]
+ 253 0012 9A60     		str	r2, [r3, #8]
+  59:..//utils/modbus/modbus.c **** 	modbus->uart_port = num;
+ 254              		.loc 1 59 0
+ 255 0014 FB68     		ldr	r3, [r7, #12]
+ 256 0016 FA79     		ldrb	r2, [r7, #7]
+ 257 0018 1A73     		strb	r2, [r3, #12]
+  60:..//utils/modbus/modbus.c **** 	// modbus->modbus_timeout = 3200; //default for 9600 baud
+  61:..//utils/modbus/modbus.c **** 	modbus->modbusTimerCount = 0;
+ 258              		.loc 1 61 0
+ 259 001a FB68     		ldr	r3, [r7, #12]
+ 260 001c 4FF00002 		mov	r2, #0
+ 261 0020 5A60     		str	r2, [r3, #4]
+  62:..//utils/modbus/modbus.c **** 	modbus->modbus_data_complete = 0;
+ 262              		.loc 1 62 0
+ 263 0022 FB68     		ldr	r3, [r7, #12]
+ 264 0024 4FF00002 		mov	r2, #0
+ 265 0028 1A60     		str	r2, [r3, #0]
+  63:..//utils/modbus/modbus.c **** 	return 1;
+ 266              		.loc 1 63 0
+ 267 002a 4FF00103 		mov	r3, #1
+  64:..//utils/modbus/modbus.c **** }
+ 268              		.loc 1 64 0
+ 269 002e 1846     		mov	r0, r3
+ 270 0030 07F11407 		add	r7, r7, #20
+ 271 0034 BD46     		mov	sp, r7
+ 272 0036 80BC     		pop	{r7}
+ 273 0038 7047     		bx	lr
+ 274              		.cfi_endproc
+ 275              	.LFE31:
+ 277 003a 00BF     		.text
+ 278              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 modbus.c
+C:\Users\hdhed\AppData\Local\Temp\ccETq3F9.s:27     .data.fixedData:00000000 fixedData
+C:\Users\hdhed\AppData\Local\Temp\ccETq3F9.s:30     .text.getUartdata:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccETq3F9.s:35     .text.getUartdata:00000000 getUartdata
+C:\Users\hdhed\AppData\Local\Temp\ccETq3F9.s:175    .text.checkModbusData:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccETq3F9.s:180    .text.checkModbusData:00000000 checkModbusData
+C:\Users\hdhed\AppData\Local\Temp\ccETq3F9.s:224    .text.modInit:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccETq3F9.s:229    .text.modInit:00000000 modInit
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+Uart_GetC2
+Uart_ChkRcv2
+VCOM_GetCh
+VCOM_ChkRcv
+ring_putc

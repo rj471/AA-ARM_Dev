@@ -1,0 +1,390 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"ssp_master.c"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.comm	SSP_ConfigStruct,24,4
+  24              		.global	iocon_cfg
+  25              		.section	.data.iocon_cfg,"aw",%progbits
+  26              		.align	2
+  29              	iocon_cfg:
+  30 0000 70       		.byte	112
+  31 0001 00       		.byte	0
+  32              		.global	iodir_cfg
+  33 0002 0000     		.section	.data.iodir_cfg,"aw",%progbits
+  34              		.align	2
+  37              	iodir_cfg:
+  38 0000 50       		.byte	80
+  39 0001 FF       		.byte	-1
+  40              		.global	iostate_on
+  41 0002 0000     		.section	.data.iostate_on,"aw",%progbits
+  42              		.align	2
+  45              	iostate_on:
+  46 0000 58       		.byte	88
+  47 0001 00       		.byte	0
+  48              		.global	iostate_off
+  49 0002 0000     		.section	.data.iostate_off,"aw",%progbits
+  50              		.align	2
+  53              	iostate_off:
+  54 0000 58       		.byte	88
+  55 0001 FF       		.byte	-1
+  56              		.comm	sspreadbuf,2,4
+  57 0002 0000     		.section	.text.SSP_CS_Init,"ax",%progbits
+  58              		.align	2
+  59              		.global	SSP_CS_Init
+  60              		.thumb
+  61              		.thumb_func
+  63              	SSP_CS_Init:
+  64              	.LFB29:
+  65              		.file 1 "..//drivers/SPI/ssp_master.c"
+   1:..//drivers/SPI/ssp_master.c **** /***********************************************************************//**
+   2:..//drivers/SPI/ssp_master.c ****  * @file		ssp_master.c
+   3:..//drivers/SPI/ssp_master.c ****  * @purpose		This example describes how to use SPP in master mode
+   4:..//drivers/SPI/ssp_master.c ****  * @version		2.0
+   5:..//drivers/SPI/ssp_master.c ****  * @date		21. May. 2010
+   6:..//drivers/SPI/ssp_master.c ****  * @author		NXP MCU SW Application Team
+   7:..//drivers/SPI/ssp_master.c ****  *---------------------------------------------------------------------
+   8:..//drivers/SPI/ssp_master.c ****  * Software that is described herein is for illustrative purposes only
+   9:..//drivers/SPI/ssp_master.c ****  * which provides customers with programming information regarding the
+  10:..//drivers/SPI/ssp_master.c ****  * products. This software is supplied "AS IS" without any warranties.
+  11:..//drivers/SPI/ssp_master.c ****  * NXP Semiconductors assumes no responsibility or liability for the
+  12:..//drivers/SPI/ssp_master.c ****  * use of the software, conveys no license or title under any patent,
+  13:..//drivers/SPI/ssp_master.c ****  * copyright, or mask work right to the product. NXP Semiconductors
+  14:..//drivers/SPI/ssp_master.c ****  * reserves the right to make changes in the software without
+  15:..//drivers/SPI/ssp_master.c ****  * notification. NXP Semiconductors also make no representation or
+  16:..//drivers/SPI/ssp_master.c ****  * warranty that such application will be suitable for the specified
+  17:..//drivers/SPI/ssp_master.c ****  * use without further testing or modification.
+  18:..//drivers/SPI/ssp_master.c ****  **********************************************************************/
+  19:..//drivers/SPI/ssp_master.c **** #include "ssp_master.h"
+  20:..//drivers/SPI/ssp_master.c **** 
+  21:..//drivers/SPI/ssp_master.c **** /* Example group ----------------------------------------------------------- */
+  22:..//drivers/SPI/ssp_master.c **** /** @defgroup SSP_Master	Master
+  23:..//drivers/SPI/ssp_master.c ****  * @ingroup SSP_Examples
+  24:..//drivers/SPI/ssp_master.c ****  * @{
+  25:..//drivers/SPI/ssp_master.c ****  */
+  26:..//drivers/SPI/ssp_master.c **** 
+  27:..//drivers/SPI/ssp_master.c **** /************************** PRIVATE DEFINTIONS ************************/
+  28:..//drivers/SPI/ssp_master.c **** // PORT number that /CS pin assigned on
+  29:..//drivers/SPI/ssp_master.c **** #define CS_PORT_NUM				0
+  30:..//drivers/SPI/ssp_master.c **** // PIN number that  /CS pin assigned on
+  31:..//drivers/SPI/ssp_master.c **** #define CS_PIN_NUM				6
+  32:..//drivers/SPI/ssp_master.c **** 
+  33:..//drivers/SPI/ssp_master.c **** // Define macro used in command when using SSP with SC16IS740
+  34:..//drivers/SPI/ssp_master.c **** #define SC16IS740_WR_CMD(x)		((uint8_t) (x << 3))
+  35:..//drivers/SPI/ssp_master.c **** #define SC16IS740_RD_CMD(x)		((uint8_t) ((x << 3) | 0x80))
+  36:..//drivers/SPI/ssp_master.c **** 
+  37:..//drivers/SPI/ssp_master.c **** // Define register address of SC16IS740
+  38:..//drivers/SPI/ssp_master.c **** #define SC16IS740_IODIR_REG		0x0A
+  39:..//drivers/SPI/ssp_master.c **** #define SC16IS740_IOSTATE_REG	0x0B
+  40:..//drivers/SPI/ssp_master.c **** #define SC16IS740_IOCON_REG		0x0E
+  41:..//drivers/SPI/ssp_master.c **** 
+  42:..//drivers/SPI/ssp_master.c **** // SSP Configuration structure variable
+  43:..//drivers/SPI/ssp_master.c **** SSP_CFG_Type SSP_ConfigStruct;
+  44:..//drivers/SPI/ssp_master.c **** 
+  45:..//drivers/SPI/ssp_master.c **** uint8_t iocon_cfg[2] = {SC16IS740_WR_CMD(SC16IS740_IOCON_REG), 0x00};
+  46:..//drivers/SPI/ssp_master.c **** uint8_t iodir_cfg[2] = {SC16IS740_WR_CMD(SC16IS740_IODIR_REG), 0xFF};
+  47:..//drivers/SPI/ssp_master.c **** uint8_t iostate_on[2] = {SC16IS740_WR_CMD(SC16IS740_IOSTATE_REG), 0x00};
+  48:..//drivers/SPI/ssp_master.c **** uint8_t iostate_off[2] = {SC16IS740_WR_CMD(SC16IS740_IOSTATE_REG), 0xFF};
+  49:..//drivers/SPI/ssp_master.c **** uint8_t sspreadbuf[2];
+  50:..//drivers/SPI/ssp_master.c **** /*-------------------------PRIVATE FUNCTIONS------------------------------*/
+  51:..//drivers/SPI/ssp_master.c **** /*********************************************************************//**
+  52:..//drivers/SPI/ssp_master.c ****  * @brief 		Initialize CS pin as GPIO function to drive /CS pin
+  53:..//drivers/SPI/ssp_master.c ****  * 				due to definition of CS_PORT_NUM and CS_PORT_NUM
+  54:..//drivers/SPI/ssp_master.c ****  * @param		None
+  55:..//drivers/SPI/ssp_master.c ****  * @return		None
+  56:..//drivers/SPI/ssp_master.c ****  ***********************************************************************/
+  57:..//drivers/SPI/ssp_master.c **** void SSP_CS_Init(void){
+  66              		.loc 1 57 0
+  67              		.cfi_startproc
+  68              		@ args = 0, pretend = 0, frame = 0
+  69              		@ frame_needed = 1, uses_anonymous_args = 0
+  70 0000 80B5     		push	{r7, lr}
+  71              	.LCFI0:
+  72              		.cfi_def_cfa_offset 8
+  73 0002 00AF     		add	r7, sp, #0
+  74              		.cfi_offset 14, -4
+  75              		.cfi_offset 7, -8
+  76              	.LCFI1:
+  77              		.cfi_def_cfa_register 7
+  58:..//drivers/SPI/ssp_master.c **** 	GPIO_SetDir(CS_PORT_NUM, (1<<CS_PIN_NUM), 1);
+  78              		.loc 1 58 0
+  79 0004 4FF00000 		mov	r0, #0
+  80 0008 4FF04001 		mov	r1, #64
+  81 000c 4FF00102 		mov	r2, #1
+  82 0010 40F20003 		movw	r3, #:lower16:GPIO_SetDir
+  83 0014 C0F20003 		movt	r3, #:upper16:GPIO_SetDir
+  84 0018 9847     		blx	r3
+  59:..//drivers/SPI/ssp_master.c **** 	GPIO_SetValue(CS_PORT_NUM, (1<<CS_PIN_NUM));
+  85              		.loc 1 59 0
+  86 001a 4FF00000 		mov	r0, #0
+  87 001e 4FF04001 		mov	r1, #64
+  88 0022 40F20003 		movw	r3, #:lower16:GPIO_SetValue
+  89 0026 C0F20003 		movt	r3, #:upper16:GPIO_SetValue
+  90 002a 9847     		blx	r3
+  60:..//drivers/SPI/ssp_master.c **** }
+  91              		.loc 1 60 0
+  92 002c 80BD     		pop	{r7, pc}
+  93              		.cfi_endproc
+  94              	.LFE29:
+  96 002e 00BF     		.section	.text.SSP_CS_Force,"ax",%progbits
+  97              		.align	2
+  98              		.global	SSP_CS_Force
+  99              		.thumb
+ 100              		.thumb_func
+ 102              	SSP_CS_Force:
+ 103              	.LFB30:
+  61:..//drivers/SPI/ssp_master.c **** 
+  62:..//drivers/SPI/ssp_master.c **** /*********************************************************************//**
+  63:..//drivers/SPI/ssp_master.c ****  * @brief 		Drive CS output pin to low/high level to select slave device
+  64:..//drivers/SPI/ssp_master.c ****  * 				via /CS pin state
+  65:..//drivers/SPI/ssp_master.c ****  * @param[in]	state State of CS output pin that will be driven:
+  66:..//drivers/SPI/ssp_master.c ****  * 				- 0: Drive CS pin to low level
+  67:..//drivers/SPI/ssp_master.c ****  * 				- 1: Drive CS pin to high level
+  68:..//drivers/SPI/ssp_master.c ****  * @return		None
+  69:..//drivers/SPI/ssp_master.c ****  ***********************************************************************/
+  70:..//drivers/SPI/ssp_master.c **** void SSP_CS_Force(int32_t state){
+ 104              		.loc 1 70 0
+ 105              		.cfi_startproc
+ 106              		@ args = 0, pretend = 0, frame = 8
+ 107              		@ frame_needed = 1, uses_anonymous_args = 0
+ 108 0000 80B5     		push	{r7, lr}
+ 109              	.LCFI2:
+ 110              		.cfi_def_cfa_offset 8
+ 111 0002 82B0     		sub	sp, sp, #8
+ 112              	.LCFI3:
+ 113              		.cfi_def_cfa_offset 16
+ 114 0004 00AF     		add	r7, sp, #0
+ 115              		.cfi_offset 14, -4
+ 116              		.cfi_offset 7, -8
+ 117              	.LCFI4:
+ 118              		.cfi_def_cfa_register 7
+ 119 0006 7860     		str	r0, [r7, #4]
+  71:..//drivers/SPI/ssp_master.c **** 	if (state){
+ 120              		.loc 1 71 0
+ 121 0008 7B68     		ldr	r3, [r7, #4]
+ 122 000a 002B     		cmp	r3, #0
+ 123 000c 09D0     		beq	.L4
+  72:..//drivers/SPI/ssp_master.c **** 		GPIO_SetValue(CS_PORT_NUM, (1<<CS_PIN_NUM));
+ 124              		.loc 1 72 0
+ 125 000e 4FF00000 		mov	r0, #0
+ 126 0012 4FF04001 		mov	r1, #64
+ 127 0016 40F20003 		movw	r3, #:lower16:GPIO_SetValue
+ 128 001a C0F20003 		movt	r3, #:upper16:GPIO_SetValue
+ 129 001e 9847     		blx	r3
+ 130 0020 08E0     		b	.L6
+ 131              	.L4:
+  73:..//drivers/SPI/ssp_master.c **** 	}else{
+  74:..//drivers/SPI/ssp_master.c **** 		GPIO_ClearValue(CS_PORT_NUM, (1<<CS_PIN_NUM));
+ 132              		.loc 1 74 0
+ 133 0022 4FF00000 		mov	r0, #0
+ 134 0026 4FF04001 		mov	r1, #64
+ 135 002a 40F20003 		movw	r3, #:lower16:GPIO_ClearValue
+ 136 002e C0F20003 		movt	r3, #:upper16:GPIO_ClearValue
+ 137 0032 9847     		blx	r3
+ 138              	.L6:
+  75:..//drivers/SPI/ssp_master.c **** 	}
+  76:..//drivers/SPI/ssp_master.c **** }
+ 139              		.loc 1 76 0
+ 140 0034 07F10807 		add	r7, r7, #8
+ 141 0038 BD46     		mov	sp, r7
+ 142 003a 80BD     		pop	{r7, pc}
+ 143              		.cfi_endproc
+ 144              	.LFE30:
+ 146              		.section	.text.ssp_master_init,"ax",%progbits
+ 147              		.align	2
+ 148              		.global	ssp_master_init
+ 149              		.thumb
+ 150              		.thumb_func
+ 152              	ssp_master_init:
+ 153              	.LFB31:
+  77:..//drivers/SPI/ssp_master.c **** 
+  78:..//drivers/SPI/ssp_master.c **** /*-------------------------MAIN FUNCTION------------------------------*/
+  79:..//drivers/SPI/ssp_master.c **** /*********************************************************************//**
+  80:..//drivers/SPI/ssp_master.c ****  * @brief		c_entry: Main SSP program body
+  81:..//drivers/SPI/ssp_master.c ****  * @param[in]	None
+  82:..//drivers/SPI/ssp_master.c ****  * @return 		int
+  83:..//drivers/SPI/ssp_master.c ****  **********************************************************************/
+  84:..//drivers/SPI/ssp_master.c **** int ssp_master_init(void){
+ 154              		.loc 1 84 0
+ 155              		.cfi_startproc
+ 156              		@ args = 0, pretend = 0, frame = 40
+ 157              		@ frame_needed = 1, uses_anonymous_args = 0
+ 158 0000 80B5     		push	{r7, lr}
+ 159              	.LCFI5:
+ 160              		.cfi_def_cfa_offset 8
+ 161 0002 8AB0     		sub	sp, sp, #40
+ 162              	.LCFI6:
+ 163              		.cfi_def_cfa_offset 48
+ 164 0004 00AF     		add	r7, sp, #0
+ 165              		.cfi_offset 14, -4
+ 166              		.cfi_offset 7, -8
+ 167              	.LCFI7:
+ 168              		.cfi_def_cfa_register 7
+  85:..//drivers/SPI/ssp_master.c **** 	PINSEL_CFG_Type PinCfg;	
+  86:..//drivers/SPI/ssp_master.c **** 	SSP_DATA_SETUP_Type xferConfig;
+  87:..//drivers/SPI/ssp_master.c **** 	uint32_t tmp;
+  88:..//drivers/SPI/ssp_master.c **** 	/*
+  89:..//drivers/SPI/ssp_master.c **** 	 * Initialize SPI pin connect
+  90:..//drivers/SPI/ssp_master.c **** 	 * P0.15 - SCK;
+  91:..//drivers/SPI/ssp_master.c **** 	 * P0.16 - SSEL
+  92:..//drivers/SPI/ssp_master.c **** 	 * P0.17 - MISO
+  93:..//drivers/SPI/ssp_master.c **** 	 * P0.18 - MOSI
+  94:..//drivers/SPI/ssp_master.c **** 	 */
+  95:..//drivers/SPI/ssp_master.c **** 	PinCfg.Funcnum = 2;
+ 169              		.loc 1 95 0
+ 170 0006 4FF00203 		mov	r3, #2
+ 171 000a BB77     		strb	r3, [r7, #30]
+  96:..//drivers/SPI/ssp_master.c **** 	PinCfg.OpenDrain = 0;
+ 172              		.loc 1 96 0
+ 173 000c 4FF00003 		mov	r3, #0
+ 174 0010 87F82030 		strb	r3, [r7, #32]
+  97:..//drivers/SPI/ssp_master.c **** 	PinCfg.Pinmode = 0;
+ 175              		.loc 1 97 0
+ 176 0014 4FF00003 		mov	r3, #0
+ 177 0018 FB77     		strb	r3, [r7, #31]
+  98:..//drivers/SPI/ssp_master.c **** 	PinCfg.Portnum = SSP_PORTNUM;
+ 178              		.loc 1 98 0
+ 179 001a 4FF00003 		mov	r3, #0
+ 180 001e 3B77     		strb	r3, [r7, #28]
+  99:..//drivers/SPI/ssp_master.c **** 	PinCfg.Pinnum = SSP_CLK;
+ 181              		.loc 1 99 0
+ 182 0020 4FF00703 		mov	r3, #7
+ 183 0024 7B77     		strb	r3, [r7, #29]
+ 100:..//drivers/SPI/ssp_master.c **** 	PINSEL_ConfigPin(&PinCfg);
+ 184              		.loc 1 100 0
+ 185 0026 07F11C03 		add	r3, r7, #28
+ 186 002a 1846     		mov	r0, r3
+ 187 002c 40F20003 		movw	r3, #:lower16:PINSEL_ConfigPin
+ 188 0030 C0F20003 		movt	r3, #:upper16:PINSEL_ConfigPin
+ 189 0034 9847     		blx	r3
+ 101:..//drivers/SPI/ssp_master.c **** 	PinCfg.Pinnum = SSP_MISO;
+ 190              		.loc 1 101 0
+ 191 0036 4FF00803 		mov	r3, #8
+ 192 003a 7B77     		strb	r3, [r7, #29]
+ 102:..//drivers/SPI/ssp_master.c **** 	PINSEL_ConfigPin(&PinCfg);
+ 193              		.loc 1 102 0
+ 194 003c 07F11C03 		add	r3, r7, #28
+ 195 0040 1846     		mov	r0, r3
+ 196 0042 40F20003 		movw	r3, #:lower16:PINSEL_ConfigPin
+ 197 0046 C0F20003 		movt	r3, #:upper16:PINSEL_ConfigPin
+ 198 004a 9847     		blx	r3
+ 103:..//drivers/SPI/ssp_master.c **** 	PinCfg.Pinnum = SSP_MOSI;
+ 199              		.loc 1 103 0
+ 200 004c 4FF00903 		mov	r3, #9
+ 201 0050 7B77     		strb	r3, [r7, #29]
+ 104:..//drivers/SPI/ssp_master.c **** 	PINSEL_ConfigPin(&PinCfg);
+ 202              		.loc 1 104 0
+ 203 0052 07F11C03 		add	r3, r7, #28
+ 204 0056 1846     		mov	r0, r3
+ 205 0058 40F20003 		movw	r3, #:lower16:PINSEL_ConfigPin
+ 206 005c C0F20003 		movt	r3, #:upper16:PINSEL_ConfigPin
+ 207 0060 9847     		blx	r3
+ 105:..//drivers/SPI/ssp_master.c **** 	PinCfg.Funcnum = 0;
+ 208              		.loc 1 105 0
+ 209 0062 4FF00003 		mov	r3, #0
+ 210 0066 BB77     		strb	r3, [r7, #30]
+ 106:..//drivers/SPI/ssp_master.c **** 	PinCfg.Pinnum = SSP_CS;
+ 211              		.loc 1 106 0
+ 212 0068 4FF00603 		mov	r3, #6
+ 213 006c 7B77     		strb	r3, [r7, #29]
+ 107:..//drivers/SPI/ssp_master.c **** 	PINSEL_ConfigPin(&PinCfg);
+ 214              		.loc 1 107 0
+ 215 006e 07F11C03 		add	r3, r7, #28
+ 216 0072 1846     		mov	r0, r3
+ 217 0074 40F20003 		movw	r3, #:lower16:PINSEL_ConfigPin
+ 218 0078 C0F20003 		movt	r3, #:upper16:PINSEL_ConfigPin
+ 219 007c 9847     		blx	r3
+ 108:..//drivers/SPI/ssp_master.c **** 
+ 109:..//drivers/SPI/ssp_master.c **** 	// initialize SSP configuration structure to default
+ 110:..//drivers/SPI/ssp_master.c **** 	SSP_ConfigStructInit(&SSP_ConfigStruct);
+ 220              		.loc 1 110 0
+ 221 007e 40F20000 		movw	r0, #:lower16:SSP_ConfigStruct
+ 222 0082 C0F20000 		movt	r0, #:upper16:SSP_ConfigStruct
+ 223 0086 40F20003 		movw	r3, #:lower16:SSP_ConfigStructInit
+ 224 008a C0F20003 		movt	r3, #:upper16:SSP_ConfigStructInit
+ 225 008e 9847     		blx	r3
+ 111:..//drivers/SPI/ssp_master.c **** 	// Initialize SSP peripheral with parameter given in structure above
+ 112:..//drivers/SPI/ssp_master.c **** 	SSP_Init(LPC_SSP1, &SSP_ConfigStruct);
+ 226              		.loc 1 112 0
+ 227 0090 40F20000 		movw	r0, #:lower16:1073938432
+ 228 0094 C4F20300 		movt	r0, #:upper16:1073938432
+ 229 0098 40F20001 		movw	r1, #:lower16:SSP_ConfigStruct
+ 230 009c C0F20001 		movt	r1, #:upper16:SSP_ConfigStruct
+ 231 00a0 40F20003 		movw	r3, #:lower16:SSP_Init
+ 232 00a4 C0F20003 		movt	r3, #:upper16:SSP_Init
+ 233 00a8 9847     		blx	r3
+ 113:..//drivers/SPI/ssp_master.c **** 	
+ 114:..//drivers/SPI/ssp_master.c **** 	// Initialize /CS pin to GPIO function
+ 115:..//drivers/SPI/ssp_master.c **** 	SSP_CS_Init();
+ 234              		.loc 1 115 0
+ 235 00aa 40F20003 		movw	r3, #:lower16:SSP_CS_Init
+ 236 00ae C0F20003 		movt	r3, #:upper16:SSP_CS_Init
+ 237 00b2 9847     		blx	r3
+ 116:..//drivers/SPI/ssp_master.c **** 	
+ 117:..//drivers/SPI/ssp_master.c **** 	// Enable SSP peripheral
+ 118:..//drivers/SPI/ssp_master.c **** 	SSP_Cmd(LPC_SSP1, ENABLE);
+ 238              		.loc 1 118 0
+ 239 00b4 40F20000 		movw	r0, #:lower16:1073938432
+ 240 00b8 C4F20300 		movt	r0, #:upper16:1073938432
+ 241 00bc 4FF00101 		mov	r1, #1
+ 242 00c0 40F20003 		movw	r3, #:lower16:SSP_Cmd
+ 243 00c4 C0F20003 		movt	r3, #:upper16:SSP_Cmd
+ 244 00c8 9847     		blx	r3
+ 119:..//drivers/SPI/ssp_master.c **** 	SSP_CS_Force(1);
+ 245              		.loc 1 119 0
+ 246 00ca 4FF00100 		mov	r0, #1
+ 247 00ce 40F20003 		movw	r3, #:lower16:SSP_CS_Force
+ 248 00d2 C0F20003 		movt	r3, #:upper16:SSP_CS_Force
+ 249 00d6 9847     		blx	r3
+ 120:..//drivers/SPI/ssp_master.c **** 	
+ 121:..//drivers/SPI/ssp_master.c ****     return 1;
+ 250              		.loc 1 121 0
+ 251 00d8 4FF00103 		mov	r3, #1
+ 122:..//drivers/SPI/ssp_master.c **** }
+ 252              		.loc 1 122 0
+ 253 00dc 1846     		mov	r0, r3
+ 254 00de 07F12807 		add	r7, r7, #40
+ 255 00e2 BD46     		mov	sp, r7
+ 256 00e4 80BD     		pop	{r7, pc}
+ 257              		.cfi_endproc
+ 258              	.LFE31:
+ 260 00e6 00BF     		.text
+ 261              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 ssp_master.c
+                            *COM*:00000018 SSP_ConfigStruct
+C:\Users\hdhed\AppData\Local\Temp\ccrlVbJh.s:29     .data.iocon_cfg:00000000 iocon_cfg
+C:\Users\hdhed\AppData\Local\Temp\ccrlVbJh.s:26     .data.iocon_cfg:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccrlVbJh.s:37     .data.iodir_cfg:00000000 iodir_cfg
+C:\Users\hdhed\AppData\Local\Temp\ccrlVbJh.s:34     .data.iodir_cfg:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccrlVbJh.s:45     .data.iostate_on:00000000 iostate_on
+C:\Users\hdhed\AppData\Local\Temp\ccrlVbJh.s:42     .data.iostate_on:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccrlVbJh.s:53     .data.iostate_off:00000000 iostate_off
+C:\Users\hdhed\AppData\Local\Temp\ccrlVbJh.s:50     .data.iostate_off:00000000 $d
+                            *COM*:00000002 sspreadbuf
+C:\Users\hdhed\AppData\Local\Temp\ccrlVbJh.s:58     .text.SSP_CS_Init:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccrlVbJh.s:63     .text.SSP_CS_Init:00000000 SSP_CS_Init
+C:\Users\hdhed\AppData\Local\Temp\ccrlVbJh.s:97     .text.SSP_CS_Force:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccrlVbJh.s:102    .text.SSP_CS_Force:00000000 SSP_CS_Force
+C:\Users\hdhed\AppData\Local\Temp\ccrlVbJh.s:147    .text.ssp_master_init:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccrlVbJh.s:152    .text.ssp_master_init:00000000 ssp_master_init
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+GPIO_SetDir
+GPIO_SetValue
+GPIO_ClearValue
+PINSEL_ConfigPin
+SSP_ConfigStructInit
+SSP_Init
+SSP_Cmd

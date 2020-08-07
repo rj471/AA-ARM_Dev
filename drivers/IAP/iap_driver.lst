@@ -1,0 +1,1285 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"iap_driver.c"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.section	.rodata.flash_sector_addrs,"a",%progbits
+  24              		.align	2
+  27              	flash_sector_addrs:
+  28 0000 00000000 		.word	0
+  29 0004 00100000 		.word	4096
+  30 0008 00200000 		.word	8192
+  31 000c 00300000 		.word	12288
+  32 0010 00400000 		.word	16384
+  33 0014 00500000 		.word	20480
+  34 0018 00600000 		.word	24576
+  35 001c 00700000 		.word	28672
+  36 0020 00800000 		.word	32768
+  37 0024 00900000 		.word	36864
+  38 0028 00A00000 		.word	40960
+  39 002c 00B00000 		.word	45056
+  40 0030 00C00000 		.word	49152
+  41 0034 00D00000 		.word	53248
+  42 0038 00E00000 		.word	57344
+  43 003c 00F00000 		.word	61440
+  44 0040 00000100 		.word	65536
+  45 0044 00800100 		.word	98304
+  46 0048 00000200 		.word	131072
+  47 004c 00800200 		.word	163840
+  48 0050 00000300 		.word	196608
+  49 0054 00800300 		.word	229376
+  50 0058 00000400 		.word	262144
+  51 005c 00800400 		.word	294912
+  52 0060 00000500 		.word	327680
+  53 0064 00800500 		.word	360448
+  54 0068 00000600 		.word	393216
+  55 006c 00800600 		.word	425984
+  56 0070 00000700 		.word	458752
+  57 0074 00800700 		.word	491520
+  58              		.section	.rodata.flash_sector_sizes,"a",%progbits
+  59              		.align	2
+  62              	flash_sector_sizes:
+  63 0000 00100000 		.word	4096
+  64 0004 00100000 		.word	4096
+  65 0008 00100000 		.word	4096
+  66 000c 00100000 		.word	4096
+  67 0010 00100000 		.word	4096
+  68 0014 00100000 		.word	4096
+  69 0018 00100000 		.word	4096
+  70 001c 00100000 		.word	4096
+  71 0020 00100000 		.word	4096
+  72 0024 00100000 		.word	4096
+  73 0028 00100000 		.word	4096
+  74 002c 00100000 		.word	4096
+  75 0030 00100000 		.word	4096
+  76 0034 00100000 		.word	4096
+  77 0038 00100000 		.word	4096
+  78 003c 00100000 		.word	4096
+  79 0040 00800000 		.word	32768
+  80 0044 00800000 		.word	32768
+  81 0048 00800000 		.word	32768
+  82 004c 00800000 		.word	32768
+  83 0050 00800000 		.word	32768
+  84 0054 00800000 		.word	32768
+  85 0058 00800000 		.word	32768
+  86 005c 00800000 		.word	32768
+  87 0060 00800000 		.word	32768
+  88 0064 00800000 		.word	32768
+  89 0068 00800000 		.word	32768
+  90 006c 00800000 		.word	32768
+  91 0070 00800000 		.word	32768
+  92 0074 00800000 		.word	32768
+  93              		.section	.data.iap_entry,"aw",%progbits
+  94              		.align	2
+  97              	iap_entry:
+  98 0000 F11FFF1F 		.word	536813553
+  99              		.section	.bss.cclk_kHz,"aw",%nobits
+ 100              		.align	2
+ 103              	cclk_kHz:
+ 104 0000 00000000 		.space	4
+ 105              		.section	.text.iap_init,"ax",%progbits
+ 106              		.align	2
+ 107              		.global	iap_init
+ 108              		.thumb
+ 109              		.thumb_func
+ 111              	iap_init:
+ 112              	.LFB0:
+ 113              		.file 1 "..//drivers/IAP/iap_driver.c"
+   1:..//drivers/IAP/iap_driver.c **** #include <stdint.h>
+   2:..//drivers/IAP/iap_driver.c **** #include <string.h>
+   3:..//drivers/IAP/iap_driver.c **** #include <stdio.h>
+   4:..//drivers/IAP/iap_driver.c **** #include "iap_driver.h"
+   5:..//drivers/IAP/iap_driver.c **** 
+   6:..//drivers/IAP/iap_driver.c **** static const unsigned int flash_sector_addrs[] = {
+   7:..//drivers/IAP/iap_driver.c ****     0x0000,    0x1000,    0x2000,    0x3000,
+   8:..//drivers/IAP/iap_driver.c ****     0x4000,    0x5000,    0x6000,    0x7000,
+   9:..//drivers/IAP/iap_driver.c ****     0x8000,    0x9000,    0xa000,    0xb000,
+  10:..//drivers/IAP/iap_driver.c ****     0xc000,    0xd000,    0xe000,    0xf000,
+  11:..//drivers/IAP/iap_driver.c ****     0x10000,    0x18000,    0x20000,    0x28000,
+  12:..//drivers/IAP/iap_driver.c ****     0x30000,    0x38000,    0x40000,    0x48000,
+  13:..//drivers/IAP/iap_driver.c ****     0x50000,    0x58000,    0x60000,    0x68000,
+  14:..//drivers/IAP/iap_driver.c ****     0x70000,    0x78000
+  15:..//drivers/IAP/iap_driver.c **** };
+  16:..//drivers/IAP/iap_driver.c **** 
+  17:..//drivers/IAP/iap_driver.c **** static const unsigned int flash_sector_sizes[] = {
+  18:..//drivers/IAP/iap_driver.c ****     0x1000,    0x1000,    0x1000,    0x1000,
+  19:..//drivers/IAP/iap_driver.c ****     0x1000,    0x1000,    0x1000,    0x1000,
+  20:..//drivers/IAP/iap_driver.c ****     0x1000,    0x1000,    0x1000,    0x1000,
+  21:..//drivers/IAP/iap_driver.c ****     0x1000,    0x1000,    0x1000,    0x1000,
+  22:..//drivers/IAP/iap_driver.c ****     0x8000,    0x8000,    0x8000,    0x8000,
+  23:..//drivers/IAP/iap_driver.c ****     0x8000,    0x8000,    0x8000,    0x8000,
+  24:..//drivers/IAP/iap_driver.c ****     0x8000,    0x8000,    0x8000,    0x8000,
+  25:..//drivers/IAP/iap_driver.c ****     0x8000,    0x8000
+  26:..//drivers/IAP/iap_driver.c **** };
+  27:..//drivers/IAP/iap_driver.c **** 
+  28:..//drivers/IAP/iap_driver.c **** enum command_code{
+  29:..//drivers/IAP/iap_driver.c ****     IAPCommand_Prepare_sector_for_write_operation = 50,
+  30:..//drivers/IAP/iap_driver.c ****     IAPCommand_Copy_RAM_to_Flash,
+  31:..//drivers/IAP/iap_driver.c ****     IAPCommand_Erase_sector,
+  32:..//drivers/IAP/iap_driver.c ****     IAPCommand_Blank_check_sector,
+  33:..//drivers/IAP/iap_driver.c ****     IAPCommand_Read_part_ID,
+  34:..//drivers/IAP/iap_driver.c ****     IAPCommand_Read_Boot_Code_version,
+  35:..//drivers/IAP/iap_driver.c ****     IAPCommand_Compare,
+  36:..//drivers/IAP/iap_driver.c ****     IAPCommand_Reinvoke_ISP,
+  37:..//drivers/IAP/iap_driver.c ****     IAPCommand_Read_device_serial_number
+  38:..//drivers/IAP/iap_driver.c **** };
+  39:..//drivers/IAP/iap_driver.c **** 
+  40:..//drivers/IAP/iap_driver.c **** typedef void (*iap_entry_t)(unsigned int [], unsigned int []);
+  41:..//drivers/IAP/iap_driver.c **** 
+  42:..//drivers/IAP/iap_driver.c **** static iap_entry_t iap_entry = (iap_entry_t)0x1fff1ff1;
+  43:..//drivers/IAP/iap_driver.c **** 
+  44:..//drivers/IAP/iap_driver.c **** static int cclk_kHz = 0;
+  45:..//drivers/IAP/iap_driver.c **** extern uint32_t SystemCoreClock;
+  46:..//drivers/IAP/iap_driver.c **** 
+  47:..//drivers/IAP/iap_driver.c **** void iap_init(void)
+  48:..//drivers/IAP/iap_driver.c **** {
+ 114              		.loc 1 48 0
+ 115              		.cfi_startproc
+ 116              		@ args = 0, pretend = 0, frame = 0
+ 117              		@ frame_needed = 1, uses_anonymous_args = 0
+ 118              		@ link register save eliminated.
+ 119 0000 80B4     		push	{r7}
+ 120              	.LCFI0:
+ 121              		.cfi_def_cfa_offset 4
+ 122 0002 00AF     		add	r7, sp, #0
+ 123              		.cfi_offset 7, -4
+ 124              	.LCFI1:
+ 125              		.cfi_def_cfa_register 7
+  49:..//drivers/IAP/iap_driver.c ****     cclk_kHz = SystemCoreClock/1000;
+ 126              		.loc 1 49 0
+ 127 0004 40F20003 		movw	r3, #:lower16:SystemCoreClock
+ 128 0008 C0F20003 		movt	r3, #:upper16:SystemCoreClock
+ 129 000c 1A68     		ldr	r2, [r3, #0]
+ 130 000e 44F6D353 		movw	r3, #:lower16:274877907
+ 131 0012 C1F26203 		movt	r3, #:upper16:274877907
+ 132 0016 A3FB0213 		umull	r1, r3, r3, r2
+ 133 001a 4FEA9313 		lsr	r3, r3, #6
+ 134 001e 1A46     		mov	r2, r3
+ 135 0020 40F20003 		movw	r3, #:lower16:cclk_kHz
+ 136 0024 C0F20003 		movt	r3, #:upper16:cclk_kHz
+ 137 0028 1A60     		str	r2, [r3, #0]
+  50:..//drivers/IAP/iap_driver.c **** }
+ 138              		.loc 1 50 0
+ 139 002a BD46     		mov	sp, r7
+ 140 002c 80BC     		pop	{r7}
+ 141 002e 7047     		bx	lr
+ 142              		.cfi_endproc
+ 143              	.LFE0:
+ 145              		.section	.text.iap_read_id,"ax",%progbits
+ 146              		.align	2
+ 147              		.global	iap_read_id
+ 148              		.thumb
+ 149              		.thumb_func
+ 151              	iap_read_id:
+ 152              	.LFB1:
+  51:..//drivers/IAP/iap_driver.c **** 
+  52:..//drivers/IAP/iap_driver.c **** int iap_read_id(void)
+  53:..//drivers/IAP/iap_driver.c **** {
+ 153              		.loc 1 53 0
+ 154              		.cfi_startproc
+ 155              		@ args = 0, pretend = 0, frame = 40
+ 156              		@ frame_needed = 1, uses_anonymous_args = 0
+ 157 0000 80B5     		push	{r7, lr}
+ 158              	.LCFI2:
+ 159              		.cfi_def_cfa_offset 8
+ 160 0002 8AB0     		sub	sp, sp, #40
+ 161              	.LCFI3:
+ 162              		.cfi_def_cfa_offset 48
+ 163 0004 00AF     		add	r7, sp, #0
+ 164              		.cfi_offset 14, -4
+ 165              		.cfi_offset 7, -8
+ 166              	.LCFI4:
+ 167              		.cfi_def_cfa_register 7
+  54:..//drivers/IAP/iap_driver.c ****     unsigned int cmd[5], res[5];
+  55:..//drivers/IAP/iap_driver.c ****     cmd[0] = IAPCommand_Read_part_ID;
+ 168              		.loc 1 55 0
+ 169 0006 4FF03603 		mov	r3, #54
+ 170 000a 7B61     		str	r3, [r7, #20]
+  56:..//drivers/IAP/iap_driver.c ****     iap_entry(cmd, res);
+ 171              		.loc 1 56 0
+ 172 000c 40F20003 		movw	r3, #:lower16:iap_entry
+ 173 0010 C0F20003 		movt	r3, #:upper16:iap_entry
+ 174 0014 1B68     		ldr	r3, [r3, #0]
+ 175 0016 07F11401 		add	r1, r7, #20
+ 176 001a 3A46     		mov	r2, r7
+ 177 001c 0846     		mov	r0, r1
+ 178 001e 1146     		mov	r1, r2
+ 179 0020 9847     		blx	r3
+  57:..//drivers/IAP/iap_driver.c ****     return ((int)res[1]);
+ 180              		.loc 1 57 0
+ 181 0022 7B68     		ldr	r3, [r7, #4]
+  58:..//drivers/IAP/iap_driver.c **** }
+ 182              		.loc 1 58 0
+ 183 0024 1846     		mov	r0, r3
+ 184 0026 07F12807 		add	r7, r7, #40
+ 185 002a BD46     		mov	sp, r7
+ 186 002c 80BD     		pop	{r7, pc}
+ 187              		.cfi_endproc
+ 188              	.LFE1:
+ 190 002e 00BF     		.section	.text.iap_read_version,"ax",%progbits
+ 191              		.align	2
+ 192              		.global	iap_read_version
+ 193              		.thumb
+ 194              		.thumb_func
+ 196              	iap_read_version:
+ 197              	.LFB2:
+  59:..//drivers/IAP/iap_driver.c **** 
+  60:..//drivers/IAP/iap_driver.c **** int iap_read_version(void)
+  61:..//drivers/IAP/iap_driver.c **** {
+ 198              		.loc 1 61 0
+ 199              		.cfi_startproc
+ 200              		@ args = 0, pretend = 0, frame = 40
+ 201              		@ frame_needed = 1, uses_anonymous_args = 0
+ 202 0000 80B5     		push	{r7, lr}
+ 203              	.LCFI5:
+ 204              		.cfi_def_cfa_offset 8
+ 205 0002 8AB0     		sub	sp, sp, #40
+ 206              	.LCFI6:
+ 207              		.cfi_def_cfa_offset 48
+ 208 0004 00AF     		add	r7, sp, #0
+ 209              		.cfi_offset 14, -4
+ 210              		.cfi_offset 7, -8
+ 211              	.LCFI7:
+ 212              		.cfi_def_cfa_register 7
+  62:..//drivers/IAP/iap_driver.c ****     unsigned int cmd[5], res[5];
+  63:..//drivers/IAP/iap_driver.c ****     cmd[0] = IAPCommand_Read_Boot_Code_version;
+ 213              		.loc 1 63 0
+ 214 0006 4FF03703 		mov	r3, #55
+ 215 000a 7B61     		str	r3, [r7, #20]
+  64:..//drivers/IAP/iap_driver.c ****     iap_entry(cmd, res);
+ 216              		.loc 1 64 0
+ 217 000c 40F20003 		movw	r3, #:lower16:iap_entry
+ 218 0010 C0F20003 		movt	r3, #:upper16:iap_entry
+ 219 0014 1B68     		ldr	r3, [r3, #0]
+ 220 0016 07F11401 		add	r1, r7, #20
+ 221 001a 3A46     		mov	r2, r7
+ 222 001c 0846     		mov	r0, r1
+ 223 001e 1146     		mov	r1, r2
+ 224 0020 9847     		blx	r3
+  65:..//drivers/IAP/iap_driver.c ****     return ((int)res[1]);    //NOTE: different from document UM10360, P635
+ 225              		.loc 1 65 0
+ 226 0022 7B68     		ldr	r3, [r7, #4]
+  66:..//drivers/IAP/iap_driver.c **** }
+ 227              		.loc 1 66 0
+ 228 0024 1846     		mov	r0, r3
+ 229 0026 07F12807 		add	r7, r7, #40
+ 230 002a BD46     		mov	sp, r7
+ 231 002c 80BD     		pop	{r7, pc}
+ 232              		.cfi_endproc
+ 233              	.LFE2:
+ 235 002e 00BF     		.section	.text.iap_read_serial,"ax",%progbits
+ 236              		.align	2
+ 237              		.global	iap_read_serial
+ 238              		.thumb
+ 239              		.thumb_func
+ 241              	iap_read_serial:
+ 242              	.LFB3:
+  67:..//drivers/IAP/iap_driver.c **** 
+  68:..//drivers/IAP/iap_driver.c **** 
+  69:..//drivers/IAP/iap_driver.c **** int iap_read_serial(void)
+  70:..//drivers/IAP/iap_driver.c **** {
+ 243              		.loc 1 70 0
+ 244              		.cfi_startproc
+ 245              		@ args = 0, pretend = 0, frame = 40
+ 246              		@ frame_needed = 1, uses_anonymous_args = 0
+ 247 0000 80B5     		push	{r7, lr}
+ 248              	.LCFI8:
+ 249              		.cfi_def_cfa_offset 8
+ 250 0002 8AB0     		sub	sp, sp, #40
+ 251              	.LCFI9:
+ 252              		.cfi_def_cfa_offset 48
+ 253 0004 00AF     		add	r7, sp, #0
+ 254              		.cfi_offset 14, -4
+ 255              		.cfi_offset 7, -8
+ 256              	.LCFI10:
+ 257              		.cfi_def_cfa_register 7
+  71:..//drivers/IAP/iap_driver.c ****     unsigned int cmd[5], res[5];
+  72:..//drivers/IAP/iap_driver.c ****     cmd[0] = IAPCommand_Read_device_serial_number;
+ 258              		.loc 1 72 0
+ 259 0006 4FF03A03 		mov	r3, #58
+ 260 000a 7B61     		str	r3, [r7, #20]
+  73:..//drivers/IAP/iap_driver.c ****     iap_entry(cmd, res);
+ 261              		.loc 1 73 0
+ 262 000c 40F20003 		movw	r3, #:lower16:iap_entry
+ 263 0010 C0F20003 		movt	r3, #:upper16:iap_entry
+ 264 0014 1B68     		ldr	r3, [r3, #0]
+ 265 0016 07F11401 		add	r1, r7, #20
+ 266 001a 3A46     		mov	r2, r7
+ 267 001c 0846     		mov	r0, r1
+ 268 001e 1146     		mov	r1, r2
+ 269 0020 9847     		blx	r3
+  74:..//drivers/IAP/iap_driver.c ****     return ((int)res[1]);
+ 270              		.loc 1 74 0
+ 271 0022 7B68     		ldr	r3, [r7, #4]
+  75:..//drivers/IAP/iap_driver.c **** }
+ 272              		.loc 1 75 0
+ 273 0024 1846     		mov	r0, r3
+ 274 0026 07F12807 		add	r7, r7, #40
+ 275 002a BD46     		mov	sp, r7
+ 276 002c 80BD     		pop	{r7, pc}
+ 277              		.cfi_endproc
+ 278              	.LFE3:
+ 280 002e 00BF     		.section	.text.iap_blank_check,"ax",%progbits
+ 281              		.align	2
+ 282              		.global	iap_blank_check
+ 283              		.thumb
+ 284              		.thumb_func
+ 286              	iap_blank_check:
+ 287              	.LFB4:
+  76:..//drivers/IAP/iap_driver.c **** 
+  77:..//drivers/IAP/iap_driver.c **** int iap_blank_check(unsigned int sector)
+  78:..//drivers/IAP/iap_driver.c **** {
+ 288              		.loc 1 78 0
+ 289              		.cfi_startproc
+ 290              		@ args = 0, pretend = 0, frame = 48
+ 291              		@ frame_needed = 1, uses_anonymous_args = 0
+ 292 0000 80B5     		push	{r7, lr}
+ 293              	.LCFI11:
+ 294              		.cfi_def_cfa_offset 8
+ 295 0002 8CB0     		sub	sp, sp, #48
+ 296              	.LCFI12:
+ 297              		.cfi_def_cfa_offset 56
+ 298 0004 00AF     		add	r7, sp, #0
+ 299              		.cfi_offset 14, -4
+ 300              		.cfi_offset 7, -8
+ 301              	.LCFI13:
+ 302              		.cfi_def_cfa_register 7
+ 303 0006 7860     		str	r0, [r7, #4]
+  79:..//drivers/IAP/iap_driver.c ****     unsigned int cmd[5], res[5];
+  80:..//drivers/IAP/iap_driver.c ****     cmd[0] = IAPCommand_Blank_check_sector;
+ 304              		.loc 1 80 0
+ 305 0008 4FF03503 		mov	r3, #53
+ 306 000c FB61     		str	r3, [r7, #28]
+  81:..//drivers/IAP/iap_driver.c ****     cmd[1] = (unsigned int)sector;
+ 307              		.loc 1 81 0
+ 308 000e 7B68     		ldr	r3, [r7, #4]
+ 309 0010 3B62     		str	r3, [r7, #32]
+  82:..//drivers/IAP/iap_driver.c ****     cmd[2] = (unsigned int)sector;
+ 310              		.loc 1 82 0
+ 311 0012 7B68     		ldr	r3, [r7, #4]
+ 312 0014 7B62     		str	r3, [r7, #36]
+  83:..//drivers/IAP/iap_driver.c ****     iap_entry(cmd, res);
+ 313              		.loc 1 83 0
+ 314 0016 40F20003 		movw	r3, #:lower16:iap_entry
+ 315 001a C0F20003 		movt	r3, #:upper16:iap_entry
+ 316 001e 1B68     		ldr	r3, [r3, #0]
+ 317 0020 07F11C01 		add	r1, r7, #28
+ 318 0024 07F10802 		add	r2, r7, #8
+ 319 0028 0846     		mov	r0, r1
+ 320 002a 1146     		mov	r1, r2
+ 321 002c 9847     		blx	r3
+  84:..//drivers/IAP/iap_driver.c ****     return ((int)res[0]);
+ 322              		.loc 1 84 0
+ 323 002e BB68     		ldr	r3, [r7, #8]
+  85:..//drivers/IAP/iap_driver.c **** }
+ 324              		.loc 1 85 0
+ 325 0030 1846     		mov	r0, r3
+ 326 0032 07F13007 		add	r7, r7, #48
+ 327 0036 BD46     		mov	sp, r7
+ 328 0038 80BD     		pop	{r7, pc}
+ 329              		.cfi_endproc
+ 330              	.LFE4:
+ 332 003a 00BF     		.section	.rodata
+ 333              		.align	2
+ 334              	.LC0:
+ 335 0000 6961705F 		.ascii	"iap_prepare:result:%d\012\000"
+ 335      70726570 
+ 335      6172653A 
+ 335      72657375 
+ 335      6C743A25 
+ 336              		.section	.text.iap_prepare,"ax",%progbits
+ 337              		.align	2
+ 338              		.thumb
+ 339              		.thumb_func
+ 341              	iap_prepare:
+ 342              	.LFB5:
+  86:..//drivers/IAP/iap_driver.c **** 
+  87:..//drivers/IAP/iap_driver.c **** static int iap_prepare(unsigned int sector)
+  88:..//drivers/IAP/iap_driver.c **** {
+ 343              		.loc 1 88 0
+ 344              		.cfi_startproc
+ 345              		@ args = 0, pretend = 0, frame = 48
+ 346              		@ frame_needed = 1, uses_anonymous_args = 0
+ 347 0000 80B5     		push	{r7, lr}
+ 348              	.LCFI14:
+ 349              		.cfi_def_cfa_offset 8
+ 350 0002 8CB0     		sub	sp, sp, #48
+ 351              	.LCFI15:
+ 352              		.cfi_def_cfa_offset 56
+ 353 0004 00AF     		add	r7, sp, #0
+ 354              		.cfi_offset 14, -4
+ 355              		.cfi_offset 7, -8
+ 356              	.LCFI16:
+ 357              		.cfi_def_cfa_register 7
+ 358 0006 7860     		str	r0, [r7, #4]
+  89:..//drivers/IAP/iap_driver.c ****     unsigned int cmd[5], res[5];
+  90:..//drivers/IAP/iap_driver.c ****     cmd[0] = IAPCommand_Prepare_sector_for_write_operation;
+ 359              		.loc 1 90 0
+ 360 0008 4FF03203 		mov	r3, #50
+ 361 000c FB61     		str	r3, [r7, #28]
+  91:..//drivers/IAP/iap_driver.c ****     cmd[1] = (unsigned int)sector;
+ 362              		.loc 1 91 0
+ 363 000e 7B68     		ldr	r3, [r7, #4]
+ 364 0010 3B62     		str	r3, [r7, #32]
+  92:..//drivers/IAP/iap_driver.c ****     cmd[2] = (unsigned int)sector;
+ 365              		.loc 1 92 0
+ 366 0012 7B68     		ldr	r3, [r7, #4]
+ 367 0014 7B62     		str	r3, [r7, #36]
+  93:..//drivers/IAP/iap_driver.c ****     iap_entry(cmd, res);
+ 368              		.loc 1 93 0
+ 369 0016 40F20003 		movw	r3, #:lower16:iap_entry
+ 370 001a C0F20003 		movt	r3, #:upper16:iap_entry
+ 371 001e 1B68     		ldr	r3, [r3, #0]
+ 372 0020 07F11C01 		add	r1, r7, #28
+ 373 0024 07F10802 		add	r2, r7, #8
+ 374 0028 0846     		mov	r0, r1
+ 375 002a 1146     		mov	r1, r2
+ 376 002c 9847     		blx	r3
+  94:..//drivers/IAP/iap_driver.c ****     if(res[0]){
+ 377              		.loc 1 94 0
+ 378 002e BB68     		ldr	r3, [r7, #8]
+ 379 0030 002B     		cmp	r3, #0
+ 380 0032 0AD0     		beq	.L12
+  95:..//drivers/IAP/iap_driver.c ****         printf("iap_prepare:result:%d\n",res[0]);
+ 381              		.loc 1 95 0
+ 382 0034 BB68     		ldr	r3, [r7, #8]
+ 383 0036 40F20000 		movw	r0, #:lower16:.LC0
+ 384 003a C0F20000 		movt	r0, #:upper16:.LC0
+ 385 003e 1946     		mov	r1, r3
+ 386 0040 40F20003 		movw	r3, #:lower16:printf
+ 387 0044 C0F20003 		movt	r3, #:upper16:printf
+ 388 0048 9847     		blx	r3
+ 389              	.L12:
+  96:..//drivers/IAP/iap_driver.c ****     }
+  97:..//drivers/IAP/iap_driver.c ****     return ((int)res[0]);
+ 390              		.loc 1 97 0
+ 391 004a BB68     		ldr	r3, [r7, #8]
+  98:..//drivers/IAP/iap_driver.c **** }
+ 392              		.loc 1 98 0
+ 393 004c 1846     		mov	r0, r3
+ 394 004e 07F13007 		add	r7, r7, #48
+ 395 0052 BD46     		mov	sp, r7
+ 396 0054 80BD     		pop	{r7, pc}
+ 397              		.cfi_endproc
+ 398              	.LFE5:
+ 400 0056 00BF     		.section	.rodata
+ 401 0017 00       		.align	2
+ 402              	.LC1:
+ 403 0018 6961705F 		.ascii	"iap_erase:result:%d\012\000"
+ 403      65726173 
+ 403      653A7265 
+ 403      73756C74 
+ 403      3A25640A 
+ 404              		.section	.text.iap_erase,"ax",%progbits
+ 405              		.align	2
+ 406              		.global	iap_erase
+ 407              		.thumb
+ 408              		.thumb_func
+ 410              	iap_erase:
+ 411              	.LFB6:
+  99:..//drivers/IAP/iap_driver.c **** 
+ 100:..//drivers/IAP/iap_driver.c **** int iap_erase(unsigned int sector)
+ 101:..//drivers/IAP/iap_driver.c **** {
+ 412              		.loc 1 101 0
+ 413              		.cfi_startproc
+ 414              		@ args = 0, pretend = 0, frame = 48
+ 415              		@ frame_needed = 1, uses_anonymous_args = 0
+ 416 0000 80B5     		push	{r7, lr}
+ 417              	.LCFI17:
+ 418              		.cfi_def_cfa_offset 8
+ 419 0002 8CB0     		sub	sp, sp, #48
+ 420              	.LCFI18:
+ 421              		.cfi_def_cfa_offset 56
+ 422 0004 00AF     		add	r7, sp, #0
+ 423              		.cfi_offset 14, -4
+ 424              		.cfi_offset 7, -8
+ 425              	.LCFI19:
+ 426              		.cfi_def_cfa_register 7
+ 427 0006 7860     		str	r0, [r7, #4]
+ 102:..//drivers/IAP/iap_driver.c ****     unsigned int cmd[5], res[5];
+ 103:..//drivers/IAP/iap_driver.c ****     iap_prepare(sector);
+ 428              		.loc 1 103 0
+ 429 0008 7868     		ldr	r0, [r7, #4]
+ 430 000a 40F20003 		movw	r3, #:lower16:iap_prepare
+ 431 000e C0F20003 		movt	r3, #:upper16:iap_prepare
+ 432 0012 9847     		blx	r3
+ 104:..//drivers/IAP/iap_driver.c ****     cmd[0] = IAPCommand_Erase_sector;
+ 433              		.loc 1 104 0
+ 434 0014 4FF03403 		mov	r3, #52
+ 435 0018 FB61     		str	r3, [r7, #28]
+ 105:..//drivers/IAP/iap_driver.c ****     cmd[1] = (unsigned int)sector;
+ 436              		.loc 1 105 0
+ 437 001a 7B68     		ldr	r3, [r7, #4]
+ 438 001c 3B62     		str	r3, [r7, #32]
+ 106:..//drivers/IAP/iap_driver.c ****     cmd[2] = (unsigned int)sector;
+ 439              		.loc 1 106 0
+ 440 001e 7B68     		ldr	r3, [r7, #4]
+ 441 0020 7B62     		str	r3, [r7, #36]
+ 107:..//drivers/IAP/iap_driver.c ****     cmd[3] = cclk_kHz;
+ 442              		.loc 1 107 0
+ 443 0022 40F20003 		movw	r3, #:lower16:cclk_kHz
+ 444 0026 C0F20003 		movt	r3, #:upper16:cclk_kHz
+ 445 002a 1B68     		ldr	r3, [r3, #0]
+ 446 002c BB62     		str	r3, [r7, #40]
+ 108:..//drivers/IAP/iap_driver.c ****     iap_entry(cmd, res);
+ 447              		.loc 1 108 0
+ 448 002e 40F20003 		movw	r3, #:lower16:iap_entry
+ 449 0032 C0F20003 		movt	r3, #:upper16:iap_entry
+ 450 0036 1B68     		ldr	r3, [r3, #0]
+ 451 0038 07F11C01 		add	r1, r7, #28
+ 452 003c 07F10802 		add	r2, r7, #8
+ 453 0040 0846     		mov	r0, r1
+ 454 0042 1146     		mov	r1, r2
+ 455 0044 9847     		blx	r3
+ 109:..//drivers/IAP/iap_driver.c ****     if(res[0]){
+ 456              		.loc 1 109 0
+ 457 0046 BB68     		ldr	r3, [r7, #8]
+ 458 0048 002B     		cmp	r3, #0
+ 459 004a 0AD0     		beq	.L15
+ 110:..//drivers/IAP/iap_driver.c ****         printf("iap_erase:result:%d\n",res[0]);
+ 460              		.loc 1 110 0
+ 461 004c BB68     		ldr	r3, [r7, #8]
+ 462 004e 40F20000 		movw	r0, #:lower16:.LC1
+ 463 0052 C0F20000 		movt	r0, #:upper16:.LC1
+ 464 0056 1946     		mov	r1, r3
+ 465 0058 40F20003 		movw	r3, #:lower16:printf
+ 466 005c C0F20003 		movt	r3, #:upper16:printf
+ 467 0060 9847     		blx	r3
+ 468              	.L15:
+ 111:..//drivers/IAP/iap_driver.c ****     }
+ 112:..//drivers/IAP/iap_driver.c ****     // while(iap_blank_check(sector)){
+ 113:..//drivers/IAP/iap_driver.c ****     //     //could get stuck here. might wanna add iap_erase(sector) since there's no point in stay
+ 114:..//drivers/IAP/iap_driver.c ****     //     ;
+ 115:..//drivers/IAP/iap_driver.c ****     // }
+ 116:..//drivers/IAP/iap_driver.c ****     return ((int)res[0]);
+ 469              		.loc 1 116 0
+ 470 0062 BB68     		ldr	r3, [r7, #8]
+ 117:..//drivers/IAP/iap_driver.c **** }
+ 471              		.loc 1 117 0
+ 472 0064 1846     		mov	r0, r3
+ 473 0066 07F13007 		add	r7, r7, #48
+ 474 006a BD46     		mov	sp, r7
+ 475 006c 80BD     		pop	{r7, pc}
+ 476              		.cfi_endproc
+ 477              	.LFE6:
+ 479 006e 00BF     		.section	.rodata
+ 480 002d 000000   		.align	2
+ 481              	.LC2:
+ 482 0030 0A696170 		.ascii	"\012iap_compare(0x%x,0x%x,0x%x) result:%d,pos[0x%x]"
+ 482      5F636F6D 
+ 482      70617265 
+ 482      28307825 
+ 482      782C3078 
+ 483 0060 00       		.ascii	"\000"
+ 484              		.section	.text.iap_compare,"ax",%progbits
+ 485              		.align	2
+ 486              		.thumb
+ 487              		.thumb_func
+ 489              	iap_compare:
+ 490              	.LFB7:
+ 118:..//drivers/IAP/iap_driver.c **** 
+ 119:..//drivers/IAP/iap_driver.c **** static int iap_compare(unsigned int src_addr, unsigned int dest_addr, unsigned int size)
+ 120:..//drivers/IAP/iap_driver.c **** {
+ 491              		.loc 1 120 0
+ 492              		.cfi_startproc
+ 493              		@ args = 0, pretend = 0, frame = 56
+ 494              		@ frame_needed = 1, uses_anonymous_args = 0
+ 495 0000 80B5     		push	{r7, lr}
+ 496              	.LCFI20:
+ 497              		.cfi_def_cfa_offset 8
+ 498 0002 90B0     		sub	sp, sp, #64
+ 499              	.LCFI21:
+ 500              		.cfi_def_cfa_offset 72
+ 501 0004 02AF     		add	r7, sp, #8
+ 502              		.cfi_offset 14, -4
+ 503              		.cfi_offset 7, -8
+ 504              	.LCFI22:
+ 505              		.cfi_def_cfa 7, 64
+ 506 0006 F860     		str	r0, [r7, #12]
+ 507 0008 B960     		str	r1, [r7, #8]
+ 508 000a 7A60     		str	r2, [r7, #4]
+ 121:..//drivers/IAP/iap_driver.c ****     unsigned int cmd[5], res[5];
+ 122:..//drivers/IAP/iap_driver.c **** 
+ 123:..//drivers/IAP/iap_driver.c ****     cmd[0] = IAPCommand_Compare;
+ 509              		.loc 1 123 0
+ 510 000c 4FF03803 		mov	r3, #56
+ 511 0010 7B62     		str	r3, [r7, #36]
+ 124:..//drivers/IAP/iap_driver.c ****     cmd[1] = (unsigned int)dest_addr;
+ 512              		.loc 1 124 0
+ 513 0012 BB68     		ldr	r3, [r7, #8]
+ 514 0014 BB62     		str	r3, [r7, #40]
+ 125:..//drivers/IAP/iap_driver.c ****     cmd[2] = (unsigned int)src_addr;
+ 515              		.loc 1 125 0
+ 516 0016 FB68     		ldr	r3, [r7, #12]
+ 517 0018 FB62     		str	r3, [r7, #44]
+ 126:..//drivers/IAP/iap_driver.c ****     cmd[3] = size;
+ 518              		.loc 1 126 0
+ 519 001a 7B68     		ldr	r3, [r7, #4]
+ 520 001c 3B63     		str	r3, [r7, #48]
+ 127:..//drivers/IAP/iap_driver.c ****     iap_entry(cmd, res);
+ 521              		.loc 1 127 0
+ 522 001e 40F20003 		movw	r3, #:lower16:iap_entry
+ 523 0022 C0F20003 		movt	r3, #:upper16:iap_entry
+ 524 0026 1B68     		ldr	r3, [r3, #0]
+ 525 0028 07F12401 		add	r1, r7, #36
+ 526 002c 07F11002 		add	r2, r7, #16
+ 527 0030 0846     		mov	r0, r1
+ 528 0032 1146     		mov	r1, r2
+ 529 0034 9847     		blx	r3
+ 128:..//drivers/IAP/iap_driver.c ****     if(res[0]){
+ 530              		.loc 1 128 0
+ 531 0036 3B69     		ldr	r3, [r7, #16]
+ 532 0038 002B     		cmp	r3, #0
+ 533 003a 0FD0     		beq	.L18
+ 129:..//drivers/IAP/iap_driver.c ****         printf("\niap_compare(0x%x,0x%x,0x%x) result:%d,pos[0x%x]",
+ 534              		.loc 1 129 0
+ 535 003c 3A69     		ldr	r2, [r7, #16]
+ 536 003e 7B69     		ldr	r3, [r7, #20]
+ 537 0040 0092     		str	r2, [sp, #0]
+ 538 0042 0193     		str	r3, [sp, #4]
+ 539 0044 40F20000 		movw	r0, #:lower16:.LC2
+ 540 0048 C0F20000 		movt	r0, #:upper16:.LC2
+ 541 004c F968     		ldr	r1, [r7, #12]
+ 542 004e BA68     		ldr	r2, [r7, #8]
+ 543 0050 7B68     		ldr	r3, [r7, #4]
+ 544 0052 40F2000C 		movw	ip, #:lower16:printf
+ 545 0056 C0F2000C 		movt	ip, #:upper16:printf
+ 546 005a E047     		blx	ip
+ 547              	.L18:
+ 130:..//drivers/IAP/iap_driver.c ****                 src_addr, dest_addr, size, res[0],res[1]);
+ 131:..//drivers/IAP/iap_driver.c ****     }
+ 132:..//drivers/IAP/iap_driver.c ****     return ((int)res[0]);
+ 548              		.loc 1 132 0
+ 549 005c 3B69     		ldr	r3, [r7, #16]
+ 133:..//drivers/IAP/iap_driver.c **** }
+ 550              		.loc 1 133 0
+ 551 005e 1846     		mov	r0, r3
+ 552 0060 07F13807 		add	r7, r7, #56
+ 553 0064 BD46     		mov	sp, r7
+ 554 0066 80BD     		pop	{r7, pc}
+ 555              		.cfi_endproc
+ 556              	.LFE7:
+ 558              		.section	.rodata
+ 559 0061 000000   		.align	2
+ 560              	.LC3:
+ 561 0064 636D645B 		.ascii	"cmd[%x,%x,%x], result:%d\012\000"
+ 561      25782C25 
+ 561      782C2578 
+ 561      5D2C2072 
+ 561      6573756C 
+ 562 007e 0000     		.align	2
+ 563              	.LC4:
+ 564 0080 0A636F6D 		.ascii	"\012compare%d\000"
+ 564      70617265 
+ 564      256400
+ 565 008b 00       		.align	2
+ 566              	.LC5:
+ 567 008c 0A696170 		.ascii	"\012iap_write failed\000"
+ 567      5F777269 
+ 567      74652066 
+ 567      61696C65 
+ 567      6400
+ 568 009e 0000     		.align	2
+ 569              	.LC6:
+ 570 00a0 0A726573 		.ascii	"\012res2[0]=%d\000"
+ 570      325B305D 
+ 570      3D256400 
+ 571              		.section	.text.iap_write,"ax",%progbits
+ 572              		.align	2
+ 573              		.global	iap_write
+ 574              		.thumb
+ 575              		.thumb_func
+ 577              	iap_write:
+ 578              	.LFB8:
+ 134:..//drivers/IAP/iap_driver.c **** int iap_write(unsigned int sector, unsigned int offset, 
+ 135:..//drivers/IAP/iap_driver.c ****         const void *buf, unsigned int size)
+ 136:..//drivers/IAP/iap_driver.c **** {
+ 579              		.loc 1 136 0
+ 580              		.cfi_startproc
+ 581              		@ args = 0, pretend = 0, frame = 328
+ 582              		@ frame_needed = 1, uses_anonymous_args = 0
+ 583 0000 80B5     		push	{r7, lr}
+ 584              	.LCFI23:
+ 585              		.cfi_def_cfa_offset 8
+ 586 0002 D4B0     		sub	sp, sp, #336
+ 587              	.LCFI24:
+ 588              		.cfi_def_cfa_offset 344
+ 589 0004 02AF     		add	r7, sp, #8
+ 590              		.cfi_offset 14, -4
+ 591              		.cfi_offset 7, -8
+ 592              	.LCFI25:
+ 593              		.cfi_def_cfa 7, 336
+ 594 0006 07F10C0C 		add	ip, r7, #12
+ 595 000a CCF80000 		str	r0, [ip, #0]
+ 596 000e 07F10800 		add	r0, r7, #8
+ 597 0012 0160     		str	r1, [r0, #0]
+ 598 0014 07F10401 		add	r1, r7, #4
+ 599 0018 0A60     		str	r2, [r1, #0]
+ 600 001a 3A46     		mov	r2, r7
+ 601 001c 1360     		str	r3, [r2, #0]
+ 137:..//drivers/IAP/iap_driver.c ****     unsigned int cmd[5], res[5];
+ 138:..//drivers/IAP/iap_driver.c ****     char wbuf[256]; // this buffer is to make 256byte boundary, according to IAP requirement
+ 139:..//drivers/IAP/iap_driver.c ****     unsigned int i;
+ 140:..//drivers/IAP/iap_driver.c ****     unsigned int dest_addr = flash_sector_addrs[sector] + offset;
+ 602              		.loc 1 140 0
+ 603 001e 07F10C03 		add	r3, r7, #12
+ 604 0022 1A68     		ldr	r2, [r3, #0]
+ 605 0024 40F20003 		movw	r3, #:lower16:flash_sector_addrs
+ 606 0028 C0F20003 		movt	r3, #:upper16:flash_sector_addrs
+ 607 002c 53F82220 		ldr	r2, [r3, r2, lsl #2]
+ 608 0030 07F10803 		add	r3, r7, #8
+ 609 0034 1B68     		ldr	r3, [r3, #0]
+ 610 0036 1344     		add	r3, r2, r3
+ 611 0038 C7F84031 		str	r3, [r7, #320]
+ 141:..//drivers/IAP/iap_driver.c ****     for(i = 0; i<size; i+=sizeof(wbuf)){
+ 612              		.loc 1 141 0
+ 613 003c 4FF00003 		mov	r3, #0
+ 614 0040 C7F83C31 		str	r3, [r7, #316]
+ 615 0044 CBE0     		b	.L21
+ 616              	.L28:
+ 617              	.LBB2:
+ 142:..//drivers/IAP/iap_driver.c ****         unsigned int s = size-i;
+ 618              		.loc 1 142 0
+ 619 0046 3B46     		mov	r3, r7
+ 620 0048 1A68     		ldr	r2, [r3, #0]
+ 621 004a D7F83C31 		ldr	r3, [r7, #316]
+ 622 004e C3EB0203 		rsb	r3, r3, r2
+ 623 0052 C7F84431 		str	r3, [r7, #324]
+ 143:..//drivers/IAP/iap_driver.c ****         iap_prepare(sector);
+ 624              		.loc 1 143 0
+ 625 0056 07F10C03 		add	r3, r7, #12
+ 626 005a 1868     		ldr	r0, [r3, #0]
+ 627 005c 40F20003 		movw	r3, #:lower16:iap_prepare
+ 628 0060 C0F20003 		movt	r3, #:upper16:iap_prepare
+ 629 0064 9847     		blx	r3
+ 144:..//drivers/IAP/iap_driver.c ****         if (s>sizeof(wbuf)) s = sizeof(wbuf);
+ 630              		.loc 1 144 0
+ 631 0066 D7F84431 		ldr	r3, [r7, #324]
+ 632 006a B3F5807F 		cmp	r3, #256
+ 633 006e 03D9     		bls	.L22
+ 634 0070 4FF48073 		mov	r3, #256
+ 635 0074 C7F84431 		str	r3, [r7, #324]
+ 636              	.L22:
+ 145:..//drivers/IAP/iap_driver.c ****         memset(wbuf, 0, sizeof(wbuf));
+ 637              		.loc 1 145 0
+ 638 0078 07F11403 		add	r3, r7, #20
+ 639 007c 1846     		mov	r0, r3
+ 640 007e 4FF00001 		mov	r1, #0
+ 641 0082 4FF48072 		mov	r2, #256
+ 642 0086 40F20003 		movw	r3, #:lower16:memset
+ 643 008a C0F20003 		movt	r3, #:upper16:memset
+ 644 008e 9847     		blx	r3
+ 146:..//drivers/IAP/iap_driver.c ****         memcpy(wbuf, ( (void*)( (int)buf + i ) ), s);
+ 645              		.loc 1 146 0
+ 646 0090 07F10403 		add	r3, r7, #4
+ 647 0094 1A68     		ldr	r2, [r3, #0]
+ 648 0096 D7F83C31 		ldr	r3, [r7, #316]
+ 649 009a 1344     		add	r3, r2, r3
+ 650 009c 07F11402 		add	r2, r7, #20
+ 651 00a0 1046     		mov	r0, r2
+ 652 00a2 1946     		mov	r1, r3
+ 653 00a4 D7F84421 		ldr	r2, [r7, #324]
+ 654 00a8 40F20003 		movw	r3, #:lower16:memcpy
+ 655 00ac C0F20003 		movt	r3, #:upper16:memcpy
+ 656 00b0 9847     		blx	r3
+ 147:..//drivers/IAP/iap_driver.c **** 		cmd[0] = IAPCommand_Copy_RAM_to_Flash;
+ 657              		.loc 1 147 0
+ 658 00b2 4FF03303 		mov	r3, #51
+ 659 00b6 C7F82831 		str	r3, [r7, #296]
+ 148:..//drivers/IAP/iap_driver.c ****         cmd[1] = (unsigned int)dest_addr+i;
+ 660              		.loc 1 148 0
+ 661 00ba D7F84021 		ldr	r2, [r7, #320]
+ 662 00be D7F83C31 		ldr	r3, [r7, #316]
+ 663 00c2 1344     		add	r3, r2, r3
+ 664 00c4 C7F82C31 		str	r3, [r7, #300]
+ 149:..//drivers/IAP/iap_driver.c ****         cmd[2] = (unsigned int)wbuf;
+ 665              		.loc 1 149 0
+ 666 00c8 07F11403 		add	r3, r7, #20
+ 667 00cc C7F83031 		str	r3, [r7, #304]
+ 150:..//drivers/IAP/iap_driver.c ****         cmd[3] = sizeof(wbuf);
+ 668              		.loc 1 150 0
+ 669 00d0 4FF48073 		mov	r3, #256
+ 670 00d4 C7F83431 		str	r3, [r7, #308]
+ 151:..//drivers/IAP/iap_driver.c ****         cmd[4] = cclk_kHz;
+ 671              		.loc 1 151 0
+ 672 00d8 40F20003 		movw	r3, #:lower16:cclk_kHz
+ 673 00dc C0F20003 		movt	r3, #:upper16:cclk_kHz
+ 674 00e0 1B68     		ldr	r3, [r3, #0]
+ 675 00e2 C7F83831 		str	r3, [r7, #312]
+ 152:..//drivers/IAP/iap_driver.c ****         iap_entry(cmd, res);
+ 676              		.loc 1 152 0
+ 677 00e6 40F20003 		movw	r3, #:lower16:iap_entry
+ 678 00ea C0F20003 		movt	r3, #:upper16:iap_entry
+ 679 00ee 1B68     		ldr	r3, [r3, #0]
+ 680 00f0 07F59471 		add	r1, r7, #296
+ 681 00f4 07F58A72 		add	r2, r7, #276
+ 682 00f8 0846     		mov	r0, r1
+ 683 00fa 1146     		mov	r1, r2
+ 684 00fc 9847     		blx	r3
+ 153:..//drivers/IAP/iap_driver.c **** 		
+ 154:..//drivers/IAP/iap_driver.c ****         // printf("\nres1[0]=%d",res[0]);
+ 155:..//drivers/IAP/iap_driver.c ****         if(res[0]){
+ 685              		.loc 1 155 0
+ 686 00fe D7F81431 		ldr	r3, [r7, #276]
+ 687 0102 002B     		cmp	r3, #0
+ 688 0104 11D0     		beq	.L23
+ 156:..//drivers/IAP/iap_driver.c ****             printf("cmd[%x,%x,%x], result:%d\n",cmd[1], cmd[2], cmd[3], res[0]);
+ 689              		.loc 1 156 0
+ 690 0106 D7F82C11 		ldr	r1, [r7, #300]
+ 691 010a D7F83021 		ldr	r2, [r7, #304]
+ 692 010e D7F83431 		ldr	r3, [r7, #308]
+ 693 0112 D7F81401 		ldr	r0, [r7, #276]
+ 694 0116 0090     		str	r0, [sp, #0]
+ 695 0118 40F20000 		movw	r0, #:lower16:.LC3
+ 696 011c C0F20000 		movt	r0, #:upper16:.LC3
+ 697 0120 40F2000C 		movw	ip, #:lower16:printf
+ 698 0124 C0F2000C 		movt	ip, #:upper16:printf
+ 699 0128 E047     		blx	ip
+ 700              	.L23:
+ 157:..//drivers/IAP/iap_driver.c ****         }
+ 158:..//drivers/IAP/iap_driver.c ****         if(iap_compare(dest_addr+i, (unsigned int)wbuf, sizeof(wbuf))){
+ 701              		.loc 1 158 0
+ 702 012a D7F84021 		ldr	r2, [r7, #320]
+ 703 012e D7F83C31 		ldr	r3, [r7, #316]
+ 704 0132 1A44     		add	r2, r2, r3
+ 705 0134 07F11403 		add	r3, r7, #20
+ 706 0138 1046     		mov	r0, r2
+ 707 013a 1946     		mov	r1, r3
+ 708 013c 4FF48072 		mov	r2, #256
+ 709 0140 40F20003 		movw	r3, #:lower16:iap_compare
+ 710 0144 C0F20003 		movt	r3, #:upper16:iap_compare
+ 711 0148 9847     		blx	r3
+ 712 014a 0346     		mov	r3, r0
+ 713 014c 002B     		cmp	r3, #0
+ 714 014e 0DD0     		beq	.L24
+ 159:..//drivers/IAP/iap_driver.c **** 			printf("\ncompare%d",1);
+ 715              		.loc 1 159 0
+ 716 0150 40F20000 		movw	r0, #:lower16:.LC4
+ 717 0154 C0F20000 		movt	r0, #:upper16:.LC4
+ 718 0158 4FF00101 		mov	r1, #1
+ 719 015c 40F20003 		movw	r3, #:lower16:printf
+ 720 0160 C0F20003 		movt	r3, #:upper16:printf
+ 721 0164 9847     		blx	r3
+ 160:..//drivers/IAP/iap_driver.c ****             return -1;
+ 722              		.loc 1 160 0
+ 723 0166 4FF0FF33 		mov	r3, #-1
+ 724 016a 41E0     		b	.L25
+ 725              	.L24:
+ 161:..//drivers/IAP/iap_driver.c ****         }
+ 162:..//drivers/IAP/iap_driver.c ****         if(memcmp((const void *)(dest_addr+i), wbuf, sizeof(wbuf))){
+ 726              		.loc 1 162 0
+ 727 016c D7F84021 		ldr	r2, [r7, #320]
+ 728 0170 D7F83C31 		ldr	r3, [r7, #316]
+ 729 0174 1344     		add	r3, r2, r3
+ 730 0176 1A46     		mov	r2, r3
+ 731 0178 07F11403 		add	r3, r7, #20
+ 732 017c 1046     		mov	r0, r2
+ 733 017e 1946     		mov	r1, r3
+ 734 0180 4FF48072 		mov	r2, #256
+ 735 0184 40F20003 		movw	r3, #:lower16:memcmp
+ 736 0188 C0F20003 		movt	r3, #:upper16:memcmp
+ 737 018c 9847     		blx	r3
+ 738 018e 0346     		mov	r3, r0
+ 739 0190 002B     		cmp	r3, #0
+ 740 0192 0BD0     		beq	.L26
+ 163:..//drivers/IAP/iap_driver.c ****             printf("\niap_write failed\n");
+ 741              		.loc 1 163 0
+ 742 0194 40F20000 		movw	r0, #:lower16:.LC5
+ 743 0198 C0F20000 		movt	r0, #:upper16:.LC5
+ 744 019c 40F20003 		movw	r3, #:lower16:puts
+ 745 01a0 C0F20003 		movt	r3, #:upper16:puts
+ 746 01a4 9847     		blx	r3
+ 164:..//drivers/IAP/iap_driver.c ****             return -1;
+ 747              		.loc 1 164 0
+ 748 01a6 4FF0FF33 		mov	r3, #-1
+ 749 01aa 21E0     		b	.L25
+ 750              	.L26:
+ 165:..//drivers/IAP/iap_driver.c ****         }
+ 166:..//drivers/IAP/iap_driver.c ****         if(res[0]){
+ 751              		.loc 1 166 0
+ 752 01ac D7F81431 		ldr	r3, [r7, #276]
+ 753 01b0 002B     		cmp	r3, #0
+ 754 01b2 0ED0     		beq	.L27
+ 167:..//drivers/IAP/iap_driver.c ****             printf("\nres2[0]=%d",res[0]);
+ 755              		.loc 1 167 0
+ 756 01b4 D7F81431 		ldr	r3, [r7, #276]
+ 757 01b8 40F20000 		movw	r0, #:lower16:.LC6
+ 758 01bc C0F20000 		movt	r0, #:upper16:.LC6
+ 759 01c0 1946     		mov	r1, r3
+ 760 01c2 40F20003 		movw	r3, #:lower16:printf
+ 761 01c6 C0F20003 		movt	r3, #:upper16:printf
+ 762 01ca 9847     		blx	r3
+ 168:..//drivers/IAP/iap_driver.c **** 			return (int)res[0];
+ 763              		.loc 1 168 0
+ 764 01cc D7F81431 		ldr	r3, [r7, #276]
+ 765 01d0 0EE0     		b	.L25
+ 766              	.L27:
+ 767              	.LBE2:
+ 768              		.loc 1 141 0
+ 769 01d2 D7F83C31 		ldr	r3, [r7, #316]
+ 770 01d6 03F58073 		add	r3, r3, #256
+ 771 01da C7F83C31 		str	r3, [r7, #316]
+ 772              	.L21:
+ 773 01de 3B46     		mov	r3, r7
+ 774 01e0 D7F83C21 		ldr	r2, [r7, #316]
+ 775 01e4 1B68     		ldr	r3, [r3, #0]
+ 776 01e6 9A42     		cmp	r2, r3
+ 777 01e8 FFF42DAF 		bcc	.L28
+ 169:..//drivers/IAP/iap_driver.c **** 		}
+ 170:..//drivers/IAP/iap_driver.c **** 			
+ 171:..//drivers/IAP/iap_driver.c ****     }
+ 172:..//drivers/IAP/iap_driver.c ****     return ((int)res[0]);
+ 778              		.loc 1 172 0
+ 779 01ec D7F81431 		ldr	r3, [r7, #276]
+ 780              	.L25:
+ 173:..//drivers/IAP/iap_driver.c **** }
+ 781              		.loc 1 173 0
+ 782 01f0 1846     		mov	r0, r3
+ 783 01f2 07F5A477 		add	r7, r7, #328
+ 784 01f6 BD46     		mov	sp, r7
+ 785 01f8 80BD     		pop	{r7, pc}
+ 786              		.cfi_endproc
+ 787              	.LFE8:
+ 789 01fa 00BF     		.section	.text.iap_get_ptr,"ax",%progbits
+ 790              		.align	2
+ 791              		.global	iap_get_ptr
+ 792              		.thumb
+ 793              		.thumb_func
+ 795              	iap_get_ptr:
+ 796              	.LFB9:
+ 174:..//drivers/IAP/iap_driver.c **** 
+ 175:..//drivers/IAP/iap_driver.c **** void *iap_get_ptr(unsigned int sector, unsigned int offset)
+ 176:..//drivers/IAP/iap_driver.c **** {
+ 797              		.loc 1 176 0
+ 798              		.cfi_startproc
+ 799              		@ args = 0, pretend = 0, frame = 16
+ 800              		@ frame_needed = 1, uses_anonymous_args = 0
+ 801              		@ link register save eliminated.
+ 802 0000 80B4     		push	{r7}
+ 803              	.LCFI26:
+ 804              		.cfi_def_cfa_offset 4
+ 805 0002 85B0     		sub	sp, sp, #20
+ 806              	.LCFI27:
+ 807              		.cfi_def_cfa_offset 24
+ 808 0004 00AF     		add	r7, sp, #0
+ 809              		.cfi_offset 7, -4
+ 810              	.LCFI28:
+ 811              		.cfi_def_cfa_register 7
+ 812 0006 7860     		str	r0, [r7, #4]
+ 813 0008 3960     		str	r1, [r7, #0]
+ 177:..//drivers/IAP/iap_driver.c ****     unsigned int src_addr = flash_sector_addrs[sector] + offset;
+ 814              		.loc 1 177 0
+ 815 000a 7A68     		ldr	r2, [r7, #4]
+ 816 000c 40F20003 		movw	r3, #:lower16:flash_sector_addrs
+ 817 0010 C0F20003 		movt	r3, #:upper16:flash_sector_addrs
+ 818 0014 53F82220 		ldr	r2, [r3, r2, lsl #2]
+ 819 0018 3B68     		ldr	r3, [r7, #0]
+ 820 001a 1344     		add	r3, r2, r3
+ 821 001c FB60     		str	r3, [r7, #12]
+ 178:..//drivers/IAP/iap_driver.c ****     return (void *)src_addr;
+ 822              		.loc 1 178 0
+ 823 001e FB68     		ldr	r3, [r7, #12]
+ 179:..//drivers/IAP/iap_driver.c **** }
+ 824              		.loc 1 179 0
+ 825 0020 1846     		mov	r0, r3
+ 826 0022 07F11407 		add	r7, r7, #20
+ 827 0026 BD46     		mov	sp, r7
+ 828 0028 80BC     		pop	{r7}
+ 829 002a 7047     		bx	lr
+ 830              		.cfi_endproc
+ 831              	.LFE9:
+ 833              		.section	.text.iap_read,"ax",%progbits
+ 834              		.align	2
+ 835              		.global	iap_read
+ 836              		.thumb
+ 837              		.thumb_func
+ 839              	iap_read:
+ 840              	.LFB10:
+ 180:..//drivers/IAP/iap_driver.c **** 
+ 181:..//drivers/IAP/iap_driver.c **** 
+ 182:..//drivers/IAP/iap_driver.c **** int iap_read(unsigned int sector, unsigned int offset,
+ 183:..//drivers/IAP/iap_driver.c ****         void *buf, unsigned int size)
+ 184:..//drivers/IAP/iap_driver.c **** {
+ 841              		.loc 1 184 0
+ 842              		.cfi_startproc
+ 843              		@ args = 0, pretend = 0, frame = 16
+ 844              		@ frame_needed = 1, uses_anonymous_args = 0
+ 845 0000 80B5     		push	{r7, lr}
+ 846              	.LCFI29:
+ 847              		.cfi_def_cfa_offset 8
+ 848 0002 84B0     		sub	sp, sp, #16
+ 849              	.LCFI30:
+ 850              		.cfi_def_cfa_offset 24
+ 851 0004 00AF     		add	r7, sp, #0
+ 852              		.cfi_offset 14, -4
+ 853              		.cfi_offset 7, -8
+ 854              	.LCFI31:
+ 855              		.cfi_def_cfa_register 7
+ 856 0006 F860     		str	r0, [r7, #12]
+ 857 0008 B960     		str	r1, [r7, #8]
+ 858 000a 7A60     		str	r2, [r7, #4]
+ 859 000c 3B60     		str	r3, [r7, #0]
+ 185:..//drivers/IAP/iap_driver.c ****     memcpy(buf, iap_get_ptr(sector, offset), size);
+ 860              		.loc 1 185 0
+ 861 000e F868     		ldr	r0, [r7, #12]
+ 862 0010 B968     		ldr	r1, [r7, #8]
+ 863 0012 40F20003 		movw	r3, #:lower16:iap_get_ptr
+ 864 0016 C0F20003 		movt	r3, #:upper16:iap_get_ptr
+ 865 001a 9847     		blx	r3
+ 866 001c 0346     		mov	r3, r0
+ 867 001e 7868     		ldr	r0, [r7, #4]
+ 868 0020 1946     		mov	r1, r3
+ 869 0022 3A68     		ldr	r2, [r7, #0]
+ 870 0024 40F20003 		movw	r3, #:lower16:memcpy
+ 871 0028 C0F20003 		movt	r3, #:upper16:memcpy
+ 872 002c 9847     		blx	r3
+ 186:..//drivers/IAP/iap_driver.c ****     return 0;
+ 873              		.loc 1 186 0
+ 874 002e 4FF00003 		mov	r3, #0
+ 187:..//drivers/IAP/iap_driver.c **** }
+ 875              		.loc 1 187 0
+ 876 0032 1846     		mov	r0, r3
+ 877 0034 07F11007 		add	r7, r7, #16
+ 878 0038 BD46     		mov	sp, r7
+ 879 003a 80BD     		pop	{r7, pc}
+ 880              		.cfi_endproc
+ 881              	.LFE10:
+ 883              		.section	.text.iap_copy,"ax",%progbits
+ 884              		.align	2
+ 885              		.global	iap_copy
+ 886              		.thumb
+ 887              		.thumb_func
+ 889              	iap_copy:
+ 890              	.LFB11:
+ 188:..//drivers/IAP/iap_driver.c **** 
+ 189:..//drivers/IAP/iap_driver.c **** int iap_copy(unsigned int dest_sector, unsigned int src_sector, 
+ 190:..//drivers/IAP/iap_driver.c ****         unsigned int offset, unsigned int size)
+ 191:..//drivers/IAP/iap_driver.c **** {
+ 891              		.loc 1 191 0
+ 892              		.cfi_startproc
+ 893              		@ args = 0, pretend = 0, frame = 280
+ 894              		@ frame_needed = 1, uses_anonymous_args = 0
+ 895 0000 80B5     		push	{r7, lr}
+ 896              	.LCFI32:
+ 897              		.cfi_def_cfa_offset 8
+ 898 0002 C6B0     		sub	sp, sp, #280
+ 899              	.LCFI33:
+ 900              		.cfi_def_cfa_offset 288
+ 901 0004 00AF     		add	r7, sp, #0
+ 902              		.cfi_offset 14, -4
+ 903              		.cfi_offset 7, -8
+ 904              	.LCFI34:
+ 905              		.cfi_def_cfa_register 7
+ 906 0006 07F10C0C 		add	ip, r7, #12
+ 907 000a CCF80000 		str	r0, [ip, #0]
+ 908 000e 07F10800 		add	r0, r7, #8
+ 909 0012 0160     		str	r1, [r0, #0]
+ 910 0014 07F10401 		add	r1, r7, #4
+ 911 0018 0A60     		str	r2, [r1, #0]
+ 912 001a 3A46     		mov	r2, r7
+ 913 001c 1360     		str	r3, [r2, #0]
+ 192:..//drivers/IAP/iap_driver.c ****     unsigned int i;
+ 193:..//drivers/IAP/iap_driver.c ****     char buf[256];
+ 194:..//drivers/IAP/iap_driver.c ****     unsigned int s;
+ 195:..//drivers/IAP/iap_driver.c ****     for(i=0; i<size; i+= sizeof(buf)){
+ 914              		.loc 1 195 0
+ 915 001e 4FF00003 		mov	r3, #0
+ 916 0022 C7F81031 		str	r3, [r7, #272]
+ 917 0026 4AE0     		b	.L35
+ 918              	.L37:
+ 196:..//drivers/IAP/iap_driver.c ****         s = sizeof(buf);
+ 919              		.loc 1 196 0
+ 920 0028 4FF48073 		mov	r3, #256
+ 921 002c C7F81431 		str	r3, [r7, #276]
+ 197:..//drivers/IAP/iap_driver.c ****         if(i+s>size) s = size-i;
+ 922              		.loc 1 197 0
+ 923 0030 D7F81021 		ldr	r2, [r7, #272]
+ 924 0034 D7F81431 		ldr	r3, [r7, #276]
+ 925 0038 1A44     		add	r2, r2, r3
+ 926 003a 3B46     		mov	r3, r7
+ 927 003c 1B68     		ldr	r3, [r3, #0]
+ 928 003e 9A42     		cmp	r2, r3
+ 929 0040 07D9     		bls	.L36
+ 930 0042 3B46     		mov	r3, r7
+ 931 0044 1A68     		ldr	r2, [r3, #0]
+ 932 0046 D7F81031 		ldr	r3, [r7, #272]
+ 933 004a C3EB0203 		rsb	r3, r3, r2
+ 934 004e C7F81431 		str	r3, [r7, #276]
+ 935              	.L36:
+ 198:..//drivers/IAP/iap_driver.c ****         iap_read(src_sector, offset+i, buf, s);
+ 936              		.loc 1 198 0
+ 937 0052 07F10403 		add	r3, r7, #4
+ 938 0056 1A68     		ldr	r2, [r3, #0]
+ 939 0058 D7F81031 		ldr	r3, [r7, #272]
+ 940 005c 1A44     		add	r2, r2, r3
+ 941 005e 07F10801 		add	r1, r7, #8
+ 942 0062 07F11003 		add	r3, r7, #16
+ 943 0066 0868     		ldr	r0, [r1, #0]
+ 944 0068 1146     		mov	r1, r2
+ 945 006a 1A46     		mov	r2, r3
+ 946 006c D7F81431 		ldr	r3, [r7, #276]
+ 947 0070 40F2000C 		movw	ip, #:lower16:iap_read
+ 948 0074 C0F2000C 		movt	ip, #:upper16:iap_read
+ 949 0078 E047     		blx	ip
+ 199:..//drivers/IAP/iap_driver.c ****         iap_prepare(dest_sector);
+ 950              		.loc 1 199 0
+ 951 007a 07F10C03 		add	r3, r7, #12
+ 952 007e 1868     		ldr	r0, [r3, #0]
+ 953 0080 40F20003 		movw	r3, #:lower16:iap_prepare
+ 954 0084 C0F20003 		movt	r3, #:upper16:iap_prepare
+ 955 0088 9847     		blx	r3
+ 200:..//drivers/IAP/iap_driver.c ****         iap_write(dest_sector, offset+i, buf, s);
+ 956              		.loc 1 200 0
+ 957 008a 07F10403 		add	r3, r7, #4
+ 958 008e 1A68     		ldr	r2, [r3, #0]
+ 959 0090 D7F81031 		ldr	r3, [r7, #272]
+ 960 0094 1A44     		add	r2, r2, r3
+ 961 0096 07F10C01 		add	r1, r7, #12
+ 962 009a 07F11003 		add	r3, r7, #16
+ 963 009e 0868     		ldr	r0, [r1, #0]
+ 964 00a0 1146     		mov	r1, r2
+ 965 00a2 1A46     		mov	r2, r3
+ 966 00a4 D7F81431 		ldr	r3, [r7, #276]
+ 967 00a8 40F2000C 		movw	ip, #:lower16:iap_write
+ 968 00ac C0F2000C 		movt	ip, #:upper16:iap_write
+ 969 00b0 E047     		blx	ip
+ 970              		.loc 1 195 0
+ 971 00b2 D7F81031 		ldr	r3, [r7, #272]
+ 972 00b6 03F58073 		add	r3, r3, #256
+ 973 00ba C7F81031 		str	r3, [r7, #272]
+ 974              	.L35:
+ 975 00be 3B46     		mov	r3, r7
+ 976 00c0 D7F81021 		ldr	r2, [r7, #272]
+ 977 00c4 1B68     		ldr	r3, [r3, #0]
+ 978 00c6 9A42     		cmp	r2, r3
+ 979 00c8 AED3     		bcc	.L37
+ 201:..//drivers/IAP/iap_driver.c ****     }
+ 202:..//drivers/IAP/iap_driver.c ****     return 0;
+ 980              		.loc 1 202 0
+ 981 00ca 4FF00003 		mov	r3, #0
+ 203:..//drivers/IAP/iap_driver.c **** }
+ 982              		.loc 1 203 0
+ 983 00ce 1846     		mov	r0, r3
+ 984 00d0 07F58C77 		add	r7, r7, #280
+ 985 00d4 BD46     		mov	sp, r7
+ 986 00d6 80BD     		pop	{r7, pc}
+ 987              		.cfi_endproc
+ 988              	.LFE11:
+ 990              		.section	.text.iap_cmp,"ax",%progbits
+ 991              		.align	2
+ 992              		.global	iap_cmp
+ 993              		.thumb
+ 994              		.thumb_func
+ 996              	iap_cmp:
+ 997              	.LFB12:
+ 204:..//drivers/IAP/iap_driver.c **** 
+ 205:..//drivers/IAP/iap_driver.c **** int iap_cmp(unsigned int sector, unsigned int offset,
+ 206:..//drivers/IAP/iap_driver.c ****         const void *buf, unsigned int size)
+ 207:..//drivers/IAP/iap_driver.c **** {
+ 998              		.loc 1 207 0
+ 999              		.cfi_startproc
+ 1000              		@ args = 0, pretend = 0, frame = 16
+ 1001              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1002 0000 80B5     		push	{r7, lr}
+ 1003              	.LCFI35:
+ 1004              		.cfi_def_cfa_offset 8
+ 1005 0002 84B0     		sub	sp, sp, #16
+ 1006              	.LCFI36:
+ 1007              		.cfi_def_cfa_offset 24
+ 1008 0004 00AF     		add	r7, sp, #0
+ 1009              		.cfi_offset 14, -4
+ 1010              		.cfi_offset 7, -8
+ 1011              	.LCFI37:
+ 1012              		.cfi_def_cfa_register 7
+ 1013 0006 F860     		str	r0, [r7, #12]
+ 1014 0008 B960     		str	r1, [r7, #8]
+ 1015 000a 7A60     		str	r2, [r7, #4]
+ 1016 000c 3B60     		str	r3, [r7, #0]
+ 208:..//drivers/IAP/iap_driver.c ****     return memcmp(buf, iap_get_ptr(sector, offset), size);
+ 1017              		.loc 1 208 0
+ 1018 000e F868     		ldr	r0, [r7, #12]
+ 1019 0010 B968     		ldr	r1, [r7, #8]
+ 1020 0012 40F20003 		movw	r3, #:lower16:iap_get_ptr
+ 1021 0016 C0F20003 		movt	r3, #:upper16:iap_get_ptr
+ 1022 001a 9847     		blx	r3
+ 1023 001c 0346     		mov	r3, r0
+ 1024 001e 7868     		ldr	r0, [r7, #4]
+ 1025 0020 1946     		mov	r1, r3
+ 1026 0022 3A68     		ldr	r2, [r7, #0]
+ 1027 0024 40F20003 		movw	r3, #:lower16:memcmp
+ 1028 0028 C0F20003 		movt	r3, #:upper16:memcmp
+ 1029 002c 9847     		blx	r3
+ 1030 002e 0346     		mov	r3, r0
+ 209:..//drivers/IAP/iap_driver.c **** }
+ 1031              		.loc 1 209 0
+ 1032 0030 1846     		mov	r0, r3
+ 1033 0032 07F11007 		add	r7, r7, #16
+ 1034 0036 BD46     		mov	sp, r7
+ 1035 0038 80BD     		pop	{r7, pc}
+ 1036              		.cfi_endproc
+ 1037              	.LFE12:
+ 1039              		.text
+ 1040              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 iap_driver.c
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:24     .rodata.flash_sector_addrs:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:27     .rodata.flash_sector_addrs:00000000 flash_sector_addrs
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:59     .rodata.flash_sector_sizes:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:62     .rodata.flash_sector_sizes:00000000 flash_sector_sizes
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:94     .data.iap_entry:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:97     .data.iap_entry:00000000 iap_entry
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:100    .bss.cclk_kHz:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:103    .bss.cclk_kHz:00000000 cclk_kHz
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:106    .text.iap_init:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:111    .text.iap_init:00000000 iap_init
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:146    .text.iap_read_id:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:151    .text.iap_read_id:00000000 iap_read_id
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:191    .text.iap_read_version:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:196    .text.iap_read_version:00000000 iap_read_version
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:236    .text.iap_read_serial:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:241    .text.iap_read_serial:00000000 iap_read_serial
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:281    .text.iap_blank_check:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:286    .text.iap_blank_check:00000000 iap_blank_check
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:333    .rodata:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:334    .rodata:00000000 .LC0
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:337    .text.iap_prepare:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:341    .text.iap_prepare:00000000 iap_prepare
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:402    .rodata:00000018 .LC1
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:405    .text.iap_erase:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:410    .text.iap_erase:00000000 iap_erase
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:481    .rodata:00000030 .LC2
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:485    .text.iap_compare:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:489    .text.iap_compare:00000000 iap_compare
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:560    .rodata:00000064 .LC3
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:563    .rodata:00000080 .LC4
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:566    .rodata:0000008c .LC5
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:569    .rodata:000000a0 .LC6
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:572    .text.iap_write:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:577    .text.iap_write:00000000 iap_write
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:790    .text.iap_get_ptr:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:795    .text.iap_get_ptr:00000000 iap_get_ptr
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:834    .text.iap_read:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:839    .text.iap_read:00000000 iap_read
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:884    .text.iap_copy:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:889    .text.iap_copy:00000000 iap_copy
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:991    .text.iap_cmp:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc01z6Oe.s:996    .text.iap_cmp:00000000 iap_cmp
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+SystemCoreClock
+printf
+memset
+memcpy
+memcmp
+puts

@@ -1,0 +1,694 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"delay.c"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.section	.text.few_ticks,"ax",%progbits
+  24              		.align	2
+  25              		.global	few_ticks
+  26              		.thumb
+  27              		.thumb_func
+  29              	few_ticks:
+  30              	.LFB29:
+  31              		.file 1 "..//common/src/delay.c"
+   1:..//common/src/delay.c **** /*Copyright (C) 2011 by Sagar G V
+   2:..//common/src/delay.c **** 
+   3:..//common/src/delay.c **** Permission is hereby granted, free of charge, to any person obtaining a copy
+   4:..//common/src/delay.c **** of this software and associated documentation files (the "Software"), to deal
+   5:..//common/src/delay.c **** in the Software without restriction, including without limitation the rights
+   6:..//common/src/delay.c **** to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   7:..//common/src/delay.c **** copies of the Software, and to permit persons to whom the Software is
+   8:..//common/src/delay.c **** furnished to do so, subject to the following conditions:
+   9:..//common/src/delay.c **** 
+  10:..//common/src/delay.c **** The above copyright notice and this permission notice shall be included in
+  11:..//common/src/delay.c **** all copies or substantial portions of the Software.
+  12:..//common/src/delay.c **** 
+  13:..//common/src/delay.c **** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  14:..//common/src/delay.c **** IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  15:..//common/src/delay.c **** FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  16:..//common/src/delay.c **** AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  17:..//common/src/delay.c **** LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  18:..//common/src/delay.c **** OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  19:..//common/src/delay.c **** THE SOFTWARE.
+  20:..//common/src/delay.c **** */
+  21:..//common/src/delay.c **** 
+  22:..//common/src/delay.c **** #include "delay.h"
+  23:..//common/src/delay.c **** 
+  24:..//common/src/delay.c **** #ifdef __cplusplus
+  25:..//common/src/delay.c **** extern "C" {
+  26:..//common/src/delay.c **** #endif
+  27:..//common/src/delay.c **** 
+  28:..//common/src/delay.c **** void few_ticks()
+  29:..//common/src/delay.c **** {
+  32              		.loc 1 29 0
+  33              		.cfi_startproc
+  34              		@ args = 0, pretend = 0, frame = 0
+  35              		@ frame_needed = 1, uses_anonymous_args = 0
+  36              		@ link register save eliminated.
+  37 0000 80B4     		push	{r7}
+  38              	.LCFI0:
+  39              		.cfi_def_cfa_offset 4
+  40 0002 00AF     		add	r7, sp, #0
+  41              		.cfi_offset 7, -4
+  42              	.LCFI1:
+  43              		.cfi_def_cfa_register 7
+  30:..//common/src/delay.c **** 	__ASM("nop");
+  44              		.loc 1 30 0
+  45              	@ 30 "..//common/src/delay.c" 1
+  46 0004 00BF     		nop
+  47              	@ 0 "" 2
+  31:..//common/src/delay.c **** 	__ASM("nop");
+  48              		.loc 1 31 0
+  49              	@ 31 "..//common/src/delay.c" 1
+  50 0006 00BF     		nop
+  51              	@ 0 "" 2
+  32:..//common/src/delay.c **** 	__ASM("nop");
+  52              		.loc 1 32 0
+  53              	@ 32 "..//common/src/delay.c" 1
+  54 0008 00BF     		nop
+  55              	@ 0 "" 2
+  33:..//common/src/delay.c **** 	__ASM("nop");
+  56              		.loc 1 33 0
+  57              	@ 33 "..//common/src/delay.c" 1
+  58 000a 00BF     		nop
+  59              	@ 0 "" 2
+  34:..//common/src/delay.c **** 	__ASM("nop");
+  60              		.loc 1 34 0
+  61              	@ 34 "..//common/src/delay.c" 1
+  62 000c 00BF     		nop
+  63              	@ 0 "" 2
+  35:..//common/src/delay.c **** 	__ASM("nop");
+  64              		.loc 1 35 0
+  65              	@ 35 "..//common/src/delay.c" 1
+  66 000e 00BF     		nop
+  67              	@ 0 "" 2
+  36:..//common/src/delay.c **** 	__ASM("nop");
+  68              		.loc 1 36 0
+  69              	@ 36 "..//common/src/delay.c" 1
+  70 0010 00BF     		nop
+  71              	@ 0 "" 2
+  37:..//common/src/delay.c **** 	__ASM("nop");
+  72              		.loc 1 37 0
+  73              	@ 37 "..//common/src/delay.c" 1
+  74 0012 00BF     		nop
+  75              	@ 0 "" 2
+  38:..//common/src/delay.c **** 	__ASM("nop");
+  76              		.loc 1 38 0
+  77              	@ 38 "..//common/src/delay.c" 1
+  78 0014 00BF     		nop
+  79              	@ 0 "" 2
+  39:..//common/src/delay.c **** 	__ASM("nop");
+  80              		.loc 1 39 0
+  81              	@ 39 "..//common/src/delay.c" 1
+  82 0016 00BF     		nop
+  83              	@ 0 "" 2
+  40:..//common/src/delay.c **** 	__ASM("nop");
+  84              		.loc 1 40 0
+  85              	@ 40 "..//common/src/delay.c" 1
+  86 0018 00BF     		nop
+  87              	@ 0 "" 2
+  41:..//common/src/delay.c **** 	__ASM("nop");
+  88              		.loc 1 41 0
+  89              	@ 41 "..//common/src/delay.c" 1
+  90 001a 00BF     		nop
+  91              	@ 0 "" 2
+  42:..//common/src/delay.c **** 	__ASM("nop");
+  92              		.loc 1 42 0
+  93              	@ 42 "..//common/src/delay.c" 1
+  94 001c 00BF     		nop
+  95              	@ 0 "" 2
+  43:..//common/src/delay.c **** 	__ASM("nop");
+  96              		.loc 1 43 0
+  97              	@ 43 "..//common/src/delay.c" 1
+  98 001e 00BF     		nop
+  99              	@ 0 "" 2
+  44:..//common/src/delay.c **** 	__ASM("nop");
+ 100              		.loc 1 44 0
+ 101              	@ 44 "..//common/src/delay.c" 1
+ 102 0020 00BF     		nop
+ 103              	@ 0 "" 2
+  45:..//common/src/delay.c **** 	__ASM("nop");
+ 104              		.loc 1 45 0
+ 105              	@ 45 "..//common/src/delay.c" 1
+ 106 0022 00BF     		nop
+ 107              	@ 0 "" 2
+  46:..//common/src/delay.c **** 	__ASM("nop");
+ 108              		.loc 1 46 0
+ 109              	@ 46 "..//common/src/delay.c" 1
+ 110 0024 00BF     		nop
+ 111              	@ 0 "" 2
+  47:..//common/src/delay.c **** 	__ASM("nop");
+ 112              		.loc 1 47 0
+ 113              	@ 47 "..//common/src/delay.c" 1
+ 114 0026 00BF     		nop
+ 115              	@ 0 "" 2
+  48:..//common/src/delay.c **** 	__ASM("nop");
+ 116              		.loc 1 48 0
+ 117              	@ 48 "..//common/src/delay.c" 1
+ 118 0028 00BF     		nop
+ 119              	@ 0 "" 2
+  49:..//common/src/delay.c **** 	__ASM("nop");
+ 120              		.loc 1 49 0
+ 121              	@ 49 "..//common/src/delay.c" 1
+ 122 002a 00BF     		nop
+ 123              	@ 0 "" 2
+  50:..//common/src/delay.c **** 	__ASM("nop");
+ 124              		.loc 1 50 0
+ 125              	@ 50 "..//common/src/delay.c" 1
+ 126 002c 00BF     		nop
+ 127              	@ 0 "" 2
+  51:..//common/src/delay.c **** 	__ASM("nop");
+ 128              		.loc 1 51 0
+ 129              	@ 51 "..//common/src/delay.c" 1
+ 130 002e 00BF     		nop
+ 131              	@ 0 "" 2
+  52:..//common/src/delay.c **** 	__ASM("nop");
+ 132              		.loc 1 52 0
+ 133              	@ 52 "..//common/src/delay.c" 1
+ 134 0030 00BF     		nop
+ 135              	@ 0 "" 2
+  53:..//common/src/delay.c **** 	__ASM("nop");
+ 136              		.loc 1 53 0
+ 137              	@ 53 "..//common/src/delay.c" 1
+ 138 0032 00BF     		nop
+ 139              	@ 0 "" 2
+  54:..//common/src/delay.c **** 	__ASM("nop");
+ 140              		.loc 1 54 0
+ 141              	@ 54 "..//common/src/delay.c" 1
+ 142 0034 00BF     		nop
+ 143              	@ 0 "" 2
+  55:..//common/src/delay.c **** 	__ASM("nop");
+ 144              		.loc 1 55 0
+ 145              	@ 55 "..//common/src/delay.c" 1
+ 146 0036 00BF     		nop
+ 147              	@ 0 "" 2
+  56:..//common/src/delay.c **** 	__ASM("nop");
+ 148              		.loc 1 56 0
+ 149              	@ 56 "..//common/src/delay.c" 1
+ 150 0038 00BF     		nop
+ 151              	@ 0 "" 2
+  57:..//common/src/delay.c **** 	__ASM("nop");
+ 152              		.loc 1 57 0
+ 153              	@ 57 "..//common/src/delay.c" 1
+ 154 003a 00BF     		nop
+ 155              	@ 0 "" 2
+  58:..//common/src/delay.c **** 	__ASM("nop");
+ 156              		.loc 1 58 0
+ 157              	@ 58 "..//common/src/delay.c" 1
+ 158 003c 00BF     		nop
+ 159              	@ 0 "" 2
+  59:..//common/src/delay.c **** 	__ASM("nop");
+ 160              		.loc 1 59 0
+ 161              	@ 59 "..//common/src/delay.c" 1
+ 162 003e 00BF     		nop
+ 163              	@ 0 "" 2
+  60:..//common/src/delay.c **** 	__ASM("nop");
+ 164              		.loc 1 60 0
+ 165              	@ 60 "..//common/src/delay.c" 1
+ 166 0040 00BF     		nop
+ 167              	@ 0 "" 2
+  61:..//common/src/delay.c **** 	__ASM("nop");
+ 168              		.loc 1 61 0
+ 169              	@ 61 "..//common/src/delay.c" 1
+ 170 0042 00BF     		nop
+ 171              	@ 0 "" 2
+  62:..//common/src/delay.c **** 	__ASM("nop");
+ 172              		.loc 1 62 0
+ 173              	@ 62 "..//common/src/delay.c" 1
+ 174 0044 00BF     		nop
+ 175              	@ 0 "" 2
+  63:..//common/src/delay.c **** 	__ASM("nop");
+ 176              		.loc 1 63 0
+ 177              	@ 63 "..//common/src/delay.c" 1
+ 178 0046 00BF     		nop
+ 179              	@ 0 "" 2
+  64:..//common/src/delay.c **** 	__ASM("nop");
+ 180              		.loc 1 64 0
+ 181              	@ 64 "..//common/src/delay.c" 1
+ 182 0048 00BF     		nop
+ 183              	@ 0 "" 2
+  65:..//common/src/delay.c **** 	__ASM("nop");
+ 184              		.loc 1 65 0
+ 185              	@ 65 "..//common/src/delay.c" 1
+ 186 004a 00BF     		nop
+ 187              	@ 0 "" 2
+  66:..//common/src/delay.c **** 	__ASM("nop");
+ 188              		.loc 1 66 0
+ 189              	@ 66 "..//common/src/delay.c" 1
+ 190 004c 00BF     		nop
+ 191              	@ 0 "" 2
+  67:..//common/src/delay.c **** 	__ASM("nop");
+ 192              		.loc 1 67 0
+ 193              	@ 67 "..//common/src/delay.c" 1
+ 194 004e 00BF     		nop
+ 195              	@ 0 "" 2
+  68:..//common/src/delay.c **** 	__ASM("nop");
+ 196              		.loc 1 68 0
+ 197              	@ 68 "..//common/src/delay.c" 1
+ 198 0050 00BF     		nop
+ 199              	@ 0 "" 2
+  69:..//common/src/delay.c **** 	__ASM("nop");
+ 200              		.loc 1 69 0
+ 201              	@ 69 "..//common/src/delay.c" 1
+ 202 0052 00BF     		nop
+ 203              	@ 0 "" 2
+  70:..//common/src/delay.c **** 	__ASM("nop");
+ 204              		.loc 1 70 0
+ 205              	@ 70 "..//common/src/delay.c" 1
+ 206 0054 00BF     		nop
+ 207              	@ 0 "" 2
+  71:..//common/src/delay.c **** 	__ASM("nop");
+ 208              		.loc 1 71 0
+ 209              	@ 71 "..//common/src/delay.c" 1
+ 210 0056 00BF     		nop
+ 211              	@ 0 "" 2
+  72:..//common/src/delay.c **** 	__ASM("nop");
+ 212              		.loc 1 72 0
+ 213              	@ 72 "..//common/src/delay.c" 1
+ 214 0058 00BF     		nop
+ 215              	@ 0 "" 2
+  73:..//common/src/delay.c **** 	__ASM("nop");
+ 216              		.loc 1 73 0
+ 217              	@ 73 "..//common/src/delay.c" 1
+ 218 005a 00BF     		nop
+ 219              	@ 0 "" 2
+  74:..//common/src/delay.c **** 	__ASM("nop");
+ 220              		.loc 1 74 0
+ 221              	@ 74 "..//common/src/delay.c" 1
+ 222 005c 00BF     		nop
+ 223              	@ 0 "" 2
+  75:..//common/src/delay.c **** 	__ASM("nop");
+ 224              		.loc 1 75 0
+ 225              	@ 75 "..//common/src/delay.c" 1
+ 226 005e 00BF     		nop
+ 227              	@ 0 "" 2
+  76:..//common/src/delay.c **** 	__ASM("nop");
+ 228              		.loc 1 76 0
+ 229              	@ 76 "..//common/src/delay.c" 1
+ 230 0060 00BF     		nop
+ 231              	@ 0 "" 2
+  77:..//common/src/delay.c **** 	__ASM("nop");
+ 232              		.loc 1 77 0
+ 233              	@ 77 "..//common/src/delay.c" 1
+ 234 0062 00BF     		nop
+ 235              	@ 0 "" 2
+  78:..//common/src/delay.c **** 	__ASM("nop");
+ 236              		.loc 1 78 0
+ 237              	@ 78 "..//common/src/delay.c" 1
+ 238 0064 00BF     		nop
+ 239              	@ 0 "" 2
+  79:..//common/src/delay.c **** 	__ASM("nop");
+ 240              		.loc 1 79 0
+ 241              	@ 79 "..//common/src/delay.c" 1
+ 242 0066 00BF     		nop
+ 243              	@ 0 "" 2
+  80:..//common/src/delay.c **** 	__ASM("nop");
+ 244              		.loc 1 80 0
+ 245              	@ 80 "..//common/src/delay.c" 1
+ 246 0068 00BF     		nop
+ 247              	@ 0 "" 2
+  81:..//common/src/delay.c **** 	__ASM("nop");
+ 248              		.loc 1 81 0
+ 249              	@ 81 "..//common/src/delay.c" 1
+ 250 006a 00BF     		nop
+ 251              	@ 0 "" 2
+  82:..//common/src/delay.c **** 	__ASM("nop");
+ 252              		.loc 1 82 0
+ 253              	@ 82 "..//common/src/delay.c" 1
+ 254 006c 00BF     		nop
+ 255              	@ 0 "" 2
+  83:..//common/src/delay.c **** 	__ASM("nop");
+ 256              		.loc 1 83 0
+ 257              	@ 83 "..//common/src/delay.c" 1
+ 258 006e 00BF     		nop
+ 259              	@ 0 "" 2
+  84:..//common/src/delay.c **** 	__ASM("nop");
+ 260              		.loc 1 84 0
+ 261              	@ 84 "..//common/src/delay.c" 1
+ 262 0070 00BF     		nop
+ 263              	@ 0 "" 2
+  85:..//common/src/delay.c **** 	__ASM("nop");
+ 264              		.loc 1 85 0
+ 265              	@ 85 "..//common/src/delay.c" 1
+ 266 0072 00BF     		nop
+ 267              	@ 0 "" 2
+  86:..//common/src/delay.c **** 	__ASM("nop");
+ 268              		.loc 1 86 0
+ 269              	@ 86 "..//common/src/delay.c" 1
+ 270 0074 00BF     		nop
+ 271              	@ 0 "" 2
+  87:..//common/src/delay.c **** 	__ASM("nop");
+ 272              		.loc 1 87 0
+ 273              	@ 87 "..//common/src/delay.c" 1
+ 274 0076 00BF     		nop
+ 275              	@ 0 "" 2
+  88:..//common/src/delay.c **** 	__ASM("nop");
+ 276              		.loc 1 88 0
+ 277              	@ 88 "..//common/src/delay.c" 1
+ 278 0078 00BF     		nop
+ 279              	@ 0 "" 2
+  89:..//common/src/delay.c **** 	__ASM("nop");
+ 280              		.loc 1 89 0
+ 281              	@ 89 "..//common/src/delay.c" 1
+ 282 007a 00BF     		nop
+ 283              	@ 0 "" 2
+  90:..//common/src/delay.c **** 	__ASM("nop");
+ 284              		.loc 1 90 0
+ 285              	@ 90 "..//common/src/delay.c" 1
+ 286 007c 00BF     		nop
+ 287              	@ 0 "" 2
+  91:..//common/src/delay.c **** 	__ASM("nop");
+ 288              		.loc 1 91 0
+ 289              	@ 91 "..//common/src/delay.c" 1
+ 290 007e 00BF     		nop
+ 291              	@ 0 "" 2
+  92:..//common/src/delay.c **** 	__ASM("nop");
+ 292              		.loc 1 92 0
+ 293              	@ 92 "..//common/src/delay.c" 1
+ 294 0080 00BF     		nop
+ 295              	@ 0 "" 2
+  93:..//common/src/delay.c **** 	__ASM("nop");
+ 296              		.loc 1 93 0
+ 297              	@ 93 "..//common/src/delay.c" 1
+ 298 0082 00BF     		nop
+ 299              	@ 0 "" 2
+  94:..//common/src/delay.c **** 	__ASM("nop");
+ 300              		.loc 1 94 0
+ 301              	@ 94 "..//common/src/delay.c" 1
+ 302 0084 00BF     		nop
+ 303              	@ 0 "" 2
+  95:..//common/src/delay.c **** 	__ASM("nop");
+ 304              		.loc 1 95 0
+ 305              	@ 95 "..//common/src/delay.c" 1
+ 306 0086 00BF     		nop
+ 307              	@ 0 "" 2
+  96:..//common/src/delay.c **** 	__ASM("nop");
+ 308              		.loc 1 96 0
+ 309              	@ 96 "..//common/src/delay.c" 1
+ 310 0088 00BF     		nop
+ 311              	@ 0 "" 2
+  97:..//common/src/delay.c **** 	__ASM("nop");
+ 312              		.loc 1 97 0
+ 313              	@ 97 "..//common/src/delay.c" 1
+ 314 008a 00BF     		nop
+ 315              	@ 0 "" 2
+  98:..//common/src/delay.c **** 	__ASM("nop");
+ 316              		.loc 1 98 0
+ 317              	@ 98 "..//common/src/delay.c" 1
+ 318 008c 00BF     		nop
+ 319              	@ 0 "" 2
+  99:..//common/src/delay.c **** 	__ASM("nop");
+ 320              		.loc 1 99 0
+ 321              	@ 99 "..//common/src/delay.c" 1
+ 322 008e 00BF     		nop
+ 323              	@ 0 "" 2
+ 100:..//common/src/delay.c **** 	__ASM("nop");
+ 324              		.loc 1 100 0
+ 325              	@ 100 "..//common/src/delay.c" 1
+ 326 0090 00BF     		nop
+ 327              	@ 0 "" 2
+ 101:..//common/src/delay.c **** 	__ASM("nop");
+ 328              		.loc 1 101 0
+ 329              	@ 101 "..//common/src/delay.c" 1
+ 330 0092 00BF     		nop
+ 331              	@ 0 "" 2
+ 102:..//common/src/delay.c **** 	__ASM("nop");
+ 332              		.loc 1 102 0
+ 333              	@ 102 "..//common/src/delay.c" 1
+ 334 0094 00BF     		nop
+ 335              	@ 0 "" 2
+ 103:..//common/src/delay.c **** 	__ASM("nop");
+ 336              		.loc 1 103 0
+ 337              	@ 103 "..//common/src/delay.c" 1
+ 338 0096 00BF     		nop
+ 339              	@ 0 "" 2
+ 104:..//common/src/delay.c **** 	__ASM("nop");
+ 340              		.loc 1 104 0
+ 341              	@ 104 "..//common/src/delay.c" 1
+ 342 0098 00BF     		nop
+ 343              	@ 0 "" 2
+ 105:..//common/src/delay.c **** 	__ASM("nop");
+ 344              		.loc 1 105 0
+ 345              	@ 105 "..//common/src/delay.c" 1
+ 346 009a 00BF     		nop
+ 347              	@ 0 "" 2
+ 106:..//common/src/delay.c **** 	__ASM("nop");
+ 348              		.loc 1 106 0
+ 349              	@ 106 "..//common/src/delay.c" 1
+ 350 009c 00BF     		nop
+ 351              	@ 0 "" 2
+ 107:..//common/src/delay.c **** 	__ASM("nop");
+ 352              		.loc 1 107 0
+ 353              	@ 107 "..//common/src/delay.c" 1
+ 354 009e 00BF     		nop
+ 355              	@ 0 "" 2
+ 108:..//common/src/delay.c **** 	__ASM("nop");
+ 356              		.loc 1 108 0
+ 357              	@ 108 "..//common/src/delay.c" 1
+ 358 00a0 00BF     		nop
+ 359              	@ 0 "" 2
+ 109:..//common/src/delay.c **** 	__ASM("nop");
+ 360              		.loc 1 109 0
+ 361              	@ 109 "..//common/src/delay.c" 1
+ 362 00a2 00BF     		nop
+ 363              	@ 0 "" 2
+ 110:..//common/src/delay.c **** 	__ASM("nop");
+ 364              		.loc 1 110 0
+ 365              	@ 110 "..//common/src/delay.c" 1
+ 366 00a4 00BF     		nop
+ 367              	@ 0 "" 2
+ 111:..//common/src/delay.c **** 	__ASM("nop");
+ 368              		.loc 1 111 0
+ 369              	@ 111 "..//common/src/delay.c" 1
+ 370 00a6 00BF     		nop
+ 371              	@ 0 "" 2
+ 112:..//common/src/delay.c **** 	__ASM("nop");
+ 372              		.loc 1 112 0
+ 373              	@ 112 "..//common/src/delay.c" 1
+ 374 00a8 00BF     		nop
+ 375              	@ 0 "" 2
+ 113:..//common/src/delay.c **** 	__ASM("nop");
+ 376              		.loc 1 113 0
+ 377              	@ 113 "..//common/src/delay.c" 1
+ 378 00aa 00BF     		nop
+ 379              	@ 0 "" 2
+ 114:..//common/src/delay.c **** 	__ASM("nop");
+ 380              		.loc 1 114 0
+ 381              	@ 114 "..//common/src/delay.c" 1
+ 382 00ac 00BF     		nop
+ 383              	@ 0 "" 2
+ 115:..//common/src/delay.c **** 	__ASM("nop");
+ 384              		.loc 1 115 0
+ 385              	@ 115 "..//common/src/delay.c" 1
+ 386 00ae 00BF     		nop
+ 387              	@ 0 "" 2
+ 116:..//common/src/delay.c **** 	__ASM("nop");
+ 388              		.loc 1 116 0
+ 389              	@ 116 "..//common/src/delay.c" 1
+ 390 00b0 00BF     		nop
+ 391              	@ 0 "" 2
+ 117:..//common/src/delay.c **** 	__ASM("nop");
+ 392              		.loc 1 117 0
+ 393              	@ 117 "..//common/src/delay.c" 1
+ 394 00b2 00BF     		nop
+ 395              	@ 0 "" 2
+ 118:..//common/src/delay.c **** 	__ASM("nop");
+ 396              		.loc 1 118 0
+ 397              	@ 118 "..//common/src/delay.c" 1
+ 398 00b4 00BF     		nop
+ 399              	@ 0 "" 2
+ 119:..//common/src/delay.c **** 	__ASM("nop");
+ 400              		.loc 1 119 0
+ 401              	@ 119 "..//common/src/delay.c" 1
+ 402 00b6 00BF     		nop
+ 403              	@ 0 "" 2
+ 120:..//common/src/delay.c **** 	__ASM("nop");
+ 404              		.loc 1 120 0
+ 405              	@ 120 "..//common/src/delay.c" 1
+ 406 00b8 00BF     		nop
+ 407              	@ 0 "" 2
+ 121:..//common/src/delay.c **** 	__ASM("nop");
+ 408              		.loc 1 121 0
+ 409              	@ 121 "..//common/src/delay.c" 1
+ 410 00ba 00BF     		nop
+ 411              	@ 0 "" 2
+ 122:..//common/src/delay.c **** 	__ASM("nop");
+ 412              		.loc 1 122 0
+ 413              	@ 122 "..//common/src/delay.c" 1
+ 414 00bc 00BF     		nop
+ 415              	@ 0 "" 2
+ 123:..//common/src/delay.c **** 	__ASM("nop");
+ 416              		.loc 1 123 0
+ 417              	@ 123 "..//common/src/delay.c" 1
+ 418 00be 00BF     		nop
+ 419              	@ 0 "" 2
+ 124:..//common/src/delay.c **** }
+ 420              		.loc 1 124 0
+ 421              		.thumb
+ 422 00c0 BD46     		mov	sp, r7
+ 423 00c2 80BC     		pop	{r7}
+ 424 00c4 7047     		bx	lr
+ 425              		.cfi_endproc
+ 426              	.LFE29:
+ 428 00c6 00BF     		.section	.text._delay_us,"ax",%progbits
+ 429              		.align	2
+ 430              		.global	_delay_us
+ 431              		.thumb
+ 432              		.thumb_func
+ 434              	_delay_us:
+ 435              	.LFB30:
+ 125:..//common/src/delay.c **** 
+ 126:..//common/src/delay.c **** void _delay_us(uint32_t time)
+ 127:..//common/src/delay.c **** {
+ 436              		.loc 1 127 0
+ 437              		.cfi_startproc
+ 438              		@ args = 0, pretend = 0, frame = 16
+ 439              		@ frame_needed = 1, uses_anonymous_args = 0
+ 440 0000 80B5     		push	{r7, lr}
+ 441              	.LCFI2:
+ 442              		.cfi_def_cfa_offset 8
+ 443 0002 84B0     		sub	sp, sp, #16
+ 444              	.LCFI3:
+ 445              		.cfi_def_cfa_offset 24
+ 446 0004 00AF     		add	r7, sp, #0
+ 447              		.cfi_offset 14, -4
+ 448              		.cfi_offset 7, -8
+ 449              	.LCFI4:
+ 450              		.cfi_def_cfa_register 7
+ 451 0006 7860     		str	r0, [r7, #4]
+ 128:..//common/src/delay.c **** 	uint32_t i;
+ 129:..//common/src/delay.c **** 	for(i=0;i<time;i++)
+ 452              		.loc 1 129 0
+ 453 0008 4FF00003 		mov	r3, #0
+ 454 000c FB60     		str	r3, [r7, #12]
+ 455 000e 08E0     		b	.L4
+ 456              	.L5:
+ 130:..//common/src/delay.c **** 		few_ticks();
+ 457              		.loc 1 130 0
+ 458 0010 40F20003 		movw	r3, #:lower16:few_ticks
+ 459 0014 C0F20003 		movt	r3, #:upper16:few_ticks
+ 460 0018 9847     		blx	r3
+ 461              		.loc 1 129 0
+ 462 001a FB68     		ldr	r3, [r7, #12]
+ 463 001c 03F10103 		add	r3, r3, #1
+ 464 0020 FB60     		str	r3, [r7, #12]
+ 465              	.L4:
+ 466 0022 FA68     		ldr	r2, [r7, #12]
+ 467 0024 7B68     		ldr	r3, [r7, #4]
+ 468 0026 9A42     		cmp	r2, r3
+ 469 0028 F2D3     		bcc	.L5
+ 131:..//common/src/delay.c **** 	
+ 132:..//common/src/delay.c **** }
+ 470              		.loc 1 132 0
+ 471 002a 07F11007 		add	r7, r7, #16
+ 472 002e BD46     		mov	sp, r7
+ 473 0030 80BD     		pop	{r7, pc}
+ 474              		.cfi_endproc
+ 475              	.LFE30:
+ 477 0032 00BF     		.section	.text._delay_ms,"ax",%progbits
+ 478              		.align	2
+ 479              		.global	_delay_ms
+ 480              		.thumb
+ 481              		.thumb_func
+ 483              	_delay_ms:
+ 484              	.LFB31:
+ 133:..//common/src/delay.c **** void _delay_ms(uint32_t time)
+ 134:..//common/src/delay.c **** {
+ 485              		.loc 1 134 0
+ 486              		.cfi_startproc
+ 487              		@ args = 0, pretend = 0, frame = 8
+ 488              		@ frame_needed = 1, uses_anonymous_args = 0
+ 489 0000 80B5     		push	{r7, lr}
+ 490              	.LCFI5:
+ 491              		.cfi_def_cfa_offset 8
+ 492 0002 82B0     		sub	sp, sp, #8
+ 493              	.LCFI6:
+ 494              		.cfi_def_cfa_offset 16
+ 495 0004 00AF     		add	r7, sp, #0
+ 496              		.cfi_offset 14, -4
+ 497              		.cfi_offset 7, -8
+ 498              	.LCFI7:
+ 499              		.cfi_def_cfa_register 7
+ 500 0006 7860     		str	r0, [r7, #4]
+ 135:..//common/src/delay.c **** 	_delay_us(1000*time);
+ 501              		.loc 1 135 0
+ 502 0008 7B68     		ldr	r3, [r7, #4]
+ 503 000a 4FF47A72 		mov	r2, #1000
+ 504 000e 02FB03F3 		mul	r3, r2, r3
+ 505 0012 1846     		mov	r0, r3
+ 506 0014 40F20003 		movw	r3, #:lower16:_delay_us
+ 507 0018 C0F20003 		movt	r3, #:upper16:_delay_us
+ 508 001c 9847     		blx	r3
+ 136:..//common/src/delay.c **** }
+ 509              		.loc 1 136 0
+ 510 001e 07F10807 		add	r7, r7, #8
+ 511 0022 BD46     		mov	sp, r7
+ 512 0024 80BD     		pop	{r7, pc}
+ 513              		.cfi_endproc
+ 514              	.LFE31:
+ 516 0026 00BF     		.section	.text._delay_s,"ax",%progbits
+ 517              		.align	2
+ 518              		.global	_delay_s
+ 519              		.thumb
+ 520              		.thumb_func
+ 522              	_delay_s:
+ 523              	.LFB32:
+ 137:..//common/src/delay.c **** void _delay_s(uint32_t time)
+ 138:..//common/src/delay.c **** {
+ 524              		.loc 1 138 0
+ 525              		.cfi_startproc
+ 526              		@ args = 0, pretend = 0, frame = 8
+ 527              		@ frame_needed = 1, uses_anonymous_args = 0
+ 528 0000 80B5     		push	{r7, lr}
+ 529              	.LCFI8:
+ 530              		.cfi_def_cfa_offset 8
+ 531 0002 82B0     		sub	sp, sp, #8
+ 532              	.LCFI9:
+ 533              		.cfi_def_cfa_offset 16
+ 534 0004 00AF     		add	r7, sp, #0
+ 535              		.cfi_offset 14, -4
+ 536              		.cfi_offset 7, -8
+ 537              	.LCFI10:
+ 538              		.cfi_def_cfa_register 7
+ 539 0006 7860     		str	r0, [r7, #4]
+ 139:..//common/src/delay.c **** 	_delay_ms(1000*time);
+ 540              		.loc 1 139 0
+ 541 0008 7B68     		ldr	r3, [r7, #4]
+ 542 000a 4FF47A72 		mov	r2, #1000
+ 543 000e 02FB03F3 		mul	r3, r2, r3
+ 544 0012 1846     		mov	r0, r3
+ 545 0014 40F20003 		movw	r3, #:lower16:_delay_ms
+ 546 0018 C0F20003 		movt	r3, #:upper16:_delay_ms
+ 547 001c 9847     		blx	r3
+ 140:..//common/src/delay.c **** }
+ 548              		.loc 1 140 0
+ 549 001e 07F10807 		add	r7, r7, #8
+ 550 0022 BD46     		mov	sp, r7
+ 551 0024 80BD     		pop	{r7, pc}
+ 552              		.cfi_endproc
+ 553              	.LFE32:
+ 555 0026 00BF     		.text
+ 556              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 delay.c
+C:\Users\hdhed\AppData\Local\Temp\ccDYzwMm.s:24     .text.few_ticks:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccDYzwMm.s:29     .text.few_ticks:00000000 few_ticks
+C:\Users\hdhed\AppData\Local\Temp\ccDYzwMm.s:429    .text._delay_us:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccDYzwMm.s:434    .text._delay_us:00000000 _delay_us
+C:\Users\hdhed\AppData\Local\Temp\ccDYzwMm.s:478    .text._delay_ms:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccDYzwMm.s:483    .text._delay_ms:00000000 _delay_ms
+C:\Users\hdhed\AppData\Local\Temp\ccDYzwMm.s:517    .text._delay_s:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccDYzwMm.s:522    .text._delay_s:00000000 _delay_s
+                     .debug_frame:00000010 $d
+
+NO UNDEFINED SYMBOLS

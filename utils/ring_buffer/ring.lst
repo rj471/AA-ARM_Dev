@@ -1,0 +1,524 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"ring.c"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.section	.text.ring_init,"ax",%progbits
+  24              		.align	2
+  25              		.global	ring_init
+  26              		.thumb
+  27              		.thumb_func
+  29              	ring_init:
+  30              	.LFB29:
+  31              		.file 1 "..//utils/ring_buffer/ring.c"
+   1:..//utils/ring_buffer/ring.c **** // Copyright (C) 2003 Project Majingaa. (http://majingaa.dyndns.org/)
+   2:..//utils/ring_buffer/ring.c **** // This file is part of majingaa-hos
+   3:..//utils/ring_buffer/ring.c **** // majingaa-hos is free software; you can redistribute it and/or modify it under the terms of the G
+   4:..//utils/ring_buffer/ring.c **** // majingaa-hos is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; withou
+   5:..//utils/ring_buffer/ring.c **** // You should have received a copy of the GNU General Public License along with majingaa-hos; see t
+   6:..//utils/ring_buffer/ring.c **** /*************************************************************
+   7:..//utils/ring_buffer/ring.c ****  * ring.c -- Ring Buffer Library
+   8:..//utils/ring_buffer/ring.c ****  *************************************************************/
+   9:..//utils/ring_buffer/ring.c **** //			February 5th, 2006		Modify return structure
+  10:..//utils/ring_buffer/ring.c **** //			July      26th, 2009	for PIC24USB
+  11:..//utils/ring_buffer/ring.c **** //			April     24th, 2010	for mbed board / NXP LPC1768
+  12:..//utils/ring_buffer/ring.c **** //			May        1st, 2010
+  13:..//utils/ring_buffer/ring.c **** 
+  14:..//utils/ring_buffer/ring.c **** #include "ring.h"
+  15:..//utils/ring_buffer/ring.c **** 
+  16:..//utils/ring_buffer/ring.c **** uint16_t ring_init (ring_t *ring, uint8_t *buff, uint16_t size){
+  32              		.loc 1 16 0
+  33              		.cfi_startproc
+  34              		@ args = 0, pretend = 0, frame = 16
+  35              		@ frame_needed = 1, uses_anonymous_args = 0
+  36              		@ link register save eliminated.
+  37 0000 80B4     		push	{r7}
+  38              	.LCFI0:
+  39              		.cfi_def_cfa_offset 4
+  40 0002 85B0     		sub	sp, sp, #20
+  41              	.LCFI1:
+  42              		.cfi_def_cfa_offset 24
+  43 0004 00AF     		add	r7, sp, #0
+  44              		.cfi_offset 7, -4
+  45              	.LCFI2:
+  46              		.cfi_def_cfa_register 7
+  47 0006 F860     		str	r0, [r7, #12]
+  48 0008 B960     		str	r1, [r7, #8]
+  49 000a 1346     		mov	r3, r2
+  50 000c FB80     		strh	r3, [r7, #6]	@ movhi
+  17:..//utils/ring_buffer/ring.c **** 	ring->buff = buff;
+  51              		.loc 1 17 0
+  52 000e FB68     		ldr	r3, [r7, #12]
+  53 0010 BA68     		ldr	r2, [r7, #8]
+  54 0012 1A60     		str	r2, [r3, #0]
+  18:..//utils/ring_buffer/ring.c **** 	ring->size = size;
+  55              		.loc 1 18 0
+  56 0014 FB68     		ldr	r3, [r7, #12]
+  57 0016 FA88     		ldrh	r2, [r7, #6]	@ movhi
+  58 0018 9A80     		strh	r2, [r3, #4]	@ movhi
+  19:..//utils/ring_buffer/ring.c **** 	ring->head = ring->tail = 0;
+  59              		.loc 1 19 0
+  60 001a FB68     		ldr	r3, [r7, #12]
+  61 001c 4FF00002 		mov	r2, #0
+  62 0020 1A81     		strh	r2, [r3, #8]	@ movhi
+  63 0022 FB68     		ldr	r3, [r7, #12]
+  64 0024 1A89     		ldrh	r2, [r3, #8]
+  65 0026 FB68     		ldr	r3, [r7, #12]
+  66 0028 DA80     		strh	r2, [r3, #6]	@ movhi
+  20:..//utils/ring_buffer/ring.c **** 	return 0;
+  67              		.loc 1 20 0
+  68 002a 4FF00003 		mov	r3, #0
+  21:..//utils/ring_buffer/ring.c **** }
+  69              		.loc 1 21 0
+  70 002e 1846     		mov	r0, r3
+  71 0030 07F11407 		add	r7, r7, #20
+  72 0034 BD46     		mov	sp, r7
+  73 0036 80BC     		pop	{r7}
+  74 0038 7047     		bx	lr
+  75              		.cfi_endproc
+  76              	.LFE29:
+  78 003a 00BF     		.section	.text.ring_is_full,"ax",%progbits
+  79              		.align	2
+  80              		.global	ring_is_full
+  81              		.thumb
+  82              		.thumb_func
+  84              	ring_is_full:
+  85              	.LFB30:
+  22:..//utils/ring_buffer/ring.c **** 
+  23:..//utils/ring_buffer/ring.c **** uint16_t ring_is_full (ring_t *ring){
+  86              		.loc 1 23 0
+  87              		.cfi_startproc
+  88              		@ args = 0, pretend = 0, frame = 8
+  89              		@ frame_needed = 1, uses_anonymous_args = 0
+  90              		@ link register save eliminated.
+  91 0000 80B4     		push	{r7}
+  92              	.LCFI3:
+  93              		.cfi_def_cfa_offset 4
+  94 0002 83B0     		sub	sp, sp, #12
+  95              	.LCFI4:
+  96              		.cfi_def_cfa_offset 16
+  97 0004 00AF     		add	r7, sp, #0
+  98              		.cfi_offset 7, -4
+  99              	.LCFI5:
+ 100              		.cfi_def_cfa_register 7
+ 101 0006 7860     		str	r0, [r7, #4]
+  24:..//utils/ring_buffer/ring.c **** 	if (ring->tail == ring->head-1 ||
+ 102              		.loc 1 24 0
+ 103 0008 7B68     		ldr	r3, [r7, #4]
+ 104 000a 1B89     		ldrh	r3, [r3, #8]
+ 105 000c 1A46     		mov	r2, r3
+ 106 000e 7B68     		ldr	r3, [r7, #4]
+ 107 0010 DB88     		ldrh	r3, [r3, #6]
+ 108 0012 03F1FF33 		add	r3, r3, #-1
+ 109 0016 9A42     		cmp	r2, r3
+ 110 0018 0CD0     		beq	.L4
+  25:..//utils/ring_buffer/ring.c **** 		(ring->tail == ring->size-1 && ring->head == 0)) {
+ 111              		.loc 1 25 0
+ 112 001a 7B68     		ldr	r3, [r7, #4]
+ 113 001c 1B89     		ldrh	r3, [r3, #8]
+ 114 001e 1A46     		mov	r2, r3
+ 115 0020 7B68     		ldr	r3, [r7, #4]
+ 116 0022 9B88     		ldrh	r3, [r3, #4]
+ 117 0024 03F1FF33 		add	r3, r3, #-1
+ 118              		.loc 1 24 0
+ 119 0028 9A42     		cmp	r2, r3
+ 120 002a 06D1     		bne	.L5
+ 121              		.loc 1 25 0
+ 122 002c 7B68     		ldr	r3, [r7, #4]
+ 123 002e DB88     		ldrh	r3, [r3, #6]
+ 124              		.loc 1 24 0
+ 125 0030 002B     		cmp	r3, #0
+ 126 0032 02D1     		bne	.L5
+ 127              	.L4:
+  26:..//utils/ring_buffer/ring.c **** 		return 1;
+ 128              		.loc 1 26 0
+ 129 0034 4FF00103 		mov	r3, #1
+ 130 0038 01E0     		b	.L6
+ 131              	.L5:
+  27:..//utils/ring_buffer/ring.c **** 	}else {
+  28:..//utils/ring_buffer/ring.c **** 		return 0;
+ 132              		.loc 1 28 0
+ 133 003a 4FF00003 		mov	r3, #0
+ 134              	.L6:
+  29:..//utils/ring_buffer/ring.c **** 	}
+  30:..//utils/ring_buffer/ring.c **** }
+ 135              		.loc 1 30 0
+ 136 003e 1846     		mov	r0, r3
+ 137 0040 07F10C07 		add	r7, r7, #12
+ 138 0044 BD46     		mov	sp, r7
+ 139 0046 80BC     		pop	{r7}
+ 140 0048 7047     		bx	lr
+ 141              		.cfi_endproc
+ 142              	.LFE30:
+ 144 004a 00BF     		.section	.text.ring_is_empty,"ax",%progbits
+ 145              		.align	2
+ 146              		.global	ring_is_empty
+ 147              		.thumb
+ 148              		.thumb_func
+ 150              	ring_is_empty:
+ 151              	.LFB31:
+  31:..//utils/ring_buffer/ring.c **** 
+  32:..//utils/ring_buffer/ring.c **** uint16_t ring_is_empty (ring_t *ring){
+ 152              		.loc 1 32 0
+ 153              		.cfi_startproc
+ 154              		@ args = 0, pretend = 0, frame = 8
+ 155              		@ frame_needed = 1, uses_anonymous_args = 0
+ 156              		@ link register save eliminated.
+ 157 0000 80B4     		push	{r7}
+ 158              	.LCFI6:
+ 159              		.cfi_def_cfa_offset 4
+ 160 0002 83B0     		sub	sp, sp, #12
+ 161              	.LCFI7:
+ 162              		.cfi_def_cfa_offset 16
+ 163 0004 00AF     		add	r7, sp, #0
+ 164              		.cfi_offset 7, -4
+ 165              	.LCFI8:
+ 166              		.cfi_def_cfa_register 7
+ 167 0006 7860     		str	r0, [r7, #4]
+  33:..//utils/ring_buffer/ring.c **** 	if (ring->head == ring->tail){
+ 168              		.loc 1 33 0
+ 169 0008 7B68     		ldr	r3, [r7, #4]
+ 170 000a DA88     		ldrh	r2, [r3, #6]
+ 171 000c 7B68     		ldr	r3, [r7, #4]
+ 172 000e 1B89     		ldrh	r3, [r3, #8]
+ 173 0010 9A42     		cmp	r2, r3
+ 174 0012 02D1     		bne	.L9
+  34:..//utils/ring_buffer/ring.c **** 		return 1;
+ 175              		.loc 1 34 0
+ 176 0014 4FF00103 		mov	r3, #1
+ 177 0018 01E0     		b	.L10
+ 178              	.L9:
+  35:..//utils/ring_buffer/ring.c **** 	}
+  36:..//utils/ring_buffer/ring.c **** 	return 0;
+ 179              		.loc 1 36 0
+ 180 001a 4FF00003 		mov	r3, #0
+ 181              	.L10:
+  37:..//utils/ring_buffer/ring.c **** }
+ 182              		.loc 1 37 0
+ 183 001e 1846     		mov	r0, r3
+ 184 0020 07F10C07 		add	r7, r7, #12
+ 185 0024 BD46     		mov	sp, r7
+ 186 0026 80BC     		pop	{r7}
+ 187 0028 7047     		bx	lr
+ 188              		.cfi_endproc
+ 189              	.LFE31:
+ 191 002a 00BF     		.section	.text.ring_putc,"ax",%progbits
+ 192              		.align	2
+ 193              		.global	ring_putc
+ 194              		.thumb
+ 195              		.thumb_func
+ 197              	ring_putc:
+ 198              	.LFB32:
+  38:..//utils/ring_buffer/ring.c **** 
+  39:..//utils/ring_buffer/ring.c **** uint16_t ring_putc (ring_t *ring, uint8_t c){
+ 199              		.loc 1 39 0
+ 200              		.cfi_startproc
+ 201              		@ args = 0, pretend = 0, frame = 8
+ 202              		@ frame_needed = 1, uses_anonymous_args = 0
+ 203 0000 80B5     		push	{r7, lr}
+ 204              	.LCFI9:
+ 205              		.cfi_def_cfa_offset 8
+ 206 0002 82B0     		sub	sp, sp, #8
+ 207              	.LCFI10:
+ 208              		.cfi_def_cfa_offset 16
+ 209 0004 00AF     		add	r7, sp, #0
+ 210              		.cfi_offset 14, -4
+ 211              		.cfi_offset 7, -8
+ 212              	.LCFI11:
+ 213              		.cfi_def_cfa_register 7
+ 214 0006 7860     		str	r0, [r7, #4]
+ 215 0008 0B46     		mov	r3, r1
+ 216 000a FB70     		strb	r3, [r7, #3]
+  40:..//utils/ring_buffer/ring.c **** 	if (ring_is_full(ring)){
+ 217              		.loc 1 40 0
+ 218 000c 7868     		ldr	r0, [r7, #4]
+ 219 000e 40F20003 		movw	r3, #:lower16:ring_is_full
+ 220 0012 C0F20003 		movt	r3, #:upper16:ring_is_full
+ 221 0016 9847     		blx	r3
+ 222 0018 0346     		mov	r3, r0
+ 223 001a 002B     		cmp	r3, #0
+ 224 001c 02D0     		beq	.L13
+  41:..//utils/ring_buffer/ring.c **** 		return 1;
+ 225              		.loc 1 41 0
+ 226 001e 4FF00103 		mov	r3, #1
+ 227 0022 18E0     		b	.L14
+ 228              	.L13:
+  42:..//utils/ring_buffer/ring.c **** 	}
+  43:..//utils/ring_buffer/ring.c **** 	ring->buff[ring->tail++] = c;
+ 229              		.loc 1 43 0
+ 230 0024 7B68     		ldr	r3, [r7, #4]
+ 231 0026 1968     		ldr	r1, [r3, #0]
+ 232 0028 7B68     		ldr	r3, [r7, #4]
+ 233 002a 1B89     		ldrh	r3, [r3, #8]
+ 234 002c 1A46     		mov	r2, r3
+ 235 002e 0A44     		add	r2, r1, r2
+ 236 0030 F978     		ldrb	r1, [r7, #3]
+ 237 0032 1170     		strb	r1, [r2, #0]
+ 238 0034 03F10103 		add	r3, r3, #1
+ 239 0038 9AB2     		uxth	r2, r3
+ 240 003a 7B68     		ldr	r3, [r7, #4]
+ 241 003c 1A81     		strh	r2, [r3, #8]	@ movhi
+  44:..//utils/ring_buffer/ring.c **** 	if (ring->tail == ring->size){
+ 242              		.loc 1 44 0
+ 243 003e 7B68     		ldr	r3, [r7, #4]
+ 244 0040 1A89     		ldrh	r2, [r3, #8]
+ 245 0042 7B68     		ldr	r3, [r7, #4]
+ 246 0044 9B88     		ldrh	r3, [r3, #4]
+ 247 0046 9A42     		cmp	r2, r3
+ 248 0048 03D1     		bne	.L15
+  45:..//utils/ring_buffer/ring.c **** 		ring->tail = 0;
+ 249              		.loc 1 45 0
+ 250 004a 7B68     		ldr	r3, [r7, #4]
+ 251 004c 4FF00002 		mov	r2, #0
+ 252 0050 1A81     		strh	r2, [r3, #8]	@ movhi
+ 253              	.L15:
+  46:..//utils/ring_buffer/ring.c **** 	}
+  47:..//utils/ring_buffer/ring.c **** 	return 0;
+ 254              		.loc 1 47 0
+ 255 0052 4FF00003 		mov	r3, #0
+ 256              	.L14:
+  48:..//utils/ring_buffer/ring.c **** }
+ 257              		.loc 1 48 0
+ 258 0056 1846     		mov	r0, r3
+ 259 0058 07F10807 		add	r7, r7, #8
+ 260 005c BD46     		mov	sp, r7
+ 261 005e 80BD     		pop	{r7, pc}
+ 262              		.cfi_endproc
+ 263              	.LFE32:
+ 265              		.section	.text.ring_getc,"ax",%progbits
+ 266              		.align	2
+ 267              		.global	ring_getc
+ 268              		.thumb
+ 269              		.thumb_func
+ 271              	ring_getc:
+ 272              	.LFB33:
+  49:..//utils/ring_buffer/ring.c **** 
+  50:..//utils/ring_buffer/ring.c **** uint16_t ring_getc (ring_t *ring){
+ 273              		.loc 1 50 0
+ 274              		.cfi_startproc
+ 275              		@ args = 0, pretend = 0, frame = 8
+ 276              		@ frame_needed = 1, uses_anonymous_args = 0
+ 277 0000 80B5     		push	{r7, lr}
+ 278              	.LCFI12:
+ 279              		.cfi_def_cfa_offset 8
+ 280 0002 82B0     		sub	sp, sp, #8
+ 281              	.LCFI13:
+ 282              		.cfi_def_cfa_offset 16
+ 283 0004 00AF     		add	r7, sp, #0
+ 284              		.cfi_offset 14, -4
+ 285              		.cfi_offset 7, -8
+ 286              	.LCFI14:
+ 287              		.cfi_def_cfa_register 7
+ 288 0006 7860     		str	r0, [r7, #4]
+  51:..//utils/ring_buffer/ring.c **** 	if (ring_is_empty(ring)){
+ 289              		.loc 1 51 0
+ 290 0008 7868     		ldr	r0, [r7, #4]
+ 291 000a 40F20003 		movw	r3, #:lower16:ring_is_empty
+ 292 000e C0F20003 		movt	r3, #:upper16:ring_is_empty
+ 293 0012 9847     		blx	r3
+ 294 0014 0346     		mov	r3, r0
+ 295 0016 002B     		cmp	r3, #0
+ 296 0018 02D0     		beq	.L18
+  52:..//utils/ring_buffer/ring.c **** 		return 1;
+ 297              		.loc 1 52 0
+ 298 001a 4FF00103 		mov	r3, #1
+ 299 001e 27E0     		b	.L19
+ 300              	.L18:
+  53:..//utils/ring_buffer/ring.c **** 	}
+  54:..//utils/ring_buffer/ring.c **** 	ring->dt_got = ring->buff[ring->head++];
+ 301              		.loc 1 54 0
+ 302 0020 7B68     		ldr	r3, [r7, #4]
+ 303 0022 1968     		ldr	r1, [r3, #0]
+ 304 0024 7B68     		ldr	r3, [r7, #4]
+ 305 0026 DB88     		ldrh	r3, [r3, #6]
+ 306 0028 1A46     		mov	r2, r3
+ 307 002a 0A44     		add	r2, r1, r2
+ 308 002c 1178     		ldrb	r1, [r2, #0]	@ zero_extendqisi2
+ 309 002e 7A68     		ldr	r2, [r7, #4]
+ 310 0030 9172     		strb	r1, [r2, #10]
+ 311 0032 03F10103 		add	r3, r3, #1
+ 312 0036 9AB2     		uxth	r2, r3
+ 313 0038 7B68     		ldr	r3, [r7, #4]
+ 314 003a DA80     		strh	r2, [r3, #6]	@ movhi
+  55:..//utils/ring_buffer/ring.c **** 	if (ring->head == ring->size){
+ 315              		.loc 1 55 0
+ 316 003c 7B68     		ldr	r3, [r7, #4]
+ 317 003e DA88     		ldrh	r2, [r3, #6]
+ 318 0040 7B68     		ldr	r3, [r7, #4]
+ 319 0042 9B88     		ldrh	r3, [r3, #4]
+ 320 0044 9A42     		cmp	r2, r3
+ 321 0046 03D1     		bne	.L20
+  56:..//utils/ring_buffer/ring.c **** 		ring->head = 0;
+ 322              		.loc 1 56 0
+ 323 0048 7B68     		ldr	r3, [r7, #4]
+ 324 004a 4FF00002 		mov	r2, #0
+ 325 004e DA80     		strh	r2, [r3, #6]	@ movhi
+ 326              	.L20:
+  57:..//utils/ring_buffer/ring.c **** 	}
+  58:..//utils/ring_buffer/ring.c **** 	if (ring->head == ring->tail) {	// Initialize ring
+ 327              		.loc 1 58 0
+ 328 0050 7B68     		ldr	r3, [r7, #4]
+ 329 0052 DA88     		ldrh	r2, [r3, #6]
+ 330 0054 7B68     		ldr	r3, [r7, #4]
+ 331 0056 1B89     		ldrh	r3, [r3, #8]
+ 332 0058 9A42     		cmp	r2, r3
+ 333 005a 07D1     		bne	.L21
+  59:..//utils/ring_buffer/ring.c **** 		ring->head = ring->tail = 0;
+ 334              		.loc 1 59 0
+ 335 005c 7B68     		ldr	r3, [r7, #4]
+ 336 005e 4FF00002 		mov	r2, #0
+ 337 0062 1A81     		strh	r2, [r3, #8]	@ movhi
+ 338 0064 7B68     		ldr	r3, [r7, #4]
+ 339 0066 1A89     		ldrh	r2, [r3, #8]
+ 340 0068 7B68     		ldr	r3, [r7, #4]
+ 341 006a DA80     		strh	r2, [r3, #6]	@ movhi
+ 342              	.L21:
+  60:..//utils/ring_buffer/ring.c **** 	}
+  61:..//utils/ring_buffer/ring.c **** 	return 0;
+ 343              		.loc 1 61 0
+ 344 006c 4FF00003 		mov	r3, #0
+ 345              	.L19:
+  62:..//utils/ring_buffer/ring.c **** }
+ 346              		.loc 1 62 0
+ 347 0070 1846     		mov	r0, r3
+ 348 0072 07F10807 		add	r7, r7, #8
+ 349 0076 BD46     		mov	sp, r7
+ 350 0078 80BD     		pop	{r7, pc}
+ 351              		.cfi_endproc
+ 352              	.LFE33:
+ 354 007a 00BF     		.section	.text.ring_get_capacity,"ax",%progbits
+ 355              		.align	2
+ 356              		.global	ring_get_capacity
+ 357              		.thumb
+ 358              		.thumb_func
+ 360              	ring_get_capacity:
+ 361              	.LFB34:
+  63:..//utils/ring_buffer/ring.c **** 
+  64:..//utils/ring_buffer/ring.c **** uint16_t ring_get_capacity (ring_t *ring){
+ 362              		.loc 1 64 0
+ 363              		.cfi_startproc
+ 364              		@ args = 0, pretend = 0, frame = 8
+ 365              		@ frame_needed = 1, uses_anonymous_args = 0
+ 366              		@ link register save eliminated.
+ 367 0000 80B4     		push	{r7}
+ 368              	.LCFI15:
+ 369              		.cfi_def_cfa_offset 4
+ 370 0002 83B0     		sub	sp, sp, #12
+ 371              	.LCFI16:
+ 372              		.cfi_def_cfa_offset 16
+ 373 0004 00AF     		add	r7, sp, #0
+ 374              		.cfi_offset 7, -4
+ 375              	.LCFI17:
+ 376              		.cfi_def_cfa_register 7
+ 377 0006 7860     		str	r0, [r7, #4]
+  65:..//utils/ring_buffer/ring.c **** 	if (ring->head < ring->tail) {
+ 378              		.loc 1 65 0
+ 379 0008 7B68     		ldr	r3, [r7, #4]
+ 380 000a DA88     		ldrh	r2, [r3, #6]
+ 381 000c 7B68     		ldr	r3, [r7, #4]
+ 382 000e 1B89     		ldrh	r3, [r3, #8]
+ 383 0010 9A42     		cmp	r2, r3
+ 384 0012 07D2     		bcs	.L24
+  66:..//utils/ring_buffer/ring.c **** 		return ring->tail - ring->head;
+ 385              		.loc 1 66 0
+ 386 0014 7B68     		ldr	r3, [r7, #4]
+ 387 0016 1A89     		ldrh	r2, [r3, #8]
+ 388 0018 7B68     		ldr	r3, [r7, #4]
+ 389 001a DB88     		ldrh	r3, [r3, #6]
+ 390 001c C3EB0203 		rsb	r3, r3, r2
+ 391 0020 9BB2     		uxth	r3, r3
+ 392 0022 06E0     		b	.L25
+ 393              	.L24:
+  67:..//utils/ring_buffer/ring.c **** 	} else {
+  68:..//utils/ring_buffer/ring.c **** 		return ring->head - ring->tail;
+ 394              		.loc 1 68 0
+ 395 0024 7B68     		ldr	r3, [r7, #4]
+ 396 0026 DA88     		ldrh	r2, [r3, #6]
+ 397 0028 7B68     		ldr	r3, [r7, #4]
+ 398 002a 1B89     		ldrh	r3, [r3, #8]
+ 399 002c C3EB0203 		rsb	r3, r3, r2
+ 400 0030 9BB2     		uxth	r3, r3
+ 401              	.L25:
+  69:..//utils/ring_buffer/ring.c **** 	}
+  70:..//utils/ring_buffer/ring.c **** }
+ 402              		.loc 1 70 0
+ 403 0032 1846     		mov	r0, r3
+ 404 0034 07F10C07 		add	r7, r7, #12
+ 405 0038 BD46     		mov	sp, r7
+ 406 003a 80BC     		pop	{r7}
+ 407 003c 7047     		bx	lr
+ 408              		.cfi_endproc
+ 409              	.LFE34:
+ 411 003e 00BF     		.section	.text.ring_clear,"ax",%progbits
+ 412              		.align	2
+ 413              		.global	ring_clear
+ 414              		.thumb
+ 415              		.thumb_func
+ 417              	ring_clear:
+ 418              	.LFB35:
+  71:..//utils/ring_buffer/ring.c **** 
+  72:..//utils/ring_buffer/ring.c **** void ring_clear (ring_t *ring){
+ 419              		.loc 1 72 0
+ 420              		.cfi_startproc
+ 421              		@ args = 0, pretend = 0, frame = 8
+ 422              		@ frame_needed = 1, uses_anonymous_args = 0
+ 423              		@ link register save eliminated.
+ 424 0000 80B4     		push	{r7}
+ 425              	.LCFI18:
+ 426              		.cfi_def_cfa_offset 4
+ 427 0002 83B0     		sub	sp, sp, #12
+ 428              	.LCFI19:
+ 429              		.cfi_def_cfa_offset 16
+ 430 0004 00AF     		add	r7, sp, #0
+ 431              		.cfi_offset 7, -4
+ 432              	.LCFI20:
+ 433              		.cfi_def_cfa_register 7
+ 434 0006 7860     		str	r0, [r7, #4]
+  73:..//utils/ring_buffer/ring.c **** 	ring->head = ring->tail = 0;
+ 435              		.loc 1 73 0
+ 436 0008 7B68     		ldr	r3, [r7, #4]
+ 437 000a 4FF00002 		mov	r2, #0
+ 438 000e 1A81     		strh	r2, [r3, #8]	@ movhi
+ 439 0010 7B68     		ldr	r3, [r7, #4]
+ 440 0012 1A89     		ldrh	r2, [r3, #8]
+ 441 0014 7B68     		ldr	r3, [r7, #4]
+ 442 0016 DA80     		strh	r2, [r3, #6]	@ movhi
+  74:..//utils/ring_buffer/ring.c **** }
+ 443              		.loc 1 74 0
+ 444 0018 07F10C07 		add	r7, r7, #12
+ 445 001c BD46     		mov	sp, r7
+ 446 001e 80BC     		pop	{r7}
+ 447 0020 7047     		bx	lr
+ 448              		.cfi_endproc
+ 449              	.LFE35:
+ 451 0022 00BF     		.text
+ 452              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 ring.c
+C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:24     .text.ring_init:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:29     .text.ring_init:00000000 ring_init
+C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:79     .text.ring_is_full:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:84     .text.ring_is_full:00000000 ring_is_full
+C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:145    .text.ring_is_empty:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:150    .text.ring_is_empty:00000000 ring_is_empty
+C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:192    .text.ring_putc:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:197    .text.ring_putc:00000000 ring_putc
+C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:266    .text.ring_getc:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:271    .text.ring_getc:00000000 ring_getc
+C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:355    .text.ring_get_capacity:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:360    .text.ring_get_capacity:00000000 ring_get_capacity
+C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:412    .text.ring_clear:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:417    .text.ring_clear:00000000 ring_clear
+                     .debug_frame:00000010 $d
+
+NO UNDEFINED SYMBOLS

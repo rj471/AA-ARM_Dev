@@ -1,0 +1,1221 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"SM_Operation.cpp"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.section	.text._ZN13State_MachineD2Ev,"axG",%progbits,_ZN13State_MachineD2Ev,comdat
+  24              		.align	2
+  25              		.weak	_ZN13State_MachineD2Ev
+  26              		.thumb
+  27              		.thumb_func
+  29              	_ZN13State_MachineD2Ev:
+  30              	.LFB1:
+  31              		.file 1 "..//utils/state_machine/state_machine.h"
+   1:..//utils/state_machine/state_machine.h **** #ifndef __STATE_MACHINE_H__
+   2:..//utils/state_machine/state_machine.h **** #define __STATE_MACHINE_H__
+   3:..//utils/state_machine/state_machine.h **** 
+   4:..//utils/state_machine/state_machine.h **** #define SM_START 1
+   5:..//utils/state_machine/state_machine.h **** #define SM_STOP 0
+   6:..//utils/state_machine/state_machine.h **** 
+   7:..//utils/state_machine/state_machine.h **** #define SM_OPERATION_AUTO			0
+   8:..//utils/state_machine/state_machine.h **** #define SM_OPERATION_MANUAL			1
+   9:..//utils/state_machine/state_machine.h **** 
+  10:..//utils/state_machine/state_machine.h **** /*Return codes for state machines...*/
+  11:..//utils/state_machine/state_machine.h **** enum SM_RET{
+  12:..//utils/state_machine/state_machine.h **** 	SM_RESET = 0,
+  13:..//utils/state_machine/state_machine.h **** 	SM_STARTED = 1,
+  14:..//utils/state_machine/state_machine.h **** 	SM_DONE = 2,
+  15:..//utils/state_machine/state_machine.h **** 	SM_ERROR = -1,
+  16:..//utils/state_machine/state_machine.h **** 	SM_ABORTED = 3,
+  17:..//utils/state_machine/state_machine.h **** };
+  18:..//utils/state_machine/state_machine.h **** 
+  19:..//utils/state_machine/state_machine.h **** #define SM_STATE_RESET	0
+  20:..//utils/state_machine/state_machine.h **** 
+  21:..//utils/state_machine/state_machine.h **** class State_Machine{
+  22:..//utils/state_machine/state_machine.h **** 	public:
+  23:..//utils/state_machine/state_machine.h **** 	volatile int state;
+  24:..//utils/state_machine/state_machine.h **** 	volatile int flag_start;
+  25:..//utils/state_machine/state_machine.h **** 	
+  26:..//utils/state_machine/state_machine.h **** 	// volatile int pause_cur_state;
+  27:..//utils/state_machine/state_machine.h **** 	// volatile int pause_next_state;
+  28:..//utils/state_machine/state_machine.h **** 	volatile int manual_flag;
+  29:..//utils/state_machine/state_machine.h **** 	volatile int paused;
+  30:..//utils/state_machine/state_machine.h **** 	
+  31:..//utils/state_machine/state_machine.h **** 	State_Machine(void);
+  32:..//utils/state_machine/state_machine.h **** 	State_Machine (int s); // consructor which calls the state machine..
+  33:..//utils/state_machine/state_machine.h **** 	int next_state(void);    	// incremen state by 1
+  34:..//utils/state_machine/state_machine.h **** 	int next_state(int s);  // set nex state to value state..
+  35:..//utils/state_machine/state_machine.h **** 	
+  36:..//utils/state_machine/state_machine.h **** 	// virtual functions return -1
+  37:..//utils/state_machine/state_machine.h **** 	virtual int update(void);
+  38:..//utils/state_machine/state_machine.h **** 	
+  39:..//utils/state_machine/state_machine.h **** 	// mealy machine with input...
+  40:..//utils/state_machine/state_machine.h **** 	virtual int update(int);
+  41:..//utils/state_machine/state_machine.h **** 	
+  42:..//utils/state_machine/state_machine.h **** 	virtual int reset(void);
+  43:..//utils/state_machine/state_machine.h **** 	
+  44:..//utils/state_machine/state_machine.h **** 	// this function returns 1 if state machine is started...
+  45:..//utils/state_machine/state_machine.h **** 	virtual int SM_started();
+  46:..//utils/state_machine/state_machine.h **** 	
+  47:..//utils/state_machine/state_machine.h **** 	virtual int SM_start();
+  48:..//utils/state_machine/state_machine.h **** 	virtual int SM_stop();
+  49:..//utils/state_machine/state_machine.h **** 	
+  50:..//utils/state_machine/state_machine.h **** 	// This will pause the state machine if manual is enabled..
+  51:..//utils/state_machine/state_machine.h **** 	// it will return if the machine has paused or not..
+  52:..//utils/state_machine/state_machine.h **** 	//virtual int SM_pause(void);
+  53:..//utils/state_machine/state_machine.h **** 	
+  54:..//utils/state_machine/state_machine.h **** 	virtual int SM_pause(int input);
+  55:..//utils/state_machine/state_machine.h **** 	
+  56:..//utils/state_machine/state_machine.h **** 	// this should be called in the pause state of the state machine...
+  57:..//utils/state_machine/state_machine.h **** 	// this will take an input and if input is 1 it will release from pause to the next state...
+  58:..//utils/state_machine/state_machine.h **** 	//virtual int SM_pause_update(int input);
+  59:..//utils/state_machine/state_machine.h **** 	
+  60:..//utils/state_machine/state_machine.h **** 	
+  61:..//utils/state_machine/state_machine.h **** 	virtual ~State_Machine(void){};
+  32              		.loc 1 61 0
+  33              		.cfi_startproc
+  34              		@ args = 0, pretend = 0, frame = 8
+  35              		@ frame_needed = 1, uses_anonymous_args = 0
+  36 0000 80B5     		push	{r7, lr}
+  37              	.LCFI0:
+  38              		.cfi_def_cfa_offset 8
+  39 0002 82B0     		sub	sp, sp, #8
+  40              	.LCFI1:
+  41              		.cfi_def_cfa_offset 16
+  42 0004 00AF     		add	r7, sp, #0
+  43              		.cfi_offset 14, -4
+  44              		.cfi_offset 7, -8
+  45              	.LCFI2:
+  46              		.cfi_def_cfa_register 7
+  47 0006 7860     		str	r0, [r7, #4]
+  48              		.loc 1 61 0
+  49 0008 7B68     		ldr	r3, [r7, #4]
+  50 000a 094A     		ldr	r2, .L5
+  51 000c 1A60     		str	r2, [r3, #0]
+  52 000e 4FF00003 		mov	r3, #0
+  53 0012 DBB2     		uxtb	r3, r3
+  54 0014 002B     		cmp	r3, #0
+  55 0016 05D0     		beq	.L3
+  56 0018 7868     		ldr	r0, [r7, #4]
+  57 001a 40F20003 		movw	r3, #:lower16:_ZdlPv
+  58 001e C0F20003 		movt	r3, #:upper16:_ZdlPv
+  59 0022 9847     		blx	r3
+  60              	.L3:
+  61 0024 7B68     		ldr	r3, [r7, #4]
+  62 0026 1846     		mov	r0, r3
+  63 0028 07F10807 		add	r7, r7, #8
+  64 002c BD46     		mov	sp, r7
+  65 002e 80BD     		pop	{r7, pc}
+  66              	.L6:
+  67              		.align	2
+  68              	.L5:
+  69 0030 08000000 		.word	_ZTV13State_Machine+8
+  70              		.cfi_endproc
+  71              	.LFE1:
+  73              		.section	.text._ZN12SM_OPERATIONC2Ev,"ax",%progbits
+  74              		.align	2
+  75              		.global	_ZN12SM_OPERATIONC2Ev
+  76              		.thumb
+  77              		.thumb_func
+  79              	_ZN12SM_OPERATIONC2Ev:
+  80              	.LFB34:
+  81              		.file 2 "..//PHY/state_machines/SM_Operation.cpp"
+   1:..//PHY/state_machines/SM_Operation.cpp **** #include "SM_Operation.h"
+   2:..//PHY/state_machines/SM_Operation.cpp **** #include "delay_timer.h"
+   3:..//PHY/state_machines/SM_Operation.cpp **** #include "config.h"
+   4:..//PHY/state_machines/SM_Operation.cpp **** #include "global.h"
+   5:..//PHY/state_machines/SM_Operation.cpp **** #include "state_machine.h"
+   6:..//PHY/state_machines/SM_Operation.cpp **** #include "input_output.h"
+   7:..//PHY/state_machines/SM_Operation.cpp **** #include "config_data.h"
+   8:..//PHY/state_machines/SM_Operation.cpp **** 
+   9:..//PHY/state_machines/SM_Operation.cpp **** #define MOTOR_STOPPED 0 
+  10:..//PHY/state_machines/SM_Operation.cpp **** #define HOME_DIST 0X7FFFFF
+  11:..//PHY/state_machines/SM_Operation.cpp **** 
+  12:..//PHY/state_machines/SM_Operation.cpp **** SM_OPERATION::SM_OPERATION():State_Machine(){
+  82              		.loc 2 12 0
+  83              		.cfi_startproc
+  84              		@ args = 0, pretend = 0, frame = 8
+  85              		@ frame_needed = 1, uses_anonymous_args = 0
+  86 0000 80B5     		push	{r7, lr}
+  87              	.LCFI3:
+  88              		.cfi_def_cfa_offset 8
+  89 0002 82B0     		sub	sp, sp, #8
+  90              	.LCFI4:
+  91              		.cfi_def_cfa_offset 16
+  92 0004 00AF     		add	r7, sp, #0
+  93              		.cfi_offset 14, -4
+  94              		.cfi_offset 7, -8
+  95              	.LCFI5:
+  96              		.cfi_def_cfa_register 7
+  97 0006 7860     		str	r0, [r7, #4]
+  98              		.loc 2 12 0
+  99 0008 7B68     		ldr	r3, [r7, #4]
+ 100 000a 1846     		mov	r0, r3
+ 101 000c 40F20003 		movw	r3, #:lower16:_ZN13State_MachineC2Ev
+ 102 0010 C0F20003 		movt	r3, #:upper16:_ZN13State_MachineC2Ev
+ 103 0014 9847     		blx	r3
+ 104 0016 7B68     		ldr	r3, [r7, #4]
+ 105 0018 094A     		ldr	r2, .L10
+ 106 001a 1A60     		str	r2, [r3, #0]
+  13:..//PHY/state_machines/SM_Operation.cpp **** 	SM_stop();
+ 107              		.loc 2 13 0
+ 108 001c 7B68     		ldr	r3, [r7, #4]
+ 109 001e 1846     		mov	r0, r3
+ 110 0020 40F20003 		movw	r3, #:lower16:_ZN13State_Machine7SM_stopEv
+ 111 0024 C0F20003 		movt	r3, #:upper16:_ZN13State_Machine7SM_stopEv
+ 112 0028 9847     		blx	r3
+  14:..//PHY/state_machines/SM_Operation.cpp **** 	
+  15:..//PHY/state_machines/SM_Operation.cpp **** 	state = SM_OPERATION_RESET;
+ 113              		.loc 2 15 0
+ 114 002a 7B68     		ldr	r3, [r7, #4]
+ 115 002c 4FF00002 		mov	r2, #0
+ 116 0030 5A60     		str	r2, [r3, #4]
+  16:..//PHY/state_machines/SM_Operation.cpp **** }
+ 117              		.loc 2 16 0
+ 118 0032 7B68     		ldr	r3, [r7, #4]
+ 119 0034 1846     		mov	r0, r3
+ 120 0036 07F10807 		add	r7, r7, #8
+ 121 003a BD46     		mov	sp, r7
+ 122 003c 80BD     		pop	{r7, pc}
+ 123              	.L11:
+ 124 003e 00BF     		.align	2
+ 125              	.L10:
+ 126 0040 08000000 		.word	_ZTV12SM_OPERATION+8
+ 127              		.cfi_endproc
+ 128              	.LFE34:
+ 130              		.section	.text._ZN12SM_OPERATIONC1Ev,"ax",%progbits
+ 131              		.align	2
+ 132              		.global	_ZN12SM_OPERATIONC1Ev
+ 133              		.thumb
+ 134              		.thumb_func
+ 136              	_ZN12SM_OPERATIONC1Ev:
+ 137              	.LFB35:
+ 138              		.loc 2 12 0
+ 139              		.cfi_startproc
+ 140              		@ args = 0, pretend = 0, frame = 8
+ 141              		@ frame_needed = 1, uses_anonymous_args = 0
+ 142 0000 80B5     		push	{r7, lr}
+ 143              	.LCFI6:
+ 144              		.cfi_def_cfa_offset 8
+ 145 0002 82B0     		sub	sp, sp, #8
+ 146              	.LCFI7:
+ 147              		.cfi_def_cfa_offset 16
+ 148 0004 00AF     		add	r7, sp, #0
+ 149              		.cfi_offset 14, -4
+ 150              		.cfi_offset 7, -8
+ 151              	.LCFI8:
+ 152              		.cfi_def_cfa_register 7
+ 153 0006 7860     		str	r0, [r7, #4]
+ 154              		.loc 2 12 0
+ 155 0008 7B68     		ldr	r3, [r7, #4]
+ 156 000a 1846     		mov	r0, r3
+ 157 000c 40F20003 		movw	r3, #:lower16:_ZN13State_MachineC2Ev
+ 158 0010 C0F20003 		movt	r3, #:upper16:_ZN13State_MachineC2Ev
+ 159 0014 9847     		blx	r3
+ 160 0016 7B68     		ldr	r3, [r7, #4]
+ 161 0018 094A     		ldr	r2, .L15
+ 162 001a 1A60     		str	r2, [r3, #0]
+ 163              		.loc 2 13 0
+ 164 001c 7B68     		ldr	r3, [r7, #4]
+ 165 001e 1846     		mov	r0, r3
+ 166 0020 40F20003 		movw	r3, #:lower16:_ZN13State_Machine7SM_stopEv
+ 167 0024 C0F20003 		movt	r3, #:upper16:_ZN13State_Machine7SM_stopEv
+ 168 0028 9847     		blx	r3
+ 169              		.loc 2 15 0
+ 170 002a 7B68     		ldr	r3, [r7, #4]
+ 171 002c 4FF00002 		mov	r2, #0
+ 172 0030 5A60     		str	r2, [r3, #4]
+ 173              		.loc 2 16 0
+ 174 0032 7B68     		ldr	r3, [r7, #4]
+ 175 0034 1846     		mov	r0, r3
+ 176 0036 07F10807 		add	r7, r7, #8
+ 177 003a BD46     		mov	sp, r7
+ 178 003c 80BD     		pop	{r7, pc}
+ 179              	.L16:
+ 180 003e 00BF     		.align	2
+ 181              	.L15:
+ 182 0040 08000000 		.word	_ZTV12SM_OPERATION+8
+ 183              		.cfi_endproc
+ 184              	.LFE35:
+ 186              		.section	.text._ZN12SM_OPERATION6updateEv,"ax",%progbits
+ 187              		.align	2
+ 188              		.global	_ZN12SM_OPERATION6updateEv
+ 189              		.thumb
+ 190              		.thumb_func
+ 192              	_ZN12SM_OPERATION6updateEv:
+ 193              	.LFB36:
+  17:..//PHY/state_machines/SM_Operation.cpp **** 
+  18:..//PHY/state_machines/SM_Operation.cpp **** int SM_OPERATION::update(void){
+ 194              		.loc 2 18 0
+ 195              		.cfi_startproc
+ 196              		@ args = 0, pretend = 0, frame = 40
+ 197              		@ frame_needed = 1, uses_anonymous_args = 0
+ 198 0000 80B5     		push	{r7, lr}
+ 199              	.LCFI9:
+ 200              		.cfi_def_cfa_offset 8
+ 201 0002 8AB0     		sub	sp, sp, #40
+ 202              	.LCFI10:
+ 203              		.cfi_def_cfa_offset 48
+ 204 0004 00AF     		add	r7, sp, #0
+ 205              		.cfi_offset 14, -4
+ 206              		.cfi_offset 7, -8
+ 207              	.LCFI11:
+ 208              		.cfi_def_cfa_register 7
+ 209 0006 7860     		str	r0, [r7, #4]
+ 210              	.LBB2:
+  19:..//PHY/state_machines/SM_Operation.cpp **** 
+  20:..//PHY/state_machines/SM_Operation.cpp **** 	if(SM_START == SM_started()){	
+ 211              		.loc 2 20 0
+ 212 0008 7B68     		ldr	r3, [r7, #4]
+ 213 000a 1B68     		ldr	r3, [r3, #0]
+ 214 000c 03F10C03 		add	r3, r3, #12
+ 215 0010 1B68     		ldr	r3, [r3, #0]
+ 216 0012 7A68     		ldr	r2, [r7, #4]
+ 217 0014 1046     		mov	r0, r2
+ 218 0016 9847     		blx	r3
+ 219 0018 0346     		mov	r3, r0
+ 220 001a 012B     		cmp	r3, #1
+ 221 001c 14BF     		ite	ne
+ 222 001e 0023     		movne	r3, #0
+ 223 0020 0123     		moveq	r3, #1
+ 224 0022 DBB2     		uxtb	r3, r3
+ 225 0024 002B     		cmp	r3, #0
+ 226 0026 00F0A682 		beq	.L18
+  21:..//PHY/state_machines/SM_Operation.cpp **** 		if(input_rise_flag[OBJECT_SNSR]){
+ 227              		.loc 2 21 0
+ 228 002a 40F20003 		movw	r3, #:lower16:input_rise_flag
+ 229 002e C0F20003 		movt	r3, #:upper16:input_rise_flag
+ 230 0032 9B78     		ldrb	r3, [r3, #2]	@ zero_extendqisi2
+ 231 0034 002B     		cmp	r3, #0
+ 232 0036 33D0     		beq	.L19
+ 233              	.LBB3:
+  22:..//PHY/state_machines/SM_Operation.cpp **** 			input_rise_flag[OBJECT_SNSR] = 0;
+ 234              		.loc 2 22 0
+ 235 0038 40F20003 		movw	r3, #:lower16:input_rise_flag
+ 236 003c C0F20003 		movt	r3, #:upper16:input_rise_flag
+ 237 0040 4FF00002 		mov	r2, #0
+ 238 0044 9A70     		strb	r2, [r3, #2]
+  23:..//PHY/state_machines/SM_Operation.cpp **** 			int mod = (queued_object_count_01 % MAX_TIM_NUM) + BASE_T1;
+ 239              		.loc 2 23 0
+ 240 0046 7B68     		ldr	r3, [r7, #4]
+ 241 0048 9969     		ldr	r1, [r3, #24]
+ 242 004a 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 243 004e CCF6CC43 		movt	r3, #:upper16:-858993459
+ 244 0052 A3FB0123 		umull	r2, r3, r3, r1
+ 245 0056 4FEAD302 		lsr	r2, r3, #3
+ 246 005a 1346     		mov	r3, r2
+ 247 005c 4FEA8303 		lsl	r3, r3, #2
+ 248 0060 1344     		add	r3, r3, r2
+ 249 0062 4FEA4303 		lsl	r3, r3, #1
+ 250 0066 C3EB0102 		rsb	r2, r3, r1
+ 251 006a BA60     		str	r2, [r7, #8]
+  24:..//PHY/state_machines/SM_Operation.cpp **** 			if(used_timer_array1[mod-BASE_T1] == 0){
+ 252              		.loc 2 24 0
+ 253 006c BA68     		ldr	r2, [r7, #8]
+ 254 006e 7B68     		ldr	r3, [r7, #4]
+ 255 0070 1344     		add	r3, r2, r3
+ 256 0072 93F83030 		ldrb	r3, [r3, #48]	@ zero_extendqisi2
+ 257 0076 002B     		cmp	r3, #0
+ 258 0078 12D1     		bne	.L19
+  25:..//PHY/state_machines/SM_Operation.cpp **** 				used_timer_array1[mod-BASE_T1] = 1;
+ 259              		.loc 2 25 0
+ 260 007a BA68     		ldr	r2, [r7, #8]
+ 261 007c 7B68     		ldr	r3, [r7, #4]
+ 262 007e 1344     		add	r3, r2, r3
+ 263 0080 4FF00102 		mov	r2, #1
+ 264 0084 83F83020 		strb	r2, [r3, #48]
+  26:..//PHY/state_machines/SM_Operation.cpp **** 				dt_reset(mod);
+ 265              		.loc 2 26 0
+ 266 0088 B868     		ldr	r0, [r7, #8]
+ 267 008a 40F20003 		movw	r3, #:lower16:_Z8dt_reseti
+ 268 008e C0F20003 		movt	r3, #:upper16:_Z8dt_reseti
+ 269 0092 9847     		blx	r3
+  27:..//PHY/state_machines/SM_Operation.cpp **** 				queued_object_count_01++;
+ 270              		.loc 2 27 0
+ 271 0094 7B68     		ldr	r3, [r7, #4]
+ 272 0096 9B69     		ldr	r3, [r3, #24]
+ 273 0098 03F10102 		add	r2, r3, #1
+ 274 009c 7B68     		ldr	r3, [r7, #4]
+ 275 009e 9A61     		str	r2, [r3, #24]
+ 276              	.L19:
+ 277              	.LBE3:
+ 278              	.LBB4:
+  28:..//PHY/state_machines/SM_Operation.cpp **** 			}else{
+  29:..//PHY/state_machines/SM_Operation.cpp **** 				//run time error
+  30:..//PHY/state_machines/SM_Operation.cpp **** 			}
+  31:..//PHY/state_machines/SM_Operation.cpp **** 	    }
+  32:..//PHY/state_machines/SM_Operation.cpp **** 
+  33:..//PHY/state_machines/SM_Operation.cpp **** 	 // }
+  34:..//PHY/state_machines/SM_Operation.cpp **** 
+  35:..//PHY/state_machines/SM_Operation.cpp **** 	    // arrived at 1st cam
+  36:..//PHY/state_machines/SM_Operation.cpp **** 		for(int mod = BASE_T1; mod < (BASE_T1 + MAX_TIM_NUM); mod++){
+ 279              		.loc 2 36 0
+ 280 00a0 4FF00003 		mov	r3, #0
+ 281 00a4 FB60     		str	r3, [r7, #12]
+ 282 00a6 3FE0     		b	.L20
+ 283              	.L24:
+  37:..//PHY/state_machines/SM_Operation.cpp **** 			if(dt_is_timeup(mod) && used_timer_array1[mod-BASE_T1] == 1){
+ 284              		.loc 2 37 0
+ 285 00a8 F868     		ldr	r0, [r7, #12]
+ 286 00aa 40F20003 		movw	r3, #:lower16:_Z12dt_is_timeupi
+ 287 00ae C0F20003 		movt	r3, #:upper16:_Z12dt_is_timeupi
+ 288 00b2 9847     		blx	r3
+ 289 00b4 0346     		mov	r3, r0
+ 290 00b6 002B     		cmp	r3, #0
+ 291 00b8 09D0     		beq	.L21
+ 292 00ba FA68     		ldr	r2, [r7, #12]
+ 293 00bc 7B68     		ldr	r3, [r7, #4]
+ 294 00be 1344     		add	r3, r2, r3
+ 295 00c0 93F83030 		ldrb	r3, [r3, #48]	@ zero_extendqisi2
+ 296 00c4 012B     		cmp	r3, #1
+ 297 00c6 02D1     		bne	.L21
+ 298 00c8 4FF00103 		mov	r3, #1
+ 299 00cc 01E0     		b	.L22
+ 300              	.L21:
+ 301 00ce 4FF00003 		mov	r3, #0
+ 302              	.L22:
+ 303 00d2 002B     		cmp	r3, #0
+ 304 00d4 24D0     		beq	.L23
+  38:..//PHY/state_machines/SM_Operation.cpp **** 				used_timer_array1[mod-BASE_T1] = 0;
+ 305              		.loc 2 38 0
+ 306 00d6 FA68     		ldr	r2, [r7, #12]
+ 307 00d8 7B68     		ldr	r3, [r7, #4]
+ 308 00da 1344     		add	r3, r2, r3
+ 309 00dc 4FF00002 		mov	r2, #0
+ 310 00e0 83F83020 		strb	r2, [r3, #48]
+  39:..//PHY/state_machines/SM_Operation.cpp **** 				cam1_on = 1;
+ 311              		.loc 2 39 0
+ 312 00e4 7B68     		ldr	r3, [r7, #4]
+ 313 00e6 4FF00102 		mov	r2, #1
+ 314 00ea 83F82C20 		strb	r2, [r3, #44]
+  40:..//PHY/state_machines/SM_Operation.cpp **** 				dt_set_delay(CAM1_ON_DELAY,CAM_ON_TIME);
+ 315              		.loc 2 40 0
+ 316 00ee 4FF02800 		mov	r0, #40
+ 317 00f2 4FF06401 		mov	r1, #100
+ 318 00f6 40F20003 		movw	r3, #:lower16:_Z12dt_set_delayim
+ 319 00fa C0F20003 		movt	r3, #:upper16:_Z12dt_set_delayim
+ 320 00fe 9847     		blx	r3
+  41:..//PHY/state_machines/SM_Operation.cpp **** 				io_set_output(CAM1_TRIGGER,1);
+ 321              		.loc 2 41 0
+ 322 0100 4FF00000 		mov	r0, #0
+ 323 0104 4FF00101 		mov	r1, #1
+ 324 0108 40F20003 		movw	r3, #:lower16:io_set_output
+ 325 010c C0F20003 		movt	r3, #:upper16:io_set_output
+ 326 0110 9847     		blx	r3
+  42:..//PHY/state_machines/SM_Operation.cpp **** 				dt_reset(CAM1_ON_DELAY);
+ 327              		.loc 2 42 0
+ 328 0112 4FF02800 		mov	r0, #40
+ 329 0116 40F20003 		movw	r3, #:lower16:_Z8dt_reseti
+ 330 011a C0F20003 		movt	r3, #:upper16:_Z8dt_reseti
+ 331 011e 9847     		blx	r3
+ 332              	.L23:
+ 333              		.loc 2 36 0
+ 334 0120 FB68     		ldr	r3, [r7, #12]
+ 335 0122 03F10103 		add	r3, r3, #1
+ 336 0126 FB60     		str	r3, [r7, #12]
+ 337              	.L20:
+ 338 0128 FB68     		ldr	r3, [r7, #12]
+ 339 012a 092B     		cmp	r3, #9
+ 340 012c CCBF     		ite	gt
+ 341 012e 0023     		movgt	r3, #0
+ 342 0130 0123     		movle	r3, #1
+ 343 0132 DBB2     		uxtb	r3, r3
+ 344 0134 002B     		cmp	r3, #0
+ 345 0136 B7D1     		bne	.L24
+ 346              	.LBE4:
+  43:..//PHY/state_machines/SM_Operation.cpp **** 			}
+  44:..//PHY/state_machines/SM_Operation.cpp **** 		}
+  45:..//PHY/state_machines/SM_Operation.cpp **** 
+  46:..//PHY/state_machines/SM_Operation.cpp **** 		// 1st cam over
+  47:..//PHY/state_machines/SM_Operation.cpp **** 		if(cam1_on == 1 && dt_is_timeup(CAM1_ON_DELAY)){
+ 347              		.loc 2 47 0
+ 348 0138 7B68     		ldr	r3, [r7, #4]
+ 349 013a 93F82C30 		ldrb	r3, [r3, #44]	@ zero_extendqisi2
+ 350 013e 012B     		cmp	r3, #1
+ 351 0140 0CD1     		bne	.L25
+ 352 0142 4FF02800 		mov	r0, #40
+ 353 0146 40F20003 		movw	r3, #:lower16:_Z12dt_is_timeupi
+ 354 014a C0F20003 		movt	r3, #:upper16:_Z12dt_is_timeupi
+ 355 014e 9847     		blx	r3
+ 356 0150 0346     		mov	r3, r0
+ 357 0152 002B     		cmp	r3, #0
+ 358 0154 02D0     		beq	.L25
+ 359 0156 4FF00103 		mov	r3, #1
+ 360 015a 01E0     		b	.L26
+ 361              	.L25:
+ 362 015c 4FF00003 		mov	r3, #0
+ 363              	.L26:
+ 364 0160 002B     		cmp	r3, #0
+ 365 0162 40D0     		beq	.L27
+ 366              	.LBB5:
+  48:..//PHY/state_machines/SM_Operation.cpp **** 			io_set_output(CAM1_TRIGGER,0);
+ 367              		.loc 2 48 0
+ 368 0164 4FF00000 		mov	r0, #0
+ 369 0168 4FF00001 		mov	r1, #0
+ 370 016c 40F20003 		movw	r3, #:lower16:io_set_output
+ 371 0170 C0F20003 		movt	r3, #:upper16:io_set_output
+ 372 0174 9847     		blx	r3
+  49:..//PHY/state_machines/SM_Operation.cpp **** 			cam1_on = 0;
+ 373              		.loc 2 49 0
+ 374 0176 7B68     		ldr	r3, [r7, #4]
+ 375 0178 4FF00002 		mov	r2, #0
+ 376 017c 83F82C20 		strb	r2, [r3, #44]
+  50:..//PHY/state_machines/SM_Operation.cpp **** 			int mod = (queued_object_count_12 % MAX_TIM_NUM) + BASE_T2;
+ 377              		.loc 2 50 0
+ 378 0180 7B68     		ldr	r3, [r7, #4]
+ 379 0182 D969     		ldr	r1, [r3, #28]
+ 380 0184 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 381 0188 CCF6CC43 		movt	r3, #:upper16:-858993459
+ 382 018c A3FB0123 		umull	r2, r3, r3, r1
+ 383 0190 4FEAD302 		lsr	r2, r3, #3
+ 384 0194 1346     		mov	r3, r2
+ 385 0196 4FEA8303 		lsl	r3, r3, #2
+ 386 019a 1344     		add	r3, r3, r2
+ 387 019c 4FEA4303 		lsl	r3, r3, #1
+ 388 01a0 C3EB0102 		rsb	r2, r3, r1
+ 389 01a4 02F10A03 		add	r3, r2, #10
+ 390 01a8 3B61     		str	r3, [r7, #16]
+  51:..//PHY/state_machines/SM_Operation.cpp **** 			if(used_timer_array2[mod-BASE_T2] == 0){
+ 391              		.loc 2 51 0
+ 392 01aa 3B69     		ldr	r3, [r7, #16]
+ 393 01ac A3F10A02 		sub	r2, r3, #10
+ 394 01b0 7B68     		ldr	r3, [r7, #4]
+ 395 01b2 1344     		add	r3, r2, r3
+ 396 01b4 93F83A30 		ldrb	r3, [r3, #58]	@ zero_extendqisi2
+ 397 01b8 002B     		cmp	r3, #0
+ 398 01ba 14D1     		bne	.L27
+  52:..//PHY/state_machines/SM_Operation.cpp **** 				used_timer_array2[mod-BASE_T2] = 1;
+ 399              		.loc 2 52 0
+ 400 01bc 3B69     		ldr	r3, [r7, #16]
+ 401 01be A3F10A02 		sub	r2, r3, #10
+ 402 01c2 7B68     		ldr	r3, [r7, #4]
+ 403 01c4 1344     		add	r3, r2, r3
+ 404 01c6 4FF00102 		mov	r2, #1
+ 405 01ca 83F83A20 		strb	r2, [r3, #58]
+  53:..//PHY/state_machines/SM_Operation.cpp **** 				dt_reset(mod);
+ 406              		.loc 2 53 0
+ 407 01ce 3869     		ldr	r0, [r7, #16]
+ 408 01d0 40F20003 		movw	r3, #:lower16:_Z8dt_reseti
+ 409 01d4 C0F20003 		movt	r3, #:upper16:_Z8dt_reseti
+ 410 01d8 9847     		blx	r3
+  54:..//PHY/state_machines/SM_Operation.cpp **** 				queued_object_count_12++;
+ 411              		.loc 2 54 0
+ 412 01da 7B68     		ldr	r3, [r7, #4]
+ 413 01dc DB69     		ldr	r3, [r3, #28]
+ 414 01de 03F10102 		add	r2, r3, #1
+ 415 01e2 7B68     		ldr	r3, [r7, #4]
+ 416 01e4 DA61     		str	r2, [r3, #28]
+ 417              	.L27:
+ 418              	.LBE5:
+ 419              	.LBB6:
+  55:..//PHY/state_machines/SM_Operation.cpp **** 			}else{
+  56:..//PHY/state_machines/SM_Operation.cpp **** 					//run time error
+  57:..//PHY/state_machines/SM_Operation.cpp **** 			}
+  58:..//PHY/state_machines/SM_Operation.cpp **** 		}
+  59:..//PHY/state_machines/SM_Operation.cpp **** 
+  60:..//PHY/state_machines/SM_Operation.cpp **** 		// arrived at cam 2
+  61:..//PHY/state_machines/SM_Operation.cpp **** 		for(int mod = BASE_T2; mod < (BASE_T2 + MAX_TIM_NUM); mod++){
+ 420              		.loc 2 61 0
+ 421 01e6 4FF00A03 		mov	r3, #10
+ 422 01ea 7B61     		str	r3, [r7, #20]
+ 423 01ec 43E0     		b	.L28
+ 424              	.L32:
+  62:..//PHY/state_machines/SM_Operation.cpp **** 			if(dt_is_timeup(mod) && used_timer_array2[mod-BASE_T2] == 1){
+ 425              		.loc 2 62 0
+ 426 01ee 7869     		ldr	r0, [r7, #20]
+ 427 01f0 40F20003 		movw	r3, #:lower16:_Z12dt_is_timeupi
+ 428 01f4 C0F20003 		movt	r3, #:upper16:_Z12dt_is_timeupi
+ 429 01f8 9847     		blx	r3
+ 430 01fa 0346     		mov	r3, r0
+ 431 01fc 002B     		cmp	r3, #0
+ 432 01fe 0BD0     		beq	.L29
+ 433 0200 7B69     		ldr	r3, [r7, #20]
+ 434 0202 A3F10A02 		sub	r2, r3, #10
+ 435 0206 7B68     		ldr	r3, [r7, #4]
+ 436 0208 1344     		add	r3, r2, r3
+ 437 020a 93F83A30 		ldrb	r3, [r3, #58]	@ zero_extendqisi2
+ 438 020e 012B     		cmp	r3, #1
+ 439 0210 02D1     		bne	.L29
+ 440 0212 4FF00103 		mov	r3, #1
+ 441 0216 01E0     		b	.L30
+ 442              	.L29:
+ 443 0218 4FF00003 		mov	r3, #0
+ 444              	.L30:
+ 445 021c 002B     		cmp	r3, #0
+ 446 021e 26D0     		beq	.L31
+  63:..//PHY/state_machines/SM_Operation.cpp **** 				used_timer_array2[mod-BASE_T2] = 0;
+ 447              		.loc 2 63 0
+ 448 0220 7B69     		ldr	r3, [r7, #20]
+ 449 0222 A3F10A02 		sub	r2, r3, #10
+ 450 0226 7B68     		ldr	r3, [r7, #4]
+ 451 0228 1344     		add	r3, r2, r3
+ 452 022a 4FF00002 		mov	r2, #0
+ 453 022e 83F83A20 		strb	r2, [r3, #58]
+  64:..//PHY/state_machines/SM_Operation.cpp **** 				cam2_on = 1;
+ 454              		.loc 2 64 0
+ 455 0232 7B68     		ldr	r3, [r7, #4]
+ 456 0234 4FF00102 		mov	r2, #1
+ 457 0238 83F82D20 		strb	r2, [r3, #45]
+  65:..//PHY/state_machines/SM_Operation.cpp **** 				dt_set_delay(CAM2_ON_DELAY,CAM_ON_TIME);
+ 458              		.loc 2 65 0
+ 459 023c 4FF02900 		mov	r0, #41
+ 460 0240 4FF06401 		mov	r1, #100
+ 461 0244 40F20003 		movw	r3, #:lower16:_Z12dt_set_delayim
+ 462 0248 C0F20003 		movt	r3, #:upper16:_Z12dt_set_delayim
+ 463 024c 9847     		blx	r3
+  66:..//PHY/state_machines/SM_Operation.cpp **** 				io_set_output(CAM2_TRIGGER,1);
+ 464              		.loc 2 66 0
+ 465 024e 4FF00100 		mov	r0, #1
+ 466 0252 4FF00101 		mov	r1, #1
+ 467 0256 40F20003 		movw	r3, #:lower16:io_set_output
+ 468 025a C0F20003 		movt	r3, #:upper16:io_set_output
+ 469 025e 9847     		blx	r3
+  67:..//PHY/state_machines/SM_Operation.cpp **** 				dt_reset(CAM2_ON_DELAY);
+ 470              		.loc 2 67 0
+ 471 0260 4FF02900 		mov	r0, #41
+ 472 0264 40F20003 		movw	r3, #:lower16:_Z8dt_reseti
+ 473 0268 C0F20003 		movt	r3, #:upper16:_Z8dt_reseti
+ 474 026c 9847     		blx	r3
+ 475              	.L31:
+ 476              		.loc 2 61 0
+ 477 026e 7B69     		ldr	r3, [r7, #20]
+ 478 0270 03F10103 		add	r3, r3, #1
+ 479 0274 7B61     		str	r3, [r7, #20]
+ 480              	.L28:
+ 481 0276 7B69     		ldr	r3, [r7, #20]
+ 482 0278 132B     		cmp	r3, #19
+ 483 027a CCBF     		ite	gt
+ 484 027c 0023     		movgt	r3, #0
+ 485 027e 0123     		movle	r3, #1
+ 486 0280 DBB2     		uxtb	r3, r3
+ 487 0282 002B     		cmp	r3, #0
+ 488 0284 B3D1     		bne	.L32
+ 489              	.LBE6:
+  68:..//PHY/state_machines/SM_Operation.cpp **** 			}
+  69:..//PHY/state_machines/SM_Operation.cpp **** 		}
+  70:..//PHY/state_machines/SM_Operation.cpp **** 
+  71:..//PHY/state_machines/SM_Operation.cpp **** 		// 2nd cam over
+  72:..//PHY/state_machines/SM_Operation.cpp **** 		if(cam2_on == 1 && dt_is_timeup(CAM2_ON_DELAY)){
+ 490              		.loc 2 72 0
+ 491 0286 7B68     		ldr	r3, [r7, #4]
+ 492 0288 93F82D30 		ldrb	r3, [r3, #45]	@ zero_extendqisi2
+ 493 028c 012B     		cmp	r3, #1
+ 494 028e 0CD1     		bne	.L33
+ 495 0290 4FF02900 		mov	r0, #41
+ 496 0294 40F20003 		movw	r3, #:lower16:_Z12dt_is_timeupi
+ 497 0298 C0F20003 		movt	r3, #:upper16:_Z12dt_is_timeupi
+ 498 029c 9847     		blx	r3
+ 499 029e 0346     		mov	r3, r0
+ 500 02a0 002B     		cmp	r3, #0
+ 501 02a2 02D0     		beq	.L33
+ 502 02a4 4FF00103 		mov	r3, #1
+ 503 02a8 01E0     		b	.L34
+ 504              	.L33:
+ 505 02aa 4FF00003 		mov	r3, #0
+ 506              	.L34:
+ 507 02ae 002B     		cmp	r3, #0
+ 508 02b0 40D0     		beq	.L35
+ 509              	.LBB7:
+  73:..//PHY/state_machines/SM_Operation.cpp **** 			io_set_output(CAM2_TRIGGER,0);
+ 510              		.loc 2 73 0
+ 511 02b2 4FF00100 		mov	r0, #1
+ 512 02b6 4FF00001 		mov	r1, #0
+ 513 02ba 40F20003 		movw	r3, #:lower16:io_set_output
+ 514 02be C0F20003 		movt	r3, #:upper16:io_set_output
+ 515 02c2 9847     		blx	r3
+  74:..//PHY/state_machines/SM_Operation.cpp **** 			cam2_on = 0;
+ 516              		.loc 2 74 0
+ 517 02c4 7B68     		ldr	r3, [r7, #4]
+ 518 02c6 4FF00002 		mov	r2, #0
+ 519 02ca 83F82D20 		strb	r2, [r3, #45]
+  75:..//PHY/state_machines/SM_Operation.cpp **** 			int mod = (queued_object_count_23 % MAX_TIM_NUM) + BASE_T3;
+ 520              		.loc 2 75 0
+ 521 02ce 7B68     		ldr	r3, [r7, #4]
+ 522 02d0 196A     		ldr	r1, [r3, #32]
+ 523 02d2 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 524 02d6 CCF6CC43 		movt	r3, #:upper16:-858993459
+ 525 02da A3FB0123 		umull	r2, r3, r3, r1
+ 526 02de 4FEAD302 		lsr	r2, r3, #3
+ 527 02e2 1346     		mov	r3, r2
+ 528 02e4 4FEA8303 		lsl	r3, r3, #2
+ 529 02e8 1344     		add	r3, r3, r2
+ 530 02ea 4FEA4303 		lsl	r3, r3, #1
+ 531 02ee C3EB0102 		rsb	r2, r3, r1
+ 532 02f2 02F11403 		add	r3, r2, #20
+ 533 02f6 BB61     		str	r3, [r7, #24]
+  76:..//PHY/state_machines/SM_Operation.cpp **** 			if(used_timer_array3[mod-BASE_T3] == 0){
+ 534              		.loc 2 76 0
+ 535 02f8 BB69     		ldr	r3, [r7, #24]
+ 536 02fa A3F11402 		sub	r2, r3, #20
+ 537 02fe 7B68     		ldr	r3, [r7, #4]
+ 538 0300 1344     		add	r3, r2, r3
+ 539 0302 93F84430 		ldrb	r3, [r3, #68]	@ zero_extendqisi2
+ 540 0306 002B     		cmp	r3, #0
+ 541 0308 14D1     		bne	.L35
+  77:..//PHY/state_machines/SM_Operation.cpp **** 				used_timer_array3[mod-BASE_T3] = 1;
+ 542              		.loc 2 77 0
+ 543 030a BB69     		ldr	r3, [r7, #24]
+ 544 030c A3F11402 		sub	r2, r3, #20
+ 545 0310 7B68     		ldr	r3, [r7, #4]
+ 546 0312 1344     		add	r3, r2, r3
+ 547 0314 4FF00102 		mov	r2, #1
+ 548 0318 83F84420 		strb	r2, [r3, #68]
+  78:..//PHY/state_machines/SM_Operation.cpp **** 				dt_reset(mod);
+ 549              		.loc 2 78 0
+ 550 031c B869     		ldr	r0, [r7, #24]
+ 551 031e 40F20003 		movw	r3, #:lower16:_Z8dt_reseti
+ 552 0322 C0F20003 		movt	r3, #:upper16:_Z8dt_reseti
+ 553 0326 9847     		blx	r3
+  79:..//PHY/state_machines/SM_Operation.cpp **** 				queued_object_count_23++;
+ 554              		.loc 2 79 0
+ 555 0328 7B68     		ldr	r3, [r7, #4]
+ 556 032a 1B6A     		ldr	r3, [r3, #32]
+ 557 032c 03F10102 		add	r2, r3, #1
+ 558 0330 7B68     		ldr	r3, [r7, #4]
+ 559 0332 1A62     		str	r2, [r3, #32]
+ 560              	.L35:
+ 561              	.LBE7:
+ 562              	.LBB8:
+  80:..//PHY/state_machines/SM_Operation.cpp **** 			}else{
+  81:..//PHY/state_machines/SM_Operation.cpp **** 				//run time error
+  82:..//PHY/state_machines/SM_Operation.cpp **** 			}
+  83:..//PHY/state_machines/SM_Operation.cpp **** 		}
+  84:..//PHY/state_machines/SM_Operation.cpp **** 
+  85:..//PHY/state_machines/SM_Operation.cpp **** 		// arrived at cam 3
+  86:..//PHY/state_machines/SM_Operation.cpp **** 		for(int mod = BASE_T3; mod < (BASE_T3 + MAX_TIM_NUM); mod++){
+ 563              		.loc 2 86 0
+ 564 0334 4FF01403 		mov	r3, #20
+ 565 0338 FB61     		str	r3, [r7, #28]
+ 566 033a 43E0     		b	.L36
+ 567              	.L40:
+  87:..//PHY/state_machines/SM_Operation.cpp **** 			if(dt_is_timeup(mod) && used_timer_array3[mod-BASE_T3] == 1){
+ 568              		.loc 2 87 0
+ 569 033c F869     		ldr	r0, [r7, #28]
+ 570 033e 40F20003 		movw	r3, #:lower16:_Z12dt_is_timeupi
+ 571 0342 C0F20003 		movt	r3, #:upper16:_Z12dt_is_timeupi
+ 572 0346 9847     		blx	r3
+ 573 0348 0346     		mov	r3, r0
+ 574 034a 002B     		cmp	r3, #0
+ 575 034c 0BD0     		beq	.L37
+ 576 034e FB69     		ldr	r3, [r7, #28]
+ 577 0350 A3F11402 		sub	r2, r3, #20
+ 578 0354 7B68     		ldr	r3, [r7, #4]
+ 579 0356 1344     		add	r3, r2, r3
+ 580 0358 93F84430 		ldrb	r3, [r3, #68]	@ zero_extendqisi2
+ 581 035c 012B     		cmp	r3, #1
+ 582 035e 02D1     		bne	.L37
+ 583 0360 4FF00103 		mov	r3, #1
+ 584 0364 01E0     		b	.L38
+ 585              	.L37:
+ 586 0366 4FF00003 		mov	r3, #0
+ 587              	.L38:
+ 588 036a 002B     		cmp	r3, #0
+ 589 036c 26D0     		beq	.L39
+  88:..//PHY/state_machines/SM_Operation.cpp **** 				used_timer_array3[mod-BASE_T3] = 0;
+ 590              		.loc 2 88 0
+ 591 036e FB69     		ldr	r3, [r7, #28]
+ 592 0370 A3F11402 		sub	r2, r3, #20
+ 593 0374 7B68     		ldr	r3, [r7, #4]
+ 594 0376 1344     		add	r3, r2, r3
+ 595 0378 4FF00002 		mov	r2, #0
+ 596 037c 83F84420 		strb	r2, [r3, #68]
+  89:..//PHY/state_machines/SM_Operation.cpp **** 				cam3_on = 1;
+ 597              		.loc 2 89 0
+ 598 0380 7B68     		ldr	r3, [r7, #4]
+ 599 0382 4FF00102 		mov	r2, #1
+ 600 0386 83F82E20 		strb	r2, [r3, #46]
+  90:..//PHY/state_machines/SM_Operation.cpp **** 				dt_set_delay(CAM3_ON_DELAY,CAM_ON_TIME);
+ 601              		.loc 2 90 0
+ 602 038a 4FF02A00 		mov	r0, #42
+ 603 038e 4FF06401 		mov	r1, #100
+ 604 0392 40F20003 		movw	r3, #:lower16:_Z12dt_set_delayim
+ 605 0396 C0F20003 		movt	r3, #:upper16:_Z12dt_set_delayim
+ 606 039a 9847     		blx	r3
+  91:..//PHY/state_machines/SM_Operation.cpp **** 				io_set_output(CAM3_TRIGGER,1);
+ 607              		.loc 2 91 0
+ 608 039c 4FF00200 		mov	r0, #2
+ 609 03a0 4FF00101 		mov	r1, #1
+ 610 03a4 40F20003 		movw	r3, #:lower16:io_set_output
+ 611 03a8 C0F20003 		movt	r3, #:upper16:io_set_output
+ 612 03ac 9847     		blx	r3
+  92:..//PHY/state_machines/SM_Operation.cpp **** 				dt_reset(CAM3_ON_DELAY);
+ 613              		.loc 2 92 0
+ 614 03ae 4FF02A00 		mov	r0, #42
+ 615 03b2 40F20003 		movw	r3, #:lower16:_Z8dt_reseti
+ 616 03b6 C0F20003 		movt	r3, #:upper16:_Z8dt_reseti
+ 617 03ba 9847     		blx	r3
+ 618              	.L39:
+ 619              		.loc 2 86 0
+ 620 03bc FB69     		ldr	r3, [r7, #28]
+ 621 03be 03F10103 		add	r3, r3, #1
+ 622 03c2 FB61     		str	r3, [r7, #28]
+ 623              	.L36:
+ 624 03c4 FB69     		ldr	r3, [r7, #28]
+ 625 03c6 1D2B     		cmp	r3, #29
+ 626 03c8 CCBF     		ite	gt
+ 627 03ca 0023     		movgt	r3, #0
+ 628 03cc 0123     		movle	r3, #1
+ 629 03ce DBB2     		uxtb	r3, r3
+ 630 03d0 002B     		cmp	r3, #0
+ 631 03d2 B3D1     		bne	.L40
+ 632              	.LBE8:
+  93:..//PHY/state_machines/SM_Operation.cpp **** 			}
+  94:..//PHY/state_machines/SM_Operation.cpp **** 		}
+  95:..//PHY/state_machines/SM_Operation.cpp **** 
+  96:..//PHY/state_machines/SM_Operation.cpp **** 		// 3rd cam over
+  97:..//PHY/state_machines/SM_Operation.cpp **** 		if(cam3_on == 1 && dt_is_timeup(CAM3_ON_DELAY)){
+ 633              		.loc 2 97 0
+ 634 03d4 7B68     		ldr	r3, [r7, #4]
+ 635 03d6 93F82E30 		ldrb	r3, [r3, #46]	@ zero_extendqisi2
+ 636 03da 012B     		cmp	r3, #1
+ 637 03dc 0CD1     		bne	.L41
+ 638 03de 4FF02A00 		mov	r0, #42
+ 639 03e2 40F20003 		movw	r3, #:lower16:_Z12dt_is_timeupi
+ 640 03e6 C0F20003 		movt	r3, #:upper16:_Z12dt_is_timeupi
+ 641 03ea 9847     		blx	r3
+ 642 03ec 0346     		mov	r3, r0
+ 643 03ee 002B     		cmp	r3, #0
+ 644 03f0 02D0     		beq	.L41
+ 645 03f2 4FF00103 		mov	r3, #1
+ 646 03f6 01E0     		b	.L42
+ 647              	.L41:
+ 648 03f8 4FF00003 		mov	r3, #0
+ 649              	.L42:
+ 650 03fc 002B     		cmp	r3, #0
+ 651 03fe 40D0     		beq	.L43
+ 652              	.LBB9:
+  98:..//PHY/state_machines/SM_Operation.cpp **** 			io_set_output(CAM3_TRIGGER,0);
+ 653              		.loc 2 98 0
+ 654 0400 4FF00200 		mov	r0, #2
+ 655 0404 4FF00001 		mov	r1, #0
+ 656 0408 40F20003 		movw	r3, #:lower16:io_set_output
+ 657 040c C0F20003 		movt	r3, #:upper16:io_set_output
+ 658 0410 9847     		blx	r3
+  99:..//PHY/state_machines/SM_Operation.cpp **** 			cam3_on = 0;
+ 659              		.loc 2 99 0
+ 660 0412 7B68     		ldr	r3, [r7, #4]
+ 661 0414 4FF00002 		mov	r2, #0
+ 662 0418 83F82E20 		strb	r2, [r3, #46]
+ 100:..//PHY/state_machines/SM_Operation.cpp **** 			int mod = (queued_object_count_34 % MAX_TIM_NUM) + BASE_T4;
+ 663              		.loc 2 100 0
+ 664 041c 7B68     		ldr	r3, [r7, #4]
+ 665 041e 596A     		ldr	r1, [r3, #36]
+ 666 0420 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 667 0424 CCF6CC43 		movt	r3, #:upper16:-858993459
+ 668 0428 A3FB0123 		umull	r2, r3, r3, r1
+ 669 042c 4FEAD302 		lsr	r2, r3, #3
+ 670 0430 1346     		mov	r3, r2
+ 671 0432 4FEA8303 		lsl	r3, r3, #2
+ 672 0436 1344     		add	r3, r3, r2
+ 673 0438 4FEA4303 		lsl	r3, r3, #1
+ 674 043c C3EB0102 		rsb	r2, r3, r1
+ 675 0440 02F11E03 		add	r3, r2, #30
+ 676 0444 3B62     		str	r3, [r7, #32]
+ 101:..//PHY/state_machines/SM_Operation.cpp **** 			if(used_timer_array4[mod-BASE_T4] == 0){
+ 677              		.loc 2 101 0
+ 678 0446 3B6A     		ldr	r3, [r7, #32]
+ 679 0448 A3F11E02 		sub	r2, r3, #30
+ 680 044c 7B68     		ldr	r3, [r7, #4]
+ 681 044e 1344     		add	r3, r2, r3
+ 682 0450 93F84E30 		ldrb	r3, [r3, #78]	@ zero_extendqisi2
+ 683 0454 002B     		cmp	r3, #0
+ 684 0456 14D1     		bne	.L43
+ 102:..//PHY/state_machines/SM_Operation.cpp **** 				used_timer_array4[mod-BASE_T4] = 1;
+ 685              		.loc 2 102 0
+ 686 0458 3B6A     		ldr	r3, [r7, #32]
+ 687 045a A3F11E02 		sub	r2, r3, #30
+ 688 045e 7B68     		ldr	r3, [r7, #4]
+ 689 0460 1344     		add	r3, r2, r3
+ 690 0462 4FF00102 		mov	r2, #1
+ 691 0466 83F84E20 		strb	r2, [r3, #78]
+ 103:..//PHY/state_machines/SM_Operation.cpp **** 				dt_reset(mod);
+ 692              		.loc 2 103 0
+ 693 046a 386A     		ldr	r0, [r7, #32]
+ 694 046c 40F20003 		movw	r3, #:lower16:_Z8dt_reseti
+ 695 0470 C0F20003 		movt	r3, #:upper16:_Z8dt_reseti
+ 696 0474 9847     		blx	r3
+ 104:..//PHY/state_machines/SM_Operation.cpp **** 				queued_object_count_34++;
+ 697              		.loc 2 104 0
+ 698 0476 7B68     		ldr	r3, [r7, #4]
+ 699 0478 5B6A     		ldr	r3, [r3, #36]
+ 700 047a 03F10102 		add	r2, r3, #1
+ 701 047e 7B68     		ldr	r3, [r7, #4]
+ 702 0480 5A62     		str	r2, [r3, #36]
+ 703              	.L43:
+ 704              	.LBE9:
+ 705              	.LBB10:
+ 105:..//PHY/state_machines/SM_Operation.cpp **** 			}else{
+ 106:..//PHY/state_machines/SM_Operation.cpp **** 				//run time error
+ 107:..//PHY/state_machines/SM_Operation.cpp **** 			}
+ 108:..//PHY/state_machines/SM_Operation.cpp **** 		}
+ 109:..//PHY/state_machines/SM_Operation.cpp **** 
+ 110:..//PHY/state_machines/SM_Operation.cpp **** 		// arrived at cam 4
+ 111:..//PHY/state_machines/SM_Operation.cpp **** 		for(int mod = BASE_T4; mod < (BASE_T4 + MAX_TIM_NUM); mod++){
+ 706              		.loc 2 111 0
+ 707 0482 4FF01E03 		mov	r3, #30
+ 708 0486 7B62     		str	r3, [r7, #36]
+ 709 0488 43E0     		b	.L44
+ 710              	.L48:
+ 112:..//PHY/state_machines/SM_Operation.cpp **** 			if(dt_is_timeup(mod) && used_timer_array4[mod-BASE_T4] == 1){
+ 711              		.loc 2 112 0
+ 712 048a 786A     		ldr	r0, [r7, #36]
+ 713 048c 40F20003 		movw	r3, #:lower16:_Z12dt_is_timeupi
+ 714 0490 C0F20003 		movt	r3, #:upper16:_Z12dt_is_timeupi
+ 715 0494 9847     		blx	r3
+ 716 0496 0346     		mov	r3, r0
+ 717 0498 002B     		cmp	r3, #0
+ 718 049a 0BD0     		beq	.L45
+ 719 049c 7B6A     		ldr	r3, [r7, #36]
+ 720 049e A3F11E02 		sub	r2, r3, #30
+ 721 04a2 7B68     		ldr	r3, [r7, #4]
+ 722 04a4 1344     		add	r3, r2, r3
+ 723 04a6 93F84E30 		ldrb	r3, [r3, #78]	@ zero_extendqisi2
+ 724 04aa 012B     		cmp	r3, #1
+ 725 04ac 02D1     		bne	.L45
+ 726 04ae 4FF00103 		mov	r3, #1
+ 727 04b2 01E0     		b	.L46
+ 728              	.L45:
+ 729 04b4 4FF00003 		mov	r3, #0
+ 730              	.L46:
+ 731 04b8 002B     		cmp	r3, #0
+ 732 04ba 26D0     		beq	.L47
+ 113:..//PHY/state_machines/SM_Operation.cpp **** 				used_timer_array4[mod-BASE_T4] = 0;
+ 733              		.loc 2 113 0
+ 734 04bc 7B6A     		ldr	r3, [r7, #36]
+ 735 04be A3F11E02 		sub	r2, r3, #30
+ 736 04c2 7B68     		ldr	r3, [r7, #4]
+ 737 04c4 1344     		add	r3, r2, r3
+ 738 04c6 4FF00002 		mov	r2, #0
+ 739 04ca 83F84E20 		strb	r2, [r3, #78]
+ 114:..//PHY/state_machines/SM_Operation.cpp **** 				cam4_on = 1;
+ 740              		.loc 2 114 0
+ 741 04ce 7B68     		ldr	r3, [r7, #4]
+ 742 04d0 4FF00102 		mov	r2, #1
+ 743 04d4 83F82F20 		strb	r2, [r3, #47]
+ 115:..//PHY/state_machines/SM_Operation.cpp **** 				dt_set_delay(CAM4_ON_DELAY,CAM_ON_TIME);
+ 744              		.loc 2 115 0
+ 745 04d8 4FF02B00 		mov	r0, #43
+ 746 04dc 4FF06401 		mov	r1, #100
+ 747 04e0 40F20003 		movw	r3, #:lower16:_Z12dt_set_delayim
+ 748 04e4 C0F20003 		movt	r3, #:upper16:_Z12dt_set_delayim
+ 749 04e8 9847     		blx	r3
+ 116:..//PHY/state_machines/SM_Operation.cpp **** 				io_set_output(CAM4_TRIGGER,1);
+ 750              		.loc 2 116 0
+ 751 04ea 4FF00300 		mov	r0, #3
+ 752 04ee 4FF00101 		mov	r1, #1
+ 753 04f2 40F20003 		movw	r3, #:lower16:io_set_output
+ 754 04f6 C0F20003 		movt	r3, #:upper16:io_set_output
+ 755 04fa 9847     		blx	r3
+ 117:..//PHY/state_machines/SM_Operation.cpp **** 				dt_reset(CAM4_ON_DELAY);
+ 756              		.loc 2 117 0
+ 757 04fc 4FF02B00 		mov	r0, #43
+ 758 0500 40F20003 		movw	r3, #:lower16:_Z8dt_reseti
+ 759 0504 C0F20003 		movt	r3, #:upper16:_Z8dt_reseti
+ 760 0508 9847     		blx	r3
+ 761              	.L47:
+ 762              		.loc 2 111 0
+ 763 050a 7B6A     		ldr	r3, [r7, #36]
+ 764 050c 03F10103 		add	r3, r3, #1
+ 765 0510 7B62     		str	r3, [r7, #36]
+ 766              	.L44:
+ 767 0512 7B6A     		ldr	r3, [r7, #36]
+ 768 0514 272B     		cmp	r3, #39
+ 769 0516 CCBF     		ite	gt
+ 770 0518 0023     		movgt	r3, #0
+ 771 051a 0123     		movle	r3, #1
+ 772 051c DBB2     		uxtb	r3, r3
+ 773 051e 002B     		cmp	r3, #0
+ 774 0520 B3D1     		bne	.L48
+ 775              	.LBE10:
+ 118:..//PHY/state_machines/SM_Operation.cpp **** 			}
+ 119:..//PHY/state_machines/SM_Operation.cpp **** 		}
+ 120:..//PHY/state_machines/SM_Operation.cpp **** 
+ 121:..//PHY/state_machines/SM_Operation.cpp **** 		// 4th cam over
+ 122:..//PHY/state_machines/SM_Operation.cpp **** 		if(cam4_on == 1 && dt_is_timeup(CAM4_ON_DELAY)){
+ 776              		.loc 2 122 0
+ 777 0522 7B68     		ldr	r3, [r7, #4]
+ 778 0524 93F82F30 		ldrb	r3, [r3, #47]	@ zero_extendqisi2
+ 779 0528 012B     		cmp	r3, #1
+ 780 052a 0CD1     		bne	.L49
+ 781 052c 4FF02B00 		mov	r0, #43
+ 782 0530 40F20003 		movw	r3, #:lower16:_Z12dt_is_timeupi
+ 783 0534 C0F20003 		movt	r3, #:upper16:_Z12dt_is_timeupi
+ 784 0538 9847     		blx	r3
+ 785 053a 0346     		mov	r3, r0
+ 786 053c 002B     		cmp	r3, #0
+ 787 053e 02D0     		beq	.L49
+ 788 0540 4FF00103 		mov	r3, #1
+ 789 0544 01E0     		b	.L50
+ 790              	.L49:
+ 791 0546 4FF00003 		mov	r3, #0
+ 792              	.L50:
+ 793 054a 002B     		cmp	r3, #0
+ 794 054c 13D0     		beq	.L18
+ 123:..//PHY/state_machines/SM_Operation.cpp **** 			io_set_output(CAM4_TRIGGER,0);
+ 795              		.loc 2 123 0
+ 796 054e 4FF00300 		mov	r0, #3
+ 797 0552 4FF00001 		mov	r1, #0
+ 798 0556 40F20003 		movw	r3, #:lower16:io_set_output
+ 799 055a C0F20003 		movt	r3, #:upper16:io_set_output
+ 800 055e 9847     		blx	r3
+ 124:..//PHY/state_machines/SM_Operation.cpp **** 			cam4_on = 0;
+ 801              		.loc 2 124 0
+ 802 0560 7B68     		ldr	r3, [r7, #4]
+ 803 0562 4FF00002 		mov	r2, #0
+ 804 0566 83F82F20 		strb	r2, [r3, #47]
+ 125:..//PHY/state_machines/SM_Operation.cpp **** 			completed_objects ++;
+ 805              		.loc 2 125 0
+ 806 056a 7B68     		ldr	r3, [r7, #4]
+ 807 056c 9B6A     		ldr	r3, [r3, #40]
+ 808 056e 03F10102 		add	r2, r3, #1
+ 809 0572 7B68     		ldr	r3, [r7, #4]
+ 810 0574 9A62     		str	r2, [r3, #40]
+ 811              	.L18:
+ 126:..//PHY/state_machines/SM_Operation.cpp **** 		}
+ 127:..//PHY/state_machines/SM_Operation.cpp **** 	}
+ 128:..//PHY/state_machines/SM_Operation.cpp ****    
+ 129:..//PHY/state_machines/SM_Operation.cpp ****     return retval;
+ 812              		.loc 2 129 0
+ 813 0576 7B68     		ldr	r3, [r7, #4]
+ 814 0578 5B69     		ldr	r3, [r3, #20]
+ 815              	.LBE2:
+ 130:..//PHY/state_machines/SM_Operation.cpp **** }
+ 816              		.loc 2 130 0
+ 817 057a 1846     		mov	r0, r3
+ 818 057c 07F12807 		add	r7, r7, #40
+ 819 0580 BD46     		mov	sp, r7
+ 820 0582 80BD     		pop	{r7, pc}
+ 821              		.cfi_endproc
+ 822              	.LFE36:
+ 824              		.section	.text._ZN12SM_OPERATION8stop_nowEv,"ax",%progbits
+ 825              		.align	2
+ 826              		.global	_ZN12SM_OPERATION8stop_nowEv
+ 827              		.thumb
+ 828              		.thumb_func
+ 830              	_ZN12SM_OPERATION8stop_nowEv:
+ 831              	.LFB37:
+ 131:..//PHY/state_machines/SM_Operation.cpp **** 
+ 132:..//PHY/state_machines/SM_Operation.cpp **** int SM_OPERATION::stop_now(){
+ 832              		.loc 2 132 0
+ 833              		.cfi_startproc
+ 834              		@ args = 0, pretend = 0, frame = 8
+ 835              		@ frame_needed = 1, uses_anonymous_args = 0
+ 836 0000 80B5     		push	{r7, lr}
+ 837              	.LCFI12:
+ 838              		.cfi_def_cfa_offset 8
+ 839 0002 82B0     		sub	sp, sp, #8
+ 840              	.LCFI13:
+ 841              		.cfi_def_cfa_offset 16
+ 842 0004 00AF     		add	r7, sp, #0
+ 843              		.cfi_offset 14, -4
+ 844              		.cfi_offset 7, -8
+ 845              	.LCFI14:
+ 846              		.cfi_def_cfa_register 7
+ 847 0006 7860     		str	r0, [r7, #4]
+ 133:..//PHY/state_machines/SM_Operation.cpp **** 	SM_stop();
+ 848              		.loc 2 133 0
+ 849 0008 7B68     		ldr	r3, [r7, #4]
+ 850 000a 1B68     		ldr	r3, [r3, #0]
+ 851 000c 03F11403 		add	r3, r3, #20
+ 852 0010 1B68     		ldr	r3, [r3, #0]
+ 853 0012 7A68     		ldr	r2, [r7, #4]
+ 854 0014 1046     		mov	r0, r2
+ 855 0016 9847     		blx	r3
+ 134:..//PHY/state_machines/SM_Operation.cpp **** 		
+ 135:..//PHY/state_machines/SM_Operation.cpp **** 	return 1;
+ 856              		.loc 2 135 0
+ 857 0018 4FF00103 		mov	r3, #1
+ 136:..//PHY/state_machines/SM_Operation.cpp **** }
+ 858              		.loc 2 136 0
+ 859 001c 1846     		mov	r0, r3
+ 860 001e 07F10807 		add	r7, r7, #8
+ 861 0022 BD46     		mov	sp, r7
+ 862 0024 80BD     		pop	{r7, pc}
+ 863              		.cfi_endproc
+ 864              	.LFE37:
+ 866              		.global	_ZTV12SM_OPERATION
+ 867 0026 00BF     		.section	.rodata._ZTV12SM_OPERATION,"a",%progbits
+ 868              		.align	3
+ 871              	_ZTV12SM_OPERATION:
+ 872 0000 00000000 		.word	0
+ 873 0004 00000000 		.word	0
+ 874 0008 00000000 		.word	_ZN12SM_OPERATION6updateEv
+ 875 000c 00000000 		.word	_ZN13State_Machine6updateEi
+ 876 0010 00000000 		.word	_ZN13State_Machine5resetEv
+ 877 0014 00000000 		.word	_ZN13State_Machine10SM_startedEv
+ 878 0018 00000000 		.word	_ZN13State_Machine8SM_startEv
+ 879 001c 00000000 		.word	_ZN13State_Machine7SM_stopEv
+ 880 0020 00000000 		.word	_ZN13State_Machine8SM_pauseEi
+ 881 0024 00000000 		.word	_ZN12SM_OPERATIOND1Ev
+ 882 0028 00000000 		.word	_ZN12SM_OPERATIOND0Ev
+ 883 002c 00000000 		.section	.text._ZN12SM_OPERATIOND1Ev,"axG",%progbits,_ZN12SM_OPERATIOND1Ev,comdat
+ 884              		.align	2
+ 885              		.weak	_ZN12SM_OPERATIOND1Ev
+ 886              		.thumb
+ 887              		.thumb_func
+ 889              	_ZN12SM_OPERATIOND1Ev:
+ 890              	.LFB40:
+ 891              		.file 3 "..//PHY/state_machines/SM_Operation.h"
+   1:..//PHY/state_machines/SM_Operation.h **** #ifndef SM_OPERATION_H_
+   2:..//PHY/state_machines/SM_Operation.h **** #define SM_OPERATION_H_
+   3:..//PHY/state_machines/SM_Operation.h **** 
+   4:..//PHY/state_machines/SM_Operation.h **** 
+   5:..//PHY/state_machines/SM_Operation.h **** #include "state_machine.h"
+   6:..//PHY/state_machines/SM_Operation.h **** #include "lpc_types.h"
+   7:..//PHY/state_machines/SM_Operation.h **** 
+   8:..//PHY/state_machines/SM_Operation.h **** 
+   9:..//PHY/state_machines/SM_Operation.h **** extern "C"{
+  10:..//PHY/state_machines/SM_Operation.h **** 	#include "input_output.h"
+  11:..//PHY/state_machines/SM_Operation.h **** 	// #include "multi-steppers.h"
+  12:..//PHY/state_machines/SM_Operation.h **** }
+  13:..//PHY/state_machines/SM_Operation.h **** 
+  14:..//PHY/state_machines/SM_Operation.h **** class SM_OPERATION: public State_Machine{
+ 892              		.loc 3 14 0
+ 893              		.cfi_startproc
+ 894              		@ args = 0, pretend = 0, frame = 8
+ 895              		@ frame_needed = 1, uses_anonymous_args = 0
+ 896 0000 80B5     		push	{r7, lr}
+ 897              	.LCFI15:
+ 898              		.cfi_def_cfa_offset 8
+ 899 0002 82B0     		sub	sp, sp, #8
+ 900              	.LCFI16:
+ 901              		.cfi_def_cfa_offset 16
+ 902 0004 00AF     		add	r7, sp, #0
+ 903              		.cfi_offset 14, -4
+ 904              		.cfi_offset 7, -8
+ 905              	.LCFI17:
+ 906              		.cfi_def_cfa_register 7
+ 907 0006 7860     		str	r0, [r7, #4]
+ 908              		.loc 3 14 0
+ 909 0008 7B68     		ldr	r3, [r7, #4]
+ 910 000a 0D4A     		ldr	r2, .L58
+ 911 000c 1A60     		str	r2, [r3, #0]
+ 912 000e 7B68     		ldr	r3, [r7, #4]
+ 913 0010 1846     		mov	r0, r3
+ 914 0012 40F20003 		movw	r3, #:lower16:_ZN13State_MachineD2Ev
+ 915 0016 C0F20003 		movt	r3, #:upper16:_ZN13State_MachineD2Ev
+ 916 001a 9847     		blx	r3
+ 917 001c 4FF00003 		mov	r3, #0
+ 918 0020 DBB2     		uxtb	r3, r3
+ 919 0022 002B     		cmp	r3, #0
+ 920 0024 05D0     		beq	.L56
+ 921 0026 7868     		ldr	r0, [r7, #4]
+ 922 0028 40F20003 		movw	r3, #:lower16:_ZdlPv
+ 923 002c C0F20003 		movt	r3, #:upper16:_ZdlPv
+ 924 0030 9847     		blx	r3
+ 925              	.L56:
+ 926 0032 7B68     		ldr	r3, [r7, #4]
+ 927 0034 1846     		mov	r0, r3
+ 928 0036 07F10807 		add	r7, r7, #8
+ 929 003a BD46     		mov	sp, r7
+ 930 003c 80BD     		pop	{r7, pc}
+ 931              	.L59:
+ 932 003e 00BF     		.align	2
+ 933              	.L58:
+ 934 0040 08000000 		.word	_ZTV12SM_OPERATION+8
+ 935              		.cfi_endproc
+ 936              	.LFE40:
+ 938              		.section	.text._ZN12SM_OPERATIOND0Ev,"axG",%progbits,_ZN12SM_OPERATIOND0Ev,comdat
+ 939              		.align	2
+ 940              		.weak	_ZN12SM_OPERATIOND0Ev
+ 941              		.thumb
+ 942              		.thumb_func
+ 944              	_ZN12SM_OPERATIOND0Ev:
+ 945              	.LFB41:
+ 946              		.loc 3 14 0
+ 947              		.cfi_startproc
+ 948              		@ args = 0, pretend = 0, frame = 8
+ 949              		@ frame_needed = 1, uses_anonymous_args = 0
+ 950 0000 80B5     		push	{r7, lr}
+ 951              	.LCFI18:
+ 952              		.cfi_def_cfa_offset 8
+ 953 0002 82B0     		sub	sp, sp, #8
+ 954              	.LCFI19:
+ 955              		.cfi_def_cfa_offset 16
+ 956 0004 00AF     		add	r7, sp, #0
+ 957              		.cfi_offset 14, -4
+ 958              		.cfi_offset 7, -8
+ 959              	.LCFI20:
+ 960              		.cfi_def_cfa_register 7
+ 961 0006 7860     		str	r0, [r7, #4]
+ 962              		.loc 3 14 0
+ 963 0008 7B68     		ldr	r3, [r7, #4]
+ 964 000a 0D4A     		ldr	r2, .L64
+ 965 000c 1A60     		str	r2, [r3, #0]
+ 966 000e 7B68     		ldr	r3, [r7, #4]
+ 967 0010 1846     		mov	r0, r3
+ 968 0012 40F20003 		movw	r3, #:lower16:_ZN13State_MachineD2Ev
+ 969 0016 C0F20003 		movt	r3, #:upper16:_ZN13State_MachineD2Ev
+ 970 001a 9847     		blx	r3
+ 971 001c 4FF00103 		mov	r3, #1
+ 972 0020 DBB2     		uxtb	r3, r3
+ 973 0022 002B     		cmp	r3, #0
+ 974 0024 05D0     		beq	.L62
+ 975 0026 7868     		ldr	r0, [r7, #4]
+ 976 0028 40F20003 		movw	r3, #:lower16:_ZdlPv
+ 977 002c C0F20003 		movt	r3, #:upper16:_ZdlPv
+ 978 0030 9847     		blx	r3
+ 979              	.L62:
+ 980 0032 7B68     		ldr	r3, [r7, #4]
+ 981 0034 1846     		mov	r0, r3
+ 982 0036 07F10807 		add	r7, r7, #8
+ 983 003a BD46     		mov	sp, r7
+ 984 003c 80BD     		pop	{r7, pc}
+ 985              	.L65:
+ 986 003e 00BF     		.align	2
+ 987              	.L64:
+ 988 0040 08000000 		.word	_ZTV12SM_OPERATION+8
+ 989              		.cfi_endproc
+ 990              	.LFE41:
+ 992              		.text
+ 993              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 SM_Operation.cpp
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:24     .text._ZN13State_MachineD2Ev:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:29     .text._ZN13State_MachineD2Ev:00000000 _ZN13State_MachineD2Ev
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:69     .text._ZN13State_MachineD2Ev:00000030 $d
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:74     .text._ZN12SM_OPERATIONC2Ev:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:79     .text._ZN12SM_OPERATIONC2Ev:00000000 _ZN12SM_OPERATIONC2Ev
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:126    .text._ZN12SM_OPERATIONC2Ev:00000040 $d
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:871    .rodata._ZTV12SM_OPERATION:00000000 _ZTV12SM_OPERATION
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:131    .text._ZN12SM_OPERATIONC1Ev:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:136    .text._ZN12SM_OPERATIONC1Ev:00000000 _ZN12SM_OPERATIONC1Ev
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:182    .text._ZN12SM_OPERATIONC1Ev:00000040 $d
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:187    .text._ZN12SM_OPERATION6updateEv:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:192    .text._ZN12SM_OPERATION6updateEv:00000000 _ZN12SM_OPERATION6updateEv
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:825    .text._ZN12SM_OPERATION8stop_nowEv:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:830    .text._ZN12SM_OPERATION8stop_nowEv:00000000 _ZN12SM_OPERATION8stop_nowEv
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:868    .rodata._ZTV12SM_OPERATION:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:889    .text._ZN12SM_OPERATIOND1Ev:00000000 _ZN12SM_OPERATIOND1Ev
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:944    .text._ZN12SM_OPERATIOND0Ev:00000000 _ZN12SM_OPERATIOND0Ev
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:884    .text._ZN12SM_OPERATIOND1Ev:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:934    .text._ZN12SM_OPERATIOND1Ev:00000040 $d
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:939    .text._ZN12SM_OPERATIOND0Ev:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:988    .text._ZN12SM_OPERATIOND0Ev:00000040 $d
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+_ZdlPv
+_ZTV13State_Machine
+_ZN13State_MachineC2Ev
+_ZN13State_Machine7SM_stopEv
+input_rise_flag
+_Z8dt_reseti
+_Z12dt_is_timeupi
+_Z12dt_set_delayim
+io_set_output
+_ZN13State_Machine6updateEi
+_ZN13State_Machine5resetEv
+_ZN13State_Machine10SM_startedEv
+_ZN13State_Machine8SM_startEv
+_ZN13State_Machine8SM_pauseEi

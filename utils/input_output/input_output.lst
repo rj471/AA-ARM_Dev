@@ -1,0 +1,1397 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"input_output.c"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.section	.bss.switch_prev_state,"aw",%nobits
+  24              		.align	2
+  27              	switch_prev_state:
+  28 0000 00000000 		.space	4
+  29              		.section	.bss.switch_state_count,"aw",%nobits
+  30              		.align	2
+  33              	switch_state_count:
+  34 0000 00000000 		.space	16
+  34      00000000 
+  34      00000000 
+  34      00000000 
+  35              		.comm	input_name,4,4
+  36              		.comm	switch_state_max_rise_count,16,4
+  37              		.comm	switch_state_max_fall_count,16,4
+  38              		.comm	input_rise_flag,4,4
+  39              		.comm	input_fall_flag,4,4
+  40              		.comm	input_value,4,4
+  41              		.comm	input_state,4,4
+  42              		.global	io_input_pins
+  43              		.section	.data.io_input_pins,"aw",%progbits
+  44              		.align	2
+  47              	io_input_pins:
+  48 0000 00       		.byte	0
+  49 0001 00       		.byte	0
+  50 0002 00       		.byte	0
+  51 0003 00       		.byte	0
+  52 0004 01       		.byte	1
+  53 0005 00       		.byte	0
+  54 0006 00       		.byte	0
+  55 0007 04       		.byte	4
+  56 0008 00       		.byte	0
+  57 0009 00       		.byte	0
+  58 000a 05       		.byte	5
+  59 000b 00       		.byte	0
+  60              		.global	io_output_pins
+  61              		.section	.data.io_output_pins,"aw",%progbits
+  62              		.align	2
+  65              	io_output_pins:
+  66 0000 00       		.byte	0
+  67 0001 13       		.byte	19
+  68 0002 01       		.byte	1
+  69 0003 00       		.byte	0
+  70 0004 14       		.byte	20
+  71 0005 01       		.byte	1
+  72 0006 00       		.byte	0
+  73 0007 15       		.byte	21
+  74 0008 01       		.byte	1
+  75 0009 00       		.byte	0
+  76 000a 16       		.byte	22
+  77 000b 01       		.byte	1
+  78 000c 00       		.byte	0
+  79 000d 17       		.byte	23
+  80 000e 01       		.byte	1
+  81 000f 00       		.byte	0
+  82 0010 18       		.byte	24
+  83 0011 01       		.byte	1
+  84 0012 00       		.byte	0
+  85 0013 19       		.byte	25
+  86 0014 01       		.byte	1
+  87 0015 00       		.byte	0
+  88 0016 1A       		.byte	26
+  89 0017 01       		.byte	1
+  90              		.section	.text.io_update,"ax",%progbits
+  91              		.align	2
+  92              		.global	io_update
+  93              		.thumb
+  94              		.thumb_func
+  96              	io_update:
+  97              	.LFB29:
+  98              		.file 1 "..//utils/input_output/input_output.c"
+   1:..//utils/input_output/input_output.c **** 
+   2:..//utils/input_output/input_output.c **** 
+   3:..//utils/input_output/input_output.c **** #include <stdio.h>
+   4:..//utils/input_output/input_output.c **** #include <string.h>
+   5:..//utils/input_output/input_output.c **** #include <stdarg.h>
+   6:..//utils/input_output/input_output.c **** #include <math.h>
+   7:..//utils/input_output/input_output.c **** #include <stdlib.h>
+   8:..//utils/input_output/input_output.c **** #include "input_output.h"
+   9:..//utils/input_output/input_output.c **** #include "lpc17xx_libcfg.h"
+  10:..//utils/input_output/input_output.c **** #include "lpc17xx_gpio.h"
+  11:..//utils/input_output/input_output.c **** #include "debug_frmwrk.h"
+  12:..//utils/input_output/input_output.c **** 
+  13:..//utils/input_output/input_output.c **** static unsigned char switch_prev_state[MAX_INPUT_COUNT];
+  14:..//utils/input_output/input_output.c **** static unsigned int switch_state_count[MAX_INPUT_COUNT];    //number of 
+  15:..//utils/input_output/input_output.c **** unsigned char input_name[MAX_INPUT_COUNT];
+  16:..//utils/input_output/input_output.c **** unsigned int switch_state_max_rise_count[MAX_INPUT_COUNT];
+  17:..//utils/input_output/input_output.c **** unsigned int switch_state_max_fall_count[MAX_INPUT_COUNT];
+  18:..//utils/input_output/input_output.c **** unsigned char input_rise_flag[MAX_INPUT_COUNT];
+  19:..//utils/input_output/input_output.c **** unsigned char input_fall_flag[MAX_INPUT_COUNT];
+  20:..//utils/input_output/input_output.c **** 
+  21:..//utils/input_output/input_output.c **** unsigned char input_value[MAX_INPUT_COUNT];
+  22:..//utils/input_output/input_output.c **** unsigned char input_state[MAX_INPUT_COUNT];
+  23:..//utils/input_output/input_output.c **** 
+  24:..//utils/input_output/input_output.c **** GPIOPin io_input_pins[MAX_INPUT_COUNT] = {  
+  25:..//utils/input_output/input_output.c **** #if MAX_INPUT_COUNT > 0
+  26:..//utils/input_output/input_output.c **** IO_INPUT0 
+  27:..//utils/input_output/input_output.c **** #endif
+  28:..//utils/input_output/input_output.c **** #if MAX_INPUT_COUNT > 1
+  29:..//utils/input_output/input_output.c **** ,IO_INPUT1 
+  30:..//utils/input_output/input_output.c **** #endif
+  31:..//utils/input_output/input_output.c **** #if MAX_INPUT_COUNT >2
+  32:..//utils/input_output/input_output.c **** ,IO_INPUT2 
+  33:..//utils/input_output/input_output.c **** #endif
+  34:..//utils/input_output/input_output.c **** #if MAX_INPUT_COUNT >3
+  35:..//utils/input_output/input_output.c **** ,IO_INPUT3 
+  36:..//utils/input_output/input_output.c **** #endif
+  37:..//utils/input_output/input_output.c **** #if MAX_INPUT_COUNT >4
+  38:..//utils/input_output/input_output.c **** ,IO_INPUT4 
+  39:..//utils/input_output/input_output.c **** #endif
+  40:..//utils/input_output/input_output.c **** #if MAX_INPUT_COUNT >5
+  41:..//utils/input_output/input_output.c **** ,IO_INPUT5 
+  42:..//utils/input_output/input_output.c **** #endif
+  43:..//utils/input_output/input_output.c **** #if MAX_INPUT_COUNT >6
+  44:..//utils/input_output/input_output.c **** ,IO_INPUT6 
+  45:..//utils/input_output/input_output.c **** #endif
+  46:..//utils/input_output/input_output.c **** #if MAX_INPUT_COUNT >7
+  47:..//utils/input_output/input_output.c **** ,IO_INPUT7 
+  48:..//utils/input_output/input_output.c **** #endif
+  49:..//utils/input_output/input_output.c **** };
+  50:..//utils/input_output/input_output.c **** 
+  51:..//utils/input_output/input_output.c **** GPIOPin io_output_pins[MAX_OUTPUT_COUNT] = {
+  52:..//utils/input_output/input_output.c **** #if MAX_OUTPUT_COUNT > 0
+  53:..//utils/input_output/input_output.c **** IO_OUTPUT0
+  54:..//utils/input_output/input_output.c **** #endif
+  55:..//utils/input_output/input_output.c **** #if MAX_OUTPUT_COUNT > 1
+  56:..//utils/input_output/input_output.c **** ,IO_OUTPUT1
+  57:..//utils/input_output/input_output.c **** #endif
+  58:..//utils/input_output/input_output.c **** #if MAX_OUTPUT_COUNT > 2
+  59:..//utils/input_output/input_output.c **** ,IO_OUTPUT2
+  60:..//utils/input_output/input_output.c **** #endif
+  61:..//utils/input_output/input_output.c **** #if MAX_OUTPUT_COUNT > 3
+  62:..//utils/input_output/input_output.c **** ,IO_OUTPUT3
+  63:..//utils/input_output/input_output.c **** #endif
+  64:..//utils/input_output/input_output.c **** #if MAX_OUTPUT_COUNT > 4
+  65:..//utils/input_output/input_output.c **** ,IO_OUTPUT4
+  66:..//utils/input_output/input_output.c **** #endif
+  67:..//utils/input_output/input_output.c **** #if MAX_OUTPUT_COUNT > 5
+  68:..//utils/input_output/input_output.c **** ,IO_OUTPUT5
+  69:..//utils/input_output/input_output.c **** #endif
+  70:..//utils/input_output/input_output.c **** #if MAX_OUTPUT_COUNT > 6
+  71:..//utils/input_output/input_output.c **** ,IO_OUTPUT6
+  72:..//utils/input_output/input_output.c **** #endif
+  73:..//utils/input_output/input_output.c **** #if MAX_OUTPUT_COUNT > 7
+  74:..//utils/input_output/input_output.c **** ,IO_OUTPUT7
+  75:..//utils/input_output/input_output.c **** #endif
+  76:..//utils/input_output/input_output.c **** #if MAX_OUTPUT_COUNT > 8
+  77:..//utils/input_output/input_output.c **** ,IO_OUTPUT8
+  78:..//utils/input_output/input_output.c **** #endif
+  79:..//utils/input_output/input_output.c **** #if MAX_OUTPUT_COUNT > 9
+  80:..//utils/input_output/input_output.c **** ,IO_OUTPUT9
+  81:..//utils/input_output/input_output.c **** #endif
+  82:..//utils/input_output/input_output.c **** #if MAX_OUTPUT_COUNT > 10
+  83:..//utils/input_output/input_output.c **** ,IO_OUTPUT10
+  84:..//utils/input_output/input_output.c **** #endif
+  85:..//utils/input_output/input_output.c **** #if MAX_OUTPUT_COUNT > 11
+  86:..//utils/input_output/input_output.c **** ,IO_OUTPUT11
+  87:..//utils/input_output/input_output.c **** #endif
+  88:..//utils/input_output/input_output.c **** #if MAX_OUTPUT_COUNT > 12
+  89:..//utils/input_output/input_output.c **** ,IO_OUTPUT12
+  90:..//utils/input_output/input_output.c **** #endif
+  91:..//utils/input_output/input_output.c **** };
+  92:..//utils/input_output/input_output.c **** 
+  93:..//utils/input_output/input_output.c **** void io_update(void)
+  94:..//utils/input_output/input_output.c **** {	
+  99              		.loc 1 94 0
+ 100              		.cfi_startproc
+ 101              		@ args = 0, pretend = 0, frame = 0
+ 102              		@ frame_needed = 1, uses_anonymous_args = 0
+ 103 0000 98B5     		push	{r3, r4, r7, lr}
+ 104              	.LCFI0:
+ 105              		.cfi_def_cfa_offset 16
+ 106 0002 00AF     		add	r7, sp, #0
+ 107              		.cfi_offset 14, -4
+ 108              		.cfi_offset 7, -8
+ 109              		.cfi_offset 4, -12
+ 110              		.cfi_offset 3, -16
+ 111              	.LCFI1:
+ 112              		.cfi_def_cfa_register 7
+  95:..//utils/input_output/input_output.c **** 	static int i;
+  96:..//utils/input_output/input_output.c **** 	static unsigned char input_value[MAX_INPUT_COUNT];   //refering to the value read by each sensor	
+  97:..//utils/input_output/input_output.c **** 	for(i=0;i<MAX_INPUT_COUNT;i++){
+ 113              		.loc 1 97 0
+ 114 0004 40F20003 		movw	r3, #:lower16:i.4840
+ 115 0008 C0F20003 		movt	r3, #:upper16:i.4840
+ 116 000c 4FF00002 		mov	r2, #0
+ 117 0010 1A60     		str	r2, [r3, #0]
+ 118 0012 59E0     		b	.L2
+ 119              	.L5:
+  98:..//utils/input_output/input_output.c **** 		input_value[i] = io_read_input(i);
+ 120              		.loc 1 98 0
+ 121 0014 40F20003 		movw	r3, #:lower16:i.4840
+ 122 0018 C0F20003 		movt	r3, #:upper16:i.4840
+ 123 001c 1C68     		ldr	r4, [r3, #0]
+ 124 001e 40F20003 		movw	r3, #:lower16:i.4840
+ 125 0022 C0F20003 		movt	r3, #:upper16:i.4840
+ 126 0026 1B68     		ldr	r3, [r3, #0]
+ 127 0028 1846     		mov	r0, r3
+ 128 002a 40F20003 		movw	r3, #:lower16:io_read_input
+ 129 002e C0F20003 		movt	r3, #:upper16:io_read_input
+ 130 0032 9847     		blx	r3
+ 131 0034 0346     		mov	r3, r0
+ 132 0036 1A46     		mov	r2, r3
+ 133 0038 40F20003 		movw	r3, #:lower16:input_value.4841
+ 134 003c C0F20003 		movt	r3, #:upper16:input_value.4841
+ 135 0040 1A55     		strb	r2, [r3, r4]
+  99:..//utils/input_output/input_output.c **** 		
+ 100:..//utils/input_output/input_output.c **** 		if (input_value[i] != switch_prev_state[i]){
+ 136              		.loc 1 100 0
+ 137 0042 40F20003 		movw	r3, #:lower16:i.4840
+ 138 0046 C0F20003 		movt	r3, #:upper16:i.4840
+ 139 004a 1A68     		ldr	r2, [r3, #0]
+ 140 004c 40F20003 		movw	r3, #:lower16:input_value.4841
+ 141 0050 C0F20003 		movt	r3, #:upper16:input_value.4841
+ 142 0054 9A5C     		ldrb	r2, [r3, r2]	@ zero_extendqisi2
+ 143 0056 40F20003 		movw	r3, #:lower16:i.4840
+ 144 005a C0F20003 		movt	r3, #:upper16:i.4840
+ 145 005e 1968     		ldr	r1, [r3, #0]
+ 146 0060 40F20003 		movw	r3, #:lower16:switch_prev_state
+ 147 0064 C0F20003 		movt	r3, #:upper16:switch_prev_state
+ 148 0068 5B5C     		ldrb	r3, [r3, r1]	@ zero_extendqisi2
+ 149 006a 9A42     		cmp	r2, r3
+ 150 006c 13D0     		beq	.L3
+ 101:..//utils/input_output/input_output.c **** 			switch_state_count[i] ++;  // switch_state_count[i] is incremented by one   
+ 151              		.loc 1 101 0
+ 152 006e 40F20003 		movw	r3, #:lower16:i.4840
+ 153 0072 C0F20003 		movt	r3, #:upper16:i.4840
+ 154 0076 1A68     		ldr	r2, [r3, #0]
+ 155 0078 40F20003 		movw	r3, #:lower16:switch_state_count
+ 156 007c C0F20003 		movt	r3, #:upper16:switch_state_count
+ 157 0080 53F82230 		ldr	r3, [r3, r2, lsl #2]
+ 158 0084 03F10101 		add	r1, r3, #1
+ 159 0088 40F20003 		movw	r3, #:lower16:switch_state_count
+ 160 008c C0F20003 		movt	r3, #:upper16:switch_state_count
+ 161 0090 43F82210 		str	r1, [r3, r2, lsl #2]
+ 162 0094 0CE0     		b	.L4
+ 163              	.L3:
+ 102:..//utils/input_output/input_output.c **** 		}
+ 103:..//utils/input_output/input_output.c **** 		else								 // if prev state is same, set state count to 0
+ 104:..//utils/input_output/input_output.c **** 			switch_state_count[i] = 0;       //switch state count reset to zero
+ 164              		.loc 1 104 0
+ 165 0096 40F20003 		movw	r3, #:lower16:i.4840
+ 166 009a C0F20003 		movt	r3, #:upper16:i.4840
+ 167 009e 1A68     		ldr	r2, [r3, #0]
+ 168 00a0 40F20003 		movw	r3, #:lower16:switch_state_count
+ 169 00a4 C0F20003 		movt	r3, #:upper16:switch_state_count
+ 170 00a8 4FF00001 		mov	r1, #0
+ 171 00ac 43F82210 		str	r1, [r3, r2, lsl #2]
+ 172              	.L4:
+ 173              		.loc 1 97 0
+ 174 00b0 40F20003 		movw	r3, #:lower16:i.4840
+ 175 00b4 C0F20003 		movt	r3, #:upper16:i.4840
+ 176 00b8 1B68     		ldr	r3, [r3, #0]
+ 177 00ba 03F10102 		add	r2, r3, #1
+ 178 00be 40F20003 		movw	r3, #:lower16:i.4840
+ 179 00c2 C0F20003 		movt	r3, #:upper16:i.4840
+ 180 00c6 1A60     		str	r2, [r3, #0]
+ 181              	.L2:
+ 182 00c8 40F20003 		movw	r3, #:lower16:i.4840
+ 183 00cc C0F20003 		movt	r3, #:upper16:i.4840
+ 184 00d0 1B68     		ldr	r3, [r3, #0]
+ 185 00d2 032B     		cmp	r3, #3
+ 186 00d4 9EDD     		ble	.L5
+ 105:..//utils/input_output/input_output.c ****  	}
+ 106:..//utils/input_output/input_output.c **** 	
+ 107:..//utils/input_output/input_output.c **** 	for(i=0;i<MAX_INPUT_COUNT;i++){
+ 187              		.loc 1 107 0
+ 188 00d6 40F20003 		movw	r3, #:lower16:i.4840
+ 189 00da C0F20003 		movt	r3, #:upper16:i.4840
+ 190 00de 4FF00002 		mov	r2, #0
+ 191 00e2 1A60     		str	r2, [r3, #0]
+ 192 00e4 A8E0     		b	.L6
+ 193              	.L10:
+ 108:..//utils/input_output/input_output.c ****  		if (switch_prev_state[i] == INPUT_ON){	// this is for rising edge...
+ 194              		.loc 1 108 0
+ 195 00e6 40F20003 		movw	r3, #:lower16:i.4840
+ 196 00ea C0F20003 		movt	r3, #:upper16:i.4840
+ 197 00ee 1A68     		ldr	r2, [r3, #0]
+ 198 00f0 40F20003 		movw	r3, #:lower16:switch_prev_state
+ 199 00f4 C0F20003 		movt	r3, #:upper16:switch_prev_state
+ 200 00f8 9B5C     		ldrb	r3, [r3, r2]	@ zero_extendqisi2
+ 201 00fa 012B     		cmp	r3, #1
+ 202 00fc 47D1     		bne	.L7
+ 109:..//utils/input_output/input_output.c **** 			if (switch_state_count[i] > switch_state_max_rise_count[i]){  //if false no further action keep 
+ 203              		.loc 1 109 0
+ 204 00fe 40F20003 		movw	r3, #:lower16:i.4840
+ 205 0102 C0F20003 		movt	r3, #:upper16:i.4840
+ 206 0106 1A68     		ldr	r2, [r3, #0]
+ 207 0108 40F20003 		movw	r3, #:lower16:switch_state_count
+ 208 010c C0F20003 		movt	r3, #:upper16:switch_state_count
+ 209 0110 53F82220 		ldr	r2, [r3, r2, lsl #2]
+ 210 0114 40F20003 		movw	r3, #:lower16:i.4840
+ 211 0118 C0F20003 		movt	r3, #:upper16:i.4840
+ 212 011c 1968     		ldr	r1, [r3, #0]
+ 213 011e 40F20003 		movw	r3, #:lower16:switch_state_max_rise_count
+ 214 0122 C0F20003 		movt	r3, #:upper16:switch_state_max_rise_count
+ 215 0126 53F82130 		ldr	r3, [r3, r1, lsl #2]
+ 216 012a 9A42     		cmp	r2, r3
+ 217 012c 77D9     		bls	.L12
+ 110:..//utils/input_output/input_output.c **** 				input_state[i] = switch_prev_state[i] = input_value[i];      //if yes update previous_switch_st
+ 218              		.loc 1 110 0
+ 219 012e 40F20003 		movw	r3, #:lower16:i.4840
+ 220 0132 C0F20003 		movt	r3, #:upper16:i.4840
+ 221 0136 1968     		ldr	r1, [r3, #0]
+ 222 0138 40F20003 		movw	r3, #:lower16:i.4840
+ 223 013c C0F20003 		movt	r3, #:upper16:i.4840
+ 224 0140 1A68     		ldr	r2, [r3, #0]
+ 225 0142 40F20003 		movw	r3, #:lower16:i.4840
+ 226 0146 C0F20003 		movt	r3, #:upper16:i.4840
+ 227 014a 1868     		ldr	r0, [r3, #0]
+ 228 014c 40F20003 		movw	r3, #:lower16:input_value.4841
+ 229 0150 C0F20003 		movt	r3, #:upper16:input_value.4841
+ 230 0154 185C     		ldrb	r0, [r3, r0]	@ zero_extendqisi2
+ 231 0156 40F20003 		movw	r3, #:lower16:switch_prev_state
+ 232 015a C0F20003 		movt	r3, #:upper16:switch_prev_state
+ 233 015e 9854     		strb	r0, [r3, r2]
+ 234 0160 40F20003 		movw	r3, #:lower16:switch_prev_state
+ 235 0164 C0F20003 		movt	r3, #:upper16:switch_prev_state
+ 236 0168 9A5C     		ldrb	r2, [r3, r2]	@ zero_extendqisi2
+ 237 016a 40F20003 		movw	r3, #:lower16:input_state
+ 238 016e C0F20003 		movt	r3, #:upper16:input_state
+ 239 0172 5A54     		strb	r2, [r3, r1]
+ 111:..//utils/input_output/input_output.c **** 				// set the rise flag...
+ 112:..//utils/input_output/input_output.c **** 				input_rise_flag[i] = 1;
+ 240              		.loc 1 112 0
+ 241 0174 40F20003 		movw	r3, #:lower16:i.4840
+ 242 0178 C0F20003 		movt	r3, #:upper16:i.4840
+ 243 017c 1A68     		ldr	r2, [r3, #0]
+ 244 017e 40F20003 		movw	r3, #:lower16:input_rise_flag
+ 245 0182 C0F20003 		movt	r3, #:upper16:input_rise_flag
+ 246 0186 4FF00101 		mov	r1, #1
+ 247 018a 9954     		strb	r1, [r3, r2]
+ 248 018c 48E0     		b	.L9
+ 249              	.L7:
+ 113:..//utils/input_output/input_output.c **** 			}	
+ 114:..//utils/input_output/input_output.c **** 		}else{ // prev_switch_state = ON // this is for falling edge...
+ 115:..//utils/input_output/input_output.c **** 			if (switch_state_count[i] > switch_state_max_fall_count[i]){  //if flase no further action keep 
+ 250              		.loc 1 115 0
+ 251 018e 40F20003 		movw	r3, #:lower16:i.4840
+ 252 0192 C0F20003 		movt	r3, #:upper16:i.4840
+ 253 0196 1A68     		ldr	r2, [r3, #0]
+ 254 0198 40F20003 		movw	r3, #:lower16:switch_state_count
+ 255 019c C0F20003 		movt	r3, #:upper16:switch_state_count
+ 256 01a0 53F82220 		ldr	r2, [r3, r2, lsl #2]
+ 257 01a4 40F20003 		movw	r3, #:lower16:i.4840
+ 258 01a8 C0F20003 		movt	r3, #:upper16:i.4840
+ 259 01ac 1968     		ldr	r1, [r3, #0]
+ 260 01ae 40F20003 		movw	r3, #:lower16:switch_state_max_fall_count
+ 261 01b2 C0F20003 		movt	r3, #:upper16:switch_state_max_fall_count
+ 262 01b6 53F82130 		ldr	r3, [r3, r1, lsl #2]
+ 263 01ba 9A42     		cmp	r2, r3
+ 264 01bc 30D9     		bls	.L9
+ 116:..//utils/input_output/input_output.c **** 				input_state[i] = switch_prev_state[i] = input_value[i];      //if yes update previous_switch_st
+ 265              		.loc 1 116 0
+ 266 01be 40F20003 		movw	r3, #:lower16:i.4840
+ 267 01c2 C0F20003 		movt	r3, #:upper16:i.4840
+ 268 01c6 1968     		ldr	r1, [r3, #0]
+ 269 01c8 40F20003 		movw	r3, #:lower16:i.4840
+ 270 01cc C0F20003 		movt	r3, #:upper16:i.4840
+ 271 01d0 1A68     		ldr	r2, [r3, #0]
+ 272 01d2 40F20003 		movw	r3, #:lower16:i.4840
+ 273 01d6 C0F20003 		movt	r3, #:upper16:i.4840
+ 274 01da 1868     		ldr	r0, [r3, #0]
+ 275 01dc 40F20003 		movw	r3, #:lower16:input_value.4841
+ 276 01e0 C0F20003 		movt	r3, #:upper16:input_value.4841
+ 277 01e4 185C     		ldrb	r0, [r3, r0]	@ zero_extendqisi2
+ 278 01e6 40F20003 		movw	r3, #:lower16:switch_prev_state
+ 279 01ea C0F20003 		movt	r3, #:upper16:switch_prev_state
+ 280 01ee 9854     		strb	r0, [r3, r2]
+ 281 01f0 40F20003 		movw	r3, #:lower16:switch_prev_state
+ 282 01f4 C0F20003 		movt	r3, #:upper16:switch_prev_state
+ 283 01f8 9A5C     		ldrb	r2, [r3, r2]	@ zero_extendqisi2
+ 284 01fa 40F20003 		movw	r3, #:lower16:input_state
+ 285 01fe C0F20003 		movt	r3, #:upper16:input_state
+ 286 0202 5A54     		strb	r2, [r3, r1]
+ 117:..//utils/input_output/input_output.c **** 				input_fall_flag[i] = 1;	
+ 287              		.loc 1 117 0
+ 288 0204 40F20003 		movw	r3, #:lower16:i.4840
+ 289 0208 C0F20003 		movt	r3, #:upper16:i.4840
+ 290 020c 1A68     		ldr	r2, [r3, #0]
+ 291 020e 40F20003 		movw	r3, #:lower16:input_fall_flag
+ 292 0212 C0F20003 		movt	r3, #:upper16:input_fall_flag
+ 293 0216 4FF00101 		mov	r1, #1
+ 294 021a 9954     		strb	r1, [r3, r2]
+ 295 021c 00E0     		b	.L9
+ 296              	.L12:
+ 297              		.loc 1 112 0
+ 298 021e 00BF     		nop
+ 299              	.L9:
+ 300              		.loc 1 107 0
+ 301 0220 40F20003 		movw	r3, #:lower16:i.4840
+ 302 0224 C0F20003 		movt	r3, #:upper16:i.4840
+ 303 0228 1B68     		ldr	r3, [r3, #0]
+ 304 022a 03F10102 		add	r2, r3, #1
+ 305 022e 40F20003 		movw	r3, #:lower16:i.4840
+ 306 0232 C0F20003 		movt	r3, #:upper16:i.4840
+ 307 0236 1A60     		str	r2, [r3, #0]
+ 308              	.L6:
+ 309 0238 40F20003 		movw	r3, #:lower16:i.4840
+ 310 023c C0F20003 		movt	r3, #:upper16:i.4840
+ 311 0240 1B68     		ldr	r3, [r3, #0]
+ 312 0242 032B     		cmp	r3, #3
+ 313 0244 7FF74FAF 		ble	.L10
+ 118:..//utils/input_output/input_output.c **** 			}	
+ 119:..//utils/input_output/input_output.c **** 		}
+ 120:..//utils/input_output/input_output.c **** 	}
+ 121:..//utils/input_output/input_output.c **** }
+ 314              		.loc 1 121 0
+ 315 0248 98BD     		pop	{r3, r4, r7, pc}
+ 316              		.cfi_endproc
+ 317              	.LFE29:
+ 319 024a 00BF     		.section	.text.fast_io_update,"ax",%progbits
+ 320              		.align	2
+ 321              		.global	fast_io_update
+ 322              		.thumb
+ 323              		.thumb_func
+ 325              	fast_io_update:
+ 326              	.LFB30:
+ 122:..//utils/input_output/input_output.c **** 
+ 123:..//utils/input_output/input_output.c **** void fast_io_update(void){
+ 327              		.loc 1 123 0
+ 328              		.cfi_startproc
+ 329              		@ args = 0, pretend = 0, frame = 8
+ 330              		@ frame_needed = 1, uses_anonymous_args = 0
+ 331 0000 80B5     		push	{r7, lr}
+ 332              	.LCFI2:
+ 333              		.cfi_def_cfa_offset 8
+ 334 0002 82B0     		sub	sp, sp, #8
+ 335              	.LCFI3:
+ 336              		.cfi_def_cfa_offset 16
+ 337 0004 00AF     		add	r7, sp, #0
+ 338              		.cfi_offset 14, -4
+ 339              		.cfi_offset 7, -8
+ 340              	.LCFI4:
+ 341              		.cfi_def_cfa_register 7
+ 124:..//utils/input_output/input_output.c **** 	GPIO_Set(&io_output_pins[0]);
+ 342              		.loc 1 124 0
+ 343 0006 40F20000 		movw	r0, #:lower16:io_output_pins
+ 344 000a C0F20000 		movt	r0, #:upper16:io_output_pins
+ 345 000e 40F20003 		movw	r3, #:lower16:GPIO_Set
+ 346 0012 C0F20003 		movt	r3, #:upper16:GPIO_Set
+ 347 0016 9847     		blx	r3
+ 125:..//utils/input_output/input_output.c **** 	static int i;
+ 126:..//utils/input_output/input_output.c **** 	static unsigned char input_value[2];   //refering to the value read by each sensor	
+ 127:..//utils/input_output/input_output.c **** 	uint32_t port_value,mask;
+ 128:..//utils/input_output/input_output.c **** 
+ 129:..//utils/input_output/input_output.c **** 	if(!(LPC_GPIO0->FIOPIN & (1<<26)))
+ 348              		.loc 1 129 0
+ 349 0018 4CF20003 		movw	r3, #:lower16:537509888
+ 350 001c C2F20903 		movt	r3, #:upper16:537509888
+ 351 0020 5B69     		ldr	r3, [r3, #20]
+ 352 0022 03F08063 		and	r3, r3, #67108864
+ 353 0026 002B     		cmp	r3, #0
+ 354 0028 07D1     		bne	.L14
+ 130:..//utils/input_output/input_output.c **** 		input_value[0] = 0;
+ 355              		.loc 1 130 0
+ 356 002a 40F20003 		movw	r3, #:lower16:input_value.4901
+ 357 002e C0F20003 		movt	r3, #:upper16:input_value.4901
+ 358 0032 4FF00002 		mov	r2, #0
+ 359 0036 1A70     		strb	r2, [r3, #0]
+ 360 0038 06E0     		b	.L15
+ 361              	.L14:
+ 131:..//utils/input_output/input_output.c **** 	else
+ 132:..//utils/input_output/input_output.c **** 		input_value[0] = 1;
+ 362              		.loc 1 132 0
+ 363 003a 40F20003 		movw	r3, #:lower16:input_value.4901
+ 364 003e C0F20003 		movt	r3, #:upper16:input_value.4901
+ 365 0042 4FF00102 		mov	r2, #1
+ 366 0046 1A70     		strb	r2, [r3, #0]
+ 367              	.L15:
+ 133:..//utils/input_output/input_output.c **** 	
+ 134:..//utils/input_output/input_output.c **** 
+ 135:..//utils/input_output/input_output.c **** 	if (input_value[0] != switch_prev_state[0])
+ 368              		.loc 1 135 0
+ 369 0048 40F20003 		movw	r3, #:lower16:input_value.4901
+ 370 004c C0F20003 		movt	r3, #:upper16:input_value.4901
+ 371 0050 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 372 0052 40F20003 		movw	r3, #:lower16:switch_prev_state
+ 373 0056 C0F20003 		movt	r3, #:upper16:switch_prev_state
+ 374 005a 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 375 005c 9A42     		cmp	r2, r3
+ 376 005e 0CD0     		beq	.L16
+ 136:..//utils/input_output/input_output.c **** 		switch_state_count[0] ++;  // switch_state_count[i] is incremented by one   
+ 377              		.loc 1 136 0
+ 378 0060 40F20003 		movw	r3, #:lower16:switch_state_count
+ 379 0064 C0F20003 		movt	r3, #:upper16:switch_state_count
+ 380 0068 1B68     		ldr	r3, [r3, #0]
+ 381 006a 03F10102 		add	r2, r3, #1
+ 382 006e 40F20003 		movw	r3, #:lower16:switch_state_count
+ 383 0072 C0F20003 		movt	r3, #:upper16:switch_state_count
+ 384 0076 1A60     		str	r2, [r3, #0]
+ 385 0078 06E0     		b	.L17
+ 386              	.L16:
+ 137:..//utils/input_output/input_output.c **** 	else								 // if prev state is same, set state count to 0
+ 138:..//utils/input_output/input_output.c **** 		switch_state_count[0] = 0;       //switch state count reset to zero
+ 387              		.loc 1 138 0
+ 388 007a 40F20003 		movw	r3, #:lower16:switch_state_count
+ 389 007e C0F20003 		movt	r3, #:upper16:switch_state_count
+ 390 0082 4FF00002 		mov	r2, #0
+ 391 0086 1A60     		str	r2, [r3, #0]
+ 392              	.L17:
+ 139:..//utils/input_output/input_output.c **** 
+ 140:..//utils/input_output/input_output.c **** 
+ 141:..//utils/input_output/input_output.c **** 	// port_value = GPIO_ReadValue(io_input_pins[1].port_num);
+ 142:..//utils/input_output/input_output.c **** 	if(!(LPC_GPIO0->FIOPIN & (1<<25)))
+ 393              		.loc 1 142 0
+ 394 0088 4CF20003 		movw	r3, #:lower16:537509888
+ 395 008c C2F20903 		movt	r3, #:upper16:537509888
+ 396 0090 5B69     		ldr	r3, [r3, #20]
+ 397 0092 03F00073 		and	r3, r3, #33554432
+ 398 0096 002B     		cmp	r3, #0
+ 399 0098 07D1     		bne	.L18
+ 143:..//utils/input_output/input_output.c **** 		input_value[1] = 0;
+ 400              		.loc 1 143 0
+ 401 009a 40F20003 		movw	r3, #:lower16:input_value.4901
+ 402 009e C0F20003 		movt	r3, #:upper16:input_value.4901
+ 403 00a2 4FF00002 		mov	r2, #0
+ 404 00a6 5A70     		strb	r2, [r3, #1]
+ 405 00a8 06E0     		b	.L19
+ 406              	.L18:
+ 144:..//utils/input_output/input_output.c **** 	else
+ 145:..//utils/input_output/input_output.c **** 		input_value[1] = 1;
+ 407              		.loc 1 145 0
+ 408 00aa 40F20003 		movw	r3, #:lower16:input_value.4901
+ 409 00ae C0F20003 		movt	r3, #:upper16:input_value.4901
+ 410 00b2 4FF00102 		mov	r2, #1
+ 411 00b6 5A70     		strb	r2, [r3, #1]
+ 412              	.L19:
+ 146:..//utils/input_output/input_output.c **** 	
+ 147:..//utils/input_output/input_output.c **** 
+ 148:..//utils/input_output/input_output.c **** 
+ 149:..//utils/input_output/input_output.c **** 	if (input_value[1] != switch_prev_state[1])
+ 413              		.loc 1 149 0
+ 414 00b8 40F20003 		movw	r3, #:lower16:input_value.4901
+ 415 00bc C0F20003 		movt	r3, #:upper16:input_value.4901
+ 416 00c0 5A78     		ldrb	r2, [r3, #1]	@ zero_extendqisi2
+ 417 00c2 40F20003 		movw	r3, #:lower16:switch_prev_state
+ 418 00c6 C0F20003 		movt	r3, #:upper16:switch_prev_state
+ 419 00ca 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+ 420 00cc 9A42     		cmp	r2, r3
+ 421 00ce 0CD0     		beq	.L20
+ 150:..//utils/input_output/input_output.c **** 		switch_state_count[1] ++;  // switch_state_count[i] is incremented by one   
+ 422              		.loc 1 150 0
+ 423 00d0 40F20003 		movw	r3, #:lower16:switch_state_count
+ 424 00d4 C0F20003 		movt	r3, #:upper16:switch_state_count
+ 425 00d8 5B68     		ldr	r3, [r3, #4]
+ 426 00da 03F10102 		add	r2, r3, #1
+ 427 00de 40F20003 		movw	r3, #:lower16:switch_state_count
+ 428 00e2 C0F20003 		movt	r3, #:upper16:switch_state_count
+ 429 00e6 5A60     		str	r2, [r3, #4]
+ 430 00e8 06E0     		b	.L21
+ 431              	.L20:
+ 151:..//utils/input_output/input_output.c **** 	else								 // if prev state is same, set state count to 0
+ 152:..//utils/input_output/input_output.c **** 		switch_state_count[1] = 0;       //switch state count reset to zero
+ 432              		.loc 1 152 0
+ 433 00ea 40F20003 		movw	r3, #:lower16:switch_state_count
+ 434 00ee C0F20003 		movt	r3, #:upper16:switch_state_count
+ 435 00f2 4FF00002 		mov	r2, #0
+ 436 00f6 5A60     		str	r2, [r3, #4]
+ 437              	.L21:
+ 153:..//utils/input_output/input_output.c **** 
+ 154:..//utils/input_output/input_output.c **** 
+ 155:..//utils/input_output/input_output.c **** 	
+ 156:..//utils/input_output/input_output.c **** 	if (switch_prev_state[0] == INPUT_ON){	// this is for rising edge...
+ 438              		.loc 1 156 0
+ 439 00f8 40F20003 		movw	r3, #:lower16:switch_prev_state
+ 440 00fc C0F20003 		movt	r3, #:upper16:switch_prev_state
+ 441 0100 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 442 0102 012B     		cmp	r3, #1
+ 443 0104 27D1     		bne	.L22
+ 157:..//utils/input_output/input_output.c **** 		if (switch_state_count[0] > switch_state_max_rise_count[0]){  //if false no further action keep c
+ 444              		.loc 1 157 0
+ 445 0106 40F20003 		movw	r3, #:lower16:switch_state_count
+ 446 010a C0F20003 		movt	r3, #:upper16:switch_state_count
+ 447 010e 1A68     		ldr	r2, [r3, #0]
+ 448 0110 40F20003 		movw	r3, #:lower16:switch_state_max_rise_count
+ 449 0114 C0F20003 		movt	r3, #:upper16:switch_state_max_rise_count
+ 450 0118 1B68     		ldr	r3, [r3, #0]
+ 451 011a 9A42     		cmp	r2, r3
+ 452 011c 43D9     		bls	.L29
+ 158:..//utils/input_output/input_output.c **** 			input_state[0] = switch_prev_state[0] = input_value[0];      //if yes update previous_switch_sta
+ 453              		.loc 1 158 0
+ 454 011e 40F20003 		movw	r3, #:lower16:input_value.4901
+ 455 0122 C0F20003 		movt	r3, #:upper16:input_value.4901
+ 456 0126 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 457 0128 40F20003 		movw	r3, #:lower16:switch_prev_state
+ 458 012c C0F20003 		movt	r3, #:upper16:switch_prev_state
+ 459 0130 1A70     		strb	r2, [r3, #0]
+ 460 0132 40F20003 		movw	r3, #:lower16:switch_prev_state
+ 461 0136 C0F20003 		movt	r3, #:upper16:switch_prev_state
+ 462 013a 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 463 013c 40F20003 		movw	r3, #:lower16:input_state
+ 464 0140 C0F20003 		movt	r3, #:upper16:input_state
+ 465 0144 1A70     		strb	r2, [r3, #0]
+ 159:..//utils/input_output/input_output.c **** 			// set the rise flag...
+ 160:..//utils/input_output/input_output.c **** 			input_rise_flag[0] = 1;
+ 466              		.loc 1 160 0
+ 467 0146 40F20003 		movw	r3, #:lower16:input_rise_flag
+ 468 014a C0F20003 		movt	r3, #:upper16:input_rise_flag
+ 469 014e 4FF00102 		mov	r2, #1
+ 470 0152 1A70     		strb	r2, [r3, #0]
+ 471 0154 28E0     		b	.L24
+ 472              	.L22:
+ 161:..//utils/input_output/input_output.c **** 		}	
+ 162:..//utils/input_output/input_output.c **** 	}else{ // prev_switch_state = ON // this is for falling edge...
+ 163:..//utils/input_output/input_output.c **** 		if (switch_state_count[0] > switch_state_max_fall_count[0]){  //if flase no further action keep c
+ 473              		.loc 1 163 0
+ 474 0156 40F20003 		movw	r3, #:lower16:switch_state_count
+ 475 015a C0F20003 		movt	r3, #:upper16:switch_state_count
+ 476 015e 1A68     		ldr	r2, [r3, #0]
+ 477 0160 40F20003 		movw	r3, #:lower16:switch_state_max_fall_count
+ 478 0164 C0F20003 		movt	r3, #:upper16:switch_state_max_fall_count
+ 479 0168 1B68     		ldr	r3, [r3, #0]
+ 480 016a 9A42     		cmp	r2, r3
+ 481 016c 1CD9     		bls	.L24
+ 164:..//utils/input_output/input_output.c **** 			input_state[0] = switch_prev_state[0] = input_value[0];      //if yes update previous_switch_sta
+ 482              		.loc 1 164 0
+ 483 016e 40F20003 		movw	r3, #:lower16:input_value.4901
+ 484 0172 C0F20003 		movt	r3, #:upper16:input_value.4901
+ 485 0176 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 486 0178 40F20003 		movw	r3, #:lower16:switch_prev_state
+ 487 017c C0F20003 		movt	r3, #:upper16:switch_prev_state
+ 488 0180 1A70     		strb	r2, [r3, #0]
+ 489 0182 40F20003 		movw	r3, #:lower16:switch_prev_state
+ 490 0186 C0F20003 		movt	r3, #:upper16:switch_prev_state
+ 491 018a 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 492 018c 40F20003 		movw	r3, #:lower16:input_state
+ 493 0190 C0F20003 		movt	r3, #:upper16:input_state
+ 494 0194 1A70     		strb	r2, [r3, #0]
+ 165:..//utils/input_output/input_output.c **** 			input_fall_flag[0] = 1;	
+ 495              		.loc 1 165 0
+ 496 0196 40F20003 		movw	r3, #:lower16:input_fall_flag
+ 497 019a C0F20003 		movt	r3, #:upper16:input_fall_flag
+ 498 019e 4FF00102 		mov	r2, #1
+ 499 01a2 1A70     		strb	r2, [r3, #0]
+ 500 01a4 00E0     		b	.L24
+ 501              	.L29:
+ 502              		.loc 1 160 0
+ 503 01a6 00BF     		nop
+ 504              	.L24:
+ 166:..//utils/input_output/input_output.c **** 		}	
+ 167:..//utils/input_output/input_output.c **** 	}
+ 168:..//utils/input_output/input_output.c **** 
+ 169:..//utils/input_output/input_output.c **** 	if (switch_prev_state[1] == INPUT_ON){	// this is for rising edge...
+ 505              		.loc 1 169 0
+ 506 01a8 40F20003 		movw	r3, #:lower16:switch_prev_state
+ 507 01ac C0F20003 		movt	r3, #:upper16:switch_prev_state
+ 508 01b0 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+ 509 01b2 012B     		cmp	r3, #1
+ 510 01b4 27D1     		bne	.L25
+ 170:..//utils/input_output/input_output.c **** 		if (switch_state_count[1] > switch_state_max_rise_count[1]){  //if false no further action keep c
+ 511              		.loc 1 170 0
+ 512 01b6 40F20003 		movw	r3, #:lower16:switch_state_count
+ 513 01ba C0F20003 		movt	r3, #:upper16:switch_state_count
+ 514 01be 5A68     		ldr	r2, [r3, #4]
+ 515 01c0 40F20003 		movw	r3, #:lower16:switch_state_max_rise_count
+ 516 01c4 C0F20003 		movt	r3, #:upper16:switch_state_max_rise_count
+ 517 01c8 5B68     		ldr	r3, [r3, #4]
+ 518 01ca 9A42     		cmp	r2, r3
+ 519 01cc 43D9     		bls	.L30
+ 171:..//utils/input_output/input_output.c **** 			input_state[1] = switch_prev_state[1] = input_value[1];      //if yes update previous_switch_sta
+ 520              		.loc 1 171 0
+ 521 01ce 40F20003 		movw	r3, #:lower16:input_value.4901
+ 522 01d2 C0F20003 		movt	r3, #:upper16:input_value.4901
+ 523 01d6 5A78     		ldrb	r2, [r3, #1]	@ zero_extendqisi2
+ 524 01d8 40F20003 		movw	r3, #:lower16:switch_prev_state
+ 525 01dc C0F20003 		movt	r3, #:upper16:switch_prev_state
+ 526 01e0 5A70     		strb	r2, [r3, #1]
+ 527 01e2 40F20003 		movw	r3, #:lower16:switch_prev_state
+ 528 01e6 C0F20003 		movt	r3, #:upper16:switch_prev_state
+ 529 01ea 5A78     		ldrb	r2, [r3, #1]	@ zero_extendqisi2
+ 530 01ec 40F20003 		movw	r3, #:lower16:input_state
+ 531 01f0 C0F20003 		movt	r3, #:upper16:input_state
+ 532 01f4 5A70     		strb	r2, [r3, #1]
+ 172:..//utils/input_output/input_output.c **** 			// set the rise flag...
+ 173:..//utils/input_output/input_output.c **** 			input_rise_flag[1] = 1;
+ 533              		.loc 1 173 0
+ 534 01f6 40F20003 		movw	r3, #:lower16:input_rise_flag
+ 535 01fa C0F20003 		movt	r3, #:upper16:input_rise_flag
+ 536 01fe 4FF00102 		mov	r2, #1
+ 537 0202 5A70     		strb	r2, [r3, #1]
+ 538 0204 28E0     		b	.L28
+ 539              	.L25:
+ 174:..//utils/input_output/input_output.c **** 		}	
+ 175:..//utils/input_output/input_output.c **** 	}else{ // prev_switch_state = ON // this is for falling edge...
+ 176:..//utils/input_output/input_output.c **** 		if (switch_state_count[1] > switch_state_max_fall_count[1]){  //if flase no further action keep c
+ 540              		.loc 1 176 0
+ 541 0206 40F20003 		movw	r3, #:lower16:switch_state_count
+ 542 020a C0F20003 		movt	r3, #:upper16:switch_state_count
+ 543 020e 5A68     		ldr	r2, [r3, #4]
+ 544 0210 40F20003 		movw	r3, #:lower16:switch_state_max_fall_count
+ 545 0214 C0F20003 		movt	r3, #:upper16:switch_state_max_fall_count
+ 546 0218 5B68     		ldr	r3, [r3, #4]
+ 547 021a 9A42     		cmp	r2, r3
+ 548 021c 1CD9     		bls	.L28
+ 177:..//utils/input_output/input_output.c **** 			input_state[1] = switch_prev_state[1] = input_value[1];      //if yes update previous_switch_sta
+ 549              		.loc 1 177 0
+ 550 021e 40F20003 		movw	r3, #:lower16:input_value.4901
+ 551 0222 C0F20003 		movt	r3, #:upper16:input_value.4901
+ 552 0226 5A78     		ldrb	r2, [r3, #1]	@ zero_extendqisi2
+ 553 0228 40F20003 		movw	r3, #:lower16:switch_prev_state
+ 554 022c C0F20003 		movt	r3, #:upper16:switch_prev_state
+ 555 0230 5A70     		strb	r2, [r3, #1]
+ 556 0232 40F20003 		movw	r3, #:lower16:switch_prev_state
+ 557 0236 C0F20003 		movt	r3, #:upper16:switch_prev_state
+ 558 023a 5A78     		ldrb	r2, [r3, #1]	@ zero_extendqisi2
+ 559 023c 40F20003 		movw	r3, #:lower16:input_state
+ 560 0240 C0F20003 		movt	r3, #:upper16:input_state
+ 561 0244 5A70     		strb	r2, [r3, #1]
+ 178:..//utils/input_output/input_output.c **** 			input_fall_flag[1] = 1;	
+ 562              		.loc 1 178 0
+ 563 0246 40F20003 		movw	r3, #:lower16:input_fall_flag
+ 564 024a C0F20003 		movt	r3, #:upper16:input_fall_flag
+ 565 024e 4FF00102 		mov	r2, #1
+ 566 0252 5A70     		strb	r2, [r3, #1]
+ 567 0254 00E0     		b	.L28
+ 568              	.L30:
+ 569              		.loc 1 173 0
+ 570 0256 00BF     		nop
+ 571              	.L28:
+ 179:..//utils/input_output/input_output.c **** 		}	
+ 180:..//utils/input_output/input_output.c **** 	}
+ 181:..//utils/input_output/input_output.c **** 	
+ 182:..//utils/input_output/input_output.c **** 
+ 183:..//utils/input_output/input_output.c **** }
+ 572              		.loc 1 183 0
+ 573 0258 07F10807 		add	r7, r7, #8
+ 574 025c BD46     		mov	sp, r7
+ 575 025e 80BD     		pop	{r7, pc}
+ 576              		.cfi_endproc
+ 577              	.LFE30:
+ 579              		.section	.rodata
+ 580              		.align	2
+ 581              	.LC0:
+ 582 0000 696F5F69 		.ascii	"io_init=%d\012\000"
+ 582      6E69743D 
+ 582      25640A00 
+ 583              		.section	.text.io_init,"ax",%progbits
+ 584              		.align	2
+ 585              		.global	io_init
+ 586              		.thumb
+ 587              		.thumb_func
+ 589              	io_init:
+ 590              	.LFB31:
+ 184:..//utils/input_output/input_output.c **** 
+ 185:..//utils/input_output/input_output.c **** void io_init(void)
+ 186:..//utils/input_output/input_output.c **** {
+ 591              		.loc 1 186 0
+ 592              		.cfi_startproc
+ 593              		@ args = 0, pretend = 0, frame = 8
+ 594              		@ frame_needed = 1, uses_anonymous_args = 0
+ 595 0000 90B5     		push	{r4, r7, lr}
+ 596              	.LCFI5:
+ 597              		.cfi_def_cfa_offset 12
+ 598 0002 83B0     		sub	sp, sp, #12
+ 599              	.LCFI6:
+ 600              		.cfi_def_cfa_offset 24
+ 601 0004 00AF     		add	r7, sp, #0
+ 602              		.cfi_offset 14, -4
+ 603              		.cfi_offset 7, -8
+ 604              		.cfi_offset 4, -12
+ 605              	.LCFI7:
+ 606              		.cfi_def_cfa_register 7
+ 187:..//utils/input_output/input_output.c **** 	int i;
+ 188:..//utils/input_output/input_output.c **** 	io_configure(io_input_pins,MAX_INPUT_COUNT, 0);
+ 607              		.loc 1 188 0
+ 608 0006 40F20000 		movw	r0, #:lower16:io_input_pins
+ 609 000a C0F20000 		movt	r0, #:upper16:io_input_pins
+ 610 000e 4FF00401 		mov	r1, #4
+ 611 0012 4FF00002 		mov	r2, #0
+ 612 0016 40F20003 		movw	r3, #:lower16:io_configure
+ 613 001a C0F20003 		movt	r3, #:upper16:io_configure
+ 614 001e 9847     		blx	r3
+ 189:..//utils/input_output/input_output.c **** 	for(i=0;i<MAX_INPUT_COUNT;i++){
+ 615              		.loc 1 189 0
+ 616 0020 4FF00003 		mov	r3, #0
+ 617 0024 7B60     		str	r3, [r7, #4]
+ 618 0026 5FE0     		b	.L32
+ 619              	.L33:
+ 190:..//utils/input_output/input_output.c **** 		switch_state_count[i] = 0;
+ 620              		.loc 1 190 0
+ 621 0028 7A68     		ldr	r2, [r7, #4]
+ 622 002a 40F20003 		movw	r3, #:lower16:switch_state_count
+ 623 002e C0F20003 		movt	r3, #:upper16:switch_state_count
+ 624 0032 4FF00001 		mov	r1, #0
+ 625 0036 43F82210 		str	r1, [r3, r2, lsl #2]
+ 191:..//utils/input_output/input_output.c **** 		switch_state_max_rise_count[i] = input_rise_debounce_time;//debounce check for rise
+ 626              		.loc 1 191 0
+ 627 003a 7A68     		ldr	r2, [r7, #4]
+ 628 003c 40F20003 		movw	r3, #:lower16:input_rise_debounce_time
+ 629 0040 C0F20003 		movt	r3, #:upper16:input_rise_debounce_time
+ 630 0044 1B68     		ldr	r3, [r3, #0]
+ 631 0046 1946     		mov	r1, r3
+ 632 0048 40F20003 		movw	r3, #:lower16:switch_state_max_rise_count
+ 633 004c C0F20003 		movt	r3, #:upper16:switch_state_max_rise_count
+ 634 0050 43F82210 		str	r1, [r3, r2, lsl #2]
+ 192:..//utils/input_output/input_output.c **** 		switch_state_max_fall_count[i] = input_fall_debounce_time;//debounce check for fall
+ 635              		.loc 1 192 0
+ 636 0054 7A68     		ldr	r2, [r7, #4]
+ 637 0056 40F20003 		movw	r3, #:lower16:input_fall_debounce_time
+ 638 005a C0F20003 		movt	r3, #:upper16:input_fall_debounce_time
+ 639 005e 1B68     		ldr	r3, [r3, #0]
+ 640 0060 1946     		mov	r1, r3
+ 641 0062 40F20003 		movw	r3, #:lower16:switch_state_max_fall_count
+ 642 0066 C0F20003 		movt	r3, #:upper16:switch_state_max_fall_count
+ 643 006a 43F82210 		str	r1, [r3, r2, lsl #2]
+ 193:..//utils/input_output/input_output.c **** 		input_rise_flag[i] = input_fall_flag[i] = input_state[i] = 0;
+ 644              		.loc 1 193 0
+ 645 006e 7868     		ldr	r0, [r7, #4]
+ 646 0070 7A68     		ldr	r2, [r7, #4]
+ 647 0072 7968     		ldr	r1, [r7, #4]
+ 648 0074 40F20003 		movw	r3, #:lower16:input_state
+ 649 0078 C0F20003 		movt	r3, #:upper16:input_state
+ 650 007c 4FF0000C 		mov	ip, #0
+ 651 0080 03F801C0 		strb	ip, [r3, r1]
+ 652 0084 40F20003 		movw	r3, #:lower16:input_state
+ 653 0088 C0F20003 		movt	r3, #:upper16:input_state
+ 654 008c 595C     		ldrb	r1, [r3, r1]	@ zero_extendqisi2
+ 655 008e 40F20003 		movw	r3, #:lower16:input_fall_flag
+ 656 0092 C0F20003 		movt	r3, #:upper16:input_fall_flag
+ 657 0096 9954     		strb	r1, [r3, r2]
+ 658 0098 40F20003 		movw	r3, #:lower16:input_fall_flag
+ 659 009c C0F20003 		movt	r3, #:upper16:input_fall_flag
+ 660 00a0 9A5C     		ldrb	r2, [r3, r2]	@ zero_extendqisi2
+ 661 00a2 40F20003 		movw	r3, #:lower16:input_rise_flag
+ 662 00a6 C0F20003 		movt	r3, #:upper16:input_rise_flag
+ 663 00aa 1A54     		strb	r2, [r3, r0]
+ 194:..//utils/input_output/input_output.c **** 		input_state[i] = io_read_input(i);
+ 664              		.loc 1 194 0
+ 665 00ac 7C68     		ldr	r4, [r7, #4]
+ 666 00ae 7868     		ldr	r0, [r7, #4]
+ 667 00b0 40F20003 		movw	r3, #:lower16:io_read_input
+ 668 00b4 C0F20003 		movt	r3, #:upper16:io_read_input
+ 669 00b8 9847     		blx	r3
+ 670 00ba 0346     		mov	r3, r0
+ 671 00bc 1A46     		mov	r2, r3
+ 672 00be 40F20003 		movw	r3, #:lower16:input_state
+ 673 00c2 C0F20003 		movt	r3, #:upper16:input_state
+ 674 00c6 1A55     		strb	r2, [r3, r4]
+ 195:..//utils/input_output/input_output.c **** 		switch_prev_state[i] = input_state[i];
+ 675              		.loc 1 195 0
+ 676 00c8 7A68     		ldr	r2, [r7, #4]
+ 677 00ca 7968     		ldr	r1, [r7, #4]
+ 678 00cc 40F20003 		movw	r3, #:lower16:input_state
+ 679 00d0 C0F20003 		movt	r3, #:upper16:input_state
+ 680 00d4 595C     		ldrb	r1, [r3, r1]	@ zero_extendqisi2
+ 681 00d6 40F20003 		movw	r3, #:lower16:switch_prev_state
+ 682 00da C0F20003 		movt	r3, #:upper16:switch_prev_state
+ 683 00de 9954     		strb	r1, [r3, r2]
+ 684              		.loc 1 189 0
+ 685 00e0 7B68     		ldr	r3, [r7, #4]
+ 686 00e2 03F10103 		add	r3, r3, #1
+ 687 00e6 7B60     		str	r3, [r7, #4]
+ 688              	.L32:
+ 689 00e8 7B68     		ldr	r3, [r7, #4]
+ 690 00ea 032B     		cmp	r3, #3
+ 691 00ec 9CDD     		ble	.L33
+ 196:..//utils/input_output/input_output.c **** 	}
+ 197:..//utils/input_output/input_output.c **** 	io_configure(io_output_pins,MAX_OUTPUT_COUNT, 1);
+ 692              		.loc 1 197 0
+ 693 00ee 40F20000 		movw	r0, #:lower16:io_output_pins
+ 694 00f2 C0F20000 		movt	r0, #:upper16:io_output_pins
+ 695 00f6 4FF00801 		mov	r1, #8
+ 696 00fa 4FF00102 		mov	r2, #1
+ 697 00fe 40F20003 		movw	r3, #:lower16:io_configure
+ 698 0102 C0F20003 		movt	r3, #:upper16:io_configure
+ 699 0106 9847     		blx	r3
+ 198:..//utils/input_output/input_output.c **** 	printf("io_init=%d\n",TRUE);
+ 700              		.loc 1 198 0
+ 701 0108 40F20000 		movw	r0, #:lower16:.LC0
+ 702 010c C0F20000 		movt	r0, #:upper16:.LC0
+ 703 0110 4FF00101 		mov	r1, #1
+ 704 0114 40F20003 		movw	r3, #:lower16:printf
+ 705 0118 C0F20003 		movt	r3, #:upper16:printf
+ 706 011c 9847     		blx	r3
+ 199:..//utils/input_output/input_output.c **** }
+ 707              		.loc 1 199 0
+ 708 011e 07F10C07 		add	r7, r7, #12
+ 709 0122 BD46     		mov	sp, r7
+ 710 0124 90BD     		pop	{r4, r7, pc}
+ 711              		.cfi_endproc
+ 712              	.LFE31:
+ 714 0126 00BF     		.section	.text.io_read_input,"ax",%progbits
+ 715              		.align	2
+ 716              		.global	io_read_input
+ 717              		.thumb
+ 718              		.thumb_func
+ 720              	io_read_input:
+ 721              	.LFB32:
+ 200:..//utils/input_output/input_output.c **** 
+ 201:..//utils/input_output/input_output.c **** 	
+ 202:..//utils/input_output/input_output.c **** char io_read_input ( int i)
+ 203:..//utils/input_output/input_output.c **** {
+ 722              		.loc 1 203 0
+ 723              		.cfi_startproc
+ 724              		@ args = 0, pretend = 0, frame = 8
+ 725              		@ frame_needed = 1, uses_anonymous_args = 0
+ 726 0000 80B5     		push	{r7, lr}
+ 727              	.LCFI8:
+ 728              		.cfi_def_cfa_offset 8
+ 729 0002 82B0     		sub	sp, sp, #8
+ 730              	.LCFI9:
+ 731              		.cfi_def_cfa_offset 16
+ 732 0004 00AF     		add	r7, sp, #0
+ 733              		.cfi_offset 14, -4
+ 734              		.cfi_offset 7, -8
+ 735              	.LCFI10:
+ 736              		.cfi_def_cfa_register 7
+ 737 0006 7860     		str	r0, [r7, #4]
+ 204:..//utils/input_output/input_output.c **** 	return GPIO_Read(&io_input_pins[i]);
+ 738              		.loc 1 204 0
+ 739 0008 7A68     		ldr	r2, [r7, #4]
+ 740 000a 1346     		mov	r3, r2
+ 741 000c 4FEA4303 		lsl	r3, r3, #1
+ 742 0010 1A44     		add	r2, r3, r2
+ 743 0012 40F20003 		movw	r3, #:lower16:io_input_pins
+ 744 0016 C0F20003 		movt	r3, #:upper16:io_input_pins
+ 745 001a 1344     		add	r3, r2, r3
+ 746 001c 1846     		mov	r0, r3
+ 747 001e 40F20003 		movw	r3, #:lower16:GPIO_Read
+ 748 0022 C0F20003 		movt	r3, #:upper16:GPIO_Read
+ 749 0026 9847     		blx	r3
+ 750 0028 0346     		mov	r3, r0
+ 205:..//utils/input_output/input_output.c **** }
+ 751              		.loc 1 205 0
+ 752 002a 1846     		mov	r0, r3
+ 753 002c 07F10807 		add	r7, r7, #8
+ 754 0030 BD46     		mov	sp, r7
+ 755 0032 80BD     		pop	{r7, pc}
+ 756              		.cfi_endproc
+ 757              	.LFE32:
+ 759              		.section	.text.io_configure,"ax",%progbits
+ 760              		.align	2
+ 761              		.global	io_configure
+ 762              		.thumb
+ 763              		.thumb_func
+ 765              	io_configure:
+ 766              	.LFB33:
+ 206:..//utils/input_output/input_output.c **** 
+ 207:..//utils/input_output/input_output.c **** 
+ 208:..//utils/input_output/input_output.c **** char io_configure(GPIOPin *list, unsigned int size, char in_out)
+ 209:..//utils/input_output/input_output.c **** {
+ 767              		.loc 1 209 0
+ 768              		.cfi_startproc
+ 769              		@ args = 0, pretend = 0, frame = 24
+ 770              		@ frame_needed = 1, uses_anonymous_args = 0
+ 771 0000 80B5     		push	{r7, lr}
+ 772              	.LCFI11:
+ 773              		.cfi_def_cfa_offset 8
+ 774 0002 86B0     		sub	sp, sp, #24
+ 775              	.LCFI12:
+ 776              		.cfi_def_cfa_offset 32
+ 777 0004 00AF     		add	r7, sp, #0
+ 778              		.cfi_offset 14, -4
+ 779              		.cfi_offset 7, -8
+ 780              	.LCFI13:
+ 781              		.cfi_def_cfa_register 7
+ 782 0006 F860     		str	r0, [r7, #12]
+ 783 0008 B960     		str	r1, [r7, #8]
+ 784 000a 1346     		mov	r3, r2
+ 785 000c FB71     		strb	r3, [r7, #7]
+ 210:..//utils/input_output/input_output.c **** 	unsigned int i;
+ 211:..//utils/input_output/input_output.c **** 	for(i=0;i<size;i++){
+ 786              		.loc 1 211 0
+ 787 000e 4FF00003 		mov	r3, #0
+ 788 0012 7B61     		str	r3, [r7, #20]
+ 789 0014 12E0     		b	.L38
+ 790              	.L39:
+ 212:..//utils/input_output/input_output.c **** 		GPIO_Configure(&list[i],in_out);
+ 791              		.loc 1 212 0
+ 792 0016 7A69     		ldr	r2, [r7, #20]
+ 793 0018 1346     		mov	r3, r2
+ 794 001a 4FEA4303 		lsl	r3, r3, #1
+ 795 001e 1A44     		add	r2, r3, r2
+ 796 0020 FB68     		ldr	r3, [r7, #12]
+ 797 0022 1A44     		add	r2, r2, r3
+ 798 0024 FB79     		ldrb	r3, [r7, #7]	@ zero_extendqisi2
+ 799 0026 1046     		mov	r0, r2
+ 800 0028 1946     		mov	r1, r3
+ 801 002a 40F20003 		movw	r3, #:lower16:GPIO_Configure
+ 802 002e C0F20003 		movt	r3, #:upper16:GPIO_Configure
+ 803 0032 9847     		blx	r3
+ 804              		.loc 1 211 0
+ 805 0034 7B69     		ldr	r3, [r7, #20]
+ 806 0036 03F10103 		add	r3, r3, #1
+ 807 003a 7B61     		str	r3, [r7, #20]
+ 808              	.L38:
+ 809 003c 7A69     		ldr	r2, [r7, #20]
+ 810 003e BB68     		ldr	r3, [r7, #8]
+ 811 0040 9A42     		cmp	r2, r3
+ 812 0042 E8D3     		bcc	.L39
+ 213:..//utils/input_output/input_output.c **** 	}
+ 214:..//utils/input_output/input_output.c **** 	return 0;
+ 813              		.loc 1 214 0
+ 814 0044 4FF00003 		mov	r3, #0
+ 215:..//utils/input_output/input_output.c **** }
+ 815              		.loc 1 215 0
+ 816 0048 1846     		mov	r0, r3
+ 817 004a 07F11807 		add	r7, r7, #24
+ 818 004e BD46     		mov	sp, r7
+ 819 0050 80BD     		pop	{r7, pc}
+ 820              		.cfi_endproc
+ 821              	.LFE33:
+ 823 0052 00BF     		.section	.text.io_set_output,"ax",%progbits
+ 824              		.align	2
+ 825              		.global	io_set_output
+ 826              		.thumb
+ 827              		.thumb_func
+ 829              	io_set_output:
+ 830              	.LFB34:
+ 216:..//utils/input_output/input_output.c **** 
+ 217:..//utils/input_output/input_output.c **** void io_set_output(int i, char value)
+ 218:..//utils/input_output/input_output.c **** {
+ 831              		.loc 1 218 0
+ 832              		.cfi_startproc
+ 833              		@ args = 0, pretend = 0, frame = 8
+ 834              		@ frame_needed = 1, uses_anonymous_args = 0
+ 835 0000 80B5     		push	{r7, lr}
+ 836              	.LCFI14:
+ 837              		.cfi_def_cfa_offset 8
+ 838 0002 82B0     		sub	sp, sp, #8
+ 839              	.LCFI15:
+ 840              		.cfi_def_cfa_offset 16
+ 841 0004 00AF     		add	r7, sp, #0
+ 842              		.cfi_offset 14, -4
+ 843              		.cfi_offset 7, -8
+ 844              	.LCFI16:
+ 845              		.cfi_def_cfa_register 7
+ 846 0006 7860     		str	r0, [r7, #4]
+ 847 0008 0B46     		mov	r3, r1
+ 848 000a FB70     		strb	r3, [r7, #3]
+ 219:..//utils/input_output/input_output.c **** 	if (value){	// set the output
+ 849              		.loc 1 219 0
+ 850 000c FB78     		ldrb	r3, [r7, #3]	@ zero_extendqisi2
+ 851 000e 002B     		cmp	r3, #0
+ 852 0010 10D0     		beq	.L42
+ 220:..//utils/input_output/input_output.c **** 		GPIO_Set(&io_output_pins[i]);
+ 853              		.loc 1 220 0
+ 854 0012 7A68     		ldr	r2, [r7, #4]
+ 855 0014 1346     		mov	r3, r2
+ 856 0016 4FEA4303 		lsl	r3, r3, #1
+ 857 001a 1A44     		add	r2, r3, r2
+ 858 001c 40F20003 		movw	r3, #:lower16:io_output_pins
+ 859 0020 C0F20003 		movt	r3, #:upper16:io_output_pins
+ 860 0024 1344     		add	r3, r2, r3
+ 861 0026 1846     		mov	r0, r3
+ 862 0028 40F20003 		movw	r3, #:lower16:GPIO_Set
+ 863 002c C0F20003 		movt	r3, #:upper16:GPIO_Set
+ 864 0030 9847     		blx	r3
+ 865 0032 0FE0     		b	.L44
+ 866              	.L42:
+ 221:..//utils/input_output/input_output.c **** 	}
+ 222:..//utils/input_output/input_output.c **** 	else { // clear the output
+ 223:..//utils/input_output/input_output.c **** 		GPIO_Clear(&io_output_pins[i]);
+ 867              		.loc 1 223 0
+ 868 0034 7A68     		ldr	r2, [r7, #4]
+ 869 0036 1346     		mov	r3, r2
+ 870 0038 4FEA4303 		lsl	r3, r3, #1
+ 871 003c 1A44     		add	r2, r3, r2
+ 872 003e 40F20003 		movw	r3, #:lower16:io_output_pins
+ 873 0042 C0F20003 		movt	r3, #:upper16:io_output_pins
+ 874 0046 1344     		add	r3, r2, r3
+ 875 0048 1846     		mov	r0, r3
+ 876 004a 40F20003 		movw	r3, #:lower16:GPIO_Clear
+ 877 004e C0F20003 		movt	r3, #:upper16:GPIO_Clear
+ 878 0052 9847     		blx	r3
+ 879              	.L44:
+ 224:..//utils/input_output/input_output.c **** 	}
+ 225:..//utils/input_output/input_output.c **** }
+ 880              		.loc 1 225 0
+ 881 0054 07F10807 		add	r7, r7, #8
+ 882 0058 BD46     		mov	sp, r7
+ 883 005a 80BD     		pop	{r7, pc}
+ 884              		.cfi_endproc
+ 885              	.LFE34:
+ 887              		.section	.text.GPIO_Read,"ax",%progbits
+ 888              		.align	2
+ 889              		.global	GPIO_Read
+ 890              		.thumb
+ 891              		.thumb_func
+ 893              	GPIO_Read:
+ 894              	.LFB35:
+ 226:..//utils/input_output/input_output.c **** 
+ 227:..//utils/input_output/input_output.c **** char GPIO_Read(GPIOPin *pin){
+ 895              		.loc 1 227 0
+ 896              		.cfi_startproc
+ 897              		@ args = 0, pretend = 0, frame = 16
+ 898              		@ frame_needed = 1, uses_anonymous_args = 0
+ 899 0000 80B5     		push	{r7, lr}
+ 900              	.LCFI17:
+ 901              		.cfi_def_cfa_offset 8
+ 902 0002 84B0     		sub	sp, sp, #16
+ 903              	.LCFI18:
+ 904              		.cfi_def_cfa_offset 24
+ 905 0004 00AF     		add	r7, sp, #0
+ 906              		.cfi_offset 14, -4
+ 907              		.cfi_offset 7, -8
+ 908              	.LCFI19:
+ 909              		.cfi_def_cfa_register 7
+ 910 0006 7860     		str	r0, [r7, #4]
+ 228:..//utils/input_output/input_output.c **** 	uint32_t port_value, mask;
+ 229:..//utils/input_output/input_output.c **** 	port_value = GPIO_ReadValue(pin->port_num);
+ 911              		.loc 1 229 0
+ 912 0008 7B68     		ldr	r3, [r7, #4]
+ 913 000a 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 914 000c 1846     		mov	r0, r3
+ 915 000e 40F20003 		movw	r3, #:lower16:GPIO_ReadValue
+ 916 0012 C0F20003 		movt	r3, #:upper16:GPIO_ReadValue
+ 917 0016 9847     		blx	r3
+ 918 0018 0346     		mov	r3, r0
+ 919 001a BB60     		str	r3, [r7, #8]
+ 230:..//utils/input_output/input_output.c **** 	mask = (port_value >> pin->pin_num) & 0x01;
+ 920              		.loc 1 230 0
+ 921 001c 7B68     		ldr	r3, [r7, #4]
+ 922 001e 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+ 923 0020 BA68     		ldr	r2, [r7, #8]
+ 924 0022 22FA03F3 		lsr	r3, r2, r3
+ 925 0026 03F00103 		and	r3, r3, #1
+ 926 002a FB60     		str	r3, [r7, #12]
+ 231:..//utils/input_output/input_output.c **** 	return mask;
+ 927              		.loc 1 231 0
+ 928 002c FB68     		ldr	r3, [r7, #12]
+ 929 002e DBB2     		uxtb	r3, r3
+ 232:..//utils/input_output/input_output.c **** }
+ 930              		.loc 1 232 0
+ 931 0030 1846     		mov	r0, r3
+ 932 0032 07F11007 		add	r7, r7, #16
+ 933 0036 BD46     		mov	sp, r7
+ 934 0038 80BD     		pop	{r7, pc}
+ 935              		.cfi_endproc
+ 936              	.LFE35:
+ 938 003a 00BF     		.section	.text.GPIO_Configure,"ax",%progbits
+ 939              		.align	2
+ 940              		.global	GPIO_Configure
+ 941              		.thumb
+ 942              		.thumb_func
+ 944              	GPIO_Configure:
+ 945              	.LFB36:
+ 233:..//utils/input_output/input_output.c **** 
+ 234:..//utils/input_output/input_output.c **** int GPIO_Configure(GPIOPin *pin, char io){
+ 946              		.loc 1 234 0
+ 947              		.cfi_startproc
+ 948              		@ args = 0, pretend = 0, frame = 16
+ 949              		@ frame_needed = 1, uses_anonymous_args = 0
+ 950 0000 80B5     		push	{r7, lr}
+ 951              	.LCFI20:
+ 952              		.cfi_def_cfa_offset 8
+ 953 0002 84B0     		sub	sp, sp, #16
+ 954              	.LCFI21:
+ 955              		.cfi_def_cfa_offset 24
+ 956 0004 00AF     		add	r7, sp, #0
+ 957              		.cfi_offset 14, -4
+ 958              		.cfi_offset 7, -8
+ 959              	.LCFI22:
+ 960              		.cfi_def_cfa_register 7
+ 961 0006 7860     		str	r0, [r7, #4]
+ 962 0008 0B46     		mov	r3, r1
+ 963 000a FB70     		strb	r3, [r7, #3]
+ 235:..//utils/input_output/input_output.c **** 	uint32_t pinMask = 0;
+ 964              		.loc 1 235 0
+ 965 000c 4FF00003 		mov	r3, #0
+ 966 0010 FB60     		str	r3, [r7, #12]
+ 236:..//utils/input_output/input_output.c **** 	if (pin->pin_num >= 32) {
+ 967              		.loc 1 236 0
+ 968 0012 7B68     		ldr	r3, [r7, #4]
+ 969 0014 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+ 970 0016 1F2B     		cmp	r3, #31
+ 971 0018 02D9     		bls	.L48
+ 237:..//utils/input_output/input_output.c **** 		return 0;
+ 972              		.loc 1 237 0
+ 973 001a 4FF00003 		mov	r3, #0
+ 974 001e 13E0     		b	.L49
+ 975              	.L48:
+ 238:..//utils/input_output/input_output.c **** 	}
+ 239:..//utils/input_output/input_output.c **** 	pinMask = 1 << (pin->pin_num);
+ 976              		.loc 1 239 0
+ 977 0020 7B68     		ldr	r3, [r7, #4]
+ 978 0022 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+ 979 0024 4FF00102 		mov	r2, #1
+ 980 0028 02FA03F3 		lsl	r3, r2, r3
+ 981 002c FB60     		str	r3, [r7, #12]
+ 240:..//utils/input_output/input_output.c **** 	GPIO_SetDir(pin->port_num,pinMask,io);
+ 982              		.loc 1 240 0
+ 983 002e 7B68     		ldr	r3, [r7, #4]
+ 984 0030 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 985 0032 FB78     		ldrb	r3, [r7, #3]	@ zero_extendqisi2
+ 986 0034 1046     		mov	r0, r2
+ 987 0036 F968     		ldr	r1, [r7, #12]
+ 988 0038 1A46     		mov	r2, r3
+ 989 003a 40F20003 		movw	r3, #:lower16:GPIO_SetDir
+ 990 003e C0F20003 		movt	r3, #:upper16:GPIO_SetDir
+ 991 0042 9847     		blx	r3
+ 241:..//utils/input_output/input_output.c **** 	return 1;
+ 992              		.loc 1 241 0
+ 993 0044 4FF00103 		mov	r3, #1
+ 994              	.L49:
+ 242:..//utils/input_output/input_output.c **** }
+ 995              		.loc 1 242 0
+ 996 0048 1846     		mov	r0, r3
+ 997 004a 07F11007 		add	r7, r7, #16
+ 998 004e BD46     		mov	sp, r7
+ 999 0050 80BD     		pop	{r7, pc}
+ 1000              		.cfi_endproc
+ 1001              	.LFE36:
+ 1003 0052 00BF     		.section	.text.GPIO_Set,"ax",%progbits
+ 1004              		.align	2
+ 1005              		.global	GPIO_Set
+ 1006              		.thumb
+ 1007              		.thumb_func
+ 1009              	GPIO_Set:
+ 1010              	.LFB37:
+ 243:..//utils/input_output/input_output.c **** 
+ 244:..//utils/input_output/input_output.c **** void GPIO_Set(GPIOPin *pin){
+ 1011              		.loc 1 244 0
+ 1012              		.cfi_startproc
+ 1013              		@ args = 0, pretend = 0, frame = 16
+ 1014              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1015 0000 80B5     		push	{r7, lr}
+ 1016              	.LCFI23:
+ 1017              		.cfi_def_cfa_offset 8
+ 1018 0002 84B0     		sub	sp, sp, #16
+ 1019              	.LCFI24:
+ 1020              		.cfi_def_cfa_offset 24
+ 1021 0004 00AF     		add	r7, sp, #0
+ 1022              		.cfi_offset 14, -4
+ 1023              		.cfi_offset 7, -8
+ 1024              	.LCFI25:
+ 1025              		.cfi_def_cfa_register 7
+ 1026 0006 7860     		str	r0, [r7, #4]
+ 245:..//utils/input_output/input_output.c **** 	uint32_t pinMask = 0;
+ 1027              		.loc 1 245 0
+ 1028 0008 4FF00003 		mov	r3, #0
+ 1029 000c FB60     		str	r3, [r7, #12]
+ 246:..//utils/input_output/input_output.c **** 	pinMask = 1 << (pin->pin_num);
+ 1030              		.loc 1 246 0
+ 1031 000e 7B68     		ldr	r3, [r7, #4]
+ 1032 0010 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+ 1033 0012 4FF00102 		mov	r2, #1
+ 1034 0016 02FA03F3 		lsl	r3, r2, r3
+ 1035 001a FB60     		str	r3, [r7, #12]
+ 247:..//utils/input_output/input_output.c **** 	GPIO_SetValue(pin->port_num,pinMask);
+ 1036              		.loc 1 247 0
+ 1037 001c 7B68     		ldr	r3, [r7, #4]
+ 1038 001e 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 1039 0020 1846     		mov	r0, r3
+ 1040 0022 F968     		ldr	r1, [r7, #12]
+ 1041 0024 40F20003 		movw	r3, #:lower16:GPIO_SetValue
+ 1042 0028 C0F20003 		movt	r3, #:upper16:GPIO_SetValue
+ 1043 002c 9847     		blx	r3
+ 248:..//utils/input_output/input_output.c **** }
+ 1044              		.loc 1 248 0
+ 1045 002e 07F11007 		add	r7, r7, #16
+ 1046 0032 BD46     		mov	sp, r7
+ 1047 0034 80BD     		pop	{r7, pc}
+ 1048              		.cfi_endproc
+ 1049              	.LFE37:
+ 1051 0036 00BF     		.section	.text.GPIO_Clear,"ax",%progbits
+ 1052              		.align	2
+ 1053              		.global	GPIO_Clear
+ 1054              		.thumb
+ 1055              		.thumb_func
+ 1057              	GPIO_Clear:
+ 1058              	.LFB38:
+ 249:..//utils/input_output/input_output.c **** 
+ 250:..//utils/input_output/input_output.c **** void GPIO_Clear(GPIOPin *pin){
+ 1059              		.loc 1 250 0
+ 1060              		.cfi_startproc
+ 1061              		@ args = 0, pretend = 0, frame = 16
+ 1062              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1063 0000 80B5     		push	{r7, lr}
+ 1064              	.LCFI26:
+ 1065              		.cfi_def_cfa_offset 8
+ 1066 0002 84B0     		sub	sp, sp, #16
+ 1067              	.LCFI27:
+ 1068              		.cfi_def_cfa_offset 24
+ 1069 0004 00AF     		add	r7, sp, #0
+ 1070              		.cfi_offset 14, -4
+ 1071              		.cfi_offset 7, -8
+ 1072              	.LCFI28:
+ 1073              		.cfi_def_cfa_register 7
+ 1074 0006 7860     		str	r0, [r7, #4]
+ 251:..//utils/input_output/input_output.c **** 	uint32_t pinMask = 0;
+ 1075              		.loc 1 251 0
+ 1076 0008 4FF00003 		mov	r3, #0
+ 1077 000c FB60     		str	r3, [r7, #12]
+ 252:..//utils/input_output/input_output.c **** 	pinMask = 1 << (pin->pin_num);
+ 1078              		.loc 1 252 0
+ 1079 000e 7B68     		ldr	r3, [r7, #4]
+ 1080 0010 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+ 1081 0012 4FF00102 		mov	r2, #1
+ 1082 0016 02FA03F3 		lsl	r3, r2, r3
+ 1083 001a FB60     		str	r3, [r7, #12]
+ 253:..//utils/input_output/input_output.c **** 	GPIO_ClearValue(pin->port_num,pinMask);
+ 1084              		.loc 1 253 0
+ 1085 001c 7B68     		ldr	r3, [r7, #4]
+ 1086 001e 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 1087 0020 1846     		mov	r0, r3
+ 1088 0022 F968     		ldr	r1, [r7, #12]
+ 1089 0024 40F20003 		movw	r3, #:lower16:GPIO_ClearValue
+ 1090 0028 C0F20003 		movt	r3, #:upper16:GPIO_ClearValue
+ 1091 002c 9847     		blx	r3
+ 254:..//utils/input_output/input_output.c **** }
+ 1092              		.loc 1 254 0
+ 1093 002e 07F11007 		add	r7, r7, #16
+ 1094 0032 BD46     		mov	sp, r7
+ 1095 0034 80BD     		pop	{r7, pc}
+ 1096              		.cfi_endproc
+ 1097              	.LFE38:
+ 1099 0036 00BF     		.section	.bss.input_value.4901,"aw",%nobits
+ 1100              		.align	2
+ 1103              	input_value.4901:
+ 1104 0000 0000     		.space	2
+ 1105 0002 0000     		.section	.bss.i.4900,"aw",%nobits
+ 1106              		.align	2
+ 1109              	i.4900:
+ 1110 0000 00000000 		.space	4
+ 1111              		.section	.bss.i.4840,"aw",%nobits
+ 1112              		.align	2
+ 1115              	i.4840:
+ 1116 0000 00000000 		.space	4
+ 1117              		.section	.bss.input_value.4841,"aw",%nobits
+ 1118              		.align	2
+ 1121              	input_value.4841:
+ 1122 0000 00000000 		.space	4
+ 1123              		.text
+ 1124              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 input_output.c
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:24     .bss.switch_prev_state:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:27     .bss.switch_prev_state:00000000 switch_prev_state
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:30     .bss.switch_state_count:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:33     .bss.switch_state_count:00000000 switch_state_count
+                            *COM*:00000004 input_name
+                            *COM*:00000010 switch_state_max_rise_count
+                            *COM*:00000010 switch_state_max_fall_count
+                            *COM*:00000004 input_rise_flag
+                            *COM*:00000004 input_fall_flag
+                            *COM*:00000004 input_value
+                            *COM*:00000004 input_state
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:47     .data.io_input_pins:00000000 io_input_pins
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:44     .data.io_input_pins:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:65     .data.io_output_pins:00000000 io_output_pins
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:62     .data.io_output_pins:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:91     .text.io_update:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:96     .text.io_update:00000000 io_update
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:1115   .bss.i.4840:00000000 i.4840
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:720    .text.io_read_input:00000000 io_read_input
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:1121   .bss.input_value.4841:00000000 input_value.4841
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:320    .text.fast_io_update:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:325    .text.fast_io_update:00000000 fast_io_update
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:1009   .text.GPIO_Set:00000000 GPIO_Set
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:1103   .bss.input_value.4901:00000000 input_value.4901
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:580    .rodata:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:581    .rodata:00000000 .LC0
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:584    .text.io_init:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:589    .text.io_init:00000000 io_init
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:765    .text.io_configure:00000000 io_configure
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:715    .text.io_read_input:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:893    .text.GPIO_Read:00000000 GPIO_Read
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:760    .text.io_configure:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:944    .text.GPIO_Configure:00000000 GPIO_Configure
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:824    .text.io_set_output:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:829    .text.io_set_output:00000000 io_set_output
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:1057   .text.GPIO_Clear:00000000 GPIO_Clear
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:888    .text.GPIO_Read:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:939    .text.GPIO_Configure:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:1004   .text.GPIO_Set:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:1052   .text.GPIO_Clear:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:1100   .bss.input_value.4901:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:1106   .bss.i.4900:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:1109   .bss.i.4900:00000000 i.4900
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:1112   .bss.i.4840:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cc95A3d4.s:1118   .bss.input_value.4841:00000000 $d
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+input_rise_debounce_time
+input_fall_debounce_time
+printf
+GPIO_ReadValue
+GPIO_SetDir
+GPIO_SetValue
+GPIO_ClearValue

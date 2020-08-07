@@ -1,0 +1,462 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"lpc17xx_rtc.c"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.section	.text.LPC17xx_RTC_Init,"ax",%progbits
+  24              		.align	2
+  25              		.global	LPC17xx_RTC_Init
+  26              		.thumb
+  27              		.thumb_func
+  29              	LPC17xx_RTC_Init:
+  30              	.LFB29:
+  31              		.file 1 "..//common/src/lpc17xx_rtc.c"
+   1:..//common/src/lpc17xx_rtc.c **** /**************************************************************************//**
+   2:..//common/src/lpc17xx_rtc.c ****  * @file     lpc17xx_rtc.c
+   3:..//common/src/lpc17xx_rtc.c ****  * @brief    Drivers for RTC peripheral in lpc17xx.
+   4:..//common/src/lpc17xx_rtc.c ****  * @version  1.0
+   5:..//common/src/lpc17xx_rtc.c ****  * @date     18. Nov. 2010
+   6:..//common/src/lpc17xx_rtc.c ****  *
+   7:..//common/src/lpc17xx_rtc.c ****  * @note
+   8:..//common/src/lpc17xx_rtc.c ****  * Copyright (C) 2010 NXP Semiconductors(NXP). All rights reserved.
+   9:..//common/src/lpc17xx_rtc.c ****  *
+  10:..//common/src/lpc17xx_rtc.c ****  * @par
+  11:..//common/src/lpc17xx_rtc.c ****  * Software that is described herein is for illustrative purposes only
+  12:..//common/src/lpc17xx_rtc.c ****  * which provides customers with programming information regarding the
+  13:..//common/src/lpc17xx_rtc.c ****  * products. This software is supplied "AS IS" without any warranties.
+  14:..//common/src/lpc17xx_rtc.c ****  * NXP Semiconductors assumes no responsibility or liability for the
+  15:..//common/src/lpc17xx_rtc.c ****  * use of the software, conveys no license or title under any patent,
+  16:..//common/src/lpc17xx_rtc.c ****  * copyright, or mask work right to the product. NXP Semiconductors
+  17:..//common/src/lpc17xx_rtc.c ****  * reserves the right to make changes in the software without
+  18:..//common/src/lpc17xx_rtc.c ****  * notification. NXP Semiconductors also make no representation or
+  19:..//common/src/lpc17xx_rtc.c ****  * warranty that such application will be suitable for the specified
+  20:..//common/src/lpc17xx_rtc.c ****  * use without further testing or modification.
+  21:..//common/src/lpc17xx_rtc.c ****  ******************************************************************************/
+  22:..//common/src/lpc17xx_rtc.c **** 
+  23:..//common/src/lpc17xx_rtc.c **** #include "LPC17xx.H"                              /* LPC17xx definitions    */
+  24:..//common/src/lpc17xx_rtc.c **** #include "lpc17xx_rtc.h"
+  25:..//common/src/lpc17xx_rtc.c **** 
+  26:..//common/src/lpc17xx_rtc.c **** #define CCR_CLKEN	0x01
+  27:..//common/src/lpc17xx_rtc.c **** #define CCR_CTCRST	0x02
+  28:..//common/src/lpc17xx_rtc.c **** 
+  29:..//common/src/lpc17xx_rtc.c **** /* Initialize RTC timer */
+  30:..//common/src/lpc17xx_rtc.c **** void LPC17xx_RTC_Init (void)
+  31:..//common/src/lpc17xx_rtc.c **** {
+  32              		.loc 1 31 0
+  33              		.cfi_startproc
+  34              		@ args = 0, pretend = 0, frame = 0
+  35              		@ frame_needed = 1, uses_anonymous_args = 0
+  36              		@ link register save eliminated.
+  37 0000 80B4     		push	{r7}
+  38              	.LCFI0:
+  39              		.cfi_def_cfa_offset 4
+  40 0002 00AF     		add	r7, sp, #0
+  41              		.cfi_offset 7, -4
+  42              	.LCFI1:
+  43              		.cfi_def_cfa_register 7
+  32:..//common/src/lpc17xx_rtc.c **** 	/* Enable CLOCK into RTC */
+  33:..//common/src/lpc17xx_rtc.c **** 	LPC_SC->PCONP |= (1 << 9);
+  44              		.loc 1 33 0
+  45 0004 4CF20003 		movw	r3, #:lower16:1074774016
+  46 0008 C4F20F03 		movt	r3, #:upper16:1074774016
+  47 000c 4CF20002 		movw	r2, #:lower16:1074774016
+  48 0010 C4F20F02 		movt	r2, #:upper16:1074774016
+  49 0014 D2F8C420 		ldr	r2, [r2, #196]
+  50 0018 42F40072 		orr	r2, r2, #512
+  51 001c C3F8C420 		str	r2, [r3, #196]
+  34:..//common/src/lpc17xx_rtc.c **** 	
+  35:..//common/src/lpc17xx_rtc.c **** 	/* If RTC is stopped, clear STOP bit. */
+  36:..//common/src/lpc17xx_rtc.c **** 	if ( LPC_RTC->RTC_AUX & (0x1<<4) )
+  52              		.loc 1 36 0
+  53 0020 44F20003 		movw	r3, #:lower16:1073889280
+  54 0024 C4F20203 		movt	r3, #:upper16:1073889280
+  55 0028 93F85C30 		ldrb	r3, [r3, #92]
+  56 002c DBB2     		uxtb	r3, r3
+  57 002e 03F01003 		and	r3, r3, #16
+  58 0032 002B     		cmp	r3, #0
+  59 0034 0FD0     		beq	.L2
+  37:..//common/src/lpc17xx_rtc.c **** 	{
+  38:..//common/src/lpc17xx_rtc.c **** 		LPC_RTC->RTC_AUX |= (0x1<<4);	
+  60              		.loc 1 38 0
+  61 0036 44F20003 		movw	r3, #:lower16:1073889280
+  62 003a C4F20203 		movt	r3, #:upper16:1073889280
+  63 003e 44F20002 		movw	r2, #:lower16:1073889280
+  64 0042 C4F20202 		movt	r2, #:upper16:1073889280
+  65 0046 92F85C20 		ldrb	r2, [r2, #92]
+  66 004a D2B2     		uxtb	r2, r2
+  67 004c 42F01002 		orr	r2, r2, #16
+  68 0050 D2B2     		uxtb	r2, r2
+  69 0052 83F85C20 		strb	r2, [r3, #92]
+  70              	.L2:
+  39:..//common/src/lpc17xx_rtc.c **** 	}
+  40:..//common/src/lpc17xx_rtc.c **** 	
+  41:..//common/src/lpc17xx_rtc.c **** 	/* Initialize registers */    
+  42:..//common/src/lpc17xx_rtc.c **** 	LPC_RTC->AMR = 0;
+  71              		.loc 1 42 0
+  72 0056 44F20003 		movw	r3, #:lower16:1073889280
+  73 005a C4F20203 		movt	r3, #:upper16:1073889280
+  74 005e 4FF00002 		mov	r2, #0
+  75 0062 1A74     		strb	r2, [r3, #16]
+  43:..//common/src/lpc17xx_rtc.c **** 	LPC_RTC->CIIR = 0;
+  76              		.loc 1 43 0
+  77 0064 44F20003 		movw	r3, #:lower16:1073889280
+  78 0068 C4F20203 		movt	r3, #:upper16:1073889280
+  79 006c 4FF00002 		mov	r2, #0
+  80 0070 1A73     		strb	r2, [r3, #12]
+  44:..//common/src/lpc17xx_rtc.c **** 	LPC_RTC->CCR = 0;
+  81              		.loc 1 44 0
+  82 0072 44F20003 		movw	r3, #:lower16:1073889280
+  83 0076 C4F20203 		movt	r3, #:upper16:1073889280
+  84 007a 4FF00002 		mov	r2, #0
+  85 007e 1A72     		strb	r2, [r3, #8]
+  45:..//common/src/lpc17xx_rtc.c **** }
+  86              		.loc 1 45 0
+  87 0080 BD46     		mov	sp, r7
+  88 0082 80BC     		pop	{r7}
+  89 0084 7047     		bx	lr
+  90              		.cfi_endproc
+  91              	.LFE29:
+  93 0086 00BF     		.section	.text.LPC17xx_RTC_Start,"ax",%progbits
+  94              		.align	2
+  95              		.global	LPC17xx_RTC_Start
+  96              		.thumb
+  97              		.thumb_func
+  99              	LPC17xx_RTC_Start:
+ 100              	.LFB30:
+  46:..//common/src/lpc17xx_rtc.c **** 
+  47:..//common/src/lpc17xx_rtc.c **** /* Start RTC timer */
+  48:..//common/src/lpc17xx_rtc.c **** void LPC17xx_RTC_Start( void ) 
+  49:..//common/src/lpc17xx_rtc.c **** {
+ 101              		.loc 1 49 0
+ 102              		.cfi_startproc
+ 103              		@ args = 0, pretend = 0, frame = 0
+ 104              		@ frame_needed = 1, uses_anonymous_args = 0
+ 105              		@ link register save eliminated.
+ 106 0000 80B4     		push	{r7}
+ 107              	.LCFI2:
+ 108              		.cfi_def_cfa_offset 4
+ 109 0002 00AF     		add	r7, sp, #0
+ 110              		.cfi_offset 7, -4
+ 111              	.LCFI3:
+ 112              		.cfi_def_cfa_register 7
+  50:..//common/src/lpc17xx_rtc.c **** 	/* Start RTC counters */
+  51:..//common/src/lpc17xx_rtc.c **** 	LPC_RTC->CCR |= CCR_CLKEN;
+ 113              		.loc 1 51 0
+ 114 0004 44F20003 		movw	r3, #:lower16:1073889280
+ 115 0008 C4F20203 		movt	r3, #:upper16:1073889280
+ 116 000c 44F20002 		movw	r2, #:lower16:1073889280
+ 117 0010 C4F20202 		movt	r2, #:upper16:1073889280
+ 118 0014 127A     		ldrb	r2, [r2, #8]
+ 119 0016 D2B2     		uxtb	r2, r2
+ 120 0018 42F00102 		orr	r2, r2, #1
+ 121 001c D2B2     		uxtb	r2, r2
+ 122 001e 1A72     		strb	r2, [r3, #8]
+  52:..//common/src/lpc17xx_rtc.c **** }
+ 123              		.loc 1 52 0
+ 124 0020 BD46     		mov	sp, r7
+ 125 0022 80BC     		pop	{r7}
+ 126 0024 7047     		bx	lr
+ 127              		.cfi_endproc
+ 128              	.LFE30:
+ 130 0026 00BF     		.section	.text.LPC17xx_RTC_Stop,"ax",%progbits
+ 131              		.align	2
+ 132              		.global	LPC17xx_RTC_Stop
+ 133              		.thumb
+ 134              		.thumb_func
+ 136              	LPC17xx_RTC_Stop:
+ 137              	.LFB31:
+  53:..//common/src/lpc17xx_rtc.c **** 
+  54:..//common/src/lpc17xx_rtc.c **** /* Stop RTC timer */
+  55:..//common/src/lpc17xx_rtc.c **** void LPC17xx_RTC_Stop( void )
+  56:..//common/src/lpc17xx_rtc.c **** {   
+ 138              		.loc 1 56 0
+ 139              		.cfi_startproc
+ 140              		@ args = 0, pretend = 0, frame = 0
+ 141              		@ frame_needed = 1, uses_anonymous_args = 0
+ 142              		@ link register save eliminated.
+ 143 0000 80B4     		push	{r7}
+ 144              	.LCFI4:
+ 145              		.cfi_def_cfa_offset 4
+ 146 0002 00AF     		add	r7, sp, #0
+ 147              		.cfi_offset 7, -4
+ 148              	.LCFI5:
+ 149              		.cfi_def_cfa_register 7
+  57:..//common/src/lpc17xx_rtc.c **** 	/* Stop RTC counters */
+  58:..//common/src/lpc17xx_rtc.c **** 	LPC_RTC->CCR &= ~CCR_CLKEN;
+ 150              		.loc 1 58 0
+ 151 0004 44F20003 		movw	r3, #:lower16:1073889280
+ 152 0008 C4F20203 		movt	r3, #:upper16:1073889280
+ 153 000c 44F20002 		movw	r2, #:lower16:1073889280
+ 154 0010 C4F20202 		movt	r2, #:upper16:1073889280
+ 155 0014 127A     		ldrb	r2, [r2, #8]
+ 156 0016 D2B2     		uxtb	r2, r2
+ 157 0018 02F0FE02 		and	r2, r2, #254
+ 158 001c 1A72     		strb	r2, [r3, #8]
+  59:..//common/src/lpc17xx_rtc.c **** }
+ 159              		.loc 1 59 0
+ 160 001e BD46     		mov	sp, r7
+ 161 0020 80BC     		pop	{r7}
+ 162 0022 7047     		bx	lr
+ 163              		.cfi_endproc
+ 164              	.LFE31:
+ 166              		.section	.text.LPC17xx_RTC_CTCReset,"ax",%progbits
+ 167              		.align	2
+ 168              		.global	LPC17xx_RTC_CTCReset
+ 169              		.thumb
+ 170              		.thumb_func
+ 172              	LPC17xx_RTC_CTCReset:
+ 173              	.LFB32:
+  60:..//common/src/lpc17xx_rtc.c **** 
+  61:..//common/src/lpc17xx_rtc.c **** /* Reset RTC clock tick counter */
+  62:..//common/src/lpc17xx_rtc.c **** void LPC17xx_RTC_CTCReset( void )
+  63:..//common/src/lpc17xx_rtc.c **** {   
+ 174              		.loc 1 63 0
+ 175              		.cfi_startproc
+ 176              		@ args = 0, pretend = 0, frame = 0
+ 177              		@ frame_needed = 1, uses_anonymous_args = 0
+ 178              		@ link register save eliminated.
+ 179 0000 80B4     		push	{r7}
+ 180              	.LCFI6:
+ 181              		.cfi_def_cfa_offset 4
+ 182 0002 00AF     		add	r7, sp, #0
+ 183              		.cfi_offset 7, -4
+ 184              	.LCFI7:
+ 185              		.cfi_def_cfa_register 7
+  64:..//common/src/lpc17xx_rtc.c **** 	/* Reset CTC */
+  65:..//common/src/lpc17xx_rtc.c **** 	LPC_RTC->CCR |= CCR_CTCRST;
+ 186              		.loc 1 65 0
+ 187 0004 44F20003 		movw	r3, #:lower16:1073889280
+ 188 0008 C4F20203 		movt	r3, #:upper16:1073889280
+ 189 000c 44F20002 		movw	r2, #:lower16:1073889280
+ 190 0010 C4F20202 		movt	r2, #:upper16:1073889280
+ 191 0014 127A     		ldrb	r2, [r2, #8]
+ 192 0016 D2B2     		uxtb	r2, r2
+ 193 0018 42F00202 		orr	r2, r2, #2
+ 194 001c D2B2     		uxtb	r2, r2
+ 195 001e 1A72     		strb	r2, [r3, #8]
+  66:..//common/src/lpc17xx_rtc.c **** }
+ 196              		.loc 1 66 0
+ 197 0020 BD46     		mov	sp, r7
+ 198 0022 80BC     		pop	{r7}
+ 199 0024 7047     		bx	lr
+ 200              		.cfi_endproc
+ 201              	.LFE32:
+ 203 0026 00BF     		.section	.text.LPC17xx_RTC_SetTime,"ax",%progbits
+ 204              		.align	2
+ 205              		.global	LPC17xx_RTC_SetTime
+ 206              		.thumb
+ 207              		.thumb_func
+ 209              	LPC17xx_RTC_SetTime:
+ 210              	.LFB33:
+  67:..//common/src/lpc17xx_rtc.c **** 
+  68:..//common/src/lpc17xx_rtc.c **** /* Setup RTC timer value */
+  69:..//common/src/lpc17xx_rtc.c **** void LPC17xx_RTC_SetTime( const RTCTime *rtc ) 
+  70:..//common/src/lpc17xx_rtc.c **** {
+ 211              		.loc 1 70 0
+ 212              		.cfi_startproc
+ 213              		@ args = 0, pretend = 0, frame = 8
+ 214              		@ frame_needed = 1, uses_anonymous_args = 0
+ 215              		@ link register save eliminated.
+ 216 0000 80B4     		push	{r7}
+ 217              	.LCFI8:
+ 218              		.cfi_def_cfa_offset 4
+ 219 0002 83B0     		sub	sp, sp, #12
+ 220              	.LCFI9:
+ 221              		.cfi_def_cfa_offset 16
+ 222 0004 00AF     		add	r7, sp, #0
+ 223              		.cfi_offset 7, -4
+ 224              	.LCFI10:
+ 225              		.cfi_def_cfa_register 7
+ 226 0006 7860     		str	r0, [r7, #4]
+  71:..//common/src/lpc17xx_rtc.c **** 	LPC_RTC->SEC    = rtc->sec;
+ 227              		.loc 1 71 0
+ 228 0008 44F20003 		movw	r3, #:lower16:1073889280
+ 229 000c C4F20203 		movt	r3, #:upper16:1073889280
+ 230 0010 7A68     		ldr	r2, [r7, #4]
+ 231 0012 1278     		ldrb	r2, [r2, #0]	@ zero_extendqisi2
+ 232 0014 83F82020 		strb	r2, [r3, #32]
+  72:..//common/src/lpc17xx_rtc.c **** 	LPC_RTC->MIN    = rtc->min;
+ 233              		.loc 1 72 0
+ 234 0018 44F20003 		movw	r3, #:lower16:1073889280
+ 235 001c C4F20203 		movt	r3, #:upper16:1073889280
+ 236 0020 7A68     		ldr	r2, [r7, #4]
+ 237 0022 5278     		ldrb	r2, [r2, #1]	@ zero_extendqisi2
+ 238 0024 83F82420 		strb	r2, [r3, #36]
+  73:..//common/src/lpc17xx_rtc.c **** 	LPC_RTC->HOUR   = rtc->hour;
+ 239              		.loc 1 73 0
+ 240 0028 44F20003 		movw	r3, #:lower16:1073889280
+ 241 002c C4F20203 		movt	r3, #:upper16:1073889280
+ 242 0030 7A68     		ldr	r2, [r7, #4]
+ 243 0032 9278     		ldrb	r2, [r2, #2]	@ zero_extendqisi2
+ 244 0034 83F82820 		strb	r2, [r3, #40]
+  74:..//common/src/lpc17xx_rtc.c **** 	LPC_RTC->DOM    = rtc->mday;
+ 245              		.loc 1 74 0
+ 246 0038 44F20003 		movw	r3, #:lower16:1073889280
+ 247 003c C4F20203 		movt	r3, #:upper16:1073889280
+ 248 0040 7A68     		ldr	r2, [r7, #4]
+ 249 0042 D278     		ldrb	r2, [r2, #3]	@ zero_extendqisi2
+ 250 0044 83F82C20 		strb	r2, [r3, #44]
+  75:..//common/src/lpc17xx_rtc.c **** 	LPC_RTC->DOW    = rtc->wday;
+ 251              		.loc 1 75 0
+ 252 0048 44F20003 		movw	r3, #:lower16:1073889280
+ 253 004c C4F20203 		movt	r3, #:upper16:1073889280
+ 254 0050 7A68     		ldr	r2, [r7, #4]
+ 255 0052 1279     		ldrb	r2, [r2, #4]	@ zero_extendqisi2
+ 256 0054 83F83020 		strb	r2, [r3, #48]
+  76:..//common/src/lpc17xx_rtc.c **** 	LPC_RTC->DOY    = rtc->yday;
+ 257              		.loc 1 76 0
+ 258 0058 44F20003 		movw	r3, #:lower16:1073889280
+ 259 005c C4F20203 		movt	r3, #:upper16:1073889280
+ 260 0060 7A68     		ldr	r2, [r7, #4]
+ 261 0062 D288     		ldrh	r2, [r2, #6]
+ 262 0064 9A86     		strh	r2, [r3, #52]	@ movhi
+  77:..//common/src/lpc17xx_rtc.c **** 	LPC_RTC->MONTH  = rtc->mon;
+ 263              		.loc 1 77 0
+ 264 0066 44F20003 		movw	r3, #:lower16:1073889280
+ 265 006a C4F20203 		movt	r3, #:upper16:1073889280
+ 266 006e 7A68     		ldr	r2, [r7, #4]
+ 267 0070 127A     		ldrb	r2, [r2, #8]	@ zero_extendqisi2
+ 268 0072 83F83820 		strb	r2, [r3, #56]
+  78:..//common/src/lpc17xx_rtc.c **** 	LPC_RTC->YEAR   = rtc->year;    
+ 269              		.loc 1 78 0
+ 270 0076 44F20003 		movw	r3, #:lower16:1073889280
+ 271 007a C4F20203 		movt	r3, #:upper16:1073889280
+ 272 007e 7A68     		ldr	r2, [r7, #4]
+ 273 0080 5289     		ldrh	r2, [r2, #10]
+ 274 0082 9A87     		strh	r2, [r3, #60]	@ movhi
+  79:..//common/src/lpc17xx_rtc.c **** }
+ 275              		.loc 1 79 0
+ 276 0084 07F10C07 		add	r7, r7, #12
+ 277 0088 BD46     		mov	sp, r7
+ 278 008a 80BC     		pop	{r7}
+ 279 008c 7047     		bx	lr
+ 280              		.cfi_endproc
+ 281              	.LFE33:
+ 283 008e 00BF     		.section	.text.LPC17xx_RTC_GetTime,"ax",%progbits
+ 284              		.align	2
+ 285              		.global	LPC17xx_RTC_GetTime
+ 286              		.thumb
+ 287              		.thumb_func
+ 289              	LPC17xx_RTC_GetTime:
+ 290              	.LFB34:
+  80:..//common/src/lpc17xx_rtc.c **** 
+  81:..//common/src/lpc17xx_rtc.c **** /* Get RTC timer value */
+  82:..//common/src/lpc17xx_rtc.c **** void LPC17xx_RTC_GetTime( RTCTime *rtc ) 
+  83:..//common/src/lpc17xx_rtc.c **** {
+ 291              		.loc 1 83 0
+ 292              		.cfi_startproc
+ 293              		@ args = 0, pretend = 0, frame = 8
+ 294              		@ frame_needed = 1, uses_anonymous_args = 0
+ 295              		@ link register save eliminated.
+ 296 0000 80B4     		push	{r7}
+ 297              	.LCFI11:
+ 298              		.cfi_def_cfa_offset 4
+ 299 0002 83B0     		sub	sp, sp, #12
+ 300              	.LCFI12:
+ 301              		.cfi_def_cfa_offset 16
+ 302 0004 00AF     		add	r7, sp, #0
+ 303              		.cfi_offset 7, -4
+ 304              	.LCFI13:
+ 305              		.cfi_def_cfa_register 7
+ 306 0006 7860     		str	r0, [r7, #4]
+  84:..//common/src/lpc17xx_rtc.c **** 	rtc->sec    = LPC_RTC->SEC;
+ 307              		.loc 1 84 0
+ 308 0008 44F20003 		movw	r3, #:lower16:1073889280
+ 309 000c C4F20203 		movt	r3, #:upper16:1073889280
+ 310 0010 93F82030 		ldrb	r3, [r3, #32]
+ 311 0014 DAB2     		uxtb	r2, r3
+ 312 0016 7B68     		ldr	r3, [r7, #4]
+ 313 0018 1A70     		strb	r2, [r3, #0]
+  85:..//common/src/lpc17xx_rtc.c **** 	rtc->min    = LPC_RTC->MIN;
+ 314              		.loc 1 85 0
+ 315 001a 44F20003 		movw	r3, #:lower16:1073889280
+ 316 001e C4F20203 		movt	r3, #:upper16:1073889280
+ 317 0022 93F82430 		ldrb	r3, [r3, #36]
+ 318 0026 DAB2     		uxtb	r2, r3
+ 319 0028 7B68     		ldr	r3, [r7, #4]
+ 320 002a 5A70     		strb	r2, [r3, #1]
+  86:..//common/src/lpc17xx_rtc.c **** 	rtc->hour   = LPC_RTC->HOUR;
+ 321              		.loc 1 86 0
+ 322 002c 44F20003 		movw	r3, #:lower16:1073889280
+ 323 0030 C4F20203 		movt	r3, #:upper16:1073889280
+ 324 0034 93F82830 		ldrb	r3, [r3, #40]
+ 325 0038 DAB2     		uxtb	r2, r3
+ 326 003a 7B68     		ldr	r3, [r7, #4]
+ 327 003c 9A70     		strb	r2, [r3, #2]
+  87:..//common/src/lpc17xx_rtc.c **** 	rtc->mday   = LPC_RTC->DOM;
+ 328              		.loc 1 87 0
+ 329 003e 44F20003 		movw	r3, #:lower16:1073889280
+ 330 0042 C4F20203 		movt	r3, #:upper16:1073889280
+ 331 0046 93F82C30 		ldrb	r3, [r3, #44]
+ 332 004a DAB2     		uxtb	r2, r3
+ 333 004c 7B68     		ldr	r3, [r7, #4]
+ 334 004e DA70     		strb	r2, [r3, #3]
+  88:..//common/src/lpc17xx_rtc.c **** 	rtc->wday   = LPC_RTC->DOW;
+ 335              		.loc 1 88 0
+ 336 0050 44F20003 		movw	r3, #:lower16:1073889280
+ 337 0054 C4F20203 		movt	r3, #:upper16:1073889280
+ 338 0058 93F83030 		ldrb	r3, [r3, #48]
+ 339 005c DAB2     		uxtb	r2, r3
+ 340 005e 7B68     		ldr	r3, [r7, #4]
+ 341 0060 1A71     		strb	r2, [r3, #4]
+  89:..//common/src/lpc17xx_rtc.c **** 	rtc->yday   = LPC_RTC->DOY;
+ 342              		.loc 1 89 0
+ 343 0062 44F20003 		movw	r3, #:lower16:1073889280
+ 344 0066 C4F20203 		movt	r3, #:upper16:1073889280
+ 345 006a 9B8E     		ldrh	r3, [r3, #52]	@ movhi
+ 346 006c 9AB2     		uxth	r2, r3
+ 347 006e 7B68     		ldr	r3, [r7, #4]
+ 348 0070 DA80     		strh	r2, [r3, #6]	@ movhi
+  90:..//common/src/lpc17xx_rtc.c **** 	rtc->mon    = LPC_RTC->MONTH;
+ 349              		.loc 1 90 0
+ 350 0072 44F20003 		movw	r3, #:lower16:1073889280
+ 351 0076 C4F20203 		movt	r3, #:upper16:1073889280
+ 352 007a 93F83830 		ldrb	r3, [r3, #56]
+ 353 007e DAB2     		uxtb	r2, r3
+ 354 0080 7B68     		ldr	r3, [r7, #4]
+ 355 0082 1A72     		strb	r2, [r3, #8]
+  91:..//common/src/lpc17xx_rtc.c **** 	rtc->year   = LPC_RTC->YEAR;   
+ 356              		.loc 1 91 0
+ 357 0084 44F20003 		movw	r3, #:lower16:1073889280
+ 358 0088 C4F20203 		movt	r3, #:upper16:1073889280
+ 359 008c 9B8F     		ldrh	r3, [r3, #60]	@ movhi
+ 360 008e 9AB2     		uxth	r2, r3
+ 361 0090 7B68     		ldr	r3, [r7, #4]
+ 362 0092 5A81     		strh	r2, [r3, #10]	@ movhi
+  92:..//common/src/lpc17xx_rtc.c **** }
+ 363              		.loc 1 92 0
+ 364 0094 07F10C07 		add	r7, r7, #12
+ 365 0098 BD46     		mov	sp, r7
+ 366 009a 80BC     		pop	{r7}
+ 367 009c 7047     		bx	lr
+ 368              		.cfi_endproc
+ 369              	.LFE34:
+ 371 009e 00BF     		.text
+ 372              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 lpc17xx_rtc.c
+C:\Users\hdhed\AppData\Local\Temp\ccC4j2M8.s:24     .text.LPC17xx_RTC_Init:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccC4j2M8.s:29     .text.LPC17xx_RTC_Init:00000000 LPC17xx_RTC_Init
+C:\Users\hdhed\AppData\Local\Temp\ccC4j2M8.s:94     .text.LPC17xx_RTC_Start:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccC4j2M8.s:99     .text.LPC17xx_RTC_Start:00000000 LPC17xx_RTC_Start
+C:\Users\hdhed\AppData\Local\Temp\ccC4j2M8.s:131    .text.LPC17xx_RTC_Stop:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccC4j2M8.s:136    .text.LPC17xx_RTC_Stop:00000000 LPC17xx_RTC_Stop
+C:\Users\hdhed\AppData\Local\Temp\ccC4j2M8.s:167    .text.LPC17xx_RTC_CTCReset:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccC4j2M8.s:172    .text.LPC17xx_RTC_CTCReset:00000000 LPC17xx_RTC_CTCReset
+C:\Users\hdhed\AppData\Local\Temp\ccC4j2M8.s:204    .text.LPC17xx_RTC_SetTime:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccC4j2M8.s:209    .text.LPC17xx_RTC_SetTime:00000000 LPC17xx_RTC_SetTime
+C:\Users\hdhed\AppData\Local\Temp\ccC4j2M8.s:284    .text.LPC17xx_RTC_GetTime:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccC4j2M8.s:289    .text.LPC17xx_RTC_GetTime:00000000 LPC17xx_RTC_GetTime
+                     .debug_frame:00000010 $d
+
+NO UNDEFINED SYMBOLS

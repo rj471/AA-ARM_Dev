@@ -1,0 +1,3386 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"lpc17xx_emac.c"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.global	EMAC_clkdiv
+  24              		.section	.rodata.EMAC_clkdiv,"a",%progbits
+  25              		.align	2
+  28              	EMAC_clkdiv:
+  29 0000 04       		.byte	4
+  30 0001 06       		.byte	6
+  31 0002 08       		.byte	8
+  32 0003 0A       		.byte	10
+  33 0004 0E       		.byte	14
+  34 0005 14       		.byte	20
+  35 0006 1C       		.byte	28
+  36 0007 00       		.section	.bss.Rx_Desc,"aw",%nobits
+  37              		.align	2
+  40              	Rx_Desc:
+  41 0000 00000000 		.space	32
+  41      00000000 
+  41      00000000 
+  41      00000000 
+  41      00000000 
+  42              		.section	.bss.Rx_Stat,"aw",%nobits
+  43              		.align	3
+  46              	Rx_Stat:
+  47 0000 00000000 		.space	32
+  47      00000000 
+  47      00000000 
+  47      00000000 
+  47      00000000 
+  48              		.section	.bss.Tx_Desc,"aw",%nobits
+  49              		.align	2
+  52              	Tx_Desc:
+  53 0000 00000000 		.space	24
+  53      00000000 
+  53      00000000 
+  53      00000000 
+  53      00000000 
+  54              		.section	.bss.Tx_Stat,"aw",%nobits
+  55              		.align	2
+  58              	Tx_Stat:
+  59 0000 00000000 		.space	12
+  59      00000000 
+  59      00000000 
+  60              		.section	.bss.rx_buf,"aw",%nobits
+  61              		.align	2
+  64              	rx_buf:
+  65 0000 00000000 		.space	6144
+  65      00000000 
+  65      00000000 
+  65      00000000 
+  65      00000000 
+  66              		.section	.bss.tx_buf,"aw",%nobits
+  67              		.align	2
+  70              	tx_buf:
+  71 0000 00000000 		.space	4608
+  71      00000000 
+  71      00000000 
+  71      00000000 
+  71      00000000 
+  72              		.section	.text.rx_descr_init,"ax",%progbits
+  73              		.align	2
+  74              		.thumb
+  75              		.thumb_func
+  77              	rx_descr_init:
+  78              	.LFB29:
+  79              		.file 1 "..//common/src/lpc17xx_emac.c"
+   1:..//common/src/lpc17xx_emac.c **** /**
+   2:..//common/src/lpc17xx_emac.c ****  * @file		lpc17xx_emac.c
+   3:..//common/src/lpc17xx_emac.c ****  * @brief		Contains all functions support for Ethernet MAC firmware library on LPC17xx
+   4:..//common/src/lpc17xx_emac.c ****  * @version		2.0
+   5:..//common/src/lpc17xx_emac.c ****  * @date		21. May. 2010
+   6:..//common/src/lpc17xx_emac.c ****  * @author		NXP MCU SW Application Team
+   7:..//common/src/lpc17xx_emac.c ****  **************************************************************************
+   8:..//common/src/lpc17xx_emac.c ****  * Software that is described herein is for illustrative purposes only
+   9:..//common/src/lpc17xx_emac.c ****  * which provides customers with programming information regarding the
+  10:..//common/src/lpc17xx_emac.c ****  * products. This software is supplied "AS IS" without any warranties.
+  11:..//common/src/lpc17xx_emac.c ****  * NXP Semiconductors assumes no responsibility or liability for the
+  12:..//common/src/lpc17xx_emac.c ****  * use of the software, conveys no license or title under any patent,
+  13:..//common/src/lpc17xx_emac.c ****  * copyright, or mask work right to the product. NXP Semiconductors
+  14:..//common/src/lpc17xx_emac.c ****  * reserves the right to make changes in the software without
+  15:..//common/src/lpc17xx_emac.c ****  * notification. NXP Semiconductors also make no representation or
+  16:..//common/src/lpc17xx_emac.c ****  * warranty that such application will be suitable for the specified
+  17:..//common/src/lpc17xx_emac.c ****  * use without further testing or modification.
+  18:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+  19:..//common/src/lpc17xx_emac.c **** 
+  20:..//common/src/lpc17xx_emac.c **** /* Peripheral group ----------------------------------------------------------- */
+  21:..//common/src/lpc17xx_emac.c **** /** @addtogroup EMAC
+  22:..//common/src/lpc17xx_emac.c ****  * @{
+  23:..//common/src/lpc17xx_emac.c ****  */
+  24:..//common/src/lpc17xx_emac.c **** 
+  25:..//common/src/lpc17xx_emac.c **** /* Includes ------------------------------------------------------------------- */
+  26:..//common/src/lpc17xx_emac.c **** #include "lpc17xx_emac.h"
+  27:..//common/src/lpc17xx_emac.c **** #include "lpc17xx_clkpwr.h"
+  28:..//common/src/lpc17xx_emac.c **** 
+  29:..//common/src/lpc17xx_emac.c **** /* If this source file built with example, the LPC17xx FW library configuration
+  30:..//common/src/lpc17xx_emac.c ****  * file in each example directory ("lpc17xx_libcfg.h") must be included,
+  31:..//common/src/lpc17xx_emac.c ****  * otherwise the default FW library configuration file must be included instead
+  32:..//common/src/lpc17xx_emac.c ****  */
+  33:..//common/src/lpc17xx_emac.c **** #ifdef __BUILD_WITH_EXAMPLE__
+  34:..//common/src/lpc17xx_emac.c **** #include "lpc17xx_libcfg.h"
+  35:..//common/src/lpc17xx_emac.c **** #else
+  36:..//common/src/lpc17xx_emac.c **** #include "lpc17xx_libcfg_default.h"
+  37:..//common/src/lpc17xx_emac.c **** #endif /* __BUILD_WITH_EXAMPLE__ */
+  38:..//common/src/lpc17xx_emac.c **** 
+  39:..//common/src/lpc17xx_emac.c **** 
+  40:..//common/src/lpc17xx_emac.c **** #ifdef _EMAC
+  41:..//common/src/lpc17xx_emac.c **** 
+  42:..//common/src/lpc17xx_emac.c **** /* Private Variables ---------------------------------------------------------- */
+  43:..//common/src/lpc17xx_emac.c **** /** @defgroup EMAC_Private_Variables EMAC Private Variables
+  44:..//common/src/lpc17xx_emac.c ****  * @{
+  45:..//common/src/lpc17xx_emac.c ****  */
+  46:..//common/src/lpc17xx_emac.c **** 
+  47:..//common/src/lpc17xx_emac.c **** /* MII Mgmt Configuration register - Clock divider setting */
+  48:..//common/src/lpc17xx_emac.c **** const uint8_t EMAC_clkdiv[] = { 4, 6, 8, 10, 14, 20, 28 };
+  49:..//common/src/lpc17xx_emac.c **** 
+  50:..//common/src/lpc17xx_emac.c **** /* EMAC local DMA Descriptors */
+  51:..//common/src/lpc17xx_emac.c **** 
+  52:..//common/src/lpc17xx_emac.c **** /** Rx Descriptor data array */
+  53:..//common/src/lpc17xx_emac.c **** static RX_Desc Rx_Desc[EMAC_NUM_RX_FRAG];
+  54:..//common/src/lpc17xx_emac.c **** 
+  55:..//common/src/lpc17xx_emac.c **** /** Rx Status data array - Must be 8-Byte aligned */
+  56:..//common/src/lpc17xx_emac.c **** #if defined ( __CC_ARM   )
+  57:..//common/src/lpc17xx_emac.c **** static __align(8) RX_Stat Rx_Stat[EMAC_NUM_RX_FRAG];
+  58:..//common/src/lpc17xx_emac.c **** #elif defined ( __ICCARM__ )
+  59:..//common/src/lpc17xx_emac.c **** #pragma data_alignment=8
+  60:..//common/src/lpc17xx_emac.c **** static RX_Stat Rx_Stat[EMAC_NUM_RX_FRAG];
+  61:..//common/src/lpc17xx_emac.c **** #elif defined   (  __GNUC__  )
+  62:..//common/src/lpc17xx_emac.c **** static __attribute__ ((aligned (8))) RX_Stat Rx_Stat[EMAC_NUM_RX_FRAG];
+  63:..//common/src/lpc17xx_emac.c **** #endif
+  64:..//common/src/lpc17xx_emac.c **** 
+  65:..//common/src/lpc17xx_emac.c **** /** Tx Descriptor data array */
+  66:..//common/src/lpc17xx_emac.c **** static TX_Desc Tx_Desc[EMAC_NUM_TX_FRAG];
+  67:..//common/src/lpc17xx_emac.c **** /** Tx Status data array */
+  68:..//common/src/lpc17xx_emac.c **** static TX_Stat Tx_Stat[EMAC_NUM_TX_FRAG];
+  69:..//common/src/lpc17xx_emac.c **** 
+  70:..//common/src/lpc17xx_emac.c **** /* EMAC local DMA buffers */
+  71:..//common/src/lpc17xx_emac.c **** /** Rx buffer data */
+  72:..//common/src/lpc17xx_emac.c **** static uint32_t rx_buf[EMAC_NUM_RX_FRAG][EMAC_ETH_MAX_FLEN>>2];
+  73:..//common/src/lpc17xx_emac.c **** /** Tx buffer data */
+  74:..//common/src/lpc17xx_emac.c **** static uint32_t tx_buf[EMAC_NUM_TX_FRAG][EMAC_ETH_MAX_FLEN>>2];
+  75:..//common/src/lpc17xx_emac.c **** 
+  76:..//common/src/lpc17xx_emac.c **** /**
+  77:..//common/src/lpc17xx_emac.c ****  * @}
+  78:..//common/src/lpc17xx_emac.c ****  */
+  79:..//common/src/lpc17xx_emac.c **** 
+  80:..//common/src/lpc17xx_emac.c **** /* Private Functions ---------------------------------------------------------- */
+  81:..//common/src/lpc17xx_emac.c **** static void rx_descr_init (void);
+  82:..//common/src/lpc17xx_emac.c **** static void tx_descr_init (void);
+  83:..//common/src/lpc17xx_emac.c **** static int32_t write_PHY (uint32_t PhyReg, uint16_t Value);
+  84:..//common/src/lpc17xx_emac.c **** static int32_t  read_PHY (uint32_t PhyReg);
+  85:..//common/src/lpc17xx_emac.c **** 
+  86:..//common/src/lpc17xx_emac.c **** static void setEmacAddr(uint8_t abStationAddr[]);
+  87:..//common/src/lpc17xx_emac.c **** static int32_t emac_CRCCalc(uint8_t frame_no_fcs[], int32_t frame_len);
+  88:..//common/src/lpc17xx_emac.c **** 
+  89:..//common/src/lpc17xx_emac.c **** 
+  90:..//common/src/lpc17xx_emac.c **** /*--------------------------- rx_descr_init ---------------------------------*/
+  91:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+  92:..//common/src/lpc17xx_emac.c ****  * @brief 		Initializes RX Descriptor
+  93:..//common/src/lpc17xx_emac.c ****  * @param[in] 	None
+  94:..//common/src/lpc17xx_emac.c ****  * @return 		None
+  95:..//common/src/lpc17xx_emac.c ****  ***********************************************************************/
+  96:..//common/src/lpc17xx_emac.c **** static void rx_descr_init (void)
+  97:..//common/src/lpc17xx_emac.c **** {
+  80              		.loc 1 97 0
+  81              		.cfi_startproc
+  82              		@ args = 0, pretend = 0, frame = 8
+  83              		@ frame_needed = 1, uses_anonymous_args = 0
+  84              		@ link register save eliminated.
+  85 0000 80B4     		push	{r7}
+  86              	.LCFI0:
+  87              		.cfi_def_cfa_offset 4
+  88 0002 83B0     		sub	sp, sp, #12
+  89              	.LCFI1:
+  90              		.cfi_def_cfa_offset 16
+  91 0004 00AF     		add	r7, sp, #0
+  92              		.cfi_offset 7, -4
+  93              	.LCFI2:
+  94              		.cfi_def_cfa_register 7
+  98:..//common/src/lpc17xx_emac.c **** 	/* Initialize Receive Descriptor and Status array. */
+  99:..//common/src/lpc17xx_emac.c **** 	uint32_t i;
+ 100:..//common/src/lpc17xx_emac.c **** 
+ 101:..//common/src/lpc17xx_emac.c **** 	for (i = 0; i < EMAC_NUM_RX_FRAG; i++) {
+  95              		.loc 1 101 0
+  96 0006 4FF00003 		mov	r3, #0
+  97 000a 7B60     		str	r3, [r7, #4]
+  98 000c 39E0     		b	.L2
+  99              	.L3:
+ 102:..//common/src/lpc17xx_emac.c **** 		Rx_Desc[i].Packet  = (uint32_t)&rx_buf[i];
+ 100              		.loc 1 102 0
+ 101 000e 7968     		ldr	r1, [r7, #4]
+ 102 0010 7A68     		ldr	r2, [r7, #4]
+ 103 0012 1346     		mov	r3, r2
+ 104 0014 4FEA4303 		lsl	r3, r3, #1
+ 105 0018 1344     		add	r3, r3, r2
+ 106 001a 4FEA4323 		lsl	r3, r3, #9
+ 107 001e 1A46     		mov	r2, r3
+ 108 0020 40F20003 		movw	r3, #:lower16:rx_buf
+ 109 0024 C0F20003 		movt	r3, #:upper16:rx_buf
+ 110 0028 1344     		add	r3, r2, r3
+ 111 002a 1A46     		mov	r2, r3
+ 112 002c 40F20003 		movw	r3, #:lower16:Rx_Desc
+ 113 0030 C0F20003 		movt	r3, #:upper16:Rx_Desc
+ 114 0034 43F83120 		str	r2, [r3, r1, lsl #3]
+ 103:..//common/src/lpc17xx_emac.c **** 		Rx_Desc[i].Ctrl    = EMAC_RCTRL_INT | (EMAC_ETH_MAX_FLEN - 1);
+ 115              		.loc 1 103 0
+ 116 0038 7B68     		ldr	r3, [r7, #4]
+ 117 003a 40F20002 		movw	r2, #:lower16:Rx_Desc
+ 118 003e C0F20002 		movt	r2, #:upper16:Rx_Desc
+ 119 0042 4FEAC303 		lsl	r3, r3, #3
+ 120 0046 1344     		add	r3, r3, r2
+ 121 0048 40F2FF52 		movw	r2, #:lower16:-2147482113
+ 122 004c C8F20002 		movt	r2, #:upper16:-2147482113
+ 123 0050 5A60     		str	r2, [r3, #4]
+ 104:..//common/src/lpc17xx_emac.c **** 		Rx_Stat[i].Info    = 0;
+ 124              		.loc 1 104 0
+ 125 0052 7A68     		ldr	r2, [r7, #4]
+ 126 0054 40F20003 		movw	r3, #:lower16:Rx_Stat
+ 127 0058 C0F20003 		movt	r3, #:upper16:Rx_Stat
+ 128 005c 4FF00001 		mov	r1, #0
+ 129 0060 43F83210 		str	r1, [r3, r2, lsl #3]
+ 105:..//common/src/lpc17xx_emac.c **** 		Rx_Stat[i].HashCRC = 0;
+ 130              		.loc 1 105 0
+ 131 0064 7B68     		ldr	r3, [r7, #4]
+ 132 0066 40F20002 		movw	r2, #:lower16:Rx_Stat
+ 133 006a C0F20002 		movt	r2, #:upper16:Rx_Stat
+ 134 006e 4FEAC303 		lsl	r3, r3, #3
+ 135 0072 1344     		add	r3, r3, r2
+ 136 0074 4FF00002 		mov	r2, #0
+ 137 0078 5A60     		str	r2, [r3, #4]
+ 138              		.loc 1 101 0
+ 139 007a 7B68     		ldr	r3, [r7, #4]
+ 140 007c 03F10103 		add	r3, r3, #1
+ 141 0080 7B60     		str	r3, [r7, #4]
+ 142              	.L2:
+ 143 0082 7B68     		ldr	r3, [r7, #4]
+ 144 0084 032B     		cmp	r3, #3
+ 145 0086 C2D9     		bls	.L3
+ 106:..//common/src/lpc17xx_emac.c **** 	}
+ 107:..//common/src/lpc17xx_emac.c **** 
+ 108:..//common/src/lpc17xx_emac.c **** 	/* Set EMAC Receive Descriptor Registers. */
+ 109:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->RxDescriptor       = (uint32_t)&Rx_Desc[0];
+ 146              		.loc 1 109 0
+ 147 0088 4FF0A042 		mov	r2, #1342177280
+ 148 008c 40F20003 		movw	r3, #:lower16:Rx_Desc
+ 149 0090 C0F20003 		movt	r3, #:upper16:Rx_Desc
+ 150 0094 C2F80831 		str	r3, [r2, #264]
+ 110:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->RxStatus           = (uint32_t)&Rx_Stat[0];
+ 151              		.loc 1 110 0
+ 152 0098 4FF0A042 		mov	r2, #1342177280
+ 153 009c 40F20003 		movw	r3, #:lower16:Rx_Stat
+ 154 00a0 C0F20003 		movt	r3, #:upper16:Rx_Stat
+ 155 00a4 C2F80C31 		str	r3, [r2, #268]
+ 111:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->RxDescriptorNumber = EMAC_NUM_RX_FRAG - 1;
+ 156              		.loc 1 111 0
+ 157 00a8 4FF0A043 		mov	r3, #1342177280
+ 158 00ac 4FF00302 		mov	r2, #3
+ 159 00b0 C3F81021 		str	r2, [r3, #272]
+ 112:..//common/src/lpc17xx_emac.c **** 
+ 113:..//common/src/lpc17xx_emac.c **** 	/* Rx Descriptors Point to 0 */
+ 114:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->RxConsumeIndex  = 0;
+ 160              		.loc 1 114 0
+ 161 00b4 4FF0A043 		mov	r3, #1342177280
+ 162 00b8 4FF00002 		mov	r2, #0
+ 163 00bc C3F81821 		str	r2, [r3, #280]
+ 115:..//common/src/lpc17xx_emac.c **** }
+ 164              		.loc 1 115 0
+ 165 00c0 07F10C07 		add	r7, r7, #12
+ 166 00c4 BD46     		mov	sp, r7
+ 167 00c6 80BC     		pop	{r7}
+ 168 00c8 7047     		bx	lr
+ 169              		.cfi_endproc
+ 170              	.LFE29:
+ 172 00ca 00BF     		.section	.text.tx_descr_init,"ax",%progbits
+ 173              		.align	2
+ 174              		.thumb
+ 175              		.thumb_func
+ 177              	tx_descr_init:
+ 178              	.LFB30:
+ 116:..//common/src/lpc17xx_emac.c **** 
+ 117:..//common/src/lpc17xx_emac.c **** 
+ 118:..//common/src/lpc17xx_emac.c **** /*--------------------------- tx_descr_init ---- ----------------------------*/
+ 119:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 120:..//common/src/lpc17xx_emac.c ****  * @brief 		Initializes TX Descriptor
+ 121:..//common/src/lpc17xx_emac.c ****  * @param[in] 	None
+ 122:..//common/src/lpc17xx_emac.c ****  * @return 		None
+ 123:..//common/src/lpc17xx_emac.c ****  ***********************************************************************/
+ 124:..//common/src/lpc17xx_emac.c **** static void tx_descr_init (void) {
+ 179              		.loc 1 124 0
+ 180              		.cfi_startproc
+ 181              		@ args = 0, pretend = 0, frame = 8
+ 182              		@ frame_needed = 1, uses_anonymous_args = 0
+ 183              		@ link register save eliminated.
+ 184 0000 80B4     		push	{r7}
+ 185              	.LCFI3:
+ 186              		.cfi_def_cfa_offset 4
+ 187 0002 83B0     		sub	sp, sp, #12
+ 188              	.LCFI4:
+ 189              		.cfi_def_cfa_offset 16
+ 190 0004 00AF     		add	r7, sp, #0
+ 191              		.cfi_offset 7, -4
+ 192              	.LCFI5:
+ 193              		.cfi_def_cfa_register 7
+ 125:..//common/src/lpc17xx_emac.c **** 	/* Initialize Transmit Descriptor and Status array. */
+ 126:..//common/src/lpc17xx_emac.c **** 	uint32_t i;
+ 127:..//common/src/lpc17xx_emac.c **** 
+ 128:..//common/src/lpc17xx_emac.c **** 	for (i = 0; i < EMAC_NUM_TX_FRAG; i++) {
+ 194              		.loc 1 128 0
+ 195 0006 4FF00003 		mov	r3, #0
+ 196 000a 7B60     		str	r3, [r7, #4]
+ 197 000c 2CE0     		b	.L6
+ 198              	.L7:
+ 129:..//common/src/lpc17xx_emac.c **** 		Tx_Desc[i].Packet = (uint32_t)&tx_buf[i];
+ 199              		.loc 1 129 0
+ 200 000e 7968     		ldr	r1, [r7, #4]
+ 201 0010 7A68     		ldr	r2, [r7, #4]
+ 202 0012 1346     		mov	r3, r2
+ 203 0014 4FEA4303 		lsl	r3, r3, #1
+ 204 0018 1344     		add	r3, r3, r2
+ 205 001a 4FEA4323 		lsl	r3, r3, #9
+ 206 001e 1A46     		mov	r2, r3
+ 207 0020 40F20003 		movw	r3, #:lower16:tx_buf
+ 208 0024 C0F20003 		movt	r3, #:upper16:tx_buf
+ 209 0028 1344     		add	r3, r2, r3
+ 210 002a 1A46     		mov	r2, r3
+ 211 002c 40F20003 		movw	r3, #:lower16:Tx_Desc
+ 212 0030 C0F20003 		movt	r3, #:upper16:Tx_Desc
+ 213 0034 43F83120 		str	r2, [r3, r1, lsl #3]
+ 130:..//common/src/lpc17xx_emac.c **** 		Tx_Desc[i].Ctrl   = 0;
+ 214              		.loc 1 130 0
+ 215 0038 7B68     		ldr	r3, [r7, #4]
+ 216 003a 40F20002 		movw	r2, #:lower16:Tx_Desc
+ 217 003e C0F20002 		movt	r2, #:upper16:Tx_Desc
+ 218 0042 4FEAC303 		lsl	r3, r3, #3
+ 219 0046 1344     		add	r3, r3, r2
+ 220 0048 4FF00002 		mov	r2, #0
+ 221 004c 5A60     		str	r2, [r3, #4]
+ 131:..//common/src/lpc17xx_emac.c **** 		Tx_Stat[i].Info   = 0;
+ 222              		.loc 1 131 0
+ 223 004e 7A68     		ldr	r2, [r7, #4]
+ 224 0050 40F20003 		movw	r3, #:lower16:Tx_Stat
+ 225 0054 C0F20003 		movt	r3, #:upper16:Tx_Stat
+ 226 0058 4FF00001 		mov	r1, #0
+ 227 005c 43F82210 		str	r1, [r3, r2, lsl #2]
+ 228              		.loc 1 128 0
+ 229 0060 7B68     		ldr	r3, [r7, #4]
+ 230 0062 03F10103 		add	r3, r3, #1
+ 231 0066 7B60     		str	r3, [r7, #4]
+ 232              	.L6:
+ 233 0068 7B68     		ldr	r3, [r7, #4]
+ 234 006a 022B     		cmp	r3, #2
+ 235 006c CFD9     		bls	.L7
+ 132:..//common/src/lpc17xx_emac.c **** 	}
+ 133:..//common/src/lpc17xx_emac.c **** 
+ 134:..//common/src/lpc17xx_emac.c **** 	/* Set EMAC Transmit Descriptor Registers. */
+ 135:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->TxDescriptor       = (uint32_t)&Tx_Desc[0];
+ 236              		.loc 1 135 0
+ 237 006e 4FF0A042 		mov	r2, #1342177280
+ 238 0072 40F20003 		movw	r3, #:lower16:Tx_Desc
+ 239 0076 C0F20003 		movt	r3, #:upper16:Tx_Desc
+ 240 007a C2F81C31 		str	r3, [r2, #284]
+ 136:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->TxStatus           = (uint32_t)&Tx_Stat[0];
+ 241              		.loc 1 136 0
+ 242 007e 4FF0A042 		mov	r2, #1342177280
+ 243 0082 40F20003 		movw	r3, #:lower16:Tx_Stat
+ 244 0086 C0F20003 		movt	r3, #:upper16:Tx_Stat
+ 245 008a C2F82031 		str	r3, [r2, #288]
+ 137:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->TxDescriptorNumber = EMAC_NUM_TX_FRAG - 1;
+ 246              		.loc 1 137 0
+ 247 008e 4FF0A043 		mov	r3, #1342177280
+ 248 0092 4FF00202 		mov	r2, #2
+ 249 0096 C3F82421 		str	r2, [r3, #292]
+ 138:..//common/src/lpc17xx_emac.c **** 
+ 139:..//common/src/lpc17xx_emac.c **** 	/* Tx Descriptors Point to 0 */
+ 140:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->TxProduceIndex  = 0;
+ 250              		.loc 1 140 0
+ 251 009a 4FF0A043 		mov	r3, #1342177280
+ 252 009e 4FF00002 		mov	r2, #0
+ 253 00a2 C3F82821 		str	r2, [r3, #296]
+ 141:..//common/src/lpc17xx_emac.c **** }
+ 254              		.loc 1 141 0
+ 255 00a6 07F10C07 		add	r7, r7, #12
+ 256 00aa BD46     		mov	sp, r7
+ 257 00ac 80BC     		pop	{r7}
+ 258 00ae 7047     		bx	lr
+ 259              		.cfi_endproc
+ 260              	.LFE30:
+ 262              		.section	.text.write_PHY,"ax",%progbits
+ 263              		.align	2
+ 264              		.thumb
+ 265              		.thumb_func
+ 267              	write_PHY:
+ 268              	.LFB31:
+ 142:..//common/src/lpc17xx_emac.c **** 
+ 143:..//common/src/lpc17xx_emac.c **** 
+ 144:..//common/src/lpc17xx_emac.c **** /*--------------------------- write_PHY -------------------------------------*/
+ 145:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 146:..//common/src/lpc17xx_emac.c ****  * @brief 		Write value to PHY device
+ 147:..//common/src/lpc17xx_emac.c ****  * @param[in] 	PhyReg: PHY Register address
+ 148:..//common/src/lpc17xx_emac.c ****  * @param[in] 	Value:  Value to write
+ 149:..//common/src/lpc17xx_emac.c ****  * @return 		0 - if success
+ 150:..//common/src/lpc17xx_emac.c ****  * 				1 - if fail
+ 151:..//common/src/lpc17xx_emac.c ****  ***********************************************************************/
+ 152:..//common/src/lpc17xx_emac.c **** static int32_t write_PHY (uint32_t PhyReg, uint16_t Value)
+ 153:..//common/src/lpc17xx_emac.c **** {
+ 269              		.loc 1 153 0
+ 270              		.cfi_startproc
+ 271              		@ args = 0, pretend = 0, frame = 16
+ 272              		@ frame_needed = 1, uses_anonymous_args = 0
+ 273              		@ link register save eliminated.
+ 274 0000 80B4     		push	{r7}
+ 275              	.LCFI6:
+ 276              		.cfi_def_cfa_offset 4
+ 277 0002 85B0     		sub	sp, sp, #20
+ 278              	.LCFI7:
+ 279              		.cfi_def_cfa_offset 24
+ 280 0004 00AF     		add	r7, sp, #0
+ 281              		.cfi_offset 7, -4
+ 282              	.LCFI8:
+ 283              		.cfi_def_cfa_register 7
+ 284 0006 7860     		str	r0, [r7, #4]
+ 285 0008 0B46     		mov	r3, r1
+ 286 000a 7B80     		strh	r3, [r7, #2]	@ movhi
+ 154:..//common/src/lpc17xx_emac.c **** 	/* Write a data 'Value' to PHY register 'PhyReg'. */
+ 155:..//common/src/lpc17xx_emac.c **** 	uint32_t tout;
+ 156:..//common/src/lpc17xx_emac.c **** 
+ 157:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->MADR = EMAC_DEF_ADR | PhyReg;
+ 287              		.loc 1 157 0
+ 288 000c 4FF0A043 		mov	r3, #1342177280
+ 289 0010 7A68     		ldr	r2, [r7, #4]
+ 290 0012 42F48072 		orr	r2, r2, #256
+ 291 0016 9A62     		str	r2, [r3, #40]
+ 158:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->MWTD = Value;
+ 292              		.loc 1 158 0
+ 293 0018 4FF0A043 		mov	r3, #1342177280
+ 294 001c 7A88     		ldrh	r2, [r7, #2]
+ 295 001e DA62     		str	r2, [r3, #44]
+ 159:..//common/src/lpc17xx_emac.c **** 
+ 160:..//common/src/lpc17xx_emac.c **** 	/* Wait until operation completed */
+ 161:..//common/src/lpc17xx_emac.c **** 	tout = 0;
+ 296              		.loc 1 161 0
+ 297 0020 4FF00003 		mov	r3, #0
+ 298 0024 FB60     		str	r3, [r7, #12]
+ 162:..//common/src/lpc17xx_emac.c **** 	for (tout = 0; tout < EMAC_MII_WR_TOUT; tout++) {
+ 299              		.loc 1 162 0
+ 300 0026 4FF00003 		mov	r3, #0
+ 301 002a FB60     		str	r3, [r7, #12]
+ 302 002c 0DE0     		b	.L10
+ 303              	.L13:
+ 163:..//common/src/lpc17xx_emac.c **** 		if ((LPC_EMAC->MIND & EMAC_MIND_BUSY) == 0) {
+ 304              		.loc 1 163 0
+ 305 002e 4FF0A043 		mov	r3, #1342177280
+ 306 0032 5B6B     		ldr	r3, [r3, #52]
+ 307 0034 03F00103 		and	r3, r3, #1
+ 308 0038 002B     		cmp	r3, #0
+ 309 003a 02D1     		bne	.L11
+ 164:..//common/src/lpc17xx_emac.c **** 			return (0);
+ 310              		.loc 1 164 0
+ 311 003c 4FF00003 		mov	r3, #0
+ 312 0040 0CE0     		b	.L12
+ 313              	.L11:
+ 314              		.loc 1 162 0
+ 315 0042 FB68     		ldr	r3, [r7, #12]
+ 316 0044 03F10103 		add	r3, r3, #1
+ 317 0048 FB60     		str	r3, [r7, #12]
+ 318              	.L10:
+ 319 004a FA68     		ldr	r2, [r7, #12]
+ 320 004c 4FF6FF73 		movw	r3, #:lower16:327679
+ 321 0050 C0F20403 		movt	r3, #:upper16:327679
+ 322 0054 9A42     		cmp	r2, r3
+ 323 0056 EAD9     		bls	.L13
+ 165:..//common/src/lpc17xx_emac.c **** 		}
+ 166:..//common/src/lpc17xx_emac.c **** 	}
+ 167:..//common/src/lpc17xx_emac.c **** 	// Time out!
+ 168:..//common/src/lpc17xx_emac.c **** 	return (-1);
+ 324              		.loc 1 168 0
+ 325 0058 4FF0FF33 		mov	r3, #-1
+ 326              	.L12:
+ 169:..//common/src/lpc17xx_emac.c **** }
+ 327              		.loc 1 169 0
+ 328 005c 1846     		mov	r0, r3
+ 329 005e 07F11407 		add	r7, r7, #20
+ 330 0062 BD46     		mov	sp, r7
+ 331 0064 80BC     		pop	{r7}
+ 332 0066 7047     		bx	lr
+ 333              		.cfi_endproc
+ 334              	.LFE31:
+ 336              		.section	.text.read_PHY,"ax",%progbits
+ 337              		.align	2
+ 338              		.thumb
+ 339              		.thumb_func
+ 341              	read_PHY:
+ 342              	.LFB32:
+ 170:..//common/src/lpc17xx_emac.c **** 
+ 171:..//common/src/lpc17xx_emac.c **** 
+ 172:..//common/src/lpc17xx_emac.c **** /*--------------------------- read_PHY --------------------------------------*/
+ 173:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 174:..//common/src/lpc17xx_emac.c ****  * @brief 		Read value from PHY device
+ 175:..//common/src/lpc17xx_emac.c ****  * @param[in] 	PhyReg: PHY Register address
+ 176:..//common/src/lpc17xx_emac.c ****  * @return 		0 - if success
+ 177:..//common/src/lpc17xx_emac.c ****  * 				1 - if fail
+ 178:..//common/src/lpc17xx_emac.c ****  ***********************************************************************/
+ 179:..//common/src/lpc17xx_emac.c **** static int32_t read_PHY (uint32_t PhyReg)
+ 180:..//common/src/lpc17xx_emac.c **** {
+ 343              		.loc 1 180 0
+ 344              		.cfi_startproc
+ 345              		@ args = 0, pretend = 0, frame = 16
+ 346              		@ frame_needed = 1, uses_anonymous_args = 0
+ 347              		@ link register save eliminated.
+ 348 0000 80B4     		push	{r7}
+ 349              	.LCFI9:
+ 350              		.cfi_def_cfa_offset 4
+ 351 0002 85B0     		sub	sp, sp, #20
+ 352              	.LCFI10:
+ 353              		.cfi_def_cfa_offset 24
+ 354 0004 00AF     		add	r7, sp, #0
+ 355              		.cfi_offset 7, -4
+ 356              	.LCFI11:
+ 357              		.cfi_def_cfa_register 7
+ 358 0006 7860     		str	r0, [r7, #4]
+ 181:..//common/src/lpc17xx_emac.c **** 	/* Read a PHY register 'PhyReg'. */
+ 182:..//common/src/lpc17xx_emac.c **** 	uint32_t tout;
+ 183:..//common/src/lpc17xx_emac.c **** 
+ 184:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->MADR = EMAC_DEF_ADR | PhyReg;
+ 359              		.loc 1 184 0
+ 360 0008 4FF0A043 		mov	r3, #1342177280
+ 361 000c 7A68     		ldr	r2, [r7, #4]
+ 362 000e 42F48072 		orr	r2, r2, #256
+ 363 0012 9A62     		str	r2, [r3, #40]
+ 185:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->MCMD = EMAC_MCMD_READ;
+ 364              		.loc 1 185 0
+ 365 0014 4FF0A043 		mov	r3, #1342177280
+ 366 0018 4FF00102 		mov	r2, #1
+ 367 001c 5A62     		str	r2, [r3, #36]
+ 186:..//common/src/lpc17xx_emac.c **** 
+ 187:..//common/src/lpc17xx_emac.c **** 	/* Wait until operation completed */
+ 188:..//common/src/lpc17xx_emac.c **** 	tout = 0;
+ 368              		.loc 1 188 0
+ 369 001e 4FF00003 		mov	r3, #0
+ 370 0022 FB60     		str	r3, [r7, #12]
+ 189:..//common/src/lpc17xx_emac.c **** 	for (tout = 0; tout < EMAC_MII_RD_TOUT; tout++) {
+ 371              		.loc 1 189 0
+ 372 0024 4FF00003 		mov	r3, #0
+ 373 0028 FB60     		str	r3, [r7, #12]
+ 374 002a 13E0     		b	.L16
+ 375              	.L19:
+ 190:..//common/src/lpc17xx_emac.c **** 		if ((LPC_EMAC->MIND & EMAC_MIND_BUSY) == 0) {
+ 376              		.loc 1 190 0
+ 377 002c 4FF0A043 		mov	r3, #1342177280
+ 378 0030 5B6B     		ldr	r3, [r3, #52]
+ 379 0032 03F00103 		and	r3, r3, #1
+ 380 0036 002B     		cmp	r3, #0
+ 381 0038 08D1     		bne	.L17
+ 191:..//common/src/lpc17xx_emac.c **** 			LPC_EMAC->MCMD = 0;
+ 382              		.loc 1 191 0
+ 383 003a 4FF0A043 		mov	r3, #1342177280
+ 384 003e 4FF00002 		mov	r2, #0
+ 385 0042 5A62     		str	r2, [r3, #36]
+ 192:..//common/src/lpc17xx_emac.c **** 			return (LPC_EMAC->MRDD);
+ 386              		.loc 1 192 0
+ 387 0044 4FF0A043 		mov	r3, #1342177280
+ 388 0048 1B6B     		ldr	r3, [r3, #48]
+ 389 004a 0CE0     		b	.L18
+ 390              	.L17:
+ 391              		.loc 1 189 0
+ 392 004c FB68     		ldr	r3, [r7, #12]
+ 393 004e 03F10103 		add	r3, r3, #1
+ 394 0052 FB60     		str	r3, [r7, #12]
+ 395              	.L16:
+ 396 0054 FA68     		ldr	r2, [r7, #12]
+ 397 0056 4FF6FF73 		movw	r3, #:lower16:327679
+ 398 005a C0F20403 		movt	r3, #:upper16:327679
+ 399 005e 9A42     		cmp	r2, r3
+ 400 0060 E4D9     		bls	.L19
+ 193:..//common/src/lpc17xx_emac.c **** 		}
+ 194:..//common/src/lpc17xx_emac.c **** 	}
+ 195:..//common/src/lpc17xx_emac.c **** 	// Time out!
+ 196:..//common/src/lpc17xx_emac.c **** 	return (-1);
+ 401              		.loc 1 196 0
+ 402 0062 4FF0FF33 		mov	r3, #-1
+ 403              	.L18:
+ 197:..//common/src/lpc17xx_emac.c **** }
+ 404              		.loc 1 197 0
+ 405 0066 1846     		mov	r0, r3
+ 406 0068 07F11407 		add	r7, r7, #20
+ 407 006c BD46     		mov	sp, r7
+ 408 006e 80BC     		pop	{r7}
+ 409 0070 7047     		bx	lr
+ 410              		.cfi_endproc
+ 411              	.LFE32:
+ 413 0072 00BF     		.section	.text.setEmacAddr,"ax",%progbits
+ 414              		.align	2
+ 415              		.thumb
+ 416              		.thumb_func
+ 418              	setEmacAddr:
+ 419              	.LFB33:
+ 198:..//common/src/lpc17xx_emac.c **** 
+ 199:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 200:..//common/src/lpc17xx_emac.c ****  * @brief		Set Station MAC address for EMAC module
+ 201:..//common/src/lpc17xx_emac.c ****  * @param[in]	abStationAddr Pointer to Station address that contains 6-bytes
+ 202:..//common/src/lpc17xx_emac.c ****  * 				of MAC address (should be in order from MAC Address 1 to MAC Address 6)
+ 203:..//common/src/lpc17xx_emac.c ****  * @return		None
+ 204:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+ 205:..//common/src/lpc17xx_emac.c **** static void setEmacAddr(uint8_t abStationAddr[])
+ 206:..//common/src/lpc17xx_emac.c **** {
+ 420              		.loc 1 206 0
+ 421              		.cfi_startproc
+ 422              		@ args = 0, pretend = 0, frame = 8
+ 423              		@ frame_needed = 1, uses_anonymous_args = 0
+ 424              		@ link register save eliminated.
+ 425 0000 80B4     		push	{r7}
+ 426              	.LCFI12:
+ 427              		.cfi_def_cfa_offset 4
+ 428 0002 83B0     		sub	sp, sp, #12
+ 429              	.LCFI13:
+ 430              		.cfi_def_cfa_offset 16
+ 431 0004 00AF     		add	r7, sp, #0
+ 432              		.cfi_offset 7, -4
+ 433              	.LCFI14:
+ 434              		.cfi_def_cfa_register 7
+ 435 0006 7860     		str	r0, [r7, #4]
+ 207:..//common/src/lpc17xx_emac.c **** 	/* Set the Ethernet MAC Address registers */
+ 208:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->SA0 = ((uint32_t)abStationAddr[5] << 8) | (uint32_t)abStationAddr[4];
+ 436              		.loc 1 208 0
+ 437 0008 4FF0A043 		mov	r3, #1342177280
+ 438 000c 7A68     		ldr	r2, [r7, #4]
+ 439 000e 02F10502 		add	r2, r2, #5
+ 440 0012 1278     		ldrb	r2, [r2, #0]	@ zero_extendqisi2
+ 441 0014 4FEA0221 		lsl	r1, r2, #8
+ 442 0018 7A68     		ldr	r2, [r7, #4]
+ 443 001a 02F10402 		add	r2, r2, #4
+ 444 001e 1278     		ldrb	r2, [r2, #0]	@ zero_extendqisi2
+ 445 0020 41EA0202 		orr	r2, r1, r2
+ 446 0024 1A64     		str	r2, [r3, #64]
+ 209:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->SA1 = ((uint32_t)abStationAddr[3] << 8) | (uint32_t)abStationAddr[2];
+ 447              		.loc 1 209 0
+ 448 0026 4FF0A043 		mov	r3, #1342177280
+ 449 002a 7A68     		ldr	r2, [r7, #4]
+ 450 002c 02F10302 		add	r2, r2, #3
+ 451 0030 1278     		ldrb	r2, [r2, #0]	@ zero_extendqisi2
+ 452 0032 4FEA0221 		lsl	r1, r2, #8
+ 453 0036 7A68     		ldr	r2, [r7, #4]
+ 454 0038 02F10202 		add	r2, r2, #2
+ 455 003c 1278     		ldrb	r2, [r2, #0]	@ zero_extendqisi2
+ 456 003e 41EA0202 		orr	r2, r1, r2
+ 457 0042 5A64     		str	r2, [r3, #68]
+ 210:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->SA2 = ((uint32_t)abStationAddr[1] << 8) | (uint32_t)abStationAddr[0];
+ 458              		.loc 1 210 0
+ 459 0044 4FF0A043 		mov	r3, #1342177280
+ 460 0048 7A68     		ldr	r2, [r7, #4]
+ 461 004a 02F10102 		add	r2, r2, #1
+ 462 004e 1278     		ldrb	r2, [r2, #0]	@ zero_extendqisi2
+ 463 0050 4FEA0221 		lsl	r1, r2, #8
+ 464 0054 7A68     		ldr	r2, [r7, #4]
+ 465 0056 1278     		ldrb	r2, [r2, #0]	@ zero_extendqisi2
+ 466 0058 41EA0202 		orr	r2, r1, r2
+ 467 005c 9A64     		str	r2, [r3, #72]
+ 211:..//common/src/lpc17xx_emac.c **** }
+ 468              		.loc 1 211 0
+ 469 005e 07F10C07 		add	r7, r7, #12
+ 470 0062 BD46     		mov	sp, r7
+ 471 0064 80BC     		pop	{r7}
+ 472 0066 7047     		bx	lr
+ 473              		.cfi_endproc
+ 474              	.LFE33:
+ 476              		.section	.text.emac_CRCCalc,"ax",%progbits
+ 477              		.align	2
+ 478              		.thumb
+ 479              		.thumb_func
+ 481              	emac_CRCCalc:
+ 482              	.LFB34:
+ 212:..//common/src/lpc17xx_emac.c **** 
+ 213:..//common/src/lpc17xx_emac.c **** 
+ 214:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 215:..//common/src/lpc17xx_emac.c ****  * @brief		Calculates CRC code for number of bytes in the frame
+ 216:..//common/src/lpc17xx_emac.c ****  * @param[in]	frame_no_fcs	Pointer to the first byte of the frame
+ 217:..//common/src/lpc17xx_emac.c ****  * @param[in]	frame_len		length of the frame without the FCS
+ 218:..//common/src/lpc17xx_emac.c ****  * @return		the CRC as a 32 bit integer
+ 219:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+ 220:..//common/src/lpc17xx_emac.c **** static int32_t emac_CRCCalc(uint8_t frame_no_fcs[], int32_t frame_len)
+ 221:..//common/src/lpc17xx_emac.c **** {
+ 483              		.loc 1 221 0
+ 484              		.cfi_startproc
+ 485              		@ args = 0, pretend = 0, frame = 40
+ 486              		@ frame_needed = 1, uses_anonymous_args = 0
+ 487              		@ link register save eliminated.
+ 488 0000 80B4     		push	{r7}
+ 489              	.LCFI15:
+ 490              		.cfi_def_cfa_offset 4
+ 491 0002 8BB0     		sub	sp, sp, #44
+ 492              	.LCFI16:
+ 493              		.cfi_def_cfa_offset 48
+ 494 0004 00AF     		add	r7, sp, #0
+ 495              		.cfi_offset 7, -4
+ 496              	.LCFI17:
+ 497              		.cfi_def_cfa_register 7
+ 498 0006 7860     		str	r0, [r7, #4]
+ 499 0008 3960     		str	r1, [r7, #0]
+ 222:..//common/src/lpc17xx_emac.c **** 	int i; 		// iterator
+ 223:..//common/src/lpc17xx_emac.c **** 	int j; 		// another iterator
+ 224:..//common/src/lpc17xx_emac.c **** 	char byte; 	// current byte
+ 225:..//common/src/lpc17xx_emac.c **** 	int crc; 	// CRC result
+ 226:..//common/src/lpc17xx_emac.c **** 	int q0, q1, q2, q3; // temporary variables
+ 227:..//common/src/lpc17xx_emac.c **** 	crc = 0xFFFFFFFF;
+ 500              		.loc 1 227 0
+ 501 000a 4FF0FF33 		mov	r3, #-1
+ 502 000e 7B61     		str	r3, [r7, #20]
+ 228:..//common/src/lpc17xx_emac.c **** 	for (i = 0; i < frame_len; i++) {
+ 503              		.loc 1 228 0
+ 504 0010 4FF00003 		mov	r3, #0
+ 505 0014 BB60     		str	r3, [r7, #8]
+ 506 0016 82E0     		b	.L24
+ 507              	.L35:
+ 229:..//common/src/lpc17xx_emac.c **** 		byte = *frame_no_fcs++;
+ 508              		.loc 1 229 0
+ 509 0018 7B68     		ldr	r3, [r7, #4]
+ 510 001a 1B78     		ldrb	r3, [r3, #0]
+ 511 001c FB74     		strb	r3, [r7, #19]
+ 512 001e 7B68     		ldr	r3, [r7, #4]
+ 513 0020 03F10103 		add	r3, r3, #1
+ 514 0024 7B60     		str	r3, [r7, #4]
+ 230:..//common/src/lpc17xx_emac.c **** 		for (j = 0; j < 2; j++) {
+ 515              		.loc 1 230 0
+ 516 0026 4FF00003 		mov	r3, #0
+ 517 002a FB60     		str	r3, [r7, #12]
+ 518 002c 70E0     		b	.L25
+ 519              	.L34:
+ 231:..//common/src/lpc17xx_emac.c **** 			if (((crc >> 28) ^ (byte >> 3)) & 0x00000001) {
+ 520              		.loc 1 231 0
+ 521 002e 7B69     		ldr	r3, [r7, #20]
+ 522 0030 4FEA2372 		asr	r2, r3, #28
+ 523 0034 FB7C     		ldrb	r3, [r7, #19]	@ zero_extendqisi2
+ 524 0036 4FEAD303 		lsr	r3, r3, #3
+ 525 003a DBB2     		uxtb	r3, r3
+ 526 003c 82EA0303 		eor	r3, r2, r3
+ 527 0040 03F00103 		and	r3, r3, #1
+ 528 0044 DBB2     		uxtb	r3, r3
+ 529 0046 002B     		cmp	r3, #0
+ 530 0048 05D0     		beq	.L26
+ 232:..//common/src/lpc17xx_emac.c **** 				q3 = 0x04C11DB7;
+ 531              		.loc 1 232 0
+ 532 004a 41F6B753 		movw	r3, #:lower16:79764919
+ 533 004e C0F2C143 		movt	r3, #:upper16:79764919
+ 534 0052 7B62     		str	r3, [r7, #36]
+ 535 0054 02E0     		b	.L27
+ 536              	.L26:
+ 233:..//common/src/lpc17xx_emac.c **** 			} else {
+ 234:..//common/src/lpc17xx_emac.c **** 				q3 = 0x00000000;
+ 537              		.loc 1 234 0
+ 538 0056 4FF00003 		mov	r3, #0
+ 539 005a 7B62     		str	r3, [r7, #36]
+ 540              	.L27:
+ 235:..//common/src/lpc17xx_emac.c **** 			}
+ 236:..//common/src/lpc17xx_emac.c **** 			if (((crc >> 29) ^ (byte >> 2)) & 0x00000001) {
+ 541              		.loc 1 236 0
+ 542 005c 7B69     		ldr	r3, [r7, #20]
+ 543 005e 4FEA6372 		asr	r2, r3, #29
+ 544 0062 FB7C     		ldrb	r3, [r7, #19]	@ zero_extendqisi2
+ 545 0064 4FEA9303 		lsr	r3, r3, #2
+ 546 0068 DBB2     		uxtb	r3, r3
+ 547 006a 82EA0303 		eor	r3, r2, r3
+ 548 006e 03F00103 		and	r3, r3, #1
+ 549 0072 DBB2     		uxtb	r3, r3
+ 550 0074 002B     		cmp	r3, #0
+ 551 0076 05D0     		beq	.L28
+ 237:..//common/src/lpc17xx_emac.c **** 				q2 = 0x09823B6E;
+ 552              		.loc 1 237 0
+ 553 0078 43F66E33 		movw	r3, #:lower16:159529838
+ 554 007c C0F68213 		movt	r3, #:upper16:159529838
+ 555 0080 3B62     		str	r3, [r7, #32]
+ 556 0082 02E0     		b	.L29
+ 557              	.L28:
+ 238:..//common/src/lpc17xx_emac.c **** 			} else {
+ 239:..//common/src/lpc17xx_emac.c **** 				q2 = 0x00000000;
+ 558              		.loc 1 239 0
+ 559 0084 4FF00003 		mov	r3, #0
+ 560 0088 3B62     		str	r3, [r7, #32]
+ 561              	.L29:
+ 240:..//common/src/lpc17xx_emac.c **** 			}
+ 241:..//common/src/lpc17xx_emac.c **** 			if (((crc >> 30) ^ (byte >> 1)) & 0x00000001) {
+ 562              		.loc 1 241 0
+ 563 008a 7B69     		ldr	r3, [r7, #20]
+ 564 008c 4FEAA372 		asr	r2, r3, #30
+ 565 0090 FB7C     		ldrb	r3, [r7, #19]	@ zero_extendqisi2
+ 566 0092 4FEA5303 		lsr	r3, r3, #1
+ 567 0096 DBB2     		uxtb	r3, r3
+ 568 0098 82EA0303 		eor	r3, r2, r3
+ 569 009c 03F00103 		and	r3, r3, #1
+ 570 00a0 DBB2     		uxtb	r3, r3
+ 571 00a2 002B     		cmp	r3, #0
+ 572 00a4 05D0     		beq	.L30
+ 242:..//common/src/lpc17xx_emac.c **** 				q1 = 0x130476DC;
+ 573              		.loc 1 242 0
+ 574 00a6 47F2DC63 		movw	r3, #:lower16:319059676
+ 575 00aa C1F20433 		movt	r3, #:upper16:319059676
+ 576 00ae FB61     		str	r3, [r7, #28]
+ 577 00b0 02E0     		b	.L31
+ 578              	.L30:
+ 243:..//common/src/lpc17xx_emac.c **** 			} else {
+ 244:..//common/src/lpc17xx_emac.c **** 				q1 = 0x00000000;
+ 579              		.loc 1 244 0
+ 580 00b2 4FF00003 		mov	r3, #0
+ 581 00b6 FB61     		str	r3, [r7, #28]
+ 582              	.L31:
+ 245:..//common/src/lpc17xx_emac.c **** 			}
+ 246:..//common/src/lpc17xx_emac.c **** 			if (((crc >> 31) ^ (byte >> 0)) & 0x00000001) {
+ 583              		.loc 1 246 0
+ 584 00b8 7B69     		ldr	r3, [r7, #20]
+ 585 00ba 4FEAE372 		asr	r2, r3, #31
+ 586 00be FB7C     		ldrb	r3, [r7, #19]	@ zero_extendqisi2
+ 587 00c0 82EA0303 		eor	r3, r2, r3
+ 588 00c4 03F00103 		and	r3, r3, #1
+ 589 00c8 DBB2     		uxtb	r3, r3
+ 590 00ca 002B     		cmp	r3, #0
+ 591 00cc 05D0     		beq	.L32
+ 247:..//common/src/lpc17xx_emac.c **** 				q0 = 0x2608EDB8;
+ 592              		.loc 1 247 0
+ 593 00ce 4EF6B853 		movw	r3, #:lower16:638119352
+ 594 00d2 C2F20863 		movt	r3, #:upper16:638119352
+ 595 00d6 BB61     		str	r3, [r7, #24]
+ 596 00d8 02E0     		b	.L33
+ 597              	.L32:
+ 248:..//common/src/lpc17xx_emac.c **** 			} else {
+ 249:..//common/src/lpc17xx_emac.c **** 				q0 = 0x00000000;
+ 598              		.loc 1 249 0
+ 599 00da 4FF00003 		mov	r3, #0
+ 600 00de BB61     		str	r3, [r7, #24]
+ 601              	.L33:
+ 250:..//common/src/lpc17xx_emac.c **** 			}
+ 251:..//common/src/lpc17xx_emac.c **** 			crc = (crc << 4) ^ q3 ^ q2 ^ q1 ^ q0;
+ 602              		.loc 1 251 0
+ 603 00e0 7B69     		ldr	r3, [r7, #20]
+ 604 00e2 4FEA0312 		lsl	r2, r3, #4
+ 605 00e6 7B6A     		ldr	r3, [r7, #36]
+ 606 00e8 82EA0302 		eor	r2, r2, r3
+ 607 00ec 3B6A     		ldr	r3, [r7, #32]
+ 608 00ee 82EA0302 		eor	r2, r2, r3
+ 609 00f2 FB69     		ldr	r3, [r7, #28]
+ 610 00f4 82EA0302 		eor	r2, r2, r3
+ 611 00f8 BB69     		ldr	r3, [r7, #24]
+ 612 00fa 82EA0303 		eor	r3, r2, r3
+ 613 00fe 7B61     		str	r3, [r7, #20]
+ 252:..//common/src/lpc17xx_emac.c **** 			byte >>= 4;
+ 614              		.loc 1 252 0
+ 615 0100 FB7C     		ldrb	r3, [r7, #19]	@ zero_extendqisi2
+ 616 0102 4FEA1313 		lsr	r3, r3, #4
+ 617 0106 FB74     		strb	r3, [r7, #19]
+ 618              		.loc 1 230 0
+ 619 0108 FB68     		ldr	r3, [r7, #12]
+ 620 010a 03F10103 		add	r3, r3, #1
+ 621 010e FB60     		str	r3, [r7, #12]
+ 622              	.L25:
+ 623 0110 FB68     		ldr	r3, [r7, #12]
+ 624 0112 012B     		cmp	r3, #1
+ 625 0114 8BDD     		ble	.L34
+ 626              		.loc 1 228 0
+ 627 0116 BB68     		ldr	r3, [r7, #8]
+ 628 0118 03F10103 		add	r3, r3, #1
+ 629 011c BB60     		str	r3, [r7, #8]
+ 630              	.L24:
+ 631 011e BA68     		ldr	r2, [r7, #8]
+ 632 0120 3B68     		ldr	r3, [r7, #0]
+ 633 0122 9A42     		cmp	r2, r3
+ 634 0124 FFF678AF 		blt	.L35
+ 253:..//common/src/lpc17xx_emac.c **** 		}
+ 254:..//common/src/lpc17xx_emac.c **** 	}
+ 255:..//common/src/lpc17xx_emac.c **** 	return crc;
+ 635              		.loc 1 255 0
+ 636 0128 7B69     		ldr	r3, [r7, #20]
+ 256:..//common/src/lpc17xx_emac.c **** }
+ 637              		.loc 1 256 0
+ 638 012a 1846     		mov	r0, r3
+ 639 012c 07F12C07 		add	r7, r7, #44
+ 640 0130 BD46     		mov	sp, r7
+ 641 0132 80BC     		pop	{r7}
+ 642 0134 7047     		bx	lr
+ 643              		.cfi_endproc
+ 644              	.LFE34:
+ 646 0136 00BF     		.section	.text.EMAC_Init,"ax",%progbits
+ 647              		.align	2
+ 648              		.global	EMAC_Init
+ 649              		.thumb
+ 650              		.thumb_func
+ 652              	EMAC_Init:
+ 653              	.LFB35:
+ 257:..//common/src/lpc17xx_emac.c **** /* End of Private Functions --------------------------------------------------- */
+ 258:..//common/src/lpc17xx_emac.c **** 
+ 259:..//common/src/lpc17xx_emac.c **** 
+ 260:..//common/src/lpc17xx_emac.c **** /* Public Functions ----------------------------------------------------------- */
+ 261:..//common/src/lpc17xx_emac.c **** /** @addtogroup EMAC_Public_Functions
+ 262:..//common/src/lpc17xx_emac.c ****  * @{
+ 263:..//common/src/lpc17xx_emac.c ****  */
+ 264:..//common/src/lpc17xx_emac.c **** 
+ 265:..//common/src/lpc17xx_emac.c **** 
+ 266:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 267:..//common/src/lpc17xx_emac.c ****  * @brief		Initializes the EMAC peripheral according to the specified
+ 268:..//common/src/lpc17xx_emac.c **** *               parameters in the EMAC_ConfigStruct.
+ 269:..//common/src/lpc17xx_emac.c ****  * @param[in]	EMAC_ConfigStruct Pointer to a EMAC_CFG_Type structure
+ 270:..//common/src/lpc17xx_emac.c **** *                    that contains the configuration information for the
+ 271:..//common/src/lpc17xx_emac.c **** *                    specified EMAC peripheral.
+ 272:..//common/src/lpc17xx_emac.c ****  * @return		None
+ 273:..//common/src/lpc17xx_emac.c ****  *
+ 274:..//common/src/lpc17xx_emac.c ****  * Note: This function will initialize EMAC module according to procedure below:
+ 275:..//common/src/lpc17xx_emac.c ****  *  - Remove the soft reset condition from the MAC
+ 276:..//common/src/lpc17xx_emac.c ****  *  - Configure the PHY via the MIIM interface of the MAC
+ 277:..//common/src/lpc17xx_emac.c ****  *  - Select RMII mode
+ 278:..//common/src/lpc17xx_emac.c ****  *  - Configure the transmit and receive DMA engines, including the descriptor arrays
+ 279:..//common/src/lpc17xx_emac.c ****  *  - Configure the host registers (MAC1,MAC2 etc.) in the MAC
+ 280:..//common/src/lpc17xx_emac.c ****  *  - Enable the receive and transmit data paths
+ 281:..//common/src/lpc17xx_emac.c ****  *  In default state after initializing, only Rx Done and Tx Done interrupt are enabled,
+ 282:..//common/src/lpc17xx_emac.c ****  *  all remain interrupts are disabled
+ 283:..//common/src/lpc17xx_emac.c ****  *  (Ref. from LPC17xx UM)
+ 284:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+ 285:..//common/src/lpc17xx_emac.c **** Status EMAC_Init(EMAC_CFG_Type *EMAC_ConfigStruct)
+ 286:..//common/src/lpc17xx_emac.c **** {
+ 654              		.loc 1 286 0
+ 655              		.cfi_startproc
+ 656              		@ args = 0, pretend = 0, frame = 24
+ 657              		@ frame_needed = 1, uses_anonymous_args = 0
+ 658 0000 80B5     		push	{r7, lr}
+ 659              	.LCFI18:
+ 660              		.cfi_def_cfa_offset 8
+ 661 0002 86B0     		sub	sp, sp, #24
+ 662              	.LCFI19:
+ 663              		.cfi_def_cfa_offset 32
+ 664 0004 00AF     		add	r7, sp, #0
+ 665              		.cfi_offset 14, -4
+ 666              		.cfi_offset 7, -8
+ 667              	.LCFI20:
+ 668              		.cfi_def_cfa_register 7
+ 669 0006 7860     		str	r0, [r7, #4]
+ 287:..//common/src/lpc17xx_emac.c **** 	/* Initialize the EMAC Ethernet controller. */
+ 288:..//common/src/lpc17xx_emac.c **** 	int32_t regv,tout, tmp;
+ 289:..//common/src/lpc17xx_emac.c **** 
+ 290:..//common/src/lpc17xx_emac.c **** 	/* Set up clock and power for Ethernet module */
+ 291:..//common/src/lpc17xx_emac.c **** 	CLKPWR_ConfigPPWR (CLKPWR_PCONP_PCENET, ENABLE);
+ 670              		.loc 1 291 0
+ 671 0008 4FF08040 		mov	r0, #1073741824
+ 672 000c 4FF00101 		mov	r1, #1
+ 673 0010 40F20003 		movw	r3, #:lower16:CLKPWR_ConfigPPWR
+ 674 0014 C0F20003 		movt	r3, #:upper16:CLKPWR_ConfigPPWR
+ 675 0018 9847     		blx	r3
+ 292:..//common/src/lpc17xx_emac.c **** 
+ 293:..//common/src/lpc17xx_emac.c **** 	/* Reset all EMAC internal modules */
+ 294:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->MAC1    = EMAC_MAC1_RES_TX | EMAC_MAC1_RES_MCS_TX | EMAC_MAC1_RES_RX |
+ 676              		.loc 1 294 0
+ 677 001a 4FF0A043 		mov	r3, #1342177280
+ 678 001e 4FF44F42 		mov	r2, #52992
+ 679 0022 1A60     		str	r2, [r3, #0]
+ 295:..//common/src/lpc17xx_emac.c **** 					EMAC_MAC1_RES_MCS_RX | EMAC_MAC1_SIM_RES | EMAC_MAC1_SOFT_RES;
+ 296:..//common/src/lpc17xx_emac.c **** 
+ 297:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->Command = EMAC_CR_REG_RES | EMAC_CR_TX_RES | EMAC_CR_RX_RES | EMAC_CR_PASS_RUNT_FRM;
+ 680              		.loc 1 297 0
+ 681 0024 4FF0A043 		mov	r3, #1342177280
+ 682 0028 4FF07802 		mov	r2, #120
+ 683 002c C3F80021 		str	r2, [r3, #256]
+ 298:..//common/src/lpc17xx_emac.c **** 
+ 299:..//common/src/lpc17xx_emac.c **** 	/* A short delay after reset. */
+ 300:..//common/src/lpc17xx_emac.c **** 	for (tout = 100; tout; tout--);
+ 684              		.loc 1 300 0
+ 685 0030 4FF06403 		mov	r3, #100
+ 686 0034 3B61     		str	r3, [r7, #16]
+ 687 0036 03E0     		b	.L38
+ 688              	.L39:
+ 689 0038 3B69     		ldr	r3, [r7, #16]
+ 690 003a 03F1FF33 		add	r3, r3, #-1
+ 691 003e 3B61     		str	r3, [r7, #16]
+ 692              	.L38:
+ 693 0040 3B69     		ldr	r3, [r7, #16]
+ 694 0042 002B     		cmp	r3, #0
+ 695 0044 F8D1     		bne	.L39
+ 301:..//common/src/lpc17xx_emac.c **** 
+ 302:..//common/src/lpc17xx_emac.c **** 	/* Initialize MAC control registers. */
+ 303:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->MAC1 = EMAC_MAC1_PASS_ALL;
+ 696              		.loc 1 303 0
+ 697 0046 4FF0A043 		mov	r3, #1342177280
+ 698 004a 4FF00202 		mov	r2, #2
+ 699 004e 1A60     		str	r2, [r3, #0]
+ 304:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->MAC2 = EMAC_MAC2_CRC_EN | EMAC_MAC2_PAD_EN;
+ 700              		.loc 1 304 0
+ 701 0050 4FF0A043 		mov	r3, #1342177280
+ 702 0054 4FF03002 		mov	r2, #48
+ 703 0058 5A60     		str	r2, [r3, #4]
+ 305:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->MAXF = EMAC_ETH_MAX_FLEN;
+ 704              		.loc 1 305 0
+ 705 005a 4FF0A043 		mov	r3, #1342177280
+ 706 005e 4FF4C062 		mov	r2, #1536
+ 707 0062 5A61     		str	r2, [r3, #20]
+ 306:..//common/src/lpc17xx_emac.c **** 	/*
+ 307:..//common/src/lpc17xx_emac.c **** 	 * Find the clock that close to desired target clock
+ 308:..//common/src/lpc17xx_emac.c **** 	 */
+ 309:..//common/src/lpc17xx_emac.c **** 	tmp = SystemCoreClock / EMAC_MCFG_MII_MAXCLK;
+ 708              		.loc 1 309 0
+ 709 0064 40F20003 		movw	r3, #:lower16:SystemCoreClock
+ 710 0068 C0F20003 		movt	r3, #:upper16:SystemCoreClock
+ 711 006c 1A68     		ldr	r2, [r3, #0]
+ 712 006e 4CF66B23 		movw	r3, #:lower16:1801439851
+ 713 0072 C6F65F33 		movt	r3, #:upper16:1801439851
+ 714 0076 A3FB0213 		umull	r1, r3, r3, r2
+ 715 007a 4FEA1353 		lsr	r3, r3, #20
+ 716 007e 7B61     		str	r3, [r7, #20]
+ 310:..//common/src/lpc17xx_emac.c **** 	for (tout = 0; tout < sizeof (EMAC_clkdiv); tout++){
+ 717              		.loc 1 310 0
+ 718 0080 4FF00003 		mov	r3, #0
+ 719 0084 3B61     		str	r3, [r7, #16]
+ 720 0086 0DE0     		b	.L40
+ 721              	.L43:
+ 311:..//common/src/lpc17xx_emac.c **** 		if (EMAC_clkdiv[tout] >= tmp) break;
+ 722              		.loc 1 311 0
+ 723 0088 3A69     		ldr	r2, [r7, #16]
+ 724 008a 40F20003 		movw	r3, #:lower16:EMAC_clkdiv
+ 725 008e C0F20003 		movt	r3, #:upper16:EMAC_clkdiv
+ 726 0092 9B5C     		ldrb	r3, [r3, r2]	@ zero_extendqisi2
+ 727 0094 1A46     		mov	r2, r3
+ 728 0096 7B69     		ldr	r3, [r7, #20]
+ 729 0098 9A42     		cmp	r2, r3
+ 730 009a 07DA     		bge	.L54
+ 731              	.L41:
+ 732              		.loc 1 310 0
+ 733 009c 3B69     		ldr	r3, [r7, #16]
+ 734 009e 03F10103 		add	r3, r3, #1
+ 735 00a2 3B61     		str	r3, [r7, #16]
+ 736              	.L40:
+ 737 00a4 3B69     		ldr	r3, [r7, #16]
+ 738 00a6 062B     		cmp	r3, #6
+ 739 00a8 EED9     		bls	.L43
+ 740 00aa 00E0     		b	.L42
+ 741              	.L54:
+ 742              		.loc 1 311 0
+ 743 00ac 00BF     		nop
+ 744              	.L42:
+ 312:..//common/src/lpc17xx_emac.c **** 	}
+ 313:..//common/src/lpc17xx_emac.c **** 	tout++;
+ 745              		.loc 1 313 0
+ 746 00ae 3B69     		ldr	r3, [r7, #16]
+ 747 00b0 03F10103 		add	r3, r3, #1
+ 748 00b4 3B61     		str	r3, [r7, #16]
+ 314:..//common/src/lpc17xx_emac.c **** 	// Write to MAC configuration register and reset
+ 315:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->MCFG = EMAC_MCFG_CLK_SEL(tout) | EMAC_MCFG_RES_MII;
+ 749              		.loc 1 315 0
+ 750 00b6 4FF0A043 		mov	r3, #1342177280
+ 751 00ba 3A69     		ldr	r2, [r7, #16]
+ 752 00bc 02F00F02 		and	r2, r2, #15
+ 753 00c0 4FEA8202 		lsl	r2, r2, #2
+ 754 00c4 42F40042 		orr	r2, r2, #32768
+ 755 00c8 1A62     		str	r2, [r3, #32]
+ 316:..//common/src/lpc17xx_emac.c **** 	// release reset
+ 317:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->MCFG &= ~(EMAC_MCFG_RES_MII);
+ 756              		.loc 1 317 0
+ 757 00ca 4FF0A043 		mov	r3, #1342177280
+ 758 00ce 4FF0A042 		mov	r2, #1342177280
+ 759 00d2 126A     		ldr	r2, [r2, #32]
+ 760 00d4 22F40042 		bic	r2, r2, #32768
+ 761 00d8 1A62     		str	r2, [r3, #32]
+ 318:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->CLRT = EMAC_CLRT_DEF;
+ 762              		.loc 1 318 0
+ 763 00da 4FF0A043 		mov	r3, #1342177280
+ 764 00de 43F20F72 		movw	r2, #14095
+ 765 00e2 1A61     		str	r2, [r3, #16]
+ 319:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->IPGR = EMAC_IPGR_P2_DEF;
+ 766              		.loc 1 319 0
+ 767 00e4 4FF0A043 		mov	r3, #1342177280
+ 768 00e8 4FF01202 		mov	r2, #18
+ 769 00ec DA60     		str	r2, [r3, #12]
+ 320:..//common/src/lpc17xx_emac.c **** 
+ 321:..//common/src/lpc17xx_emac.c **** 	/* Enable Reduced MII interface. */
+ 322:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->Command = EMAC_CR_RMII | EMAC_CR_PASS_RUNT_FRM;
+ 770              		.loc 1 322 0
+ 771 00ee 4FF0A043 		mov	r3, #1342177280
+ 772 00f2 4FF41072 		mov	r2, #576
+ 773 00f6 C3F80021 		str	r2, [r3, #256]
+ 323:..//common/src/lpc17xx_emac.c **** 
+ 324:..//common/src/lpc17xx_emac.c **** 	/* Reset Reduced MII Logic. */
+ 325:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->SUPP = EMAC_SUPP_RES_RMII;
+ 774              		.loc 1 325 0
+ 775 00fa 4FF0A043 		mov	r3, #1342177280
+ 776 00fe 4FF40062 		mov	r2, #2048
+ 777 0102 9A61     		str	r2, [r3, #24]
+ 326:..//common/src/lpc17xx_emac.c **** 
+ 327:..//common/src/lpc17xx_emac.c **** 	for (tout = 100; tout; tout--);
+ 778              		.loc 1 327 0
+ 779 0104 4FF06403 		mov	r3, #100
+ 780 0108 3B61     		str	r3, [r7, #16]
+ 781 010a 03E0     		b	.L44
+ 782              	.L45:
+ 783 010c 3B69     		ldr	r3, [r7, #16]
+ 784 010e 03F1FF33 		add	r3, r3, #-1
+ 785 0112 3B61     		str	r3, [r7, #16]
+ 786              	.L44:
+ 787 0114 3B69     		ldr	r3, [r7, #16]
+ 788 0116 002B     		cmp	r3, #0
+ 789 0118 F8D1     		bne	.L45
+ 328:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->SUPP = 0;
+ 790              		.loc 1 328 0
+ 791 011a 4FF0A043 		mov	r3, #1342177280
+ 792 011e 4FF00002 		mov	r2, #0
+ 793 0122 9A61     		str	r2, [r3, #24]
+ 329:..//common/src/lpc17xx_emac.c **** 
+ 330:..//common/src/lpc17xx_emac.c **** 	/* Put the DP83848C in reset mode */
+ 331:..//common/src/lpc17xx_emac.c **** 	write_PHY (EMAC_PHY_REG_BMCR, EMAC_PHY_BMCR_RESET);
+ 794              		.loc 1 331 0
+ 795 0124 4FF00000 		mov	r0, #0
+ 796 0128 4FF40041 		mov	r1, #32768
+ 797 012c 40F20003 		movw	r3, #:lower16:write_PHY
+ 798 0130 C0F20003 		movt	r3, #:upper16:write_PHY
+ 799 0134 9847     		blx	r3
+ 332:..//common/src/lpc17xx_emac.c **** 
+ 333:..//common/src/lpc17xx_emac.c **** 	/* Wait for hardware reset to end. */
+ 334:..//common/src/lpc17xx_emac.c **** 	for (tout = EMAC_PHY_RESP_TOUT; tout; tout--) {
+ 800              		.loc 1 334 0
+ 801 0136 4FF48013 		mov	r3, #1048576
+ 802 013a 3B61     		str	r3, [r7, #16]
+ 803 013c 17E0     		b	.L46
+ 804              	.L51:
+ 335:..//common/src/lpc17xx_emac.c **** 		regv = read_PHY (EMAC_PHY_REG_BMCR);
+ 805              		.loc 1 335 0
+ 806 013e 4FF00000 		mov	r0, #0
+ 807 0142 40F20003 		movw	r3, #:lower16:read_PHY
+ 808 0146 C0F20003 		movt	r3, #:upper16:read_PHY
+ 809 014a 9847     		blx	r3
+ 810 014c 0346     		mov	r3, r0
+ 811 014e FB60     		str	r3, [r7, #12]
+ 336:..//common/src/lpc17xx_emac.c **** 		if (!(regv & (EMAC_PHY_BMCR_RESET | EMAC_PHY_BMCR_POWERDOWN))) {
+ 812              		.loc 1 336 0
+ 813 0150 FB68     		ldr	r3, [r7, #12]
+ 814 0152 03F40843 		and	r3, r3, #34816
+ 815 0156 002B     		cmp	r3, #0
+ 816 0158 0DD0     		beq	.L55
+ 817              	.L47:
+ 337:..//common/src/lpc17xx_emac.c **** 			/* Reset complete, device not Power Down. */
+ 338:..//common/src/lpc17xx_emac.c **** 			break;
+ 339:..//common/src/lpc17xx_emac.c **** 		}
+ 340:..//common/src/lpc17xx_emac.c **** 		if (tout == 0){
+ 818              		.loc 1 340 0
+ 819 015a 3B69     		ldr	r3, [r7, #16]
+ 820 015c 002B     		cmp	r3, #0
+ 821 015e 02D1     		bne	.L49
+ 341:..//common/src/lpc17xx_emac.c **** 			// Time out, return ERROR
+ 342:..//common/src/lpc17xx_emac.c **** 			return (ERROR);
+ 822              		.loc 1 342 0
+ 823 0160 4FF00003 		mov	r3, #0
+ 824 0164 4EE0     		b	.L50
+ 825              	.L49:
+ 826              		.loc 1 334 0
+ 827 0166 3B69     		ldr	r3, [r7, #16]
+ 828 0168 03F1FF33 		add	r3, r3, #-1
+ 829 016c 3B61     		str	r3, [r7, #16]
+ 830              	.L46:
+ 831 016e 3B69     		ldr	r3, [r7, #16]
+ 832 0170 002B     		cmp	r3, #0
+ 833 0172 E4D1     		bne	.L51
+ 834 0174 00E0     		b	.L48
+ 835              	.L55:
+ 836              		.loc 1 338 0
+ 837 0176 00BF     		nop
+ 838              	.L48:
+ 343:..//common/src/lpc17xx_emac.c **** 		}
+ 344:..//common/src/lpc17xx_emac.c **** 	}
+ 345:..//common/src/lpc17xx_emac.c **** 
+ 346:..//common/src/lpc17xx_emac.c **** 	// Set PHY mode
+ 347:..//common/src/lpc17xx_emac.c **** 	if (EMAC_SetPHYMode(EMAC_ConfigStruct->Mode) < 0){
+ 839              		.loc 1 347 0
+ 840 0178 7B68     		ldr	r3, [r7, #4]
+ 841 017a 1B68     		ldr	r3, [r3, #0]
+ 842 017c 1846     		mov	r0, r3
+ 843 017e 40F20003 		movw	r3, #:lower16:EMAC_SetPHYMode
+ 844 0182 C0F20003 		movt	r3, #:upper16:EMAC_SetPHYMode
+ 845 0186 9847     		blx	r3
+ 846 0188 0346     		mov	r3, r0
+ 847 018a 002B     		cmp	r3, #0
+ 848 018c 02DA     		bge	.L52
+ 348:..//common/src/lpc17xx_emac.c **** 		return (ERROR);
+ 849              		.loc 1 348 0
+ 850 018e 4FF00003 		mov	r3, #0
+ 851 0192 37E0     		b	.L50
+ 852              	.L52:
+ 349:..//common/src/lpc17xx_emac.c **** 	}
+ 350:..//common/src/lpc17xx_emac.c **** 
+ 351:..//common/src/lpc17xx_emac.c **** 	// Set EMAC address
+ 352:..//common/src/lpc17xx_emac.c **** 	setEmacAddr(EMAC_ConfigStruct->pbEMAC_Addr);
+ 853              		.loc 1 352 0
+ 854 0194 7B68     		ldr	r3, [r7, #4]
+ 855 0196 5B68     		ldr	r3, [r3, #4]
+ 856 0198 1846     		mov	r0, r3
+ 857 019a 40F20003 		movw	r3, #:lower16:setEmacAddr
+ 858 019e C0F20003 		movt	r3, #:upper16:setEmacAddr
+ 859 01a2 9847     		blx	r3
+ 353:..//common/src/lpc17xx_emac.c **** 
+ 354:..//common/src/lpc17xx_emac.c **** 	/* Initialize Tx and Rx DMA Descriptors */
+ 355:..//common/src/lpc17xx_emac.c **** 	rx_descr_init ();
+ 860              		.loc 1 355 0
+ 861 01a4 40F20003 		movw	r3, #:lower16:rx_descr_init
+ 862 01a8 C0F20003 		movt	r3, #:upper16:rx_descr_init
+ 863 01ac 9847     		blx	r3
+ 356:..//common/src/lpc17xx_emac.c **** 	tx_descr_init ();
+ 864              		.loc 1 356 0
+ 865 01ae 40F20003 		movw	r3, #:lower16:tx_descr_init
+ 866 01b2 C0F20003 		movt	r3, #:upper16:tx_descr_init
+ 867 01b6 9847     		blx	r3
+ 357:..//common/src/lpc17xx_emac.c **** 
+ 358:..//common/src/lpc17xx_emac.c **** 	// Set Receive Filter register: enable broadcast and multicast
+ 359:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->RxFilterCtrl = EMAC_RFC_MCAST_EN | EMAC_RFC_BCAST_EN | EMAC_RFC_PERFECT_EN;
+ 868              		.loc 1 359 0
+ 869 01b8 4FF0A043 		mov	r3, #1342177280
+ 870 01bc 4FF02602 		mov	r2, #38
+ 871 01c0 C3F80022 		str	r2, [r3, #512]
+ 360:..//common/src/lpc17xx_emac.c **** 
+ 361:..//common/src/lpc17xx_emac.c **** 	/* Enable Rx Done and Tx Done interrupt for EMAC */
+ 362:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->IntEnable = EMAC_INT_RX_DONE | EMAC_INT_TX_DONE;
+ 872              		.loc 1 362 0
+ 873 01c4 4FF0A043 		mov	r3, #1342177280
+ 874 01c8 4FF08802 		mov	r2, #136
+ 875 01cc C3F8E42F 		str	r2, [r3, #4068]
+ 363:..//common/src/lpc17xx_emac.c **** 
+ 364:..//common/src/lpc17xx_emac.c **** 	/* Reset all interrupts */
+ 365:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->IntClear  = 0xFFFF;
+ 876              		.loc 1 365 0
+ 877 01d0 4FF0A043 		mov	r3, #1342177280
+ 878 01d4 4FF6FF72 		movw	r2, #65535
+ 879 01d8 C3F8E82F 		str	r2, [r3, #4072]
+ 366:..//common/src/lpc17xx_emac.c **** 
+ 367:..//common/src/lpc17xx_emac.c **** 	/* Enable receive and transmit mode of MAC Ethernet core */
+ 368:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->Command  |= (EMAC_CR_RX_EN | EMAC_CR_TX_EN);
+ 880              		.loc 1 368 0
+ 881 01dc 4FF0A043 		mov	r3, #1342177280
+ 882 01e0 4FF0A042 		mov	r2, #1342177280
+ 883 01e4 D2F80021 		ldr	r2, [r2, #256]
+ 884 01e8 42F00302 		orr	r2, r2, #3
+ 885 01ec C3F80021 		str	r2, [r3, #256]
+ 369:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->MAC1     |= EMAC_MAC1_REC_EN;
+ 886              		.loc 1 369 0
+ 887 01f0 4FF0A043 		mov	r3, #1342177280
+ 888 01f4 4FF0A042 		mov	r2, #1342177280
+ 889 01f8 1268     		ldr	r2, [r2, #0]
+ 890 01fa 42F00102 		orr	r2, r2, #1
+ 891 01fe 1A60     		str	r2, [r3, #0]
+ 370:..//common/src/lpc17xx_emac.c **** 
+ 371:..//common/src/lpc17xx_emac.c **** 	return SUCCESS;
+ 892              		.loc 1 371 0
+ 893 0200 4FF00103 		mov	r3, #1
+ 894              	.L50:
+ 372:..//common/src/lpc17xx_emac.c **** }
+ 895              		.loc 1 372 0
+ 896 0204 1846     		mov	r0, r3
+ 897 0206 07F11807 		add	r7, r7, #24
+ 898 020a BD46     		mov	sp, r7
+ 899 020c 80BD     		pop	{r7, pc}
+ 900              		.cfi_endproc
+ 901              	.LFE35:
+ 903 020e 00BF     		.section	.text.EMAC_Init_New,"ax",%progbits
+ 904              		.align	2
+ 905              		.global	EMAC_Init_New
+ 906              		.thumb
+ 907              		.thumb_func
+ 909              	EMAC_Init_New:
+ 910              	.LFB36:
+ 373:..//common/src/lpc17xx_emac.c **** 
+ 374:..//common/src/lpc17xx_emac.c **** Status EMAC_Init_New()
+ 375:..//common/src/lpc17xx_emac.c **** {
+ 911              		.loc 1 375 0
+ 912              		.cfi_startproc
+ 913              		@ args = 0, pretend = 0, frame = 16
+ 914              		@ frame_needed = 1, uses_anonymous_args = 0
+ 915 0000 80B5     		push	{r7, lr}
+ 916              	.LCFI21:
+ 917              		.cfi_def_cfa_offset 8
+ 918 0002 84B0     		sub	sp, sp, #16
+ 919              	.LCFI22:
+ 920              		.cfi_def_cfa_offset 24
+ 921 0004 00AF     		add	r7, sp, #0
+ 922              		.cfi_offset 14, -4
+ 923              		.cfi_offset 7, -8
+ 924              	.LCFI23:
+ 925              		.cfi_def_cfa_register 7
+ 376:..//common/src/lpc17xx_emac.c **** 	/* Initialize the EMAC Ethernet controller. */
+ 377:..//common/src/lpc17xx_emac.c **** 	int32_t regv,tout, tmp;
+ 378:..//common/src/lpc17xx_emac.c **** 
+ 379:..//common/src/lpc17xx_emac.c **** 	/* Set up clock and power for Ethernet module */
+ 380:..//common/src/lpc17xx_emac.c **** 	CLKPWR_ConfigPPWR (CLKPWR_PCONP_PCENET, ENABLE);
+ 926              		.loc 1 380 0
+ 927 0006 4FF08040 		mov	r0, #1073741824
+ 928 000a 4FF00101 		mov	r1, #1
+ 929 000e 40F20003 		movw	r3, #:lower16:CLKPWR_ConfigPPWR
+ 930 0012 C0F20003 		movt	r3, #:upper16:CLKPWR_ConfigPPWR
+ 931 0016 9847     		blx	r3
+ 381:..//common/src/lpc17xx_emac.c **** 
+ 382:..//common/src/lpc17xx_emac.c **** 	/* Reset all EMAC internal modules */
+ 383:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->MAC1    = EMAC_MAC1_RES_TX | EMAC_MAC1_RES_MCS_TX | EMAC_MAC1_RES_RX |
+ 932              		.loc 1 383 0
+ 933 0018 4FF0A043 		mov	r3, #1342177280
+ 934 001c 4FF44F42 		mov	r2, #52992
+ 935 0020 1A60     		str	r2, [r3, #0]
+ 384:..//common/src/lpc17xx_emac.c **** 					EMAC_MAC1_RES_MCS_RX | EMAC_MAC1_SIM_RES | EMAC_MAC1_SOFT_RES;
+ 385:..//common/src/lpc17xx_emac.c **** 
+ 386:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->Command = EMAC_CR_REG_RES | EMAC_CR_TX_RES | EMAC_CR_RX_RES | EMAC_CR_PASS_RUNT_FRM;
+ 936              		.loc 1 386 0
+ 937 0022 4FF0A043 		mov	r3, #1342177280
+ 938 0026 4FF07802 		mov	r2, #120
+ 939 002a C3F80021 		str	r2, [r3, #256]
+ 387:..//common/src/lpc17xx_emac.c **** 
+ 388:..//common/src/lpc17xx_emac.c **** 	/* A short delay after reset. */
+ 389:..//common/src/lpc17xx_emac.c **** 	for (tout = 100; tout; tout--);
+ 940              		.loc 1 389 0
+ 941 002e 4FF06403 		mov	r3, #100
+ 942 0032 BB60     		str	r3, [r7, #8]
+ 943 0034 03E0     		b	.L57
+ 944              	.L58:
+ 945 0036 BB68     		ldr	r3, [r7, #8]
+ 946 0038 03F1FF33 		add	r3, r3, #-1
+ 947 003c BB60     		str	r3, [r7, #8]
+ 948              	.L57:
+ 949 003e BB68     		ldr	r3, [r7, #8]
+ 950 0040 002B     		cmp	r3, #0
+ 951 0042 F8D1     		bne	.L58
+ 390:..//common/src/lpc17xx_emac.c **** 	// printf("\n 1st step");
+ 391:..//common/src/lpc17xx_emac.c **** 	/* Initialize MAC control registers. */
+ 392:..//common/src/lpc17xx_emac.c **** 	// LPC_EMAC->MAC1 = EMAC_MAC1_PASS_ALL;
+ 393:..//common/src/lpc17xx_emac.c **** 	
+ 394:..//common/src/lpc17xx_emac.c **** 	// LPC_EMAC->MAC2 = EMAC_MAC2_CRC_EN | EMAC_MAC2_PAD_EN;
+ 395:..//common/src/lpc17xx_emac.c **** 	// LPC_EMAC->MAXF = EMAC_ETH_MAX_FLEN;
+ 396:..//common/src/lpc17xx_emac.c **** 	// printf("\n 2nd step");
+ 397:..//common/src/lpc17xx_emac.c **** 	/*
+ 398:..//common/src/lpc17xx_emac.c **** 	 * Find the clock that close to desired target clock
+ 399:..//common/src/lpc17xx_emac.c **** 	 */
+ 400:..//common/src/lpc17xx_emac.c **** 	tmp = SystemCoreClock / EMAC_MCFG_MII_MAXCLK;
+ 952              		.loc 1 400 0
+ 953 0044 40F20003 		movw	r3, #:lower16:SystemCoreClock
+ 954 0048 C0F20003 		movt	r3, #:upper16:SystemCoreClock
+ 955 004c 1A68     		ldr	r2, [r3, #0]
+ 956 004e 4CF66B23 		movw	r3, #:lower16:1801439851
+ 957 0052 C6F65F33 		movt	r3, #:upper16:1801439851
+ 958 0056 A3FB0213 		umull	r1, r3, r3, r2
+ 959 005a 4FEA1353 		lsr	r3, r3, #20
+ 960 005e FB60     		str	r3, [r7, #12]
+ 401:..//common/src/lpc17xx_emac.c **** 	for (tout = 0; tout < sizeof (EMAC_clkdiv); tout++){
+ 961              		.loc 1 401 0
+ 962 0060 4FF00003 		mov	r3, #0
+ 963 0064 BB60     		str	r3, [r7, #8]
+ 964 0066 0DE0     		b	.L59
+ 965              	.L62:
+ 402:..//common/src/lpc17xx_emac.c **** 		if (EMAC_clkdiv[tout] >= tmp) break;
+ 966              		.loc 1 402 0
+ 967 0068 BA68     		ldr	r2, [r7, #8]
+ 968 006a 40F20003 		movw	r3, #:lower16:EMAC_clkdiv
+ 969 006e C0F20003 		movt	r3, #:upper16:EMAC_clkdiv
+ 970 0072 9B5C     		ldrb	r3, [r3, r2]	@ zero_extendqisi2
+ 971 0074 1A46     		mov	r2, r3
+ 972 0076 FB68     		ldr	r3, [r7, #12]
+ 973 0078 9A42     		cmp	r2, r3
+ 974 007a 07DA     		bge	.L73
+ 975              	.L60:
+ 976              		.loc 1 401 0
+ 977 007c BB68     		ldr	r3, [r7, #8]
+ 978 007e 03F10103 		add	r3, r3, #1
+ 979 0082 BB60     		str	r3, [r7, #8]
+ 980              	.L59:
+ 981 0084 BB68     		ldr	r3, [r7, #8]
+ 982 0086 062B     		cmp	r3, #6
+ 983 0088 EED9     		bls	.L62
+ 984 008a 00E0     		b	.L61
+ 985              	.L73:
+ 986              		.loc 1 402 0
+ 987 008c 00BF     		nop
+ 988              	.L61:
+ 403:..//common/src/lpc17xx_emac.c **** 	}
+ 404:..//common/src/lpc17xx_emac.c **** 	tout++;
+ 989              		.loc 1 404 0
+ 990 008e BB68     		ldr	r3, [r7, #8]
+ 991 0090 03F10103 		add	r3, r3, #1
+ 992 0094 BB60     		str	r3, [r7, #8]
+ 405:..//common/src/lpc17xx_emac.c **** 	// Write to MAC configuration register and reset
+ 406:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->MCFG = EMAC_MCFG_CLK_SEL(tout) | EMAC_MCFG_RES_MII;
+ 993              		.loc 1 406 0
+ 994 0096 4FF0A043 		mov	r3, #1342177280
+ 995 009a BA68     		ldr	r2, [r7, #8]
+ 996 009c 02F00F02 		and	r2, r2, #15
+ 997 00a0 4FEA8202 		lsl	r2, r2, #2
+ 998 00a4 42F40042 		orr	r2, r2, #32768
+ 999 00a8 1A62     		str	r2, [r3, #32]
+ 407:..//common/src/lpc17xx_emac.c **** 	// release reset
+ 408:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->MCFG &= ~(EMAC_MCFG_RES_MII);
+ 1000              		.loc 1 408 0
+ 1001 00aa 4FF0A043 		mov	r3, #1342177280
+ 1002 00ae 4FF0A042 		mov	r2, #1342177280
+ 1003 00b2 126A     		ldr	r2, [r2, #32]
+ 1004 00b4 22F40042 		bic	r2, r2, #32768
+ 1005 00b8 1A62     		str	r2, [r3, #32]
+ 409:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->CLRT = EMAC_CLRT_DEF;
+ 1006              		.loc 1 409 0
+ 1007 00ba 4FF0A043 		mov	r3, #1342177280
+ 1008 00be 43F20F72 		movw	r2, #14095
+ 1009 00c2 1A61     		str	r2, [r3, #16]
+ 410:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->IPGR = EMAC_IPGR_P2_DEF;
+ 1010              		.loc 1 410 0
+ 1011 00c4 4FF0A043 		mov	r3, #1342177280
+ 1012 00c8 4FF01202 		mov	r2, #18
+ 1013 00cc DA60     		str	r2, [r3, #12]
+ 411:..//common/src/lpc17xx_emac.c **** 
+ 412:..//common/src/lpc17xx_emac.c **** 	/* Enable Reduced MII interface. */
+ 413:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->Command = EMAC_CR_RMII | EMAC_CR_PASS_RUNT_FRM;
+ 1014              		.loc 1 413 0
+ 1015 00ce 4FF0A043 		mov	r3, #1342177280
+ 1016 00d2 4FF41072 		mov	r2, #576
+ 1017 00d6 C3F80021 		str	r2, [r3, #256]
+ 414:..//common/src/lpc17xx_emac.c **** 
+ 415:..//common/src/lpc17xx_emac.c **** 	/* Reset Reduced MII Logic. */
+ 416:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->SUPP = EMAC_SUPP_RES_RMII;
+ 1018              		.loc 1 416 0
+ 1019 00da 4FF0A043 		mov	r3, #1342177280
+ 1020 00de 4FF40062 		mov	r2, #2048
+ 1021 00e2 9A61     		str	r2, [r3, #24]
+ 417:..//common/src/lpc17xx_emac.c **** 
+ 418:..//common/src/lpc17xx_emac.c **** 	for (tout = 100; tout; tout--);
+ 1022              		.loc 1 418 0
+ 1023 00e4 4FF06403 		mov	r3, #100
+ 1024 00e8 BB60     		str	r3, [r7, #8]
+ 1025 00ea 03E0     		b	.L63
+ 1026              	.L64:
+ 1027 00ec BB68     		ldr	r3, [r7, #8]
+ 1028 00ee 03F1FF33 		add	r3, r3, #-1
+ 1029 00f2 BB60     		str	r3, [r7, #8]
+ 1030              	.L63:
+ 1031 00f4 BB68     		ldr	r3, [r7, #8]
+ 1032 00f6 002B     		cmp	r3, #0
+ 1033 00f8 F8D1     		bne	.L64
+ 419:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->SUPP = 0;
+ 1034              		.loc 1 419 0
+ 1035 00fa 4FF0A043 		mov	r3, #1342177280
+ 1036 00fe 4FF00002 		mov	r2, #0
+ 1037 0102 9A61     		str	r2, [r3, #24]
+ 420:..//common/src/lpc17xx_emac.c **** 
+ 421:..//common/src/lpc17xx_emac.c **** 	/* Put the DP83848C in reset mode */
+ 422:..//common/src/lpc17xx_emac.c **** 	write_PHY (EMAC_PHY_REG_BMCR, EMAC_PHY_BMCR_RESET);
+ 1038              		.loc 1 422 0
+ 1039 0104 4FF00000 		mov	r0, #0
+ 1040 0108 4FF40041 		mov	r1, #32768
+ 1041 010c 40F20003 		movw	r3, #:lower16:write_PHY
+ 1042 0110 C0F20003 		movt	r3, #:upper16:write_PHY
+ 1043 0114 9847     		blx	r3
+ 423:..//common/src/lpc17xx_emac.c **** 
+ 424:..//common/src/lpc17xx_emac.c **** 	/* Wait for hardware reset to end. */
+ 425:..//common/src/lpc17xx_emac.c **** 	for (tout = EMAC_PHY_RESP_TOUT; tout; tout--) {
+ 1044              		.loc 1 425 0
+ 1045 0116 4FF48013 		mov	r3, #1048576
+ 1046 011a BB60     		str	r3, [r7, #8]
+ 1047 011c 17E0     		b	.L65
+ 1048              	.L70:
+ 426:..//common/src/lpc17xx_emac.c **** 		regv = read_PHY (EMAC_PHY_REG_BMCR);
+ 1049              		.loc 1 426 0
+ 1050 011e 4FF00000 		mov	r0, #0
+ 1051 0122 40F20003 		movw	r3, #:lower16:read_PHY
+ 1052 0126 C0F20003 		movt	r3, #:upper16:read_PHY
+ 1053 012a 9847     		blx	r3
+ 1054 012c 0346     		mov	r3, r0
+ 1055 012e 7B60     		str	r3, [r7, #4]
+ 427:..//common/src/lpc17xx_emac.c **** 		if (!(regv & (EMAC_PHY_BMCR_RESET | EMAC_PHY_BMCR_POWERDOWN))) {
+ 1056              		.loc 1 427 0
+ 1057 0130 7B68     		ldr	r3, [r7, #4]
+ 1058 0132 03F40843 		and	r3, r3, #34816
+ 1059 0136 002B     		cmp	r3, #0
+ 1060 0138 0DD0     		beq	.L74
+ 1061              	.L66:
+ 428:..//common/src/lpc17xx_emac.c **** 			/* Reset complete, device not Power Down. */
+ 429:..//common/src/lpc17xx_emac.c **** 			break;
+ 430:..//common/src/lpc17xx_emac.c **** 		}
+ 431:..//common/src/lpc17xx_emac.c **** 		if (tout == 0){
+ 1062              		.loc 1 431 0
+ 1063 013a BB68     		ldr	r3, [r7, #8]
+ 1064 013c 002B     		cmp	r3, #0
+ 1065 013e 02D1     		bne	.L68
+ 432:..//common/src/lpc17xx_emac.c **** 			// Time out, return ERROR
+ 433:..//common/src/lpc17xx_emac.c **** 			return (ERROR);
+ 1066              		.loc 1 433 0
+ 1067 0140 4FF00003 		mov	r3, #0
+ 1068 0144 54E0     		b	.L69
+ 1069              	.L68:
+ 1070              		.loc 1 425 0
+ 1071 0146 BB68     		ldr	r3, [r7, #8]
+ 1072 0148 03F1FF33 		add	r3, r3, #-1
+ 1073 014c BB60     		str	r3, [r7, #8]
+ 1074              	.L65:
+ 1075 014e BB68     		ldr	r3, [r7, #8]
+ 1076 0150 002B     		cmp	r3, #0
+ 1077 0152 E4D1     		bne	.L70
+ 1078 0154 00E0     		b	.L67
+ 1079              	.L74:
+ 1080              		.loc 1 429 0
+ 1081 0156 00BF     		nop
+ 1082              	.L67:
+ 434:..//common/src/lpc17xx_emac.c **** 		}
+ 435:..//common/src/lpc17xx_emac.c **** 	}
+ 436:..//common/src/lpc17xx_emac.c **** 
+ 437:..//common/src/lpc17xx_emac.c **** 	// Set PHY mode
+ 438:..//common/src/lpc17xx_emac.c **** 	if (EMAC_SetPHYMode(3) < 0){
+ 1083              		.loc 1 438 0
+ 1084 0158 4FF00300 		mov	r0, #3
+ 1085 015c 40F20003 		movw	r3, #:lower16:EMAC_SetPHYMode
+ 1086 0160 C0F20003 		movt	r3, #:upper16:EMAC_SetPHYMode
+ 1087 0164 9847     		blx	r3
+ 1088 0166 0346     		mov	r3, r0
+ 1089 0168 002B     		cmp	r3, #0
+ 1090 016a 02DA     		bge	.L71
+ 439:..//common/src/lpc17xx_emac.c **** 		return (ERROR);
+ 1091              		.loc 1 439 0
+ 1092 016c 4FF00003 		mov	r3, #0
+ 1093 0170 3EE0     		b	.L69
+ 1094              	.L71:
+ 440:..//common/src/lpc17xx_emac.c **** 	}
+ 441:..//common/src/lpc17xx_emac.c **** 
+ 442:..//common/src/lpc17xx_emac.c **** 	// Set EMAC address
+ 443:..//common/src/lpc17xx_emac.c **** 	// setEmacAddr(EMAC_ConfigStruct->pbEMAC_Addr);
+ 444:..//common/src/lpc17xx_emac.c **** 
+ 445:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->SA0 = (6 << 8) | 5;
+ 1095              		.loc 1 445 0
+ 1096 0172 4FF0A043 		mov	r3, #1342177280
+ 1097 0176 40F20562 		movw	r2, #1541
+ 1098 017a 1A64     		str	r2, [r3, #64]
+ 446:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->SA1 = (4 << 8) | 3;
+ 1099              		.loc 1 446 0
+ 1100 017c 4FF0A043 		mov	r3, #1342177280
+ 1101 0180 40F20342 		movw	r2, #1027
+ 1102 0184 5A64     		str	r2, [r3, #68]
+ 447:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->SA2 = (2 << 8) | 1;
+ 1103              		.loc 1 447 0
+ 1104 0186 4FF0A043 		mov	r3, #1342177280
+ 1105 018a 40F20122 		movw	r2, #513
+ 1106 018e 9A64     		str	r2, [r3, #72]
+ 448:..//common/src/lpc17xx_emac.c **** 
+ 449:..//common/src/lpc17xx_emac.c **** 	/* Initialize Tx and Rx DMA Descriptors */
+ 450:..//common/src/lpc17xx_emac.c **** 	rx_descr_init ();
+ 1107              		.loc 1 450 0
+ 1108 0190 40F20003 		movw	r3, #:lower16:rx_descr_init
+ 1109 0194 C0F20003 		movt	r3, #:upper16:rx_descr_init
+ 1110 0198 9847     		blx	r3
+ 451:..//common/src/lpc17xx_emac.c **** 	tx_descr_init ();
+ 1111              		.loc 1 451 0
+ 1112 019a 40F20003 		movw	r3, #:lower16:tx_descr_init
+ 1113 019e C0F20003 		movt	r3, #:upper16:tx_descr_init
+ 1114 01a2 9847     		blx	r3
+ 452:..//common/src/lpc17xx_emac.c **** 
+ 453:..//common/src/lpc17xx_emac.c **** 	// Set Receive Filter register: enable broadcast and multicast
+ 454:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->RxFilterCtrl = EMAC_RFC_MCAST_EN | EMAC_RFC_BCAST_EN | EMAC_RFC_PERFECT_EN;
+ 1115              		.loc 1 454 0
+ 1116 01a4 4FF0A043 		mov	r3, #1342177280
+ 1117 01a8 4FF02602 		mov	r2, #38
+ 1118 01ac C3F80022 		str	r2, [r3, #512]
+ 455:..//common/src/lpc17xx_emac.c **** 
+ 456:..//common/src/lpc17xx_emac.c **** 	/* Enable Rx Done and Tx Done interrupt for EMAC */
+ 457:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->IntEnable = EMAC_INT_RX_DONE | EMAC_INT_TX_DONE;
+ 1119              		.loc 1 457 0
+ 1120 01b0 4FF0A043 		mov	r3, #1342177280
+ 1121 01b4 4FF08802 		mov	r2, #136
+ 1122 01b8 C3F8E42F 		str	r2, [r3, #4068]
+ 458:..//common/src/lpc17xx_emac.c **** 
+ 459:..//common/src/lpc17xx_emac.c **** 	/* Reset all interrupts */
+ 460:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->IntClear  = 0xFFFF;
+ 1123              		.loc 1 460 0
+ 1124 01bc 4FF0A043 		mov	r3, #1342177280
+ 1125 01c0 4FF6FF72 		movw	r2, #65535
+ 1126 01c4 C3F8E82F 		str	r2, [r3, #4072]
+ 461:..//common/src/lpc17xx_emac.c **** 
+ 462:..//common/src/lpc17xx_emac.c **** 	/* Enable receive and transmit mode of MAC Ethernet core */
+ 463:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->Command  |= (EMAC_CR_RX_EN | EMAC_CR_TX_EN);
+ 1127              		.loc 1 463 0
+ 1128 01c8 4FF0A043 		mov	r3, #1342177280
+ 1129 01cc 4FF0A042 		mov	r2, #1342177280
+ 1130 01d0 D2F80021 		ldr	r2, [r2, #256]
+ 1131 01d4 42F00302 		orr	r2, r2, #3
+ 1132 01d8 C3F80021 		str	r2, [r3, #256]
+ 464:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->MAC1     |= EMAC_MAC1_REC_EN;
+ 1133              		.loc 1 464 0
+ 1134 01dc 4FF0A043 		mov	r3, #1342177280
+ 1135 01e0 4FF0A042 		mov	r2, #1342177280
+ 1136 01e4 1268     		ldr	r2, [r2, #0]
+ 1137 01e6 42F00102 		orr	r2, r2, #1
+ 1138 01ea 1A60     		str	r2, [r3, #0]
+ 465:..//common/src/lpc17xx_emac.c **** 
+ 466:..//common/src/lpc17xx_emac.c **** 	return SUCCESS;
+ 1139              		.loc 1 466 0
+ 1140 01ec 4FF00103 		mov	r3, #1
+ 1141              	.L69:
+ 467:..//common/src/lpc17xx_emac.c **** }
+ 1142              		.loc 1 467 0
+ 1143 01f0 1846     		mov	r0, r3
+ 1144 01f2 07F11007 		add	r7, r7, #16
+ 1145 01f6 BD46     		mov	sp, r7
+ 1146 01f8 80BD     		pop	{r7, pc}
+ 1147              		.cfi_endproc
+ 1148              	.LFE36:
+ 1150 01fa 00BF     		.section	.text.EMAC_DeInit,"ax",%progbits
+ 1151              		.align	2
+ 1152              		.global	EMAC_DeInit
+ 1153              		.thumb
+ 1154              		.thumb_func
+ 1156              	EMAC_DeInit:
+ 1157              	.LFB37:
+ 468:..//common/src/lpc17xx_emac.c **** 
+ 469:..//common/src/lpc17xx_emac.c **** 
+ 470:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 471:..//common/src/lpc17xx_emac.c ****  * @brief		De-initializes the EMAC peripheral registers to their
+ 472:..//common/src/lpc17xx_emac.c **** *                  default reset values.
+ 473:..//common/src/lpc17xx_emac.c ****  * @param[in]	None
+ 474:..//common/src/lpc17xx_emac.c ****  * @return 		None
+ 475:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+ 476:..//common/src/lpc17xx_emac.c **** void EMAC_DeInit(void)
+ 477:..//common/src/lpc17xx_emac.c **** {
+ 1158              		.loc 1 477 0
+ 1159              		.cfi_startproc
+ 1160              		@ args = 0, pretend = 0, frame = 0
+ 1161              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1162 0000 80B5     		push	{r7, lr}
+ 1163              	.LCFI24:
+ 1164              		.cfi_def_cfa_offset 8
+ 1165 0002 00AF     		add	r7, sp, #0
+ 1166              		.cfi_offset 14, -4
+ 1167              		.cfi_offset 7, -8
+ 1168              	.LCFI25:
+ 1169              		.cfi_def_cfa_register 7
+ 478:..//common/src/lpc17xx_emac.c **** 	// Disable all interrupt
+ 479:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->IntEnable = 0x00;
+ 1170              		.loc 1 479 0
+ 1171 0004 4FF0A043 		mov	r3, #1342177280
+ 1172 0008 4FF00002 		mov	r2, #0
+ 1173 000c C3F8E42F 		str	r2, [r3, #4068]
+ 480:..//common/src/lpc17xx_emac.c **** 	// Clear all pending interrupt
+ 481:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->IntClear = (0xFF) | (EMAC_INT_SOFT_INT | EMAC_INT_WAKEUP);
+ 1174              		.loc 1 481 0
+ 1175 0010 4FF0A043 		mov	r3, #1342177280
+ 1176 0014 43F2FF02 		movw	r2, #12543
+ 1177 0018 C3F8E82F 		str	r2, [r3, #4072]
+ 482:..//common/src/lpc17xx_emac.c **** 
+ 483:..//common/src/lpc17xx_emac.c **** 	/* TurnOff clock and power for Ethernet module */
+ 484:..//common/src/lpc17xx_emac.c **** 	CLKPWR_ConfigPPWR (CLKPWR_PCONP_PCENET, DISABLE);
+ 1178              		.loc 1 484 0
+ 1179 001c 4FF08040 		mov	r0, #1073741824
+ 1180 0020 4FF00001 		mov	r1, #0
+ 1181 0024 40F20003 		movw	r3, #:lower16:CLKPWR_ConfigPPWR
+ 1182 0028 C0F20003 		movt	r3, #:upper16:CLKPWR_ConfigPPWR
+ 1183 002c 9847     		blx	r3
+ 485:..//common/src/lpc17xx_emac.c **** }
+ 1184              		.loc 1 485 0
+ 1185 002e 80BD     		pop	{r7, pc}
+ 1186              		.cfi_endproc
+ 1187              	.LFE37:
+ 1189              		.section	.text.EMAC_CheckPHYStatus,"ax",%progbits
+ 1190              		.align	2
+ 1191              		.global	EMAC_CheckPHYStatus
+ 1192              		.thumb
+ 1193              		.thumb_func
+ 1195              	EMAC_CheckPHYStatus:
+ 1196              	.LFB38:
+ 486:..//common/src/lpc17xx_emac.c **** 
+ 487:..//common/src/lpc17xx_emac.c **** 
+ 488:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 489:..//common/src/lpc17xx_emac.c ****  * @brief		Check specified PHY status in EMAC peripheral
+ 490:..//common/src/lpc17xx_emac.c ****  * @param[in]	ulPHYState	Specified PHY Status Type, should be:
+ 491:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_PHY_STAT_LINK: Link Status
+ 492:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_PHY_STAT_SPEED: Speed Status
+ 493:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_PHY_STAT_DUP: Duplex Status
+ 494:..//common/src/lpc17xx_emac.c ****  * @return		Status of specified PHY status (0 or 1).
+ 495:..//common/src/lpc17xx_emac.c ****  * 				(-1) if error.
+ 496:..//common/src/lpc17xx_emac.c ****  *
+ 497:..//common/src/lpc17xx_emac.c ****  * Note:
+ 498:..//common/src/lpc17xx_emac.c ****  * For EMAC_PHY_STAT_LINK, return value:
+ 499:..//common/src/lpc17xx_emac.c ****  * - 0: Link Down
+ 500:..//common/src/lpc17xx_emac.c ****  * - 1: Link Up
+ 501:..//common/src/lpc17xx_emac.c ****  * For EMAC_PHY_STAT_SPEED, return value:
+ 502:..//common/src/lpc17xx_emac.c ****  * - 0: 10Mbps
+ 503:..//common/src/lpc17xx_emac.c ****  * - 1: 100Mbps
+ 504:..//common/src/lpc17xx_emac.c ****  * For EMAC_PHY_STAT_DUP, return value:
+ 505:..//common/src/lpc17xx_emac.c ****  * - 0: Half-Duplex
+ 506:..//common/src/lpc17xx_emac.c ****  * - 1: Full-Duplex
+ 507:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+ 508:..//common/src/lpc17xx_emac.c **** int32_t EMAC_CheckPHYStatus(uint32_t ulPHYState)
+ 509:..//common/src/lpc17xx_emac.c **** {
+ 1197              		.loc 1 509 0
+ 1198              		.cfi_startproc
+ 1199              		@ args = 0, pretend = 0, frame = 16
+ 1200              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1201 0000 80B5     		push	{r7, lr}
+ 1202              	.LCFI26:
+ 1203              		.cfi_def_cfa_offset 8
+ 1204 0002 84B0     		sub	sp, sp, #16
+ 1205              	.LCFI27:
+ 1206              		.cfi_def_cfa_offset 24
+ 1207 0004 00AF     		add	r7, sp, #0
+ 1208              		.cfi_offset 14, -4
+ 1209              		.cfi_offset 7, -8
+ 1210              	.LCFI28:
+ 1211              		.cfi_def_cfa_register 7
+ 1212 0006 7860     		str	r0, [r7, #4]
+ 510:..//common/src/lpc17xx_emac.c **** 	int32_t regv, tmp;
+ 511:..//common/src/lpc17xx_emac.c **** #ifdef MCB_LPC_1768
+ 512:..//common/src/lpc17xx_emac.c **** 	regv = read_PHY (EMAC_PHY_REG_STS);
+ 1213              		.loc 1 512 0
+ 1214 0008 4FF01000 		mov	r0, #16
+ 1215 000c 40F20003 		movw	r3, #:lower16:read_PHY
+ 1216 0010 C0F20003 		movt	r3, #:upper16:read_PHY
+ 1217 0014 9847     		blx	r3
+ 1218 0016 0346     		mov	r3, r0
+ 1219 0018 BB60     		str	r3, [r7, #8]
+ 513:..//common/src/lpc17xx_emac.c **** 	switch(ulPHYState){
+ 1220              		.loc 1 513 0
+ 1221 001a 7B68     		ldr	r3, [r7, #4]
+ 1222 001c 012B     		cmp	r3, #1
+ 1223 001e 09D0     		beq	.L80
+ 1224 0020 012B     		cmp	r3, #1
+ 1225 0022 02D3     		bcc	.L79
+ 1226 0024 022B     		cmp	r3, #2
+ 1227 0026 0ED0     		beq	.L81
+ 1228 0028 16E0     		b	.L84
+ 1229              	.L79:
+ 514:..//common/src/lpc17xx_emac.c **** 	case EMAC_PHY_STAT_LINK:
+ 515:..//common/src/lpc17xx_emac.c **** 		tmp = (regv & EMAC_PHY_SR_LINK) ? 1 : 0;
+ 1230              		.loc 1 515 0
+ 1231 002a BB68     		ldr	r3, [r7, #8]
+ 1232 002c 03F00103 		and	r3, r3, #1
+ 1233 0030 FB60     		str	r3, [r7, #12]
+ 516:..//common/src/lpc17xx_emac.c **** 		break;
+ 1234              		.loc 1 516 0
+ 1235 0032 14E0     		b	.L82
+ 1236              	.L80:
+ 517:..//common/src/lpc17xx_emac.c **** 	case EMAC_PHY_STAT_SPEED:
+ 518:..//common/src/lpc17xx_emac.c **** 		tmp = (regv & EMAC_PHY_SR_SPEED) ? 0 : 1;
+ 1237              		.loc 1 518 0
+ 1238 0034 BB68     		ldr	r3, [r7, #8]
+ 1239 0036 03F00203 		and	r3, r3, #2
+ 1240 003a 002B     		cmp	r3, #0
+ 1241 003c 14BF     		ite	ne
+ 1242 003e 0023     		movne	r3, #0
+ 1243 0040 0123     		moveq	r3, #1
+ 1244 0042 FB60     		str	r3, [r7, #12]
+ 519:..//common/src/lpc17xx_emac.c **** 		break;
+ 1245              		.loc 1 519 0
+ 1246 0044 0BE0     		b	.L82
+ 1247              	.L81:
+ 520:..//common/src/lpc17xx_emac.c **** 	case EMAC_PHY_STAT_DUP:
+ 521:..//common/src/lpc17xx_emac.c **** 		tmp = (regv & EMAC_PHY_SR_FULL_DUP) ? 1 : 0;
+ 1248              		.loc 1 521 0
+ 1249 0046 BB68     		ldr	r3, [r7, #8]
+ 1250 0048 03F4A043 		and	r3, r3, #20480
+ 1251 004c 002B     		cmp	r3, #0
+ 1252 004e 0CBF     		ite	eq
+ 1253 0050 0023     		moveq	r3, #0
+ 1254 0052 0123     		movne	r3, #1
+ 1255 0054 FB60     		str	r3, [r7, #12]
+ 522:..//common/src/lpc17xx_emac.c **** 		break;
+ 1256              		.loc 1 522 0
+ 1257 0056 02E0     		b	.L82
+ 1258              	.L84:
+ 523:..//common/src/lpc17xx_emac.c **** #elif defined(IAR_LPC_1768)
+ 524:..//common/src/lpc17xx_emac.c **** 	/* Use IAR_LPC_1768 board:
+ 525:..//common/src/lpc17xx_emac.c **** 	 * FSZ8721BL doesn't have Status Register
+ 526:..//common/src/lpc17xx_emac.c **** 	 * so we read Basic Mode Status Register (0x01h) instead
+ 527:..//common/src/lpc17xx_emac.c **** 	 */
+ 528:..//common/src/lpc17xx_emac.c **** 	regv = read_PHY (EMAC_PHY_REG_BMSR);
+ 529:..//common/src/lpc17xx_emac.c **** 	switch(ulPHYState){
+ 530:..//common/src/lpc17xx_emac.c **** 	case EMAC_PHY_STAT_LINK:
+ 531:..//common/src/lpc17xx_emac.c **** 		tmp = (regv & EMAC_PHY_BMSR_LINK_STATUS) ? 1 : 0;
+ 532:..//common/src/lpc17xx_emac.c **** 		break;
+ 533:..//common/src/lpc17xx_emac.c **** 	case EMAC_PHY_STAT_SPEED:
+ 534:..//common/src/lpc17xx_emac.c **** 		tmp = (regv & EMAC_PHY_SR_100_SPEED) ? 1 : 0;
+ 535:..//common/src/lpc17xx_emac.c **** 		break;
+ 536:..//common/src/lpc17xx_emac.c **** 	case EMAC_PHY_STAT_DUP:
+ 537:..//common/src/lpc17xx_emac.c **** 		tmp = (regv & EMAC_PHY_SR_FULL_DUP) ? 1 : 0;
+ 538:..//common/src/lpc17xx_emac.c **** 		break;
+ 539:..//common/src/lpc17xx_emac.c **** #endif
+ 540:..//common/src/lpc17xx_emac.c **** 	default:
+ 541:..//common/src/lpc17xx_emac.c **** 		tmp = -1;
+ 1259              		.loc 1 541 0
+ 1260 0058 4FF0FF33 		mov	r3, #-1
+ 1261 005c FB60     		str	r3, [r7, #12]
+ 1262              	.L82:
+ 542:..//common/src/lpc17xx_emac.c **** 		break;
+ 543:..//common/src/lpc17xx_emac.c **** 	}
+ 544:..//common/src/lpc17xx_emac.c **** 	return (tmp);
+ 1263              		.loc 1 544 0
+ 1264 005e FB68     		ldr	r3, [r7, #12]
+ 545:..//common/src/lpc17xx_emac.c **** }
+ 1265              		.loc 1 545 0
+ 1266 0060 1846     		mov	r0, r3
+ 1267 0062 07F11007 		add	r7, r7, #16
+ 1268 0066 BD46     		mov	sp, r7
+ 1269 0068 80BD     		pop	{r7, pc}
+ 1270              		.cfi_endproc
+ 1271              	.LFE38:
+ 1273 006a 00BF     		.section	.text.EMAC_SetPHYMode,"ax",%progbits
+ 1274              		.align	2
+ 1275              		.global	EMAC_SetPHYMode
+ 1276              		.thumb
+ 1277              		.thumb_func
+ 1279              	EMAC_SetPHYMode:
+ 1280              	.LFB39:
+ 546:..//common/src/lpc17xx_emac.c **** 
+ 547:..//common/src/lpc17xx_emac.c **** 
+ 548:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 549:..//common/src/lpc17xx_emac.c ****  * @brief		Set specified PHY mode in EMAC peripheral
+ 550:..//common/src/lpc17xx_emac.c ****  * @param[in]	ulPHYMode	Specified PHY mode, should be:
+ 551:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_MODE_AUTO
+ 552:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_MODE_10M_FULL
+ 553:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_MODE_10M_HALF
+ 554:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_MODE_100M_FULL
+ 555:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_MODE_100M_HALF
+ 556:..//common/src/lpc17xx_emac.c ****  * @return		Return (0) if no error, otherwise return (-1)
+ 557:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+ 558:..//common/src/lpc17xx_emac.c **** int32_t EMAC_SetPHYMode(uint32_t ulPHYMode)
+ 559:..//common/src/lpc17xx_emac.c **** {
+ 1281              		.loc 1 559 0
+ 1282              		.cfi_startproc
+ 1283              		@ args = 0, pretend = 0, frame = 24
+ 1284              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1285 0000 80B5     		push	{r7, lr}
+ 1286              	.LCFI29:
+ 1287              		.cfi_def_cfa_offset 8
+ 1288 0002 86B0     		sub	sp, sp, #24
+ 1289              	.LCFI30:
+ 1290              		.cfi_def_cfa_offset 32
+ 1291 0004 00AF     		add	r7, sp, #0
+ 1292              		.cfi_offset 14, -4
+ 1293              		.cfi_offset 7, -8
+ 1294              	.LCFI31:
+ 1295              		.cfi_def_cfa_register 7
+ 1296 0006 7860     		str	r0, [r7, #4]
+ 560:..//common/src/lpc17xx_emac.c **** 	int32_t id1, id2, tout, regv;
+ 561:..//common/src/lpc17xx_emac.c **** 
+ 562:..//common/src/lpc17xx_emac.c **** 	/* Check if this is a DP83848C PHY. */
+ 563:..//common/src/lpc17xx_emac.c **** 	id1 = read_PHY (EMAC_PHY_REG_IDR1);
+ 1297              		.loc 1 563 0
+ 1298 0008 4FF00200 		mov	r0, #2
+ 1299 000c 40F20003 		movw	r3, #:lower16:read_PHY
+ 1300 0010 C0F20003 		movt	r3, #:upper16:read_PHY
+ 1301 0014 9847     		blx	r3
+ 1302 0016 0346     		mov	r3, r0
+ 1303 0018 BB60     		str	r3, [r7, #8]
+ 564:..//common/src/lpc17xx_emac.c **** 	id2 = read_PHY (EMAC_PHY_REG_IDR2);
+ 1304              		.loc 1 564 0
+ 1305 001a 4FF00300 		mov	r0, #3
+ 1306 001e 40F20003 		movw	r3, #:lower16:read_PHY
+ 1307 0022 C0F20003 		movt	r3, #:upper16:read_PHY
+ 1308 0026 9847     		blx	r3
+ 1309 0028 0346     		mov	r3, r0
+ 1310 002a FB60     		str	r3, [r7, #12]
+ 565:..//common/src/lpc17xx_emac.c **** 
+ 566:..//common/src/lpc17xx_emac.c **** #ifdef MCB_LPC_1768
+ 567:..//common/src/lpc17xx_emac.c **** 	if (((id1 << 16) | (id2 & 0xFFF0)) == EMAC_DP83848C_ID) {
+ 1311              		.loc 1 567 0
+ 1312 002c BB68     		ldr	r3, [r7, #8]
+ 1313 002e 4FEA0342 		lsl	r2, r3, #16
+ 1314 0032 F968     		ldr	r1, [r7, #12]
+ 1315 0034 4FF6F073 		movw	r3, #:lower16:65520
+ 1316 0038 C0F20003 		movt	r3, #:upper16:65520
+ 1317 003c 01EA0303 		and	r3, r1, r3
+ 1318 0040 42EA0302 		orr	r2, r2, r3
+ 1319 0044 45F69043 		movw	r3, #:lower16:536894608
+ 1320 0048 C2F20003 		movt	r3, #:upper16:536894608
+ 1321 004c 9A42     		cmp	r2, r3
+ 1322 004e 6ED1     		bne	.L86
+ 568:..//common/src/lpc17xx_emac.c **** 		switch(ulPHYMode){
+ 1323              		.loc 1 568 0
+ 1324 0050 7B68     		ldr	r3, [r7, #4]
+ 1325 0052 042B     		cmp	r3, #4
+ 1326 0054 5FD8     		bhi	.L87
+ 1327 0056 01A2     		adr	r2, .L93
+ 1328 0058 52F823F0 		ldr	pc, [r2, r3, lsl #2]
+ 1329              		.align	2
+ 1330              	.L93:
+ 1331 005c 71000000 		.word	.L88+1
+ 1332 0060 C7000000 		.word	.L89+1
+ 1333 0064 DB000000 		.word	.L90+1
+ 1334 0068 EF000000 		.word	.L91+1
+ 1335 006c 03010000 		.word	.L92+1
+ 1336              	.L88:
+ 569:..//common/src/lpc17xx_emac.c **** 		case EMAC_MODE_AUTO:
+ 570:..//common/src/lpc17xx_emac.c **** 			write_PHY (EMAC_PHY_REG_BMCR, EMAC_PHY_AUTO_NEG);
+ 1337              		.loc 1 570 0
+ 1338 0070 4FF00000 		mov	r0, #0
+ 1339 0074 4FF44051 		mov	r1, #12288
+ 1340 0078 40F20003 		movw	r3, #:lower16:write_PHY
+ 1341 007c C0F20003 		movt	r3, #:upper16:write_PHY
+ 1342 0080 9847     		blx	r3
+ 571:..//common/src/lpc17xx_emac.c **** #elif defined(IAR_LPC_1768) /* Use IAR LPC1768 KickStart board */
+ 572:..//common/src/lpc17xx_emac.c **** 	if (((id1 << 16) | id2) == EMAC_KSZ8721BL_ID) {
+ 573:..//common/src/lpc17xx_emac.c **** 		/* Configure the PHY device */
+ 574:..//common/src/lpc17xx_emac.c **** 		switch(ulPHYMode){
+ 575:..//common/src/lpc17xx_emac.c **** 		case EMAC_MODE_AUTO:
+ 576:..//common/src/lpc17xx_emac.c **** 			/* Use auto-negotiation about the link speed. */
+ 577:..//common/src/lpc17xx_emac.c **** 			write_PHY (EMAC_PHY_REG_BMCR, EMAC_PHY_AUTO_NEG);
+ 578:..//common/src/lpc17xx_emac.c **** //			write_PHY (EMAC_PHY_REG_BMCR, EMAC_PHY_BMCR_AN);
+ 579:..//common/src/lpc17xx_emac.c **** #endif
+ 580:..//common/src/lpc17xx_emac.c **** 			/* Wait to complete Auto_Negotiation */
+ 581:..//common/src/lpc17xx_emac.c **** 			for (tout = EMAC_PHY_RESP_TOUT; tout; tout--) {
+ 1343              		.loc 1 581 0
+ 1344 0082 4FF48013 		mov	r3, #1048576
+ 1345 0086 3B61     		str	r3, [r7, #16]
+ 1346 0088 19E0     		b	.L94
+ 1347              	.L99:
+ 582:..//common/src/lpc17xx_emac.c **** 				regv = read_PHY (EMAC_PHY_REG_BMSR);
+ 1348              		.loc 1 582 0
+ 1349 008a 4FF00100 		mov	r0, #1
+ 1350 008e 40F20003 		movw	r3, #:lower16:read_PHY
+ 1351 0092 C0F20003 		movt	r3, #:upper16:read_PHY
+ 1352 0096 9847     		blx	r3
+ 1353 0098 0346     		mov	r3, r0
+ 1354 009a 7B61     		str	r3, [r7, #20]
+ 583:..//common/src/lpc17xx_emac.c **** 				if (regv & EMAC_PHY_BMSR_AUTO_DONE) {
+ 1355              		.loc 1 583 0
+ 1356 009c 7B69     		ldr	r3, [r7, #20]
+ 1357 009e 03F02003 		and	r3, r3, #32
+ 1358 00a2 002B     		cmp	r3, #0
+ 1359 00a4 01D0     		beq	.L95
+ 584:..//common/src/lpc17xx_emac.c **** 					/* Auto-negotiation Complete. */
+ 585:..//common/src/lpc17xx_emac.c **** 					break;
+ 1360              		.loc 1 585 0
+ 1361 00a6 00BF     		nop
+ 586:..//common/src/lpc17xx_emac.c **** 				}
+ 587:..//common/src/lpc17xx_emac.c **** 				if (tout == 0){
+ 588:..//common/src/lpc17xx_emac.c **** 					// Time out, return error
+ 589:..//common/src/lpc17xx_emac.c **** 					return (-1);
+ 590:..//common/src/lpc17xx_emac.c **** 				}
+ 591:..//common/src/lpc17xx_emac.c **** 			}
+ 592:..//common/src/lpc17xx_emac.c **** 			break;
+ 1362              		.loc 1 592 0
+ 1363 00a8 38E0     		b	.L100
+ 1364              	.L95:
+ 1365              		.loc 1 587 0
+ 1366 00aa 3B69     		ldr	r3, [r7, #16]
+ 1367 00ac 002B     		cmp	r3, #0
+ 1368 00ae 02D1     		bne	.L97
+ 1369              		.loc 1 589 0
+ 1370 00b0 4FF0FF33 		mov	r3, #-1
+ 1371 00b4 43E0     		b	.L98
+ 1372              	.L97:
+ 1373              		.loc 1 581 0
+ 1374 00b6 3B69     		ldr	r3, [r7, #16]
+ 1375 00b8 03F1FF33 		add	r3, r3, #-1
+ 1376 00bc 3B61     		str	r3, [r7, #16]
+ 1377              	.L94:
+ 1378 00be 3B69     		ldr	r3, [r7, #16]
+ 1379 00c0 002B     		cmp	r3, #0
+ 1380 00c2 E2D1     		bne	.L99
+ 1381              		.loc 1 592 0
+ 1382 00c4 2AE0     		b	.L100
+ 1383              	.L89:
+ 593:..//common/src/lpc17xx_emac.c **** 		case EMAC_MODE_10M_FULL:
+ 594:..//common/src/lpc17xx_emac.c **** 			/* Connect at 10MBit full-duplex */
+ 595:..//common/src/lpc17xx_emac.c **** 			write_PHY (EMAC_PHY_REG_BMCR, EMAC_PHY_FULLD_10M);
+ 1384              		.loc 1 595 0
+ 1385 00c6 4FF00000 		mov	r0, #0
+ 1386 00ca 4FF48071 		mov	r1, #256
+ 1387 00ce 40F20003 		movw	r3, #:lower16:write_PHY
+ 1388 00d2 C0F20003 		movt	r3, #:upper16:write_PHY
+ 1389 00d6 9847     		blx	r3
+ 596:..//common/src/lpc17xx_emac.c **** 			break;
+ 1390              		.loc 1 596 0
+ 1391 00d8 20E0     		b	.L100
+ 1392              	.L90:
+ 597:..//common/src/lpc17xx_emac.c **** 		case EMAC_MODE_10M_HALF:
+ 598:..//common/src/lpc17xx_emac.c **** 			/* Connect at 10MBit half-duplex */
+ 599:..//common/src/lpc17xx_emac.c **** 			write_PHY (EMAC_PHY_REG_BMCR, EMAC_PHY_HALFD_10M);
+ 1393              		.loc 1 599 0
+ 1394 00da 4FF00000 		mov	r0, #0
+ 1395 00de 4FF00001 		mov	r1, #0
+ 1396 00e2 40F20003 		movw	r3, #:lower16:write_PHY
+ 1397 00e6 C0F20003 		movt	r3, #:upper16:write_PHY
+ 1398 00ea 9847     		blx	r3
+ 600:..//common/src/lpc17xx_emac.c **** 			break;
+ 1399              		.loc 1 600 0
+ 1400 00ec 16E0     		b	.L100
+ 1401              	.L91:
+ 601:..//common/src/lpc17xx_emac.c **** 		case EMAC_MODE_100M_FULL:
+ 602:..//common/src/lpc17xx_emac.c **** 			/* Connect at 100MBit full-duplex */
+ 603:..//common/src/lpc17xx_emac.c **** 			write_PHY (EMAC_PHY_REG_BMCR, EMAC_PHY_FULLD_100M);
+ 1402              		.loc 1 603 0
+ 1403 00ee 4FF00000 		mov	r0, #0
+ 1404 00f2 4FF40451 		mov	r1, #8448
+ 1405 00f6 40F20003 		movw	r3, #:lower16:write_PHY
+ 1406 00fa C0F20003 		movt	r3, #:upper16:write_PHY
+ 1407 00fe 9847     		blx	r3
+ 604:..//common/src/lpc17xx_emac.c **** 			break;
+ 1408              		.loc 1 604 0
+ 1409 0100 0CE0     		b	.L100
+ 1410              	.L92:
+ 605:..//common/src/lpc17xx_emac.c **** 		case EMAC_MODE_100M_HALF:
+ 606:..//common/src/lpc17xx_emac.c **** 			/* Connect at 100MBit half-duplex */
+ 607:..//common/src/lpc17xx_emac.c **** 			write_PHY (EMAC_PHY_REG_BMCR, EMAC_PHY_HALFD_100M);
+ 1411              		.loc 1 607 0
+ 1412 0102 4FF00000 		mov	r0, #0
+ 1413 0106 4FF40051 		mov	r1, #8192
+ 1414 010a 40F20003 		movw	r3, #:lower16:write_PHY
+ 1415 010e C0F20003 		movt	r3, #:upper16:write_PHY
+ 1416 0112 9847     		blx	r3
+ 608:..//common/src/lpc17xx_emac.c **** 			break;
+ 1417              		.loc 1 608 0
+ 1418 0114 02E0     		b	.L100
+ 1419              	.L87:
+ 609:..//common/src/lpc17xx_emac.c **** 		default:
+ 610:..//common/src/lpc17xx_emac.c **** 			// un-supported
+ 611:..//common/src/lpc17xx_emac.c **** 			return (-1);
+ 1420              		.loc 1 611 0
+ 1421 0116 4FF0FF33 		mov	r3, #-1
+ 1422 011a 10E0     		b	.L98
+ 1423              	.L100:
+ 612:..//common/src/lpc17xx_emac.c **** 		}
+ 613:..//common/src/lpc17xx_emac.c **** 	}
+ 614:..//common/src/lpc17xx_emac.c **** 	// It's not correct module ID
+ 615:..//common/src/lpc17xx_emac.c **** 	else {
+ 616:..//common/src/lpc17xx_emac.c **** 		return (-1);
+ 617:..//common/src/lpc17xx_emac.c **** 	}
+ 618:..//common/src/lpc17xx_emac.c **** 
+ 619:..//common/src/lpc17xx_emac.c **** 	// Update EMAC configuration with current PHY status
+ 620:..//common/src/lpc17xx_emac.c **** 	if (EMAC_UpdatePHYStatus() < 0){
+ 1424              		.loc 1 620 0
+ 1425 011c 40F20003 		movw	r3, #:lower16:EMAC_UpdatePHYStatus
+ 1426 0120 C0F20003 		movt	r3, #:upper16:EMAC_UpdatePHYStatus
+ 1427 0124 9847     		blx	r3
+ 1428 0126 0346     		mov	r3, r0
+ 1429 0128 002B     		cmp	r3, #0
+ 1430 012a 03DB     		blt	.L101
+ 1431 012c 05E0     		b	.L104
+ 1432              	.L86:
+ 1433              		.loc 1 616 0
+ 1434 012e 4FF0FF33 		mov	r3, #-1
+ 1435 0132 04E0     		b	.L98
+ 1436              	.L101:
+ 621:..//common/src/lpc17xx_emac.c **** 		return (-1);
+ 1437              		.loc 1 621 0
+ 1438 0134 4FF0FF33 		mov	r3, #-1
+ 1439 0138 01E0     		b	.L98
+ 1440              	.L104:
+ 622:..//common/src/lpc17xx_emac.c **** 	}
+ 623:..//common/src/lpc17xx_emac.c **** 
+ 624:..//common/src/lpc17xx_emac.c **** 	// Complete
+ 625:..//common/src/lpc17xx_emac.c **** 	return (0);
+ 1441              		.loc 1 625 0
+ 1442 013a 4FF00003 		mov	r3, #0
+ 1443              	.L98:
+ 626:..//common/src/lpc17xx_emac.c **** }
+ 1444              		.loc 1 626 0
+ 1445 013e 1846     		mov	r0, r3
+ 1446 0140 07F11807 		add	r7, r7, #24
+ 1447 0144 BD46     		mov	sp, r7
+ 1448 0146 80BD     		pop	{r7, pc}
+ 1449              		.cfi_endproc
+ 1450              	.LFE39:
+ 1452              		.section	.text.EMAC_UpdatePHYStatus,"ax",%progbits
+ 1453              		.align	2
+ 1454              		.global	EMAC_UpdatePHYStatus
+ 1455              		.thumb
+ 1456              		.thumb_func
+ 1458              	EMAC_UpdatePHYStatus:
+ 1459              	.LFB40:
+ 627:..//common/src/lpc17xx_emac.c **** 
+ 628:..//common/src/lpc17xx_emac.c **** 
+ 629:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 630:..//common/src/lpc17xx_emac.c ****  * @brief		Auto-Configures value for the EMAC configuration register to
+ 631:..//common/src/lpc17xx_emac.c ****  * 				match with current PHY mode
+ 632:..//common/src/lpc17xx_emac.c ****  * @param[in]	None
+ 633:..//common/src/lpc17xx_emac.c ****  * @return		Return (0) if no error, otherwise return (-1)
+ 634:..//common/src/lpc17xx_emac.c ****  *
+ 635:..//common/src/lpc17xx_emac.c ****  * Note: The EMAC configuration will be auto-configured:
+ 636:..//common/src/lpc17xx_emac.c ****  * 		- Speed mode.
+ 637:..//common/src/lpc17xx_emac.c ****  * 		- Half/Full duplex mode
+ 638:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+ 639:..//common/src/lpc17xx_emac.c **** int32_t EMAC_UpdatePHYStatus(void)
+ 640:..//common/src/lpc17xx_emac.c **** {
+ 1460              		.loc 1 640 0
+ 1461              		.cfi_startproc
+ 1462              		@ args = 0, pretend = 0, frame = 8
+ 1463              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1464 0000 80B5     		push	{r7, lr}
+ 1465              	.LCFI32:
+ 1466              		.cfi_def_cfa_offset 8
+ 1467 0002 82B0     		sub	sp, sp, #8
+ 1468              	.LCFI33:
+ 1469              		.cfi_def_cfa_offset 16
+ 1470 0004 00AF     		add	r7, sp, #0
+ 1471              		.cfi_offset 14, -4
+ 1472              		.cfi_offset 7, -8
+ 1473              	.LCFI34:
+ 1474              		.cfi_def_cfa_register 7
+ 641:..//common/src/lpc17xx_emac.c **** 	int32_t regv, tout;
+ 642:..//common/src/lpc17xx_emac.c **** 
+ 643:..//common/src/lpc17xx_emac.c **** 	/* Check the link status. */
+ 644:..//common/src/lpc17xx_emac.c **** #ifdef MCB_LPC_1768
+ 645:..//common/src/lpc17xx_emac.c **** 	for (tout = EMAC_PHY_RESP_TOUT; tout; tout--) {
+ 1475              		.loc 1 645 0
+ 1476 0006 4FF48013 		mov	r3, #1048576
+ 1477 000a 7B60     		str	r3, [r7, #4]
+ 1478 000c 18E0     		b	.L106
+ 1479              	.L111:
+ 646:..//common/src/lpc17xx_emac.c **** 		regv = read_PHY (EMAC_PHY_REG_STS);
+ 1480              		.loc 1 646 0
+ 1481 000e 4FF01000 		mov	r0, #16
+ 1482 0012 40F20003 		movw	r3, #:lower16:read_PHY
+ 1483 0016 C0F20003 		movt	r3, #:upper16:read_PHY
+ 1484 001a 9847     		blx	r3
+ 1485 001c 0346     		mov	r3, r0
+ 1486 001e 3B60     		str	r3, [r7, #0]
+ 647:..//common/src/lpc17xx_emac.c **** 		if (regv & EMAC_PHY_SR_LINK) {
+ 1487              		.loc 1 647 0
+ 1488 0020 3B68     		ldr	r3, [r7, #0]
+ 1489 0022 03F00103 		and	r3, r3, #1
+ 1490 0026 DBB2     		uxtb	r3, r3
+ 1491 0028 002B     		cmp	r3, #0
+ 1492 002a 0DD1     		bne	.L117
+ 1493              	.L107:
+ 648:..//common/src/lpc17xx_emac.c **** 			/* Link is on. */
+ 649:..//common/src/lpc17xx_emac.c **** 			break;
+ 650:..//common/src/lpc17xx_emac.c **** 		}
+ 651:..//common/src/lpc17xx_emac.c **** 		if (tout == 0){
+ 1494              		.loc 1 651 0
+ 1495 002c 7B68     		ldr	r3, [r7, #4]
+ 1496 002e 002B     		cmp	r3, #0
+ 1497 0030 02D1     		bne	.L109
+ 652:..//common/src/lpc17xx_emac.c **** 			// time out
+ 653:..//common/src/lpc17xx_emac.c **** 			return (-1);
+ 1498              		.loc 1 653 0
+ 1499 0032 4FF0FF33 		mov	r3, #-1
+ 1500 0036 3CE0     		b	.L110
+ 1501              	.L109:
+ 1502              		.loc 1 645 0
+ 1503 0038 7B68     		ldr	r3, [r7, #4]
+ 1504 003a 03F1FF33 		add	r3, r3, #-1
+ 1505 003e 7B60     		str	r3, [r7, #4]
+ 1506              	.L106:
+ 1507 0040 7B68     		ldr	r3, [r7, #4]
+ 1508 0042 002B     		cmp	r3, #0
+ 1509 0044 E3D1     		bne	.L111
+ 1510 0046 00E0     		b	.L108
+ 1511              	.L117:
+ 1512              		.loc 1 649 0
+ 1513 0048 00BF     		nop
+ 1514              	.L108:
+ 654:..//common/src/lpc17xx_emac.c **** 		}
+ 655:..//common/src/lpc17xx_emac.c **** 	}
+ 656:..//common/src/lpc17xx_emac.c **** 	/* Configure Full/Half Duplex mode. */
+ 657:..//common/src/lpc17xx_emac.c **** 	if (regv & EMAC_PHY_SR_DUP) {
+ 1515              		.loc 1 657 0
+ 1516 004a 3B68     		ldr	r3, [r7, #0]
+ 1517 004c 03F00403 		and	r3, r3, #4
+ 1518 0050 002B     		cmp	r3, #0
+ 1519 0052 17D0     		beq	.L112
+ 658:..//common/src/lpc17xx_emac.c **** 	/* Full duplex is enabled. */
+ 659:..//common/src/lpc17xx_emac.c **** 			LPC_EMAC->MAC2    |= EMAC_MAC2_FULL_DUP;
+ 1520              		.loc 1 659 0
+ 1521 0054 4FF0A043 		mov	r3, #1342177280
+ 1522 0058 4FF0A042 		mov	r2, #1342177280
+ 1523 005c 5268     		ldr	r2, [r2, #4]
+ 1524 005e 42F00102 		orr	r2, r2, #1
+ 1525 0062 5A60     		str	r2, [r3, #4]
+ 660:..//common/src/lpc17xx_emac.c **** 			LPC_EMAC->Command |= EMAC_CR_FULL_DUP;
+ 1526              		.loc 1 660 0
+ 1527 0064 4FF0A043 		mov	r3, #1342177280
+ 1528 0068 4FF0A042 		mov	r2, #1342177280
+ 1529 006c D2F80021 		ldr	r2, [r2, #256]
+ 1530 0070 42F48062 		orr	r2, r2, #1024
+ 1531 0074 C3F80021 		str	r2, [r3, #256]
+ 661:..//common/src/lpc17xx_emac.c **** 			LPC_EMAC->IPGT     = EMAC_IPGT_FULL_DUP;
+ 1532              		.loc 1 661 0
+ 1533 0078 4FF0A043 		mov	r3, #1342177280
+ 1534 007c 4FF01502 		mov	r2, #21
+ 1535 0080 9A60     		str	r2, [r3, #8]
+ 1536 0082 04E0     		b	.L113
+ 1537              	.L112:
+ 662:..//common/src/lpc17xx_emac.c **** 	} else {
+ 663:..//common/src/lpc17xx_emac.c **** 		/* Half duplex mode. */
+ 664:..//common/src/lpc17xx_emac.c **** 		LPC_EMAC->IPGT = EMAC_IPGT_HALF_DUP;
+ 1538              		.loc 1 664 0
+ 1539 0084 4FF0A043 		mov	r3, #1342177280
+ 1540 0088 4FF01202 		mov	r2, #18
+ 1541 008c 9A60     		str	r2, [r3, #8]
+ 1542              	.L113:
+ 665:..//common/src/lpc17xx_emac.c **** 	}
+ 666:..//common/src/lpc17xx_emac.c **** 	if (regv & EMAC_PHY_SR_SPEED) {
+ 1543              		.loc 1 666 0
+ 1544 008e 3B68     		ldr	r3, [r7, #0]
+ 1545 0090 03F00203 		and	r3, r3, #2
+ 1546 0094 002B     		cmp	r3, #0
+ 1547 0096 05D0     		beq	.L114
+ 667:..//common/src/lpc17xx_emac.c **** 	/* 10MBit mode. */
+ 668:..//common/src/lpc17xx_emac.c **** 		LPC_EMAC->SUPP = 0;
+ 1548              		.loc 1 668 0
+ 1549 0098 4FF0A043 		mov	r3, #1342177280
+ 1550 009c 4FF00002 		mov	r2, #0
+ 1551 00a0 9A61     		str	r2, [r3, #24]
+ 1552 00a2 04E0     		b	.L115
+ 1553              	.L114:
+ 669:..//common/src/lpc17xx_emac.c **** 	} else {
+ 670:..//common/src/lpc17xx_emac.c **** 		/* 100MBit mode. */
+ 671:..//common/src/lpc17xx_emac.c **** 		LPC_EMAC->SUPP = EMAC_SUPP_SPEED;
+ 1554              		.loc 1 671 0
+ 1555 00a4 4FF0A043 		mov	r3, #1342177280
+ 1556 00a8 4FF48072 		mov	r2, #256
+ 1557 00ac 9A61     		str	r2, [r3, #24]
+ 1558              	.L115:
+ 672:..//common/src/lpc17xx_emac.c **** 	}
+ 673:..//common/src/lpc17xx_emac.c **** #elif defined(IAR_LPC_1768)
+ 674:..//common/src/lpc17xx_emac.c **** 	for (tout = EMAC_PHY_RESP_TOUT; tout; tout--) {
+ 675:..//common/src/lpc17xx_emac.c **** 		regv = read_PHY (EMAC_PHY_REG_BMSR);
+ 676:..//common/src/lpc17xx_emac.c **** 		if (regv & EMAC_PHY_BMSR_LINK_STATUS) {
+ 677:..//common/src/lpc17xx_emac.c **** 			/* Link is on. */
+ 678:..//common/src/lpc17xx_emac.c **** 			break;
+ 679:..//common/src/lpc17xx_emac.c **** 		}
+ 680:..//common/src/lpc17xx_emac.c **** 		if (tout == 0){
+ 681:..//common/src/lpc17xx_emac.c **** 			// time out
+ 682:..//common/src/lpc17xx_emac.c **** 			return (-1);
+ 683:..//common/src/lpc17xx_emac.c **** 		}
+ 684:..//common/src/lpc17xx_emac.c **** 	}
+ 685:..//common/src/lpc17xx_emac.c **** 
+ 686:..//common/src/lpc17xx_emac.c **** 	/* Configure Full/Half Duplex mode. */
+ 687:..//common/src/lpc17xx_emac.c **** 	if (regv & EMAC_PHY_SR_FULL_DUP) {
+ 688:..//common/src/lpc17xx_emac.c **** 		/* Full duplex is enabled. */
+ 689:..//common/src/lpc17xx_emac.c **** 		LPC_EMAC->MAC2    |= EMAC_MAC2_FULL_DUP;
+ 690:..//common/src/lpc17xx_emac.c **** 		LPC_EMAC->Command |= EMAC_CR_FULL_DUP;
+ 691:..//common/src/lpc17xx_emac.c **** 		LPC_EMAC->IPGT     = EMAC_IPGT_FULL_DUP;
+ 692:..//common/src/lpc17xx_emac.c **** 	} else {
+ 693:..//common/src/lpc17xx_emac.c **** 		/* Half duplex mode. */
+ 694:..//common/src/lpc17xx_emac.c **** 		LPC_EMAC->IPGT = EMAC_IPGT_HALF_DUP;
+ 695:..//common/src/lpc17xx_emac.c **** 	}
+ 696:..//common/src/lpc17xx_emac.c **** 
+ 697:..//common/src/lpc17xx_emac.c **** 	/* Configure 100MBit/10MBit mode. */
+ 698:..//common/src/lpc17xx_emac.c **** 	if (!(regv & EMAC_PHY_SR_100_SPEED)) {
+ 699:..//common/src/lpc17xx_emac.c **** 		/* 10MBit mode. */
+ 700:..//common/src/lpc17xx_emac.c **** 		LPC_EMAC->SUPP = 0;
+ 701:..//common/src/lpc17xx_emac.c **** 	} else {
+ 702:..//common/src/lpc17xx_emac.c **** 		/* 100MBit mode. */
+ 703:..//common/src/lpc17xx_emac.c **** 		LPC_EMAC->SUPP = EMAC_SUPP_SPEED;
+ 704:..//common/src/lpc17xx_emac.c **** 	}
+ 705:..//common/src/lpc17xx_emac.c **** #endif
+ 706:..//common/src/lpc17xx_emac.c **** 	// Complete
+ 707:..//common/src/lpc17xx_emac.c **** 	return (0);
+ 1559              		.loc 1 707 0
+ 1560 00ae 4FF00003 		mov	r3, #0
+ 1561              	.L110:
+ 708:..//common/src/lpc17xx_emac.c **** }
+ 1562              		.loc 1 708 0
+ 1563 00b2 1846     		mov	r0, r3
+ 1564 00b4 07F10807 		add	r7, r7, #8
+ 1565 00b8 BD46     		mov	sp, r7
+ 1566 00ba 80BD     		pop	{r7, pc}
+ 1567              		.cfi_endproc
+ 1568              	.LFE40:
+ 1570              		.section	.text.EMAC_SetHashFilter,"ax",%progbits
+ 1571              		.align	2
+ 1572              		.global	EMAC_SetHashFilter
+ 1573              		.thumb
+ 1574              		.thumb_func
+ 1576              	EMAC_SetHashFilter:
+ 1577              	.LFB41:
+ 709:..//common/src/lpc17xx_emac.c **** 
+ 710:..//common/src/lpc17xx_emac.c **** 
+ 711:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 712:..//common/src/lpc17xx_emac.c ****  * @brief		Enable/Disable hash filter functionality for specified destination
+ 713:..//common/src/lpc17xx_emac.c ****  * 				MAC address in EMAC module
+ 714:..//common/src/lpc17xx_emac.c ****  * @param[in]	dstMAC_addr		Pointer to the first MAC destination address, should
+ 715:..//common/src/lpc17xx_emac.c ****  * 								be 6-bytes length, in order LSB to the MSB
+ 716:..//common/src/lpc17xx_emac.c ****  * @param[in]	NewState		New State of this command, should be:
+ 717:..//common/src/lpc17xx_emac.c ****  *									- ENABLE.
+ 718:..//common/src/lpc17xx_emac.c ****  *									- DISABLE.
+ 719:..//common/src/lpc17xx_emac.c ****  * @return		None
+ 720:..//common/src/lpc17xx_emac.c ****  *
+ 721:..//common/src/lpc17xx_emac.c ****  * Note:
+ 722:..//common/src/lpc17xx_emac.c ****  * The standard Ethernet cyclic redundancy check (CRC) function is calculated from
+ 723:..//common/src/lpc17xx_emac.c ****  * the 6 byte destination address in the Ethernet frame (this CRC is calculated
+ 724:..//common/src/lpc17xx_emac.c ****  * anyway as part of calculating the CRC of the whole frame), then bits [28:23] out of
+ 725:..//common/src/lpc17xx_emac.c ****  * the 32 bits CRC result are taken to form the hash. The 6 bit hash is used to access
+ 726:..//common/src/lpc17xx_emac.c ****  * the hash table: it is used as an index in the 64 bit HashFilter register that has been
+ 727:..//common/src/lpc17xx_emac.c ****  * programmed with accept values. If the selected accept value is 1, the frame is
+ 728:..//common/src/lpc17xx_emac.c ****  * accepted.
+ 729:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+ 730:..//common/src/lpc17xx_emac.c **** void EMAC_SetHashFilter(uint8_t dstMAC_addr[], FunctionalState NewState)
+ 731:..//common/src/lpc17xx_emac.c **** {
+ 1578              		.loc 1 731 0
+ 1579              		.cfi_startproc
+ 1580              		@ args = 0, pretend = 0, frame = 24
+ 1581              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1582 0000 80B5     		push	{r7, lr}
+ 1583              	.LCFI35:
+ 1584              		.cfi_def_cfa_offset 8
+ 1585 0002 86B0     		sub	sp, sp, #24
+ 1586              	.LCFI36:
+ 1587              		.cfi_def_cfa_offset 32
+ 1588 0004 00AF     		add	r7, sp, #0
+ 1589              		.cfi_offset 14, -4
+ 1590              		.cfi_offset 7, -8
+ 1591              	.LCFI37:
+ 1592              		.cfi_def_cfa_register 7
+ 1593 0006 7860     		str	r0, [r7, #4]
+ 1594 0008 0B46     		mov	r3, r1
+ 1595 000a FB70     		strb	r3, [r7, #3]
+ 732:..//common/src/lpc17xx_emac.c **** 	uint32_t *pReg;
+ 733:..//common/src/lpc17xx_emac.c **** 	uint32_t tmp;
+ 734:..//common/src/lpc17xx_emac.c **** 	int32_t crc;
+ 735:..//common/src/lpc17xx_emac.c **** 
+ 736:..//common/src/lpc17xx_emac.c **** 	// Calculate the CRC from the destination MAC address
+ 737:..//common/src/lpc17xx_emac.c **** 	crc = emac_CRCCalc(dstMAC_addr, 6);
+ 1596              		.loc 1 737 0
+ 1597 000c 7868     		ldr	r0, [r7, #4]
+ 1598 000e 4FF00601 		mov	r1, #6
+ 1599 0012 40F20003 		movw	r3, #:lower16:emac_CRCCalc
+ 1600 0016 C0F20003 		movt	r3, #:upper16:emac_CRCCalc
+ 1601 001a 9847     		blx	r3
+ 1602 001c 0346     		mov	r3, r0
+ 1603 001e 7B61     		str	r3, [r7, #20]
+ 738:..//common/src/lpc17xx_emac.c **** 	// Extract the value from CRC to get index value for hash filter table
+ 739:..//common/src/lpc17xx_emac.c **** 	crc = (crc >> 23) & 0x3F;
+ 1604              		.loc 1 739 0
+ 1605 0020 7B69     		ldr	r3, [r7, #20]
+ 1606 0022 4FEAE353 		asr	r3, r3, #23
+ 1607 0026 03F03F03 		and	r3, r3, #63
+ 1608 002a 7B61     		str	r3, [r7, #20]
+ 740:..//common/src/lpc17xx_emac.c **** 
+ 741:..//common/src/lpc17xx_emac.c **** 	pReg = (crc > 31) ? ((uint32_t *)&LPC_EMAC->HashFilterH) \
+ 1609              		.loc 1 741 0
+ 1610 002c 7B69     		ldr	r3, [r7, #20]
+ 1611 002e 1F2B     		cmp	r3, #31
+ 1612 0030 04DD     		ble	.L119
+ 1613 0032 40F21423 		movw	r3, #:lower16:1342177812
+ 1614 0036 C5F20003 		movt	r3, #:upper16:1342177812
+ 1615 003a 03E0     		b	.L120
+ 1616              	.L119:
+ 1617 003c 40F21023 		movw	r3, #:lower16:1342177808
+ 1618 0040 C5F20003 		movt	r3, #:upper16:1342177808
+ 1619              	.L120:
+ 1620 0044 FB60     		str	r3, [r7, #12]
+ 742:..//common/src/lpc17xx_emac.c **** 								: ((uint32_t *)&LPC_EMAC->HashFilterL);
+ 743:..//common/src/lpc17xx_emac.c **** 	tmp = (crc > 31) ? (crc - 32) : crc;
+ 1621              		.loc 1 743 0
+ 1622 0046 7B69     		ldr	r3, [r7, #20]
+ 1623 0048 1F2B     		cmp	r3, #31
+ 1624 004a 03DD     		ble	.L121
+ 1625 004c 7B69     		ldr	r3, [r7, #20]
+ 1626 004e A3F12003 		sub	r3, r3, #32
+ 1627 0052 00E0     		b	.L122
+ 1628              	.L121:
+ 1629 0054 7B69     		ldr	r3, [r7, #20]
+ 1630              	.L122:
+ 1631 0056 3B61     		str	r3, [r7, #16]
+ 744:..//common/src/lpc17xx_emac.c **** 	if (NewState == ENABLE) {
+ 1632              		.loc 1 744 0
+ 1633 0058 FB78     		ldrb	r3, [r7, #3]	@ zero_extendqisi2
+ 1634 005a 012B     		cmp	r3, #1
+ 1635 005c 0BD1     		bne	.L123
+ 745:..//common/src/lpc17xx_emac.c **** 		(*pReg) |= (1UL << tmp);
+ 1636              		.loc 1 745 0
+ 1637 005e FB68     		ldr	r3, [r7, #12]
+ 1638 0060 1A68     		ldr	r2, [r3, #0]
+ 1639 0062 3B69     		ldr	r3, [r7, #16]
+ 1640 0064 4FF00101 		mov	r1, #1
+ 1641 0068 01FA03F3 		lsl	r3, r1, r3
+ 1642 006c 42EA0302 		orr	r2, r2, r3
+ 1643 0070 FB68     		ldr	r3, [r7, #12]
+ 1644 0072 1A60     		str	r2, [r3, #0]
+ 1645 0074 0CE0     		b	.L124
+ 1646              	.L123:
+ 746:..//common/src/lpc17xx_emac.c **** 	} else {
+ 747:..//common/src/lpc17xx_emac.c **** 		(*pReg) &= ~(1UL << tmp);
+ 1647              		.loc 1 747 0
+ 1648 0076 FB68     		ldr	r3, [r7, #12]
+ 1649 0078 1A68     		ldr	r2, [r3, #0]
+ 1650 007a 3B69     		ldr	r3, [r7, #16]
+ 1651 007c 4FF00101 		mov	r1, #1
+ 1652 0080 01FA03F3 		lsl	r3, r1, r3
+ 1653 0084 6FEA0303 		mvn	r3, r3
+ 1654 0088 02EA0302 		and	r2, r2, r3
+ 1655 008c FB68     		ldr	r3, [r7, #12]
+ 1656 008e 1A60     		str	r2, [r3, #0]
+ 1657              	.L124:
+ 748:..//common/src/lpc17xx_emac.c **** 	}
+ 749:..//common/src/lpc17xx_emac.c **** 	// Enable Rx Filter
+ 750:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->Command &= ~EMAC_CR_PASS_RX_FILT;
+ 1658              		.loc 1 750 0
+ 1659 0090 4FF0A043 		mov	r3, #1342177280
+ 1660 0094 4FF0A042 		mov	r2, #1342177280
+ 1661 0098 D2F80021 		ldr	r2, [r2, #256]
+ 1662 009c 22F08002 		bic	r2, r2, #128
+ 1663 00a0 C3F80021 		str	r2, [r3, #256]
+ 751:..//common/src/lpc17xx_emac.c **** }
+ 1664              		.loc 1 751 0
+ 1665 00a4 07F11807 		add	r7, r7, #24
+ 1666 00a8 BD46     		mov	sp, r7
+ 1667 00aa 80BD     		pop	{r7, pc}
+ 1668              		.cfi_endproc
+ 1669              	.LFE41:
+ 1671              		.section	.text.EMAC_SetFilterMode,"ax",%progbits
+ 1672              		.align	2
+ 1673              		.global	EMAC_SetFilterMode
+ 1674              		.thumb
+ 1675              		.thumb_func
+ 1677              	EMAC_SetFilterMode:
+ 1678              	.LFB42:
+ 752:..//common/src/lpc17xx_emac.c **** 
+ 753:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 754:..//common/src/lpc17xx_emac.c ****  * @brief		Enable/Disable Filter mode for each specified type EMAC peripheral
+ 755:..//common/src/lpc17xx_emac.c ****  * @param[in]	ulFilterMode	Filter mode, should be:
+ 756:..//common/src/lpc17xx_emac.c ****  * 								- EMAC_RFC_UCAST_EN: all frames of unicast types
+ 757:..//common/src/lpc17xx_emac.c ****  * 								will be accepted
+ 758:..//common/src/lpc17xx_emac.c ****  * 								- EMAC_RFC_BCAST_EN: broadcast frame will be
+ 759:..//common/src/lpc17xx_emac.c ****  * 								accepted
+ 760:..//common/src/lpc17xx_emac.c ****  * 								- EMAC_RFC_MCAST_EN: all frames of multicast
+ 761:..//common/src/lpc17xx_emac.c ****  * 								types will be accepted
+ 762:..//common/src/lpc17xx_emac.c ****  * 								- EMAC_RFC_UCAST_HASH_EN: The imperfect hash
+ 763:..//common/src/lpc17xx_emac.c ****  * 								filter will be applied to unicast addresses
+ 764:..//common/src/lpc17xx_emac.c ****  * 								- EMAC_RFC_MCAST_HASH_EN: The imperfect hash
+ 765:..//common/src/lpc17xx_emac.c ****  * 								filter will be applied to multicast addresses
+ 766:..//common/src/lpc17xx_emac.c ****  * 								- EMAC_RFC_PERFECT_EN: the destination address
+ 767:..//common/src/lpc17xx_emac.c ****  * 								will be compared with the 6 byte station address
+ 768:..//common/src/lpc17xx_emac.c ****  * 								programmed in the station address by the filter
+ 769:..//common/src/lpc17xx_emac.c ****  * 								- EMAC_RFC_MAGP_WOL_EN: the result of the magic
+ 770:..//common/src/lpc17xx_emac.c ****  * 								packet filter will generate a WoL interrupt when
+ 771:..//common/src/lpc17xx_emac.c ****  * 								there is a match
+ 772:..//common/src/lpc17xx_emac.c ****  * 								- EMAC_RFC_PFILT_WOL_EN: the result of the perfect address
+ 773:..//common/src/lpc17xx_emac.c ****  * 								matching filter and the imperfect hash filter will
+ 774:..//common/src/lpc17xx_emac.c ****  * 								generate a WoL interrupt when there is a match
+ 775:..//common/src/lpc17xx_emac.c ****  * @param[in]	NewState	New State of this command, should be:
+ 776:..//common/src/lpc17xx_emac.c ****  * 								- ENABLE
+ 777:..//common/src/lpc17xx_emac.c ****  * 								- DISABLE
+ 778:..//common/src/lpc17xx_emac.c ****  * @return		None
+ 779:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+ 780:..//common/src/lpc17xx_emac.c **** void EMAC_SetFilterMode(uint32_t ulFilterMode, FunctionalState NewState)
+ 781:..//common/src/lpc17xx_emac.c **** {
+ 1679              		.loc 1 781 0
+ 1680              		.cfi_startproc
+ 1681              		@ args = 0, pretend = 0, frame = 8
+ 1682              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1683              		@ link register save eliminated.
+ 1684 0000 80B4     		push	{r7}
+ 1685              	.LCFI38:
+ 1686              		.cfi_def_cfa_offset 4
+ 1687 0002 83B0     		sub	sp, sp, #12
+ 1688              	.LCFI39:
+ 1689              		.cfi_def_cfa_offset 16
+ 1690 0004 00AF     		add	r7, sp, #0
+ 1691              		.cfi_offset 7, -4
+ 1692              	.LCFI40:
+ 1693              		.cfi_def_cfa_register 7
+ 1694 0006 7860     		str	r0, [r7, #4]
+ 1695 0008 0B46     		mov	r3, r1
+ 1696 000a FB70     		strb	r3, [r7, #3]
+ 782:..//common/src/lpc17xx_emac.c **** 	if (NewState == ENABLE){
+ 1697              		.loc 1 782 0
+ 1698 000c FB78     		ldrb	r3, [r7, #3]	@ zero_extendqisi2
+ 1699 000e 012B     		cmp	r3, #1
+ 1700 0010 0BD1     		bne	.L127
+ 783:..//common/src/lpc17xx_emac.c **** 		LPC_EMAC->RxFilterCtrl |= ulFilterMode;
+ 1701              		.loc 1 783 0
+ 1702 0012 4FF0A043 		mov	r3, #1342177280
+ 1703 0016 4FF0A042 		mov	r2, #1342177280
+ 1704 001a D2F80012 		ldr	r1, [r2, #512]
+ 1705 001e 7A68     		ldr	r2, [r7, #4]
+ 1706 0020 41EA0202 		orr	r2, r1, r2
+ 1707 0024 C3F80022 		str	r2, [r3, #512]
+ 1708 0028 0CE0     		b	.L129
+ 1709              	.L127:
+ 784:..//common/src/lpc17xx_emac.c **** 	} else {
+ 785:..//common/src/lpc17xx_emac.c **** 		LPC_EMAC->RxFilterCtrl &= ~ulFilterMode;
+ 1710              		.loc 1 785 0
+ 1711 002a 4FF0A043 		mov	r3, #1342177280
+ 1712 002e 4FF0A042 		mov	r2, #1342177280
+ 1713 0032 D2F80012 		ldr	r1, [r2, #512]
+ 1714 0036 7A68     		ldr	r2, [r7, #4]
+ 1715 0038 6FEA0202 		mvn	r2, r2
+ 1716 003c 01EA0202 		and	r2, r1, r2
+ 1717 0040 C3F80022 		str	r2, [r3, #512]
+ 1718              	.L129:
+ 786:..//common/src/lpc17xx_emac.c **** 	}
+ 787:..//common/src/lpc17xx_emac.c **** }
+ 1719              		.loc 1 787 0
+ 1720 0044 07F10C07 		add	r7, r7, #12
+ 1721 0048 BD46     		mov	sp, r7
+ 1722 004a 80BC     		pop	{r7}
+ 1723 004c 7047     		bx	lr
+ 1724              		.cfi_endproc
+ 1725              	.LFE42:
+ 1727 004e 00BF     		.section	.text.EMAC_GetWoLStatus,"ax",%progbits
+ 1728              		.align	2
+ 1729              		.global	EMAC_GetWoLStatus
+ 1730              		.thumb
+ 1731              		.thumb_func
+ 1733              	EMAC_GetWoLStatus:
+ 1734              	.LFB43:
+ 788:..//common/src/lpc17xx_emac.c **** 
+ 789:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 790:..//common/src/lpc17xx_emac.c ****  * @brief		Get status of Wake On LAN Filter for each specified
+ 791:..//common/src/lpc17xx_emac.c ****  * 				type in EMAC peripheral, clear this status if it is set
+ 792:..//common/src/lpc17xx_emac.c ****  * @param[in]	ulWoLMode	WoL Filter mode, should be:
+ 793:..//common/src/lpc17xx_emac.c ****  * 								- EMAC_WOL_UCAST: unicast frames caused WoL
+ 794:..//common/src/lpc17xx_emac.c ****  * 								- EMAC_WOL_UCAST: broadcast frame caused WoL
+ 795:..//common/src/lpc17xx_emac.c ****  * 								- EMAC_WOL_MCAST: multicast frame caused WoL
+ 796:..//common/src/lpc17xx_emac.c ****  * 								- EMAC_WOL_UCAST_HASH: unicast frame that passes the
+ 797:..//common/src/lpc17xx_emac.c ****  * 								imperfect hash filter caused WoL
+ 798:..//common/src/lpc17xx_emac.c ****  * 								- EMAC_WOL_MCAST_HASH: multicast frame that passes the
+ 799:..//common/src/lpc17xx_emac.c ****  * 								imperfect hash filter caused WoL
+ 800:..//common/src/lpc17xx_emac.c ****  * 								- EMAC_WOL_PERFECT:perfect address matching filter
+ 801:..//common/src/lpc17xx_emac.c ****  * 								caused WoL
+ 802:..//common/src/lpc17xx_emac.c ****  * 								- EMAC_WOL_RX_FILTER: the receive filter caused WoL
+ 803:..//common/src/lpc17xx_emac.c ****  * 								- EMAC_WOL_MAG_PACKET: the magic packet filter caused WoL
+ 804:..//common/src/lpc17xx_emac.c ****  * @return		SET/RESET
+ 805:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+ 806:..//common/src/lpc17xx_emac.c **** FlagStatus EMAC_GetWoLStatus(uint32_t ulWoLMode)
+ 807:..//common/src/lpc17xx_emac.c **** {
+ 1735              		.loc 1 807 0
+ 1736              		.cfi_startproc
+ 1737              		@ args = 0, pretend = 0, frame = 8
+ 1738              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1739              		@ link register save eliminated.
+ 1740 0000 80B4     		push	{r7}
+ 1741              	.LCFI41:
+ 1742              		.cfi_def_cfa_offset 4
+ 1743 0002 83B0     		sub	sp, sp, #12
+ 1744              	.LCFI42:
+ 1745              		.cfi_def_cfa_offset 16
+ 1746 0004 00AF     		add	r7, sp, #0
+ 1747              		.cfi_offset 7, -4
+ 1748              	.LCFI43:
+ 1749              		.cfi_def_cfa_register 7
+ 1750 0006 7860     		str	r0, [r7, #4]
+ 808:..//common/src/lpc17xx_emac.c **** 	if (LPC_EMAC->RxFilterWoLStatus & ulWoLMode) {
+ 1751              		.loc 1 808 0
+ 1752 0008 4FF0A043 		mov	r3, #1342177280
+ 1753 000c D3F80422 		ldr	r2, [r3, #516]
+ 1754 0010 7B68     		ldr	r3, [r7, #4]
+ 1755 0012 02EA0303 		and	r3, r2, r3
+ 1756 0016 002B     		cmp	r3, #0
+ 1757 0018 07D0     		beq	.L131
+ 809:..//common/src/lpc17xx_emac.c **** 		LPC_EMAC->RxFilterWoLClear = ulWoLMode;
+ 1758              		.loc 1 809 0
+ 1759 001a 4FF0A043 		mov	r3, #1342177280
+ 1760 001e 7A68     		ldr	r2, [r7, #4]
+ 1761 0020 C3F80822 		str	r2, [r3, #520]
+ 810:..//common/src/lpc17xx_emac.c **** 		return SET;
+ 1762              		.loc 1 810 0
+ 1763 0024 4FF00103 		mov	r3, #1
+ 1764 0028 01E0     		b	.L132
+ 1765              	.L131:
+ 811:..//common/src/lpc17xx_emac.c **** 	} else {
+ 812:..//common/src/lpc17xx_emac.c **** 		return RESET;
+ 1766              		.loc 1 812 0
+ 1767 002a 4FF00003 		mov	r3, #0
+ 1768              	.L132:
+ 813:..//common/src/lpc17xx_emac.c **** 	}
+ 814:..//common/src/lpc17xx_emac.c **** }
+ 1769              		.loc 1 814 0
+ 1770 002e 1846     		mov	r0, r3
+ 1771 0030 07F10C07 		add	r7, r7, #12
+ 1772 0034 BD46     		mov	sp, r7
+ 1773 0036 80BC     		pop	{r7}
+ 1774 0038 7047     		bx	lr
+ 1775              		.cfi_endproc
+ 1776              	.LFE43:
+ 1778 003a 00BF     		.section	.text.EMAC_WritePacketBuffer,"ax",%progbits
+ 1779              		.align	2
+ 1780              		.global	EMAC_WritePacketBuffer
+ 1781              		.thumb
+ 1782              		.thumb_func
+ 1784              	EMAC_WritePacketBuffer:
+ 1785              	.LFB44:
+ 815:..//common/src/lpc17xx_emac.c **** 
+ 816:..//common/src/lpc17xx_emac.c **** 
+ 817:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 818:..//common/src/lpc17xx_emac.c ****  * @brief		Write data to Tx packet data buffer at current index due to
+ 819:..//common/src/lpc17xx_emac.c ****  * 				TxProduceIndex
+ 820:..//common/src/lpc17xx_emac.c ****  * @param[in]	pDataStruct		Pointer to a EMAC_PACKETBUF_Type structure
+ 821:..//common/src/lpc17xx_emac.c ****  * 							data that contain specified information about
+ 822:..//common/src/lpc17xx_emac.c ****  * 							Packet data buffer.
+ 823:..//common/src/lpc17xx_emac.c ****  * @return		None
+ 824:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+ 825:..//common/src/lpc17xx_emac.c **** void EMAC_WritePacketBuffer(EMAC_PACKETBUF_Type *pDataStruct)
+ 826:..//common/src/lpc17xx_emac.c **** {
+ 1786              		.loc 1 826 0
+ 1787              		.cfi_startproc
+ 1788              		@ args = 0, pretend = 0, frame = 24
+ 1789              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1790              		@ link register save eliminated.
+ 1791 0000 80B4     		push	{r7}
+ 1792              	.LCFI44:
+ 1793              		.cfi_def_cfa_offset 4
+ 1794 0002 87B0     		sub	sp, sp, #28
+ 1795              	.LCFI45:
+ 1796              		.cfi_def_cfa_offset 32
+ 1797 0004 00AF     		add	r7, sp, #0
+ 1798              		.cfi_offset 7, -4
+ 1799              	.LCFI46:
+ 1800              		.cfi_def_cfa_register 7
+ 1801 0006 7860     		str	r0, [r7, #4]
+ 827:..//common/src/lpc17xx_emac.c **** 	uint32_t idx,len;
+ 828:..//common/src/lpc17xx_emac.c **** 	uint32_t *sp,*dp;
+ 829:..//common/src/lpc17xx_emac.c **** 
+ 830:..//common/src/lpc17xx_emac.c **** 	idx = LPC_EMAC->TxProduceIndex;
+ 1802              		.loc 1 830 0
+ 1803 0008 4FF0A043 		mov	r3, #1342177280
+ 1804 000c D3F82831 		ldr	r3, [r3, #296]
+ 1805 0010 BB60     		str	r3, [r7, #8]
+ 831:..//common/src/lpc17xx_emac.c **** 	sp  = (uint32_t *)pDataStruct->pbDataBuf;
+ 1806              		.loc 1 831 0
+ 1807 0012 7B68     		ldr	r3, [r7, #4]
+ 1808 0014 5B68     		ldr	r3, [r3, #4]
+ 1809 0016 3B61     		str	r3, [r7, #16]
+ 832:..//common/src/lpc17xx_emac.c **** 	dp  = (uint32_t *)Tx_Desc[idx].Packet;
+ 1810              		.loc 1 832 0
+ 1811 0018 BA68     		ldr	r2, [r7, #8]
+ 1812 001a 40F20003 		movw	r3, #:lower16:Tx_Desc
+ 1813 001e C0F20003 		movt	r3, #:upper16:Tx_Desc
+ 1814 0022 53F83230 		ldr	r3, [r3, r2, lsl #3]
+ 1815 0026 7B61     		str	r3, [r7, #20]
+ 833:..//common/src/lpc17xx_emac.c **** 	/* Copy frame data to EMAC packet buffers. */
+ 834:..//common/src/lpc17xx_emac.c **** 	for (len = (pDataStruct->ulDataLen + 3) >> 2; len; len--) {
+ 1816              		.loc 1 834 0
+ 1817 0028 7B68     		ldr	r3, [r7, #4]
+ 1818 002a 1B68     		ldr	r3, [r3, #0]
+ 1819 002c 03F10303 		add	r3, r3, #3
+ 1820 0030 4FEA9303 		lsr	r3, r3, #2
+ 1821 0034 FB60     		str	r3, [r7, #12]
+ 1822 0036 0FE0     		b	.L135
+ 1823              	.L136:
+ 835:..//common/src/lpc17xx_emac.c **** 		*dp++ = *sp++;
+ 1824              		.loc 1 835 0
+ 1825 0038 3B69     		ldr	r3, [r7, #16]
+ 1826 003a 1A68     		ldr	r2, [r3, #0]
+ 1827 003c 7B69     		ldr	r3, [r7, #20]
+ 1828 003e 1A60     		str	r2, [r3, #0]
+ 1829 0040 7B69     		ldr	r3, [r7, #20]
+ 1830 0042 03F10403 		add	r3, r3, #4
+ 1831 0046 7B61     		str	r3, [r7, #20]
+ 1832 0048 3B69     		ldr	r3, [r7, #16]
+ 1833 004a 03F10403 		add	r3, r3, #4
+ 1834 004e 3B61     		str	r3, [r7, #16]
+ 1835              		.loc 1 834 0
+ 1836 0050 FB68     		ldr	r3, [r7, #12]
+ 1837 0052 03F1FF33 		add	r3, r3, #-1
+ 1838 0056 FB60     		str	r3, [r7, #12]
+ 1839              	.L135:
+ 1840 0058 FB68     		ldr	r3, [r7, #12]
+ 1841 005a 002B     		cmp	r3, #0
+ 1842 005c ECD1     		bne	.L136
+ 836:..//common/src/lpc17xx_emac.c **** 	}
+ 837:..//common/src/lpc17xx_emac.c **** 	Tx_Desc[idx].Ctrl = (pDataStruct->ulDataLen - 1) | (EMAC_TCTRL_INT | EMAC_TCTRL_LAST);
+ 1843              		.loc 1 837 0
+ 1844 005e BB68     		ldr	r3, [r7, #8]
+ 1845 0060 7A68     		ldr	r2, [r7, #4]
+ 1846 0062 1268     		ldr	r2, [r2, #0]
+ 1847 0064 02F1FF32 		add	r2, r2, #-1
+ 1848 0068 42F04041 		orr	r1, r2, #-1073741824
+ 1849 006c 40F20002 		movw	r2, #:lower16:Tx_Desc
+ 1850 0070 C0F20002 		movt	r2, #:upper16:Tx_Desc
+ 1851 0074 4FEAC303 		lsl	r3, r3, #3
+ 1852 0078 1344     		add	r3, r3, r2
+ 1853 007a 5960     		str	r1, [r3, #4]
+ 838:..//common/src/lpc17xx_emac.c **** }
+ 1854              		.loc 1 838 0
+ 1855 007c 07F11C07 		add	r7, r7, #28
+ 1856 0080 BD46     		mov	sp, r7
+ 1857 0082 80BC     		pop	{r7}
+ 1858 0084 7047     		bx	lr
+ 1859              		.cfi_endproc
+ 1860              	.LFE44:
+ 1862 0086 00BF     		.section	.text.EMAC_ReadPacketBuffer,"ax",%progbits
+ 1863              		.align	2
+ 1864              		.global	EMAC_ReadPacketBuffer
+ 1865              		.thumb
+ 1866              		.thumb_func
+ 1868              	EMAC_ReadPacketBuffer:
+ 1869              	.LFB45:
+ 839:..//common/src/lpc17xx_emac.c **** 
+ 840:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 841:..//common/src/lpc17xx_emac.c ****  * @brief		Read data from Rx packet data buffer at current index due
+ 842:..//common/src/lpc17xx_emac.c ****  * 				to RxConsumeIndex
+ 843:..//common/src/lpc17xx_emac.c ****  * @param[in]	pDataStruct		Pointer to a EMAC_PACKETBUF_Type structure
+ 844:..//common/src/lpc17xx_emac.c ****  * 							data that contain specified information about
+ 845:..//common/src/lpc17xx_emac.c ****  * 							Packet data buffer.
+ 846:..//common/src/lpc17xx_emac.c ****  * @return		None
+ 847:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+ 848:..//common/src/lpc17xx_emac.c **** void EMAC_ReadPacketBuffer(EMAC_PACKETBUF_Type *pDataStruct)
+ 849:..//common/src/lpc17xx_emac.c **** {
+ 1870              		.loc 1 849 0
+ 1871              		.cfi_startproc
+ 1872              		@ args = 0, pretend = 0, frame = 24
+ 1873              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1874              		@ link register save eliminated.
+ 1875 0000 80B4     		push	{r7}
+ 1876              	.LCFI47:
+ 1877              		.cfi_def_cfa_offset 4
+ 1878 0002 87B0     		sub	sp, sp, #28
+ 1879              	.LCFI48:
+ 1880              		.cfi_def_cfa_offset 32
+ 1881 0004 00AF     		add	r7, sp, #0
+ 1882              		.cfi_offset 7, -4
+ 1883              	.LCFI49:
+ 1884              		.cfi_def_cfa_register 7
+ 1885 0006 7860     		str	r0, [r7, #4]
+ 850:..//common/src/lpc17xx_emac.c **** 	uint32_t idx, len;
+ 851:..//common/src/lpc17xx_emac.c **** 	uint32_t *dp, *sp;
+ 852:..//common/src/lpc17xx_emac.c **** 
+ 853:..//common/src/lpc17xx_emac.c **** 	idx = LPC_EMAC->RxConsumeIndex;
+ 1886              		.loc 1 853 0
+ 1887 0008 4FF0A043 		mov	r3, #1342177280
+ 1888 000c D3F81831 		ldr	r3, [r3, #280]
+ 1889 0010 BB60     		str	r3, [r7, #8]
+ 854:..//common/src/lpc17xx_emac.c **** 	dp = (uint32_t *)pDataStruct->pbDataBuf;
+ 1890              		.loc 1 854 0
+ 1891 0012 7B68     		ldr	r3, [r7, #4]
+ 1892 0014 5B68     		ldr	r3, [r3, #4]
+ 1893 0016 3B61     		str	r3, [r7, #16]
+ 855:..//common/src/lpc17xx_emac.c **** 	sp = (uint32_t *)Rx_Desc[idx].Packet;
+ 1894              		.loc 1 855 0
+ 1895 0018 BA68     		ldr	r2, [r7, #8]
+ 1896 001a 40F20003 		movw	r3, #:lower16:Rx_Desc
+ 1897 001e C0F20003 		movt	r3, #:upper16:Rx_Desc
+ 1898 0022 53F83230 		ldr	r3, [r3, r2, lsl #3]
+ 1899 0026 7B61     		str	r3, [r7, #20]
+ 856:..//common/src/lpc17xx_emac.c **** 
+ 857:..//common/src/lpc17xx_emac.c **** 	if (pDataStruct->pbDataBuf != NULL) {
+ 1900              		.loc 1 857 0
+ 1901 0028 7B68     		ldr	r3, [r7, #4]
+ 1902 002a 5B68     		ldr	r3, [r3, #4]
+ 1903 002c 002B     		cmp	r3, #0
+ 1904 002e 1AD0     		beq	.L142
+ 858:..//common/src/lpc17xx_emac.c **** 		for (len = (pDataStruct->ulDataLen + 3) >> 2; len; len--) {
+ 1905              		.loc 1 858 0
+ 1906 0030 7B68     		ldr	r3, [r7, #4]
+ 1907 0032 1B68     		ldr	r3, [r3, #0]
+ 1908 0034 03F10303 		add	r3, r3, #3
+ 1909 0038 4FEA9303 		lsr	r3, r3, #2
+ 1910 003c FB60     		str	r3, [r7, #12]
+ 1911 003e 0FE0     		b	.L140
+ 1912              	.L141:
+ 859:..//common/src/lpc17xx_emac.c **** 			*dp++ = *sp++;
+ 1913              		.loc 1 859 0
+ 1914 0040 7B69     		ldr	r3, [r7, #20]
+ 1915 0042 1A68     		ldr	r2, [r3, #0]
+ 1916 0044 3B69     		ldr	r3, [r7, #16]
+ 1917 0046 1A60     		str	r2, [r3, #0]
+ 1918 0048 3B69     		ldr	r3, [r7, #16]
+ 1919 004a 03F10403 		add	r3, r3, #4
+ 1920 004e 3B61     		str	r3, [r7, #16]
+ 1921 0050 7B69     		ldr	r3, [r7, #20]
+ 1922 0052 03F10403 		add	r3, r3, #4
+ 1923 0056 7B61     		str	r3, [r7, #20]
+ 1924              		.loc 1 858 0
+ 1925 0058 FB68     		ldr	r3, [r7, #12]
+ 1926 005a 03F1FF33 		add	r3, r3, #-1
+ 1927 005e FB60     		str	r3, [r7, #12]
+ 1928              	.L140:
+ 1929 0060 FB68     		ldr	r3, [r7, #12]
+ 1930 0062 002B     		cmp	r3, #0
+ 1931 0064 ECD1     		bne	.L141
+ 1932              	.L142:
+ 860:..//common/src/lpc17xx_emac.c **** 		}
+ 861:..//common/src/lpc17xx_emac.c **** 	}
+ 862:..//common/src/lpc17xx_emac.c **** }
+ 1933              		.loc 1 862 0
+ 1934 0066 07F11C07 		add	r7, r7, #28
+ 1935 006a BD46     		mov	sp, r7
+ 1936 006c 80BC     		pop	{r7}
+ 1937 006e 7047     		bx	lr
+ 1938              		.cfi_endproc
+ 1939              	.LFE45:
+ 1941              		.section	.text.EMAC_IntCmd,"ax",%progbits
+ 1942              		.align	2
+ 1943              		.global	EMAC_IntCmd
+ 1944              		.thumb
+ 1945              		.thumb_func
+ 1947              	EMAC_IntCmd:
+ 1948              	.LFB46:
+ 863:..//common/src/lpc17xx_emac.c **** 
+ 864:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 865:..//common/src/lpc17xx_emac.c ****  * @brief 		Enable/Disable interrupt for each type in EMAC
+ 866:..//common/src/lpc17xx_emac.c ****  * @param[in]	ulIntType	Interrupt Type, should be:
+ 867:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_INT_RX_OVERRUN: Receive Overrun
+ 868:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_INT_RX_ERR: Receive Error
+ 869:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_INT_RX_FIN: Receive Descriptor Finish
+ 870:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_INT_RX_DONE: Receive Done
+ 871:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_INT_TX_UNDERRUN: Transmit Under-run
+ 872:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_INT_TX_ERR: Transmit Error
+ 873:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_INT_TX_FIN: Transmit descriptor finish
+ 874:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_INT_TX_DONE: Transmit Done
+ 875:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_INT_SOFT_INT: Software interrupt
+ 876:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_INT_WAKEUP: Wakeup interrupt
+ 877:..//common/src/lpc17xx_emac.c ****  * @param[in]	NewState	New State of this function, should be:
+ 878:..//common/src/lpc17xx_emac.c ****  * 							- ENABLE.
+ 879:..//common/src/lpc17xx_emac.c ****  * 							- DISABLE.
+ 880:..//common/src/lpc17xx_emac.c ****  * @return		None
+ 881:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+ 882:..//common/src/lpc17xx_emac.c **** void EMAC_IntCmd(uint32_t ulIntType, FunctionalState NewState)
+ 883:..//common/src/lpc17xx_emac.c **** {
+ 1949              		.loc 1 883 0
+ 1950              		.cfi_startproc
+ 1951              		@ args = 0, pretend = 0, frame = 8
+ 1952              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1953              		@ link register save eliminated.
+ 1954 0000 80B4     		push	{r7}
+ 1955              	.LCFI50:
+ 1956              		.cfi_def_cfa_offset 4
+ 1957 0002 83B0     		sub	sp, sp, #12
+ 1958              	.LCFI51:
+ 1959              		.cfi_def_cfa_offset 16
+ 1960 0004 00AF     		add	r7, sp, #0
+ 1961              		.cfi_offset 7, -4
+ 1962              	.LCFI52:
+ 1963              		.cfi_def_cfa_register 7
+ 1964 0006 7860     		str	r0, [r7, #4]
+ 1965 0008 0B46     		mov	r3, r1
+ 1966 000a FB70     		strb	r3, [r7, #3]
+ 884:..//common/src/lpc17xx_emac.c **** 	if (NewState == ENABLE) {
+ 1967              		.loc 1 884 0
+ 1968 000c FB78     		ldrb	r3, [r7, #3]	@ zero_extendqisi2
+ 1969 000e 012B     		cmp	r3, #1
+ 1970 0010 0BD1     		bne	.L144
+ 885:..//common/src/lpc17xx_emac.c **** 		LPC_EMAC->IntEnable |= ulIntType;
+ 1971              		.loc 1 885 0
+ 1972 0012 4FF0A043 		mov	r3, #1342177280
+ 1973 0016 4FF0A042 		mov	r2, #1342177280
+ 1974 001a D2F8E41F 		ldr	r1, [r2, #4068]
+ 1975 001e 7A68     		ldr	r2, [r7, #4]
+ 1976 0020 41EA0202 		orr	r2, r1, r2
+ 1977 0024 C3F8E42F 		str	r2, [r3, #4068]
+ 1978 0028 0CE0     		b	.L146
+ 1979              	.L144:
+ 886:..//common/src/lpc17xx_emac.c **** 	} else {
+ 887:..//common/src/lpc17xx_emac.c **** 		LPC_EMAC->IntEnable &= ~(ulIntType);
+ 1980              		.loc 1 887 0
+ 1981 002a 4FF0A043 		mov	r3, #1342177280
+ 1982 002e 4FF0A042 		mov	r2, #1342177280
+ 1983 0032 D2F8E41F 		ldr	r1, [r2, #4068]
+ 1984 0036 7A68     		ldr	r2, [r7, #4]
+ 1985 0038 6FEA0202 		mvn	r2, r2
+ 1986 003c 01EA0202 		and	r2, r1, r2
+ 1987 0040 C3F8E42F 		str	r2, [r3, #4068]
+ 1988              	.L146:
+ 888:..//common/src/lpc17xx_emac.c **** 	}
+ 889:..//common/src/lpc17xx_emac.c **** }
+ 1989              		.loc 1 889 0
+ 1990 0044 07F10C07 		add	r7, r7, #12
+ 1991 0048 BD46     		mov	sp, r7
+ 1992 004a 80BC     		pop	{r7}
+ 1993 004c 7047     		bx	lr
+ 1994              		.cfi_endproc
+ 1995              	.LFE46:
+ 1997 004e 00BF     		.section	.text.EMAC_IntGetStatus,"ax",%progbits
+ 1998              		.align	2
+ 1999              		.global	EMAC_IntGetStatus
+ 2000              		.thumb
+ 2001              		.thumb_func
+ 2003              	EMAC_IntGetStatus:
+ 2004              	.LFB47:
+ 890:..//common/src/lpc17xx_emac.c **** 
+ 891:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 892:..//common/src/lpc17xx_emac.c ****  * @brief 		Check whether if specified interrupt flag is set or not
+ 893:..//common/src/lpc17xx_emac.c ****  * 				for each interrupt type in EMAC and clear interrupt pending
+ 894:..//common/src/lpc17xx_emac.c ****  * 				if it is set.
+ 895:..//common/src/lpc17xx_emac.c ****  * @param[in]	ulIntType	Interrupt Type, should be:
+ 896:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_INT_RX_OVERRUN: Receive Overrun
+ 897:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_INT_RX_ERR: Receive Error
+ 898:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_INT_RX_FIN: Receive Descriptor Finish
+ 899:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_INT_RX_DONE: Receive Done
+ 900:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_INT_TX_UNDERRUN: Transmit Under-run
+ 901:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_INT_TX_ERR: Transmit Error
+ 902:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_INT_TX_FIN: Transmit descriptor finish
+ 903:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_INT_TX_DONE: Transmit Done
+ 904:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_INT_SOFT_INT: Software interrupt
+ 905:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_INT_WAKEUP: Wakeup interrupt
+ 906:..//common/src/lpc17xx_emac.c ****  * @return		New state of specified interrupt (SET or RESET)
+ 907:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+ 908:..//common/src/lpc17xx_emac.c **** IntStatus EMAC_IntGetStatus(uint32_t ulIntType)
+ 909:..//common/src/lpc17xx_emac.c **** {
+ 2005              		.loc 1 909 0
+ 2006              		.cfi_startproc
+ 2007              		@ args = 0, pretend = 0, frame = 8
+ 2008              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2009              		@ link register save eliminated.
+ 2010 0000 80B4     		push	{r7}
+ 2011              	.LCFI53:
+ 2012              		.cfi_def_cfa_offset 4
+ 2013 0002 83B0     		sub	sp, sp, #12
+ 2014              	.LCFI54:
+ 2015              		.cfi_def_cfa_offset 16
+ 2016 0004 00AF     		add	r7, sp, #0
+ 2017              		.cfi_offset 7, -4
+ 2018              	.LCFI55:
+ 2019              		.cfi_def_cfa_register 7
+ 2020 0006 7860     		str	r0, [r7, #4]
+ 910:..//common/src/lpc17xx_emac.c **** 	if (LPC_EMAC->IntStatus & ulIntType) {
+ 2021              		.loc 1 910 0
+ 2022 0008 4FF0A043 		mov	r3, #1342177280
+ 2023 000c D3F8E02F 		ldr	r2, [r3, #4064]
+ 2024 0010 7B68     		ldr	r3, [r7, #4]
+ 2025 0012 02EA0303 		and	r3, r2, r3
+ 2026 0016 002B     		cmp	r3, #0
+ 2027 0018 07D0     		beq	.L148
+ 911:..//common/src/lpc17xx_emac.c **** 		LPC_EMAC->IntClear = ulIntType;
+ 2028              		.loc 1 911 0
+ 2029 001a 4FF0A043 		mov	r3, #1342177280
+ 2030 001e 7A68     		ldr	r2, [r7, #4]
+ 2031 0020 C3F8E82F 		str	r2, [r3, #4072]
+ 912:..//common/src/lpc17xx_emac.c **** 		return SET;
+ 2032              		.loc 1 912 0
+ 2033 0024 4FF00103 		mov	r3, #1
+ 2034 0028 01E0     		b	.L149
+ 2035              	.L148:
+ 913:..//common/src/lpc17xx_emac.c **** 	} else {
+ 914:..//common/src/lpc17xx_emac.c **** 		return RESET;
+ 2036              		.loc 1 914 0
+ 2037 002a 4FF00003 		mov	r3, #0
+ 2038              	.L149:
+ 915:..//common/src/lpc17xx_emac.c **** 	}
+ 916:..//common/src/lpc17xx_emac.c **** }
+ 2039              		.loc 1 916 0
+ 2040 002e 1846     		mov	r0, r3
+ 2041 0030 07F10C07 		add	r7, r7, #12
+ 2042 0034 BD46     		mov	sp, r7
+ 2043 0036 80BC     		pop	{r7}
+ 2044 0038 7047     		bx	lr
+ 2045              		.cfi_endproc
+ 2046              	.LFE47:
+ 2048 003a 00BF     		.section	.text.EMAC_CheckReceiveIndex,"ax",%progbits
+ 2049              		.align	2
+ 2050              		.global	EMAC_CheckReceiveIndex
+ 2051              		.thumb
+ 2052              		.thumb_func
+ 2054              	EMAC_CheckReceiveIndex:
+ 2055              	.LFB48:
+ 917:..//common/src/lpc17xx_emac.c **** 
+ 918:..//common/src/lpc17xx_emac.c **** 
+ 919:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 920:..//common/src/lpc17xx_emac.c ****  * @brief		Check whether if the current RxConsumeIndex is not equal to the
+ 921:..//common/src/lpc17xx_emac.c ****  * 				current RxProduceIndex.
+ 922:..//common/src/lpc17xx_emac.c ****  * @param[in]	None
+ 923:..//common/src/lpc17xx_emac.c ****  * @return		TRUE if they're not equal, otherwise return FALSE
+ 924:..//common/src/lpc17xx_emac.c ****  *
+ 925:..//common/src/lpc17xx_emac.c ****  * Note: In case the RxConsumeIndex is not equal to the RxProduceIndex,
+ 926:..//common/src/lpc17xx_emac.c ****  * it means there're available data has been received. They should be read
+ 927:..//common/src/lpc17xx_emac.c ****  * out and released the Receive Data Buffer by updating the RxConsumeIndex value.
+ 928:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+ 929:..//common/src/lpc17xx_emac.c **** Bool EMAC_CheckReceiveIndex(void)
+ 930:..//common/src/lpc17xx_emac.c **** {
+ 2056              		.loc 1 930 0
+ 2057              		.cfi_startproc
+ 2058              		@ args = 0, pretend = 0, frame = 0
+ 2059              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2060              		@ link register save eliminated.
+ 2061 0000 80B4     		push	{r7}
+ 2062              	.LCFI56:
+ 2063              		.cfi_def_cfa_offset 4
+ 2064 0002 00AF     		add	r7, sp, #0
+ 2065              		.cfi_offset 7, -4
+ 2066              	.LCFI57:
+ 2067              		.cfi_def_cfa_register 7
+ 931:..//common/src/lpc17xx_emac.c **** 	if (LPC_EMAC->RxConsumeIndex != LPC_EMAC->RxProduceIndex) {
+ 2068              		.loc 1 931 0
+ 2069 0004 4FF0A043 		mov	r3, #1342177280
+ 2070 0008 D3F81821 		ldr	r2, [r3, #280]
+ 2071 000c 4FF0A043 		mov	r3, #1342177280
+ 2072 0010 D3F81431 		ldr	r3, [r3, #276]
+ 2073 0014 9A42     		cmp	r2, r3
+ 2074 0016 02D0     		beq	.L152
+ 932:..//common/src/lpc17xx_emac.c **** 		return TRUE;
+ 2075              		.loc 1 932 0
+ 2076 0018 4FF00103 		mov	r3, #1
+ 2077 001c 01E0     		b	.L153
+ 2078              	.L152:
+ 933:..//common/src/lpc17xx_emac.c **** 	} else {
+ 934:..//common/src/lpc17xx_emac.c **** 		return FALSE;
+ 2079              		.loc 1 934 0
+ 2080 001e 4FF00003 		mov	r3, #0
+ 2081              	.L153:
+ 935:..//common/src/lpc17xx_emac.c **** 	}
+ 936:..//common/src/lpc17xx_emac.c **** }
+ 2082              		.loc 1 936 0
+ 2083 0022 1846     		mov	r0, r3
+ 2084 0024 BD46     		mov	sp, r7
+ 2085 0026 80BC     		pop	{r7}
+ 2086 0028 7047     		bx	lr
+ 2087              		.cfi_endproc
+ 2088              	.LFE48:
+ 2090 002a 00BF     		.section	.text.EMAC_CheckTransmitIndex,"ax",%progbits
+ 2091              		.align	2
+ 2092              		.global	EMAC_CheckTransmitIndex
+ 2093              		.thumb
+ 2094              		.thumb_func
+ 2096              	EMAC_CheckTransmitIndex:
+ 2097              	.LFB49:
+ 937:..//common/src/lpc17xx_emac.c **** 
+ 938:..//common/src/lpc17xx_emac.c **** 
+ 939:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 940:..//common/src/lpc17xx_emac.c ****  * @brief		Check whether if the current TxProduceIndex is not equal to the
+ 941:..//common/src/lpc17xx_emac.c ****  * 				current RxProduceIndex - 1.
+ 942:..//common/src/lpc17xx_emac.c ****  * @param[in]	None
+ 943:..//common/src/lpc17xx_emac.c ****  * @return		TRUE if they're not equal, otherwise return FALSE
+ 944:..//common/src/lpc17xx_emac.c ****  *
+ 945:..//common/src/lpc17xx_emac.c ****  * Note: In case the RxConsumeIndex is equal to the RxProduceIndex - 1,
+ 946:..//common/src/lpc17xx_emac.c ****  * it means the transmit buffer is available and data can be written to transmit
+ 947:..//common/src/lpc17xx_emac.c ****  * buffer to be sent.
+ 948:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+ 949:..//common/src/lpc17xx_emac.c **** Bool EMAC_CheckTransmitIndex(void)
+ 950:..//common/src/lpc17xx_emac.c **** {
+ 2098              		.loc 1 950 0
+ 2099              		.cfi_startproc
+ 2100              		@ args = 0, pretend = 0, frame = 8
+ 2101              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2102              		@ link register save eliminated.
+ 2103 0000 80B4     		push	{r7}
+ 2104              	.LCFI58:
+ 2105              		.cfi_def_cfa_offset 4
+ 2106 0002 83B0     		sub	sp, sp, #12
+ 2107              	.LCFI59:
+ 2108              		.cfi_def_cfa_offset 16
+ 2109 0004 00AF     		add	r7, sp, #0
+ 2110              		.cfi_offset 7, -4
+ 2111              	.LCFI60:
+ 2112              		.cfi_def_cfa_register 7
+ 951:..//common/src/lpc17xx_emac.c **** 	uint32_t tmp = LPC_EMAC->TxConsumeIndex -1;
+ 2113              		.loc 1 951 0
+ 2114 0006 4FF0A043 		mov	r3, #1342177280
+ 2115 000a D3F82C31 		ldr	r3, [r3, #300]
+ 2116 000e 03F1FF33 		add	r3, r3, #-1
+ 2117 0012 7B60     		str	r3, [r7, #4]
+ 952:..//common/src/lpc17xx_emac.c **** 	if (LPC_EMAC->TxProduceIndex == tmp) {
+ 2118              		.loc 1 952 0
+ 2119 0014 4FF0A043 		mov	r3, #1342177280
+ 2120 0018 D3F82821 		ldr	r2, [r3, #296]
+ 2121 001c 7B68     		ldr	r3, [r7, #4]
+ 2122 001e 9A42     		cmp	r2, r3
+ 2123 0020 02D1     		bne	.L156
+ 953:..//common/src/lpc17xx_emac.c **** 		return FALSE;
+ 2124              		.loc 1 953 0
+ 2125 0022 4FF00003 		mov	r3, #0
+ 2126 0026 01E0     		b	.L157
+ 2127              	.L156:
+ 954:..//common/src/lpc17xx_emac.c **** 	} else {
+ 955:..//common/src/lpc17xx_emac.c **** 		return TRUE;
+ 2128              		.loc 1 955 0
+ 2129 0028 4FF00103 		mov	r3, #1
+ 2130              	.L157:
+ 956:..//common/src/lpc17xx_emac.c **** 	}
+ 957:..//common/src/lpc17xx_emac.c **** }
+ 2131              		.loc 1 957 0
+ 2132 002c 1846     		mov	r0, r3
+ 2133 002e 07F10C07 		add	r7, r7, #12
+ 2134 0032 BD46     		mov	sp, r7
+ 2135 0034 80BC     		pop	{r7}
+ 2136 0036 7047     		bx	lr
+ 2137              		.cfi_endproc
+ 2138              	.LFE49:
+ 2140              		.section	.text.EMAC_CheckReceiveDataStatus,"ax",%progbits
+ 2141              		.align	2
+ 2142              		.global	EMAC_CheckReceiveDataStatus
+ 2143              		.thumb
+ 2144              		.thumb_func
+ 2146              	EMAC_CheckReceiveDataStatus:
+ 2147              	.LFB50:
+ 958:..//common/src/lpc17xx_emac.c **** 
+ 959:..//common/src/lpc17xx_emac.c **** 
+ 960:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 961:..//common/src/lpc17xx_emac.c ****  * @brief		Get current status value of receive data (due to RxConsumeIndex)
+ 962:..//common/src/lpc17xx_emac.c ****  * @param[in]	ulRxStatType	Received Status type, should be one of following:
+ 963:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_RINFO_CTRL_FRAME: Control Frame
+ 964:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_RINFO_VLAN: VLAN Frame
+ 965:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_RINFO_FAIL_FILT: RX Filter Failed
+ 966:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_RINFO_MCAST: Multicast Frame
+ 967:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_RINFO_BCAST: Broadcast Frame
+ 968:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_RINFO_CRC_ERR: CRC Error in Frame
+ 969:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_RINFO_SYM_ERR: Symbol Error from PHY
+ 970:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_RINFO_LEN_ERR: Length Error
+ 971:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_RINFO_RANGE_ERR: Range error(exceeded max size)
+ 972:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_RINFO_ALIGN_ERR: Alignment error
+ 973:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_RINFO_OVERRUN: Receive overrun
+ 974:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_RINFO_NO_DESCR: No new Descriptor available
+ 975:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_RINFO_LAST_FLAG: last Fragment in Frame
+ 976:..//common/src/lpc17xx_emac.c ****  * 							- EMAC_RINFO_ERR: Error Occurred (OR of all error)
+ 977:..//common/src/lpc17xx_emac.c ****  * @return		Current value of receive data (due to RxConsumeIndex)
+ 978:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+ 979:..//common/src/lpc17xx_emac.c **** FlagStatus EMAC_CheckReceiveDataStatus(uint32_t ulRxStatType)
+ 980:..//common/src/lpc17xx_emac.c **** {
+ 2148              		.loc 1 980 0
+ 2149              		.cfi_startproc
+ 2150              		@ args = 0, pretend = 0, frame = 16
+ 2151              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2152              		@ link register save eliminated.
+ 2153 0000 80B4     		push	{r7}
+ 2154              	.LCFI61:
+ 2155              		.cfi_def_cfa_offset 4
+ 2156 0002 85B0     		sub	sp, sp, #20
+ 2157              	.LCFI62:
+ 2158              		.cfi_def_cfa_offset 24
+ 2159 0004 00AF     		add	r7, sp, #0
+ 2160              		.cfi_offset 7, -4
+ 2161              	.LCFI63:
+ 2162              		.cfi_def_cfa_register 7
+ 2163 0006 7860     		str	r0, [r7, #4]
+ 981:..//common/src/lpc17xx_emac.c **** 	uint32_t idx;
+ 982:..//common/src/lpc17xx_emac.c **** 	idx = LPC_EMAC->RxConsumeIndex;
+ 2164              		.loc 1 982 0
+ 2165 0008 4FF0A043 		mov	r3, #1342177280
+ 2166 000c D3F81831 		ldr	r3, [r3, #280]
+ 2167 0010 FB60     		str	r3, [r7, #12]
+ 983:..//common/src/lpc17xx_emac.c **** 	return (((Rx_Stat[idx].Info) & ulRxStatType) ? SET : RESET);
+ 2168              		.loc 1 983 0
+ 2169 0012 FA68     		ldr	r2, [r7, #12]
+ 2170 0014 40F20003 		movw	r3, #:lower16:Rx_Stat
+ 2171 0018 C0F20003 		movt	r3, #:upper16:Rx_Stat
+ 2172 001c 53F83220 		ldr	r2, [r3, r2, lsl #3]
+ 2173 0020 7B68     		ldr	r3, [r7, #4]
+ 2174 0022 02EA0303 		and	r3, r2, r3
+ 2175 0026 002B     		cmp	r3, #0
+ 2176 0028 0CBF     		ite	eq
+ 2177 002a 0023     		moveq	r3, #0
+ 2178 002c 0123     		movne	r3, #1
+ 984:..//common/src/lpc17xx_emac.c **** }
+ 2179              		.loc 1 984 0
+ 2180 002e 1846     		mov	r0, r3
+ 2181 0030 07F11407 		add	r7, r7, #20
+ 2182 0034 BD46     		mov	sp, r7
+ 2183 0036 80BC     		pop	{r7}
+ 2184 0038 7047     		bx	lr
+ 2185              		.cfi_endproc
+ 2186              	.LFE50:
+ 2188              		.section	.text.EMAC_GetReceiveDataSize,"ax",%progbits
+ 2189              		.align	2
+ 2190              		.global	EMAC_GetReceiveDataSize
+ 2191              		.thumb
+ 2192              		.thumb_func
+ 2194              	EMAC_GetReceiveDataSize:
+ 2195              	.LFB51:
+ 985:..//common/src/lpc17xx_emac.c **** 
+ 986:..//common/src/lpc17xx_emac.c **** 
+ 987:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+ 988:..//common/src/lpc17xx_emac.c ****  * @brief		Get size of current Received data in received buffer (due to
+ 989:..//common/src/lpc17xx_emac.c ****  * 				RxConsumeIndex)
+ 990:..//common/src/lpc17xx_emac.c ****  * @param[in]	None
+ 991:..//common/src/lpc17xx_emac.c ****  * @return		Size of received data
+ 992:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+ 993:..//common/src/lpc17xx_emac.c **** uint32_t EMAC_GetReceiveDataSize(void)
+ 994:..//common/src/lpc17xx_emac.c **** {
+ 2196              		.loc 1 994 0
+ 2197              		.cfi_startproc
+ 2198              		@ args = 0, pretend = 0, frame = 8
+ 2199              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2200              		@ link register save eliminated.
+ 2201 0000 80B4     		push	{r7}
+ 2202              	.LCFI64:
+ 2203              		.cfi_def_cfa_offset 4
+ 2204 0002 83B0     		sub	sp, sp, #12
+ 2205              	.LCFI65:
+ 2206              		.cfi_def_cfa_offset 16
+ 2207 0004 00AF     		add	r7, sp, #0
+ 2208              		.cfi_offset 7, -4
+ 2209              	.LCFI66:
+ 2210              		.cfi_def_cfa_register 7
+ 995:..//common/src/lpc17xx_emac.c **** 	uint32_t idx;
+ 996:..//common/src/lpc17xx_emac.c **** 	idx =LPC_EMAC->RxConsumeIndex;
+ 2211              		.loc 1 996 0
+ 2212 0006 4FF0A043 		mov	r3, #1342177280
+ 2213 000a D3F81831 		ldr	r3, [r3, #280]
+ 2214 000e 7B60     		str	r3, [r7, #4]
+ 997:..//common/src/lpc17xx_emac.c **** 	return ((Rx_Stat[idx].Info) & EMAC_RINFO_SIZE);
+ 2215              		.loc 1 997 0
+ 2216 0010 7A68     		ldr	r2, [r7, #4]
+ 2217 0012 40F20003 		movw	r3, #:lower16:Rx_Stat
+ 2218 0016 C0F20003 		movt	r3, #:upper16:Rx_Stat
+ 2219 001a 53F83230 		ldr	r3, [r3, r2, lsl #3]
+ 2220 001e 4FEA4353 		lsl	r3, r3, #21
+ 2221 0022 4FEA5353 		lsr	r3, r3, #21
+ 998:..//common/src/lpc17xx_emac.c **** }
+ 2222              		.loc 1 998 0
+ 2223 0026 1846     		mov	r0, r3
+ 2224 0028 07F10C07 		add	r7, r7, #12
+ 2225 002c BD46     		mov	sp, r7
+ 2226 002e 80BC     		pop	{r7}
+ 2227 0030 7047     		bx	lr
+ 2228              		.cfi_endproc
+ 2229              	.LFE51:
+ 2231 0032 00BF     		.section	.text.EMAC_UpdateRxConsumeIndex,"ax",%progbits
+ 2232              		.align	2
+ 2233              		.global	EMAC_UpdateRxConsumeIndex
+ 2234              		.thumb
+ 2235              		.thumb_func
+ 2237              	EMAC_UpdateRxConsumeIndex:
+ 2238              	.LFB52:
+ 999:..//common/src/lpc17xx_emac.c **** 
+1000:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+1001:..//common/src/lpc17xx_emac.c ****  * @brief		Increase the RxConsumeIndex (after reading the Receive buffer
+1002:..//common/src/lpc17xx_emac.c ****  * 				to release the Receive buffer) and wrap-around the index if
+1003:..//common/src/lpc17xx_emac.c ****  * 				it reaches the maximum Receive Number
+1004:..//common/src/lpc17xx_emac.c ****  * @param[in]	None
+1005:..//common/src/lpc17xx_emac.c ****  * @return		None
+1006:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+1007:..//common/src/lpc17xx_emac.c **** void EMAC_UpdateRxConsumeIndex(void)
+1008:..//common/src/lpc17xx_emac.c **** {
+ 2239              		.loc 1 1008 0
+ 2240              		.cfi_startproc
+ 2241              		@ args = 0, pretend = 0, frame = 8
+ 2242              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2243              		@ link register save eliminated.
+ 2244 0000 80B4     		push	{r7}
+ 2245              	.LCFI67:
+ 2246              		.cfi_def_cfa_offset 4
+ 2247 0002 83B0     		sub	sp, sp, #12
+ 2248              	.LCFI68:
+ 2249              		.cfi_def_cfa_offset 16
+ 2250 0004 00AF     		add	r7, sp, #0
+ 2251              		.cfi_offset 7, -4
+ 2252              	.LCFI69:
+ 2253              		.cfi_def_cfa_register 7
+1009:..//common/src/lpc17xx_emac.c **** 	// Get current Rx consume index
+1010:..//common/src/lpc17xx_emac.c **** 	uint32_t idx = LPC_EMAC->RxConsumeIndex;
+ 2254              		.loc 1 1010 0
+ 2255 0006 4FF0A043 		mov	r3, #1342177280
+ 2256 000a D3F81831 		ldr	r3, [r3, #280]
+ 2257 000e 7B60     		str	r3, [r7, #4]
+1011:..//common/src/lpc17xx_emac.c **** 
+1012:..//common/src/lpc17xx_emac.c **** 	/* Release frame from EMAC buffer */
+1013:..//common/src/lpc17xx_emac.c **** 	if (++idx == EMAC_NUM_RX_FRAG) idx = 0;
+ 2258              		.loc 1 1013 0
+ 2259 0010 7B68     		ldr	r3, [r7, #4]
+ 2260 0012 03F10103 		add	r3, r3, #1
+ 2261 0016 7B60     		str	r3, [r7, #4]
+ 2262 0018 7B68     		ldr	r3, [r7, #4]
+ 2263 001a 042B     		cmp	r3, #4
+ 2264 001c 02D1     		bne	.L164
+ 2265 001e 4FF00003 		mov	r3, #0
+ 2266 0022 7B60     		str	r3, [r7, #4]
+ 2267              	.L164:
+1014:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->RxConsumeIndex = idx;
+ 2268              		.loc 1 1014 0
+ 2269 0024 4FF0A043 		mov	r3, #1342177280
+ 2270 0028 7A68     		ldr	r2, [r7, #4]
+ 2271 002a C3F81821 		str	r2, [r3, #280]
+1015:..//common/src/lpc17xx_emac.c **** }
+ 2272              		.loc 1 1015 0
+ 2273 002e 07F10C07 		add	r7, r7, #12
+ 2274 0032 BD46     		mov	sp, r7
+ 2275 0034 80BC     		pop	{r7}
+ 2276 0036 7047     		bx	lr
+ 2277              		.cfi_endproc
+ 2278              	.LFE52:
+ 2280              		.section	.text.EMAC_UpdateTxProduceIndex,"ax",%progbits
+ 2281              		.align	2
+ 2282              		.global	EMAC_UpdateTxProduceIndex
+ 2283              		.thumb
+ 2284              		.thumb_func
+ 2286              	EMAC_UpdateTxProduceIndex:
+ 2287              	.LFB53:
+1016:..//common/src/lpc17xx_emac.c **** 
+1017:..//common/src/lpc17xx_emac.c **** /*********************************************************************//**
+1018:..//common/src/lpc17xx_emac.c ****  * @brief		Increase the TxProduceIndex (after writting to the Transmit buffer
+1019:..//common/src/lpc17xx_emac.c ****  * 				to enable the Transmit buffer) and wrap-around the index if
+1020:..//common/src/lpc17xx_emac.c ****  * 				it reaches the maximum Transmit Number
+1021:..//common/src/lpc17xx_emac.c ****  * @param[in]	None
+1022:..//common/src/lpc17xx_emac.c ****  * @return		None
+1023:..//common/src/lpc17xx_emac.c ****  **********************************************************************/
+1024:..//common/src/lpc17xx_emac.c **** void EMAC_UpdateTxProduceIndex(void)
+1025:..//common/src/lpc17xx_emac.c **** {
+ 2288              		.loc 1 1025 0
+ 2289              		.cfi_startproc
+ 2290              		@ args = 0, pretend = 0, frame = 8
+ 2291              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2292              		@ link register save eliminated.
+ 2293 0000 80B4     		push	{r7}
+ 2294              	.LCFI70:
+ 2295              		.cfi_def_cfa_offset 4
+ 2296 0002 83B0     		sub	sp, sp, #12
+ 2297              	.LCFI71:
+ 2298              		.cfi_def_cfa_offset 16
+ 2299 0004 00AF     		add	r7, sp, #0
+ 2300              		.cfi_offset 7, -4
+ 2301              	.LCFI72:
+ 2302              		.cfi_def_cfa_register 7
+1026:..//common/src/lpc17xx_emac.c **** 	// Get current Tx produce index
+1027:..//common/src/lpc17xx_emac.c **** 	uint32_t idx = LPC_EMAC->TxProduceIndex;
+ 2303              		.loc 1 1027 0
+ 2304 0006 4FF0A043 		mov	r3, #1342177280
+ 2305 000a D3F82831 		ldr	r3, [r3, #296]
+ 2306 000e 7B60     		str	r3, [r7, #4]
+1028:..//common/src/lpc17xx_emac.c **** 
+1029:..//common/src/lpc17xx_emac.c **** 	/* Start frame transmission */
+1030:..//common/src/lpc17xx_emac.c **** 	if (++idx == EMAC_NUM_TX_FRAG) idx = 0;
+ 2307              		.loc 1 1030 0
+ 2308 0010 7B68     		ldr	r3, [r7, #4]
+ 2309 0012 03F10103 		add	r3, r3, #1
+ 2310 0016 7B60     		str	r3, [r7, #4]
+ 2311 0018 7B68     		ldr	r3, [r7, #4]
+ 2312 001a 032B     		cmp	r3, #3
+ 2313 001c 02D1     		bne	.L167
+ 2314 001e 4FF00003 		mov	r3, #0
+ 2315 0022 7B60     		str	r3, [r7, #4]
+ 2316              	.L167:
+1031:..//common/src/lpc17xx_emac.c **** 	LPC_EMAC->TxProduceIndex = idx;
+ 2317              		.loc 1 1031 0
+ 2318 0024 4FF0A043 		mov	r3, #1342177280
+ 2319 0028 7A68     		ldr	r2, [r7, #4]
+ 2320 002a C3F82821 		str	r2, [r3, #296]
+1032:..//common/src/lpc17xx_emac.c **** }
+ 2321              		.loc 1 1032 0
+ 2322 002e 07F10C07 		add	r7, r7, #12
+ 2323 0032 BD46     		mov	sp, r7
+ 2324 0034 80BC     		pop	{r7}
+ 2325 0036 7047     		bx	lr
+ 2326              		.cfi_endproc
+ 2327              	.LFE53:
+ 2329              		.text
+ 2330              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 lpc17xx_emac.c
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:28     .rodata.EMAC_clkdiv:00000000 EMAC_clkdiv
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:25     .rodata.EMAC_clkdiv:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:37     .bss.Rx_Desc:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:40     .bss.Rx_Desc:00000000 Rx_Desc
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:43     .bss.Rx_Stat:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:46     .bss.Rx_Stat:00000000 Rx_Stat
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:49     .bss.Tx_Desc:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:52     .bss.Tx_Desc:00000000 Tx_Desc
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:55     .bss.Tx_Stat:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:58     .bss.Tx_Stat:00000000 Tx_Stat
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:61     .bss.rx_buf:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:64     .bss.rx_buf:00000000 rx_buf
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:67     .bss.tx_buf:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:70     .bss.tx_buf:00000000 tx_buf
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:73     .text.rx_descr_init:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:77     .text.rx_descr_init:00000000 rx_descr_init
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:173    .text.tx_descr_init:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:177    .text.tx_descr_init:00000000 tx_descr_init
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:263    .text.write_PHY:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:267    .text.write_PHY:00000000 write_PHY
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:337    .text.read_PHY:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:341    .text.read_PHY:00000000 read_PHY
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:414    .text.setEmacAddr:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:418    .text.setEmacAddr:00000000 setEmacAddr
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:477    .text.emac_CRCCalc:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:481    .text.emac_CRCCalc:00000000 emac_CRCCalc
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:647    .text.EMAC_Init:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:652    .text.EMAC_Init:00000000 EMAC_Init
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1279   .text.EMAC_SetPHYMode:00000000 EMAC_SetPHYMode
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:904    .text.EMAC_Init_New:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:909    .text.EMAC_Init_New:00000000 EMAC_Init_New
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1151   .text.EMAC_DeInit:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1156   .text.EMAC_DeInit:00000000 EMAC_DeInit
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1190   .text.EMAC_CheckPHYStatus:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1195   .text.EMAC_CheckPHYStatus:00000000 EMAC_CheckPHYStatus
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1274   .text.EMAC_SetPHYMode:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1331   .text.EMAC_SetPHYMode:0000005c $d
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1338   .text.EMAC_SetPHYMode:00000070 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1458   .text.EMAC_UpdatePHYStatus:00000000 EMAC_UpdatePHYStatus
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1453   .text.EMAC_UpdatePHYStatus:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1571   .text.EMAC_SetHashFilter:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1576   .text.EMAC_SetHashFilter:00000000 EMAC_SetHashFilter
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1672   .text.EMAC_SetFilterMode:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1677   .text.EMAC_SetFilterMode:00000000 EMAC_SetFilterMode
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1728   .text.EMAC_GetWoLStatus:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1733   .text.EMAC_GetWoLStatus:00000000 EMAC_GetWoLStatus
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1779   .text.EMAC_WritePacketBuffer:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1784   .text.EMAC_WritePacketBuffer:00000000 EMAC_WritePacketBuffer
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1863   .text.EMAC_ReadPacketBuffer:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1868   .text.EMAC_ReadPacketBuffer:00000000 EMAC_ReadPacketBuffer
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1942   .text.EMAC_IntCmd:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1947   .text.EMAC_IntCmd:00000000 EMAC_IntCmd
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:1998   .text.EMAC_IntGetStatus:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:2003   .text.EMAC_IntGetStatus:00000000 EMAC_IntGetStatus
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:2049   .text.EMAC_CheckReceiveIndex:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:2054   .text.EMAC_CheckReceiveIndex:00000000 EMAC_CheckReceiveIndex
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:2091   .text.EMAC_CheckTransmitIndex:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:2096   .text.EMAC_CheckTransmitIndex:00000000 EMAC_CheckTransmitIndex
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:2141   .text.EMAC_CheckReceiveDataStatus:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:2146   .text.EMAC_CheckReceiveDataStatus:00000000 EMAC_CheckReceiveDataStatus
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:2189   .text.EMAC_GetReceiveDataSize:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:2194   .text.EMAC_GetReceiveDataSize:00000000 EMAC_GetReceiveDataSize
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:2232   .text.EMAC_UpdateRxConsumeIndex:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:2237   .text.EMAC_UpdateRxConsumeIndex:00000000 EMAC_UpdateRxConsumeIndex
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:2281   .text.EMAC_UpdateTxProduceIndex:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccO61Ljh.s:2286   .text.EMAC_UpdateTxProduceIndex:00000000 EMAC_UpdateTxProduceIndex
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+CLKPWR_ConfigPPWR
+SystemCoreClock

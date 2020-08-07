@@ -1,0 +1,892 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"lpc17xx_spi.c"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.section	.text.SPI_Init,"ax",%progbits
+  24              		.align	2
+  25              		.global	SPI_Init
+  26              		.thumb
+  27              		.thumb_func
+  29              	SPI_Init:
+  30              	.LFB29:
+  31              		.file 1 "..//common/src/lpc17xx_spi.c"
+   1:..//common/src/lpc17xx_spi.c **** /**************************************************************************//**
+   2:..//common/src/lpc17xx_spi.c ****  * @file     lpc17xx_spi.c
+   3:..//common/src/lpc17xx_spi.c ****  * @brief    Drivers for SSP peripheral in lpc17xx.
+   4:..//common/src/lpc17xx_spi.c ****  * @version  1.0
+   5:..//common/src/lpc17xx_spi.c ****  * @date     18. Nov. 2010
+   6:..//common/src/lpc17xx_spi.c ****  *
+   7:..//common/src/lpc17xx_spi.c ****  * @note
+   8:..//common/src/lpc17xx_spi.c ****  * Copyright (C) 2010 NXP Semiconductors(NXP), Martin Thomas. 
+   9:..//common/src/lpc17xx_spi.c ****  * All rights reserved.
+  10:..//common/src/lpc17xx_spi.c ****  *
+  11:..//common/src/lpc17xx_spi.c ****  * General SPI/SSP drivers: NXP
+  12:..//common/src/lpc17xx_spi.c ****  * SSP FIFO: Martin Thomas 
+  13:..//common/src/lpc17xx_spi.c ****  *
+  14:..//common/src/lpc17xx_spi.c ****  ******************************************************************************/
+  15:..//common/src/lpc17xx_spi.c **** 
+  16:..//common/src/lpc17xx_spi.c **** #include "lpc17xx_spi.h"
+  17:..//common/src/lpc17xx_spi.c **** #include "lpc_types.h"
+  18:..//common/src/lpc17xx_spi.c **** #include "lpc17xx_pinsel.h"
+  19:..//common/src/lpc17xx_spi.c **** #include "lpc17xx_gpio.h"
+  20:..//common/src/lpc17xx_spi.c **** #include "lpc17xx_ssp.h"
+  21:..//common/src/lpc17xx_spi.c **** #include "lpc17xx_clkpwr.h"
+  22:..//common/src/lpc17xx_spi.c **** #include "lpc17xx_gpdma.h"
+  23:..//common/src/lpc17xx_spi.c **** 
+  24:..//common/src/lpc17xx_spi.c **** /* Macro defines for SSP SR register */
+  25:..//common/src/lpc17xx_spi.c **** #define SSP_SR_TFE      ((uint32_t)(1<<0)) /** SSP status TX FIFO Empty bit */
+  26:..//common/src/lpc17xx_spi.c **** #define SSP_SR_TNF      ((uint32_t)(1<<1)) /** SSP status TX FIFO not full bit */
+  27:..//common/src/lpc17xx_spi.c **** #define SSP_SR_RNE      ((uint32_t)(1<<2)) /** SSP status RX FIFO not empty bit */
+  28:..//common/src/lpc17xx_spi.c **** #define SSP_SR_RFF      ((uint32_t)(1<<3)) /** SSP status RX FIFO full bit */
+  29:..//common/src/lpc17xx_spi.c **** #define SSP_SR_BSY      ((uint32_t)(1<<4)) /** SSP status SSP Busy bit */
+  30:..//common/src/lpc17xx_spi.c **** #define SSP_SR_BITMASK	((uint32_t)(0x1F)) /** SSP SR bit mask */
+  31:..//common/src/lpc17xx_spi.c **** 
+  32:..//common/src/lpc17xx_spi.c **** 
+  33:..//common/src/lpc17xx_spi.c **** /**
+  34:..//common/src/lpc17xx_spi.c ****   * @brief  Initializes the SSP0.
+  35:..//common/src/lpc17xx_spi.c ****   *
+  36:..//common/src/lpc17xx_spi.c ****   * @param  None
+  37:..//common/src/lpc17xx_spi.c ****   * @retval None 
+  38:..//common/src/lpc17xx_spi.c ****   */
+  39:..//common/src/lpc17xx_spi.c **** void SPI_Init (void) 
+  40:..//common/src/lpc17xx_spi.c **** {
+  32              		.loc 1 40 0
+  33              		.cfi_startproc
+  34              		@ args = 0, pretend = 0, frame = 40
+  35              		@ frame_needed = 1, uses_anonymous_args = 0
+  36 0000 80B5     		push	{r7, lr}
+  37              	.LCFI0:
+  38              		.cfi_def_cfa_offset 8
+  39 0002 8AB0     		sub	sp, sp, #40
+  40              	.LCFI1:
+  41              		.cfi_def_cfa_offset 48
+  42 0004 00AF     		add	r7, sp, #0
+  43              		.cfi_offset 14, -4
+  44              		.cfi_offset 7, -8
+  45              	.LCFI2:
+  46              		.cfi_def_cfa_register 7
+  41:..//common/src/lpc17xx_spi.c **** 	PINSEL_CFG_Type PinCfg;
+  42:..//common/src/lpc17xx_spi.c **** 	SSP_CFG_Type SSP_ConfigStruct;
+  43:..//common/src/lpc17xx_spi.c **** 
+  44:..//common/src/lpc17xx_spi.c **** 	// SSEL1 P0.6 as GPIO, pull-up mounted but driven push/pull here
+  45:..//common/src/lpc17xx_spi.c **** 	PinCfg.Funcnum   = PINSEL_FUNC_0;
+  47              		.loc 1 45 0
+  48 0006 4FF00003 		mov	r3, #0
+  49 000a 87F82230 		strb	r3, [r7, #34]
+  46:..//common/src/lpc17xx_spi.c **** 	PinCfg.OpenDrain = PINSEL_PINMODE_NORMAL;
+  50              		.loc 1 46 0
+  51 000e 4FF00003 		mov	r3, #0
+  52 0012 87F82430 		strb	r3, [r7, #36]
+  47:..//common/src/lpc17xx_spi.c **** 	PinCfg.Pinmode   = PINSEL_PINMODE_PULLUP;
+  53              		.loc 1 47 0
+  54 0016 4FF00003 		mov	r3, #0
+  55 001a 87F82330 		strb	r3, [r7, #35]
+  48:..//common/src/lpc17xx_spi.c **** 	PinCfg.Pinnum    = 6;
+  56              		.loc 1 48 0
+  57 001e 4FF00603 		mov	r3, #6
+  58 0022 87F82130 		strb	r3, [r7, #33]
+  49:..//common/src/lpc17xx_spi.c **** 	PinCfg.Portnum   = 0;
+  59              		.loc 1 49 0
+  60 0026 4FF00003 		mov	r3, #0
+  61 002a 87F82030 		strb	r3, [r7, #32]
+  50:..//common/src/lpc17xx_spi.c **** 	// de_select_card();
+  51:..//common/src/lpc17xx_spi.c **** 	GPIO_SetDir(0, (1 << 6), 1);
+  62              		.loc 1 51 0
+  63 002e 4FF00000 		mov	r0, #0
+  64 0032 4FF04001 		mov	r1, #64
+  65 0036 4FF00102 		mov	r2, #1
+  66 003a 40F20003 		movw	r3, #:lower16:GPIO_SetDir
+  67 003e C0F20003 		movt	r3, #:upper16:GPIO_SetDir
+  68 0042 9847     		blx	r3
+  52:..//common/src/lpc17xx_spi.c **** 	PINSEL_ConfigPin(&PinCfg);
+  69              		.loc 1 52 0
+  70 0044 07F12003 		add	r3, r7, #32
+  71 0048 1846     		mov	r0, r3
+  72 004a 40F20003 		movw	r3, #:lower16:PINSEL_ConfigPin
+  73 004e C0F20003 		movt	r3, #:upper16:PINSEL_ConfigPin
+  74 0052 9847     		blx	r3
+  53:..//common/src/lpc17xx_spi.c **** 	// SCK P0.7 alternate function 0b10
+  54:..//common/src/lpc17xx_spi.c **** 	PinCfg.Funcnum   = PINSEL_FUNC_2;
+  75              		.loc 1 54 0
+  76 0054 4FF00203 		mov	r3, #2
+  77 0058 87F82230 		strb	r3, [r7, #34]
+  55:..//common/src/lpc17xx_spi.c **** 	PinCfg.Pinnum    = 7;
+  78              		.loc 1 55 0
+  79 005c 4FF00703 		mov	r3, #7
+  80 0060 87F82130 		strb	r3, [r7, #33]
+  56:..//common/src/lpc17xx_spi.c **** 	PINSEL_ConfigPin(&PinCfg);
+  81              		.loc 1 56 0
+  82 0064 07F12003 		add	r3, r7, #32
+  83 0068 1846     		mov	r0, r3
+  84 006a 40F20003 		movw	r3, #:lower16:PINSEL_ConfigPin
+  85 006e C0F20003 		movt	r3, #:upper16:PINSEL_ConfigPin
+  86 0072 9847     		blx	r3
+  57:..//common/src/lpc17xx_spi.c **** 	// MISO P0.8
+  58:..//common/src/lpc17xx_spi.c **** 	PinCfg.Pinnum    = 8;
+  87              		.loc 1 58 0
+  88 0074 4FF00803 		mov	r3, #8
+  89 0078 87F82130 		strb	r3, [r7, #33]
+  59:..//common/src/lpc17xx_spi.c **** 	PINSEL_ConfigPin(&PinCfg);
+  90              		.loc 1 59 0
+  91 007c 07F12003 		add	r3, r7, #32
+  92 0080 1846     		mov	r0, r3
+  93 0082 40F20003 		movw	r3, #:lower16:PINSEL_ConfigPin
+  94 0086 C0F20003 		movt	r3, #:upper16:PINSEL_ConfigPin
+  95 008a 9847     		blx	r3
+  60:..//common/src/lpc17xx_spi.c **** 	// MOSI P0.9
+  61:..//common/src/lpc17xx_spi.c **** 	PinCfg.Pinnum    = 9;
+  96              		.loc 1 61 0
+  97 008c 4FF00903 		mov	r3, #9
+  98 0090 87F82130 		strb	r3, [r7, #33]
+  62:..//common/src/lpc17xx_spi.c **** 	PINSEL_ConfigPin(&PinCfg);
+  99              		.loc 1 62 0
+ 100 0094 07F12003 		add	r3, r7, #32
+ 101 0098 1846     		mov	r0, r3
+ 102 009a 40F20003 		movw	r3, #:lower16:PINSEL_ConfigPin
+ 103 009e C0F20003 		movt	r3, #:upper16:PINSEL_ConfigPin
+ 104 00a2 9847     		blx	r3
+  63:..//common/src/lpc17xx_spi.c **** 
+  64:..//common/src/lpc17xx_spi.c **** 	SSP_ConfigStructInit(&SSP_ConfigStruct);
+ 105              		.loc 1 64 0
+ 106 00a4 07F10803 		add	r3, r7, #8
+ 107 00a8 1846     		mov	r0, r3
+ 108 00aa 40F20003 		movw	r3, #:lower16:SSP_ConfigStructInit
+ 109 00ae C0F20003 		movt	r3, #:upper16:SSP_ConfigStructInit
+ 110 00b2 9847     		blx	r3
+  65:..//common/src/lpc17xx_spi.c **** 	SSP_Init(LPC_SSP1, &SSP_ConfigStruct);
+ 111              		.loc 1 65 0
+ 112 00b4 07F10803 		add	r3, r7, #8
+ 113 00b8 40F20000 		movw	r0, #:lower16:1073938432
+ 114 00bc C4F20300 		movt	r0, #:upper16:1073938432
+ 115 00c0 1946     		mov	r1, r3
+ 116 00c2 40F20003 		movw	r3, #:lower16:SSP_Init
+ 117 00c6 C0F20003 		movt	r3, #:upper16:SSP_Init
+ 118 00ca 9847     		blx	r3
+  66:..//common/src/lpc17xx_spi.c **** 
+  67:..//common/src/lpc17xx_spi.c **** 	CLKPWR_SetPCLKDiv(CLKPWR_PCLKSEL_SSP1, CLKPWR_PCLKSEL_CCLK_DIV_2);
+ 119              		.loc 1 67 0
+ 120 00cc 4FF01400 		mov	r0, #20
+ 121 00d0 4FF00201 		mov	r1, #2
+ 122 00d4 40F20003 		movw	r3, #:lower16:CLKPWR_SetPCLKDiv
+ 123 00d8 C0F20003 		movt	r3, #:upper16:CLKPWR_SetPCLKDiv
+ 124 00dc 9847     		blx	r3
+  68:..//common/src/lpc17xx_spi.c **** 
+  69:..//common/src/lpc17xx_spi.c **** 	SSP_Cmd(LPC_SSP1, ENABLE);
+ 125              		.loc 1 69 0
+ 126 00de 40F20000 		movw	r0, #:lower16:1073938432
+ 127 00e2 C4F20300 		movt	r0, #:upper16:1073938432
+ 128 00e6 4FF00101 		mov	r1, #1
+ 129 00ea 40F20003 		movw	r3, #:lower16:SSP_Cmd
+ 130 00ee C0F20003 		movt	r3, #:upper16:SSP_Cmd
+ 131 00f2 9847     		blx	r3
+ 132              	.L2:
+  70:..//common/src/lpc17xx_spi.c **** 
+  71:..//common/src/lpc17xx_spi.c **** 	/* wait for busy gone */
+  72:..//common/src/lpc17xx_spi.c **** 	while( LPC_SSP1->SR & SSP_SR_BSY ) { ; }
+ 133              		.loc 1 72 0
+ 134 00f4 40F20003 		movw	r3, #:lower16:1073938432
+ 135 00f8 C4F20303 		movt	r3, #:upper16:1073938432
+ 136 00fc DB68     		ldr	r3, [r3, #12]
+ 137 00fe 03F01003 		and	r3, r3, #16
+ 138 0102 002B     		cmp	r3, #0
+ 139 0104 F6D1     		bne	.L2
+  73:..//common/src/lpc17xx_spi.c **** 
+  74:..//common/src/lpc17xx_spi.c **** 	/* drain SPI RX FIFO */
+  75:..//common/src/lpc17xx_spi.c **** 	while( LPC_SSP1->SR & SSP_SR_RNE ) {
+ 140              		.loc 1 75 0
+ 141 0106 06E0     		b	.L3
+ 142              	.L4:
+ 143              	.LBB2:
+  76:..//common/src/lpc17xx_spi.c **** 		volatile uint32_t dummy = LPC_SSP0->DR;
+ 144              		.loc 1 76 0
+ 145 0108 48F20003 		movw	r3, #:lower16:1074298880
+ 146 010c C4F20803 		movt	r3, #:upper16:1074298880
+ 147 0110 9B68     		ldr	r3, [r3, #8]
+ 148 0112 7B60     		str	r3, [r7, #4]
+  77:..//common/src/lpc17xx_spi.c **** 		(void)dummy;
+ 149              		.loc 1 77 0
+ 150 0114 7B68     		ldr	r3, [r7, #4]
+ 151              	.L3:
+ 152              	.LBE2:
+ 153              		.loc 1 75 0
+ 154 0116 40F20003 		movw	r3, #:lower16:1073938432
+ 155 011a C4F20303 		movt	r3, #:upper16:1073938432
+ 156 011e DB68     		ldr	r3, [r3, #12]
+ 157 0120 03F00403 		and	r3, r3, #4
+ 158 0124 002B     		cmp	r3, #0
+ 159 0126 EFD1     		bne	.L4
+  78:..//common/src/lpc17xx_spi.c **** 	}
+  79:..//common/src/lpc17xx_spi.c **** 	
+  80:..//common/src/lpc17xx_spi.c **** #if 0
+  81:..//common/src/lpc17xx_spi.c ****     /* Enable SSPI0 block */
+  82:..//common/src/lpc17xx_spi.c ****     LPC_SC->PCONP |= (1 << 21);
+  83:..//common/src/lpc17xx_spi.c ****     
+  84:..//common/src/lpc17xx_spi.c ****     /* Set SSEL0 as GPIO, output high */
+  85:..//common/src/lpc17xx_spi.c ****     LPC_PINCON->PINSEL1 &= ~(3 << 0);          /* Configure P0.16(SSEL) as GPIO */
+  86:..//common/src/lpc17xx_spi.c ****     LPC_GPIO0->FIODIR |= (1 << 16);            /* set P0.16 as output */
+  87:..//common/src/lpc17xx_spi.c ****     
+  88:..//common/src/lpc17xx_spi.c ****     /* Configure other SSP pins: SCK, MISO, MOSI */
+  89:..//common/src/lpc17xx_spi.c ****     LPC_PINCON->PINSEL0 &= ~(3UL << 30);
+  90:..//common/src/lpc17xx_spi.c ****     LPC_PINCON->PINSEL0 |=  (2UL << 30);          /* P0.15: SCK0 */
+  91:..//common/src/lpc17xx_spi.c ****     LPC_PINCON->PINSEL1 &= ~((3<<2) | (3<<4));
+  92:..//common/src/lpc17xx_spi.c ****     LPC_PINCON->PINSEL1 |=  ((2<<2) | (2<<4));  /* P0.17: MISO0, P0.18: MOSI0 */
+  93:..//common/src/lpc17xx_spi.c ****     
+  94:..//common/src/lpc17xx_spi.c ****     /* Configure SSP0_PCLK to CCLK(100MHz), default value is CCLK/4 */
+  95:..//common/src/lpc17xx_spi.c ****     LPC_SC->PCLKSEL1 &= ~(3 << 10);
+  96:..//common/src/lpc17xx_spi.c ****     LPC_SC->PCLKSEL1 |=  (1 << 10);  /* SSP0_PCLK=CCLK */
+  97:..//common/src/lpc17xx_spi.c ****     
+  98:..//common/src/lpc17xx_spi.c ****     /* 8bit, SPI frame format, CPOL=0, CPHA=0, SCR=0 */  
+  99:..//common/src/lpc17xx_spi.c ****     LPC_SSP0->CR0 = (0x07 << 0) |     /* data width: 8bit*/
+ 100:..//common/src/lpc17xx_spi.c ****                     (0x00 << 4) |     /* frame format: SPI */
+ 101:..//common/src/lpc17xx_spi.c ****                     (0x00 << 6) |     /* CPOL: low level */
+ 102:..//common/src/lpc17xx_spi.c ****                     (0x00 << 7) |     /* CPHA: first edge */
+ 103:..//common/src/lpc17xx_spi.c ****                     (0x00 << 8);      /* SCR = 0 */
+ 104:..//common/src/lpc17xx_spi.c **** 
+ 105:..//common/src/lpc17xx_spi.c ****     /* Enable SSP0 as a master */
+ 106:..//common/src/lpc17xx_spi.c ****     LPC_SSP0->CR1 = (0x00 << 0) |   /* Normal mode */
+ 107:..//common/src/lpc17xx_spi.c ****                     (0x01 << 1) |   /* Enable SSP0 */
+ 108:..//common/src/lpc17xx_spi.c ****                     (0x00 << 2) |   /* Master */
+ 109:..//common/src/lpc17xx_spi.c ****                     (0x00 << 3);    /* slave output disabled */
+ 110:..//common/src/lpc17xx_spi.c **** 
+ 111:..//common/src/lpc17xx_spi.c ****     /* Configure SSP0 clock rate to 400kHz (100MHz/250) */
+ 112:..//common/src/lpc17xx_spi.c ****     SPI_ConfigClockRate (SPI_CLOCKRATE_LOW);
+ 113:..//common/src/lpc17xx_spi.c **** #endif
+ 114:..//common/src/lpc17xx_spi.c ****     /* Set SSEL to high */
+ 115:..//common/src/lpc17xx_spi.c ****     SPI_CS_High ();
+ 160              		.loc 1 115 0
+ 161 0128 40F20003 		movw	r3, #:lower16:SPI_CS_High
+ 162 012c C0F20003 		movt	r3, #:upper16:SPI_CS_High
+ 163 0130 9847     		blx	r3
+ 116:..//common/src/lpc17xx_spi.c **** }
+ 164              		.loc 1 116 0
+ 165 0132 07F12807 		add	r7, r7, #40
+ 166 0136 BD46     		mov	sp, r7
+ 167 0138 80BD     		pop	{r7, pc}
+ 168              		.cfi_endproc
+ 169              	.LFE29:
+ 171 013a 00BF     		.section	.text.SPI_ConfigClockRate,"ax",%progbits
+ 172              		.align	2
+ 173              		.global	SPI_ConfigClockRate
+ 174              		.thumb
+ 175              		.thumb_func
+ 177              	SPI_ConfigClockRate:
+ 178              	.LFB30:
+ 117:..//common/src/lpc17xx_spi.c **** 
+ 118:..//common/src/lpc17xx_spi.c **** /**
+ 119:..//common/src/lpc17xx_spi.c ****   * @brief  Configure SSP0 clock rate.
+ 120:..//common/src/lpc17xx_spi.c ****   *
+ 121:..//common/src/lpc17xx_spi.c ****   * @param  SPI_CLOCKRATE: Specifies the SPI clock rate.
+ 122:..//common/src/lpc17xx_spi.c ****   *         The value should be SPI_CLOCKRATE_LOW or SPI_CLOCKRATE_HIGH.
+ 123:..//common/src/lpc17xx_spi.c ****   * @retval None 
+ 124:..//common/src/lpc17xx_spi.c ****   *
+ 125:..//common/src/lpc17xx_spi.c ****   * SSP0_CLK = CCLK / SPI_CLOCKRATE
+ 126:..//common/src/lpc17xx_spi.c ****   */
+ 127:..//common/src/lpc17xx_spi.c **** void SPI_ConfigClockRate (uint32_t SPI_CLOCKRATE)
+ 128:..//common/src/lpc17xx_spi.c **** {
+ 179              		.loc 1 128 0
+ 180              		.cfi_startproc
+ 181              		@ args = 0, pretend = 0, frame = 8
+ 182              		@ frame_needed = 1, uses_anonymous_args = 0
+ 183              		@ link register save eliminated.
+ 184 0000 80B4     		push	{r7}
+ 185              	.LCFI3:
+ 186              		.cfi_def_cfa_offset 4
+ 187 0002 83B0     		sub	sp, sp, #12
+ 188              	.LCFI4:
+ 189              		.cfi_def_cfa_offset 16
+ 190 0004 00AF     		add	r7, sp, #0
+ 191              		.cfi_offset 7, -4
+ 192              	.LCFI5:
+ 193              		.cfi_def_cfa_register 7
+ 194 0006 7860     		str	r0, [r7, #4]
+ 129:..//common/src/lpc17xx_spi.c ****     /* CPSR must be an even value between 2 and 254 */
+ 130:..//common/src/lpc17xx_spi.c ****     LPC_SSP1->CPSR = (SPI_CLOCKRATE & 0x1FE);    
+ 195              		.loc 1 130 0
+ 196 0008 40F20003 		movw	r3, #:lower16:1073938432
+ 197 000c C4F20303 		movt	r3, #:upper16:1073938432
+ 198 0010 7A68     		ldr	r2, [r7, #4]
+ 199 0012 02F4FF72 		and	r2, r2, #510
+ 200 0016 1A61     		str	r2, [r3, #16]
+ 131:..//common/src/lpc17xx_spi.c **** }
+ 201              		.loc 1 131 0
+ 202 0018 07F10C07 		add	r7, r7, #12
+ 203 001c BD46     		mov	sp, r7
+ 204 001e 80BC     		pop	{r7}
+ 205 0020 7047     		bx	lr
+ 206              		.cfi_endproc
+ 207              	.LFE30:
+ 209 0022 00BF     		.section	.text.SPI_CS_Low,"ax",%progbits
+ 210              		.align	2
+ 211              		.global	SPI_CS_Low
+ 212              		.thumb
+ 213              		.thumb_func
+ 215              	SPI_CS_Low:
+ 216              	.LFB31:
+ 132:..//common/src/lpc17xx_spi.c **** 
+ 133:..//common/src/lpc17xx_spi.c **** /**
+ 134:..//common/src/lpc17xx_spi.c ****   * @brief  Set SSEL to low: select spi slave.
+ 135:..//common/src/lpc17xx_spi.c ****   *
+ 136:..//common/src/lpc17xx_spi.c ****   * @param  None.
+ 137:..//common/src/lpc17xx_spi.c ****   * @retval None 
+ 138:..//common/src/lpc17xx_spi.c ****   */
+ 139:..//common/src/lpc17xx_spi.c **** void SPI_CS_Low (void)
+ 140:..//common/src/lpc17xx_spi.c **** {
+ 217              		.loc 1 140 0
+ 218              		.cfi_startproc
+ 219              		@ args = 0, pretend = 0, frame = 0
+ 220              		@ frame_needed = 1, uses_anonymous_args = 0
+ 221              		@ link register save eliminated.
+ 222 0000 80B4     		push	{r7}
+ 223              	.LCFI6:
+ 224              		.cfi_def_cfa_offset 4
+ 225 0002 00AF     		add	r7, sp, #0
+ 226              		.cfi_offset 7, -4
+ 227              	.LCFI7:
+ 228              		.cfi_def_cfa_register 7
+ 141:..//common/src/lpc17xx_spi.c ****     /* SSEL is GPIO, set to high.  */
+ 142:..//common/src/lpc17xx_spi.c ****     LPC_GPIO0->FIOPIN &= ~(1 << 6);            
+ 229              		.loc 1 142 0
+ 230 0004 4CF20003 		movw	r3, #:lower16:537509888
+ 231 0008 C2F20903 		movt	r3, #:upper16:537509888
+ 232 000c 4CF20002 		movw	r2, #:lower16:537509888
+ 233 0010 C2F20902 		movt	r2, #:upper16:537509888
+ 234 0014 5269     		ldr	r2, [r2, #20]
+ 235 0016 22F04002 		bic	r2, r2, #64
+ 236 001a 5A61     		str	r2, [r3, #20]
+ 143:..//common/src/lpc17xx_spi.c **** }
+ 237              		.loc 1 143 0
+ 238 001c BD46     		mov	sp, r7
+ 239 001e 80BC     		pop	{r7}
+ 240 0020 7047     		bx	lr
+ 241              		.cfi_endproc
+ 242              	.LFE31:
+ 244 0022 00BF     		.section	.text.SPI_CS_High,"ax",%progbits
+ 245              		.align	2
+ 246              		.global	SPI_CS_High
+ 247              		.thumb
+ 248              		.thumb_func
+ 250              	SPI_CS_High:
+ 251              	.LFB32:
+ 144:..//common/src/lpc17xx_spi.c **** 
+ 145:..//common/src/lpc17xx_spi.c **** /**
+ 146:..//common/src/lpc17xx_spi.c ****   * @brief  Set SSEL to high: de-select spi slave.
+ 147:..//common/src/lpc17xx_spi.c ****   *
+ 148:..//common/src/lpc17xx_spi.c ****   * @param  None.
+ 149:..//common/src/lpc17xx_spi.c ****   * @retval None 
+ 150:..//common/src/lpc17xx_spi.c ****   */
+ 151:..//common/src/lpc17xx_spi.c **** void SPI_CS_High (void)
+ 152:..//common/src/lpc17xx_spi.c **** {
+ 252              		.loc 1 152 0
+ 253              		.cfi_startproc
+ 254              		@ args = 0, pretend = 0, frame = 0
+ 255              		@ frame_needed = 1, uses_anonymous_args = 0
+ 256              		@ link register save eliminated.
+ 257 0000 80B4     		push	{r7}
+ 258              	.LCFI8:
+ 259              		.cfi_def_cfa_offset 4
+ 260 0002 00AF     		add	r7, sp, #0
+ 261              		.cfi_offset 7, -4
+ 262              	.LCFI9:
+ 263              		.cfi_def_cfa_register 7
+ 153:..//common/src/lpc17xx_spi.c ****     /* SSEL is GPIO, set to high.  */
+ 154:..//common/src/lpc17xx_spi.c ****     LPC_GPIO0->FIOPIN |= (1 << 6);             
+ 264              		.loc 1 154 0
+ 265 0004 4CF20003 		movw	r3, #:lower16:537509888
+ 266 0008 C2F20903 		movt	r3, #:upper16:537509888
+ 267 000c 4CF20002 		movw	r2, #:lower16:537509888
+ 268 0010 C2F20902 		movt	r2, #:upper16:537509888
+ 269 0014 5269     		ldr	r2, [r2, #20]
+ 270 0016 42F04002 		orr	r2, r2, #64
+ 271 001a 5A61     		str	r2, [r3, #20]
+ 155:..//common/src/lpc17xx_spi.c **** }
+ 272              		.loc 1 155 0
+ 273 001c BD46     		mov	sp, r7
+ 274 001e 80BC     		pop	{r7}
+ 275 0020 7047     		bx	lr
+ 276              		.cfi_endproc
+ 277              	.LFE32:
+ 279 0022 00BF     		.section	.text.SPI_SendByte,"ax",%progbits
+ 280              		.align	2
+ 281              		.global	SPI_SendByte
+ 282              		.thumb
+ 283              		.thumb_func
+ 285              	SPI_SendByte:
+ 286              	.LFB33:
+ 156:..//common/src/lpc17xx_spi.c **** 
+ 157:..//common/src/lpc17xx_spi.c **** /**
+ 158:..//common/src/lpc17xx_spi.c ****   * @brief  Send one byte via MOSI and simutaniously receive one byte via MISO.
+ 159:..//common/src/lpc17xx_spi.c ****   *
+ 160:..//common/src/lpc17xx_spi.c ****   * @param  data: Specifies the byte to be sent out.
+ 161:..//common/src/lpc17xx_spi.c ****   * @retval Returned byte.
+ 162:..//common/src/lpc17xx_spi.c ****   *
+ 163:..//common/src/lpc17xx_spi.c ****   * Note: Each time send out one byte at MOSI, Rx FIFO will receive one byte. 
+ 164:..//common/src/lpc17xx_spi.c ****   */
+ 165:..//common/src/lpc17xx_spi.c **** uint8_t SPI_SendByte (uint8_t data)
+ 166:..//common/src/lpc17xx_spi.c **** {
+ 287              		.loc 1 166 0
+ 288              		.cfi_startproc
+ 289              		@ args = 0, pretend = 0, frame = 8
+ 290              		@ frame_needed = 1, uses_anonymous_args = 0
+ 291              		@ link register save eliminated.
+ 292 0000 80B4     		push	{r7}
+ 293              	.LCFI10:
+ 294              		.cfi_def_cfa_offset 4
+ 295 0002 83B0     		sub	sp, sp, #12
+ 296              	.LCFI11:
+ 297              		.cfi_def_cfa_offset 16
+ 298 0004 00AF     		add	r7, sp, #0
+ 299              		.cfi_offset 7, -4
+ 300              	.LCFI12:
+ 301              		.cfi_def_cfa_register 7
+ 302 0006 0346     		mov	r3, r0
+ 303 0008 FB71     		strb	r3, [r7, #7]
+ 167:..//common/src/lpc17xx_spi.c ****     /* Put the data on the FIFO */
+ 168:..//common/src/lpc17xx_spi.c ****     LPC_SSP1->DR = data;
+ 304              		.loc 1 168 0
+ 305 000a 40F20003 		movw	r3, #:lower16:1073938432
+ 306 000e C4F20303 		movt	r3, #:upper16:1073938432
+ 307 0012 FA79     		ldrb	r2, [r7, #7]	@ zero_extendqisi2
+ 308 0014 9A60     		str	r2, [r3, #8]
+ 309              	.L13:
+ 169:..//common/src/lpc17xx_spi.c ****     /* Wait for sending to complete */
+ 170:..//common/src/lpc17xx_spi.c ****     while (LPC_SSP1->SR & SSP_SR_BSY); 
+ 310              		.loc 1 170 0
+ 311 0016 40F20003 		movw	r3, #:lower16:1073938432
+ 312 001a C4F20303 		movt	r3, #:upper16:1073938432
+ 313 001e DB68     		ldr	r3, [r3, #12]
+ 314 0020 03F01003 		and	r3, r3, #16
+ 315 0024 002B     		cmp	r3, #0
+ 316 0026 F6D1     		bne	.L13
+ 171:..//common/src/lpc17xx_spi.c ****     /* Return the received value */              
+ 172:..//common/src/lpc17xx_spi.c ****     return (LPC_SSP1->DR);                        
+ 317              		.loc 1 172 0
+ 318 0028 40F20003 		movw	r3, #:lower16:1073938432
+ 319 002c C4F20303 		movt	r3, #:upper16:1073938432
+ 320 0030 9B68     		ldr	r3, [r3, #8]
+ 321 0032 DBB2     		uxtb	r3, r3
+ 173:..//common/src/lpc17xx_spi.c **** }
+ 322              		.loc 1 173 0
+ 323 0034 1846     		mov	r0, r3
+ 324 0036 07F10C07 		add	r7, r7, #12
+ 325 003a BD46     		mov	sp, r7
+ 326 003c 80BC     		pop	{r7}
+ 327 003e 7047     		bx	lr
+ 328              		.cfi_endproc
+ 329              	.LFE33:
+ 331              		.section	.text.SPI_RecvByte,"ax",%progbits
+ 332              		.align	2
+ 333              		.global	SPI_RecvByte
+ 334              		.thumb
+ 335              		.thumb_func
+ 337              	SPI_RecvByte:
+ 338              	.LFB34:
+ 174:..//common/src/lpc17xx_spi.c **** 
+ 175:..//common/src/lpc17xx_spi.c **** /**
+ 176:..//common/src/lpc17xx_spi.c ****   * @brief  Receive one byte via MISO.
+ 177:..//common/src/lpc17xx_spi.c ****   *
+ 178:..//common/src/lpc17xx_spi.c ****   * @param  None.
+ 179:..//common/src/lpc17xx_spi.c ****   * @retval Returned received byte.
+ 180:..//common/src/lpc17xx_spi.c ****   */
+ 181:..//common/src/lpc17xx_spi.c **** uint8_t SPI_RecvByte (void)
+ 182:..//common/src/lpc17xx_spi.c **** {
+ 339              		.loc 1 182 0
+ 340              		.cfi_startproc
+ 341              		@ args = 0, pretend = 0, frame = 0
+ 342              		@ frame_needed = 1, uses_anonymous_args = 0
+ 343 0000 80B5     		push	{r7, lr}
+ 344              	.LCFI13:
+ 345              		.cfi_def_cfa_offset 8
+ 346 0002 00AF     		add	r7, sp, #0
+ 347              		.cfi_offset 14, -4
+ 348              		.cfi_offset 7, -8
+ 349              	.LCFI14:
+ 350              		.cfi_def_cfa_register 7
+ 183:..//common/src/lpc17xx_spi.c ****     /* Send 0xFF to provide clock for MISO to receive one byte */
+ 184:..//common/src/lpc17xx_spi.c ****     return SPI_SendByte (0xFF);
+ 351              		.loc 1 184 0
+ 352 0004 4FF0FF00 		mov	r0, #255
+ 353 0008 40F20003 		movw	r3, #:lower16:SPI_SendByte
+ 354 000c C0F20003 		movt	r3, #:upper16:SPI_SendByte
+ 355 0010 9847     		blx	r3
+ 356 0012 0346     		mov	r3, r0
+ 185:..//common/src/lpc17xx_spi.c **** }
+ 357              		.loc 1 185 0
+ 358 0014 1846     		mov	r0, r3
+ 359 0016 80BD     		pop	{r7, pc}
+ 360              		.cfi_endproc
+ 361              	.LFE34:
+ 363              		.section	.text.SPI_SendBlock_FIFO,"ax",%progbits
+ 364              		.align	2
+ 365              		.global	SPI_SendBlock_FIFO
+ 366              		.thumb
+ 367              		.thumb_func
+ 369              	SPI_SendBlock_FIFO:
+ 370              	.LFB35:
+ 186:..//common/src/lpc17xx_spi.c **** 
+ 187:..//common/src/lpc17xx_spi.c **** /* SPI FIFO functions are from Martin Thomas */
+ 188:..//common/src/lpc17xx_spi.c **** #ifdef USE_FIFO
+ 189:..//common/src/lpc17xx_spi.c **** 
+ 190:..//common/src/lpc17xx_spi.c **** /* 8 frame FIFOs for both transmit and receive */
+ 191:..//common/src/lpc17xx_spi.c **** #define SSP_FIFO_DEPTH       8 
+ 192:..//common/src/lpc17xx_spi.c **** 
+ 193:..//common/src/lpc17xx_spi.c **** /**
+ 194:..//common/src/lpc17xx_spi.c ****   * @brief  Send data block using FIFO.
+ 195:..//common/src/lpc17xx_spi.c ****   *
+ 196:..//common/src/lpc17xx_spi.c ****   * @param  buf: Pointer to the byte array to be sent
+ 197:..//common/src/lpc17xx_spi.c ****   * @param  len: length (in byte) of the byte array.
+ 198:..//common/src/lpc17xx_spi.c ****   *              Should be multiple of 4.   
+ 199:..//common/src/lpc17xx_spi.c ****   * @retval None.
+ 200:..//common/src/lpc17xx_spi.c ****   */
+ 201:..//common/src/lpc17xx_spi.c **** void SPI_SendBlock_FIFO (const uint8_t *buf, uint32_t len)
+ 202:..//common/src/lpc17xx_spi.c **** {
+ 371              		.loc 1 202 0
+ 372              		.cfi_startproc
+ 373              		@ args = 0, pretend = 0, frame = 16
+ 374              		@ frame_needed = 1, uses_anonymous_args = 0
+ 375              		@ link register save eliminated.
+ 376 0000 80B4     		push	{r7}
+ 377              	.LCFI15:
+ 378              		.cfi_def_cfa_offset 4
+ 379 0002 85B0     		sub	sp, sp, #20
+ 380              	.LCFI16:
+ 381              		.cfi_def_cfa_offset 24
+ 382 0004 00AF     		add	r7, sp, #0
+ 383              		.cfi_offset 7, -4
+ 384              	.LCFI17:
+ 385              		.cfi_def_cfa_register 7
+ 386 0006 7860     		str	r0, [r7, #4]
+ 387 0008 3960     		str	r1, [r7, #0]
+ 203:..//common/src/lpc17xx_spi.c **** 	uint32_t cnt;
+ 204:..//common/src/lpc17xx_spi.c **** 	uint16_t data;
+ 205:..//common/src/lpc17xx_spi.c **** 
+ 206:..//common/src/lpc17xx_spi.c **** 	LPC_SSP1->CR0 |= 0x0f;  /* DSS to 16 bit */
+ 388              		.loc 1 206 0
+ 389 000a 40F20003 		movw	r3, #:lower16:1073938432
+ 390 000e C4F20303 		movt	r3, #:upper16:1073938432
+ 391 0012 40F20002 		movw	r2, #:lower16:1073938432
+ 392 0016 C4F20302 		movt	r2, #:upper16:1073938432
+ 393 001a 1268     		ldr	r2, [r2, #0]
+ 394 001c 42F00F02 		orr	r2, r2, #15
+ 395 0020 1A60     		str	r2, [r3, #0]
+ 207:..//common/src/lpc17xx_spi.c **** 
+ 208:..//common/src/lpc17xx_spi.c **** 	/* fill the FIFO unless it is full */
+ 209:..//common/src/lpc17xx_spi.c **** 	for ( cnt = 0; cnt < ( len / 2 ); cnt++ ) 
+ 396              		.loc 1 209 0
+ 397 0022 4FF00003 		mov	r3, #0
+ 398 0026 BB60     		str	r3, [r7, #8]
+ 399 0028 26E0     		b	.L18
+ 400              	.L19:
+ 210:..//common/src/lpc17xx_spi.c **** 	{
+ 211:..//common/src/lpc17xx_spi.c **** 		/* wait for TX FIFO not full (TNF) */
+ 212:..//common/src/lpc17xx_spi.c **** 		while ( !( LPC_SSP1->SR & SSP_SR_TNF) );
+ 401              		.loc 1 212 0
+ 402 002a 40F20003 		movw	r3, #:lower16:1073938432
+ 403 002e C4F20303 		movt	r3, #:upper16:1073938432
+ 404 0032 DB68     		ldr	r3, [r3, #12]
+ 405 0034 03F00203 		and	r3, r3, #2
+ 406 0038 002B     		cmp	r3, #0
+ 407 003a F6D0     		beq	.L19
+ 213:..//common/src/lpc17xx_spi.c **** 		
+ 214:..//common/src/lpc17xx_spi.c **** 		data  = (*buf++) << 8;
+ 408              		.loc 1 214 0
+ 409 003c 7B68     		ldr	r3, [r7, #4]
+ 410 003e 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 411 0040 4FEA0323 		lsl	r3, r3, #8
+ 412 0044 FB81     		strh	r3, [r7, #14]	@ movhi
+ 413 0046 7B68     		ldr	r3, [r7, #4]
+ 414 0048 03F10103 		add	r3, r3, #1
+ 415 004c 7B60     		str	r3, [r7, #4]
+ 215:..//common/src/lpc17xx_spi.c **** 		data |= *buf++;
+ 416              		.loc 1 215 0
+ 417 004e 7B68     		ldr	r3, [r7, #4]
+ 418 0050 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 419 0052 1A46     		mov	r2, r3
+ 420 0054 FB89     		ldrh	r3, [r7, #14]	@ movhi
+ 421 0056 42EA0303 		orr	r3, r2, r3
+ 422 005a FB81     		strh	r3, [r7, #14]	@ movhi
+ 423 005c 7B68     		ldr	r3, [r7, #4]
+ 424 005e 03F10103 		add	r3, r3, #1
+ 425 0062 7B60     		str	r3, [r7, #4]
+ 216:..//common/src/lpc17xx_spi.c **** 		LPC_SSP1->DR = data;
+ 426              		.loc 1 216 0
+ 427 0064 40F20003 		movw	r3, #:lower16:1073938432
+ 428 0068 C4F20303 		movt	r3, #:upper16:1073938432
+ 429 006c FA89     		ldrh	r2, [r7, #14]
+ 430 006e 9A60     		str	r2, [r3, #8]
+ 431              		.loc 1 209 0
+ 432 0070 BB68     		ldr	r3, [r7, #8]
+ 433 0072 03F10103 		add	r3, r3, #1
+ 434 0076 BB60     		str	r3, [r7, #8]
+ 435              	.L18:
+ 436 0078 3B68     		ldr	r3, [r7, #0]
+ 437 007a 4FEA5302 		lsr	r2, r3, #1
+ 438 007e BB68     		ldr	r3, [r7, #8]
+ 439 0080 9A42     		cmp	r2, r3
+ 440 0082 D2D8     		bhi	.L19
+ 441              	.L20:
+ 217:..//common/src/lpc17xx_spi.c **** 	}
+ 218:..//common/src/lpc17xx_spi.c **** 
+ 219:..//common/src/lpc17xx_spi.c **** 	/* wait for BSY gone */
+ 220:..//common/src/lpc17xx_spi.c **** 	while ( LPC_SSP1->SR & SSP_SR_BSY);
+ 442              		.loc 1 220 0
+ 443 0084 40F20003 		movw	r3, #:lower16:1073938432
+ 444 0088 C4F20303 		movt	r3, #:upper16:1073938432
+ 445 008c DB68     		ldr	r3, [r3, #12]
+ 446 008e 03F01003 		and	r3, r3, #16
+ 447 0092 002B     		cmp	r3, #0
+ 448 0094 F6D1     		bne	.L20
+ 221:..//common/src/lpc17xx_spi.c **** 
+ 222:..//common/src/lpc17xx_spi.c **** 	/* drain receive FIFO */
+ 223:..//common/src/lpc17xx_spi.c **** 	while ( LPC_SSP1->SR & SSP_SR_RNE ) {
+ 449              		.loc 1 223 0
+ 450 0096 05E0     		b	.L21
+ 451              	.L22:
+ 224:..//common/src/lpc17xx_spi.c **** 		data = LPC_SSP1->DR; 
+ 452              		.loc 1 224 0
+ 453 0098 40F20003 		movw	r3, #:lower16:1073938432
+ 454 009c C4F20303 		movt	r3, #:upper16:1073938432
+ 455 00a0 9B68     		ldr	r3, [r3, #8]
+ 456 00a2 FB81     		strh	r3, [r7, #14]	@ movhi
+ 457              	.L21:
+ 458              		.loc 1 223 0
+ 459 00a4 40F20003 		movw	r3, #:lower16:1073938432
+ 460 00a8 C4F20303 		movt	r3, #:upper16:1073938432
+ 461 00ac DB68     		ldr	r3, [r3, #12]
+ 462 00ae 03F00403 		and	r3, r3, #4
+ 463 00b2 002B     		cmp	r3, #0
+ 464 00b4 F0D1     		bne	.L22
+ 225:..//common/src/lpc17xx_spi.c **** 	}
+ 226:..//common/src/lpc17xx_spi.c **** 
+ 227:..//common/src/lpc17xx_spi.c **** 	LPC_SSP1->CR0 &= ~0x08;  /* DSS to 8 bit */    
+ 465              		.loc 1 227 0
+ 466 00b6 40F20003 		movw	r3, #:lower16:1073938432
+ 467 00ba C4F20303 		movt	r3, #:upper16:1073938432
+ 468 00be 40F20002 		movw	r2, #:lower16:1073938432
+ 469 00c2 C4F20302 		movt	r2, #:upper16:1073938432
+ 470 00c6 1268     		ldr	r2, [r2, #0]
+ 471 00c8 22F00802 		bic	r2, r2, #8
+ 472 00cc 1A60     		str	r2, [r3, #0]
+ 228:..//common/src/lpc17xx_spi.c **** }
+ 473              		.loc 1 228 0
+ 474 00ce 07F11407 		add	r7, r7, #20
+ 475 00d2 BD46     		mov	sp, r7
+ 476 00d4 80BC     		pop	{r7}
+ 477 00d6 7047     		bx	lr
+ 478              		.cfi_endproc
+ 479              	.LFE35:
+ 481              		.section	.text.SPI_RecvBlock_FIFO,"ax",%progbits
+ 482              		.align	2
+ 483              		.global	SPI_RecvBlock_FIFO
+ 484              		.thumb
+ 485              		.thumb_func
+ 487              	SPI_RecvBlock_FIFO:
+ 488              	.LFB36:
+ 229:..//common/src/lpc17xx_spi.c **** 
+ 230:..//common/src/lpc17xx_spi.c **** 
+ 231:..//common/src/lpc17xx_spi.c **** /**
+ 232:..//common/src/lpc17xx_spi.c ****   * @brief  Receive data block using FIFO.
+ 233:..//common/src/lpc17xx_spi.c ****   *
+ 234:..//common/src/lpc17xx_spi.c ****   * @param  buf: Pointer to the byte array to store received data
+ 235:..//common/src/lpc17xx_spi.c ****   * @param  len: Specifies the length (in byte) to receive.
+ 236:..//common/src/lpc17xx_spi.c ****   *              Should be multiple of 4.   
+ 237:..//common/src/lpc17xx_spi.c ****   * @retval None.
+ 238:..//common/src/lpc17xx_spi.c ****   */
+ 239:..//common/src/lpc17xx_spi.c **** void SPI_RecvBlock_FIFO (uint8_t *buf, uint32_t len)
+ 240:..//common/src/lpc17xx_spi.c **** {
+ 489              		.loc 1 240 0
+ 490              		.cfi_startproc
+ 491              		@ args = 0, pretend = 0, frame = 24
+ 492              		@ frame_needed = 1, uses_anonymous_args = 0
+ 493              		@ link register save eliminated.
+ 494 0000 80B4     		push	{r7}
+ 495              	.LCFI18:
+ 496              		.cfi_def_cfa_offset 4
+ 497 0002 87B0     		sub	sp, sp, #28
+ 498              	.LCFI19:
+ 499              		.cfi_def_cfa_offset 32
+ 500 0004 00AF     		add	r7, sp, #0
+ 501              		.cfi_offset 7, -4
+ 502              	.LCFI20:
+ 503              		.cfi_def_cfa_register 7
+ 504 0006 7860     		str	r0, [r7, #4]
+ 505 0008 3960     		str	r1, [r7, #0]
+ 241:..//common/src/lpc17xx_spi.c **** 	uint32_t hwtr, startcnt, i, rec;
+ 242:..//common/src/lpc17xx_spi.c **** 
+ 243:..//common/src/lpc17xx_spi.c **** 	hwtr = len/2;
+ 506              		.loc 1 243 0
+ 507 000a 3B68     		ldr	r3, [r7, #0]
+ 508 000c 4FEA5303 		lsr	r3, r3, #1
+ 509 0010 BB60     		str	r3, [r7, #8]
+ 244:..//common/src/lpc17xx_spi.c **** 	if ( len < SSP_FIFO_DEPTH ) {
+ 510              		.loc 1 244 0
+ 511 0012 3B68     		ldr	r3, [r7, #0]
+ 512 0014 072B     		cmp	r3, #7
+ 513 0016 02D8     		bhi	.L25
+ 245:..//common/src/lpc17xx_spi.c **** 		startcnt = hwtr;
+ 514              		.loc 1 245 0
+ 515 0018 BB68     		ldr	r3, [r7, #8]
+ 516 001a FB60     		str	r3, [r7, #12]
+ 517 001c 02E0     		b	.L26
+ 518              	.L25:
+ 246:..//common/src/lpc17xx_spi.c **** 	} else {
+ 247:..//common/src/lpc17xx_spi.c **** 		startcnt = SSP_FIFO_DEPTH;
+ 519              		.loc 1 247 0
+ 520 001e 4FF00803 		mov	r3, #8
+ 521 0022 FB60     		str	r3, [r7, #12]
+ 522              	.L26:
+ 248:..//common/src/lpc17xx_spi.c **** 	}
+ 249:..//common/src/lpc17xx_spi.c **** 
+ 250:..//common/src/lpc17xx_spi.c **** 	LPC_SSP1 -> CR0 |= 0x0f;  /* DSS to 16 bit */
+ 523              		.loc 1 250 0
+ 524 0024 40F20003 		movw	r3, #:lower16:1073938432
+ 525 0028 C4F20303 		movt	r3, #:upper16:1073938432
+ 526 002c 40F20002 		movw	r2, #:lower16:1073938432
+ 527 0030 C4F20302 		movt	r2, #:upper16:1073938432
+ 528 0034 1268     		ldr	r2, [r2, #0]
+ 529 0036 42F00F02 		orr	r2, r2, #15
+ 530 003a 1A60     		str	r2, [r3, #0]
+ 251:..//common/src/lpc17xx_spi.c **** 
+ 252:..//common/src/lpc17xx_spi.c **** 	for ( i = startcnt; i; i-- ) {
+ 531              		.loc 1 252 0
+ 532 003c FB68     		ldr	r3, [r7, #12]
+ 533 003e 3B61     		str	r3, [r7, #16]
+ 534 0040 0AE0     		b	.L27
+ 535              	.L28:
+ 253:..//common/src/lpc17xx_spi.c **** 		LPC_SSP1->DR = 0xffff;  // fill TX FIFO
+ 536              		.loc 1 253 0
+ 537 0042 40F20003 		movw	r3, #:lower16:1073938432
+ 538 0046 C4F20303 		movt	r3, #:upper16:1073938432
+ 539 004a 4FF6FF72 		movw	r2, #65535
+ 540 004e 9A60     		str	r2, [r3, #8]
+ 541              		.loc 1 252 0
+ 542 0050 3B69     		ldr	r3, [r7, #16]
+ 543 0052 03F1FF33 		add	r3, r3, #-1
+ 544 0056 3B61     		str	r3, [r7, #16]
+ 545              	.L27:
+ 546 0058 3B69     		ldr	r3, [r7, #16]
+ 547 005a 002B     		cmp	r3, #0
+ 548 005c F1D1     		bne	.L28
+ 549              	.L29:
+ 254:..//common/src/lpc17xx_spi.c **** 	}
+ 255:..//common/src/lpc17xx_spi.c **** 
+ 256:..//common/src/lpc17xx_spi.c **** 	do {
+ 257:..//common/src/lpc17xx_spi.c **** 		while ( !(LPC_SSP1->SR & SSP_SR_RNE ) ) {
+ 550              		.loc 1 257 0
+ 551 005e 40F20003 		movw	r3, #:lower16:1073938432
+ 552 0062 C4F20303 		movt	r3, #:upper16:1073938432
+ 553 0066 DB68     		ldr	r3, [r3, #12]
+ 554 0068 03F00403 		and	r3, r3, #4
+ 555 006c 002B     		cmp	r3, #0
+ 556 006e F6D0     		beq	.L29
+ 258:..//common/src/lpc17xx_spi.c **** 			// wait for data in RX FIFO (RNE set)
+ 259:..//common/src/lpc17xx_spi.c **** 		}
+ 260:..//common/src/lpc17xx_spi.c **** 		rec = LPC_SSP1->DR;
+ 557              		.loc 1 260 0
+ 558 0070 40F20003 		movw	r3, #:lower16:1073938432
+ 559 0074 C4F20303 		movt	r3, #:upper16:1073938432
+ 560 0078 9B68     		ldr	r3, [r3, #8]
+ 561 007a 7B61     		str	r3, [r7, #20]
+ 261:..//common/src/lpc17xx_spi.c **** 		if ( i < ( hwtr - startcnt ) ) {
+ 562              		.loc 1 261 0
+ 563 007c BA68     		ldr	r2, [r7, #8]
+ 564 007e FB68     		ldr	r3, [r7, #12]
+ 565 0080 C3EB0202 		rsb	r2, r3, r2
+ 566 0084 3B69     		ldr	r3, [r7, #16]
+ 567 0086 9A42     		cmp	r2, r3
+ 568 0088 06D9     		bls	.L30
+ 262:..//common/src/lpc17xx_spi.c **** 			LPC_SSP1->DR = 0xffff;
+ 569              		.loc 1 262 0
+ 570 008a 40F20003 		movw	r3, #:lower16:1073938432
+ 571 008e C4F20303 		movt	r3, #:upper16:1073938432
+ 572 0092 4FF6FF72 		movw	r2, #65535
+ 573 0096 9A60     		str	r2, [r3, #8]
+ 574              	.L30:
+ 263:..//common/src/lpc17xx_spi.c **** 		}
+ 264:..//common/src/lpc17xx_spi.c **** 		*buf++ = (uint8_t)(rec >> 8);
+ 575              		.loc 1 264 0
+ 576 0098 7B69     		ldr	r3, [r7, #20]
+ 577 009a 4FEA1323 		lsr	r3, r3, #8
+ 578 009e DAB2     		uxtb	r2, r3
+ 579 00a0 7B68     		ldr	r3, [r7, #4]
+ 580 00a2 1A70     		strb	r2, [r3, #0]
+ 581 00a4 7B68     		ldr	r3, [r7, #4]
+ 582 00a6 03F10103 		add	r3, r3, #1
+ 583 00aa 7B60     		str	r3, [r7, #4]
+ 265:..//common/src/lpc17xx_spi.c **** 		*buf++ = (uint8_t)(rec);
+ 584              		.loc 1 265 0
+ 585 00ac 7B69     		ldr	r3, [r7, #20]
+ 586 00ae DAB2     		uxtb	r2, r3
+ 587 00b0 7B68     		ldr	r3, [r7, #4]
+ 588 00b2 1A70     		strb	r2, [r3, #0]
+ 589 00b4 7B68     		ldr	r3, [r7, #4]
+ 590 00b6 03F10103 		add	r3, r3, #1
+ 591 00ba 7B60     		str	r3, [r7, #4]
+ 266:..//common/src/lpc17xx_spi.c **** 		i++;
+ 592              		.loc 1 266 0
+ 593 00bc 3B69     		ldr	r3, [r7, #16]
+ 594 00be 03F10103 		add	r3, r3, #1
+ 595 00c2 3B61     		str	r3, [r7, #16]
+ 267:..//common/src/lpc17xx_spi.c **** 	} while ( i < hwtr );
+ 596              		.loc 1 267 0
+ 597 00c4 3A69     		ldr	r2, [r7, #16]
+ 598 00c6 BB68     		ldr	r3, [r7, #8]
+ 599 00c8 9A42     		cmp	r2, r3
+ 600 00ca C8D3     		bcc	.L29
+ 268:..//common/src/lpc17xx_spi.c **** 
+ 269:..//common/src/lpc17xx_spi.c ****     LPC_SSP1->CR0 &= ~0x08;  /* DSS to 8 bit */
+ 601              		.loc 1 269 0
+ 602 00cc 40F20003 		movw	r3, #:lower16:1073938432
+ 603 00d0 C4F20303 		movt	r3, #:upper16:1073938432
+ 604 00d4 40F20002 		movw	r2, #:lower16:1073938432
+ 605 00d8 C4F20302 		movt	r2, #:upper16:1073938432
+ 606 00dc 1268     		ldr	r2, [r2, #0]
+ 607 00de 22F00802 		bic	r2, r2, #8
+ 608 00e2 1A60     		str	r2, [r3, #0]
+ 270:..//common/src/lpc17xx_spi.c **** }
+ 609              		.loc 1 270 0
+ 610 00e4 07F11C07 		add	r7, r7, #28
+ 611 00e8 BD46     		mov	sp, r7
+ 612 00ea 80BC     		pop	{r7}
+ 613 00ec 7047     		bx	lr
+ 614              		.cfi_endproc
+ 615              	.LFE36:
+ 617 00ee 00BF     		.text
+ 618              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 lpc17xx_spi.c
+C:\Users\hdhed\AppData\Local\Temp\ccWk9Ssf.s:24     .text.SPI_Init:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccWk9Ssf.s:29     .text.SPI_Init:00000000 SPI_Init
+C:\Users\hdhed\AppData\Local\Temp\ccWk9Ssf.s:250    .text.SPI_CS_High:00000000 SPI_CS_High
+C:\Users\hdhed\AppData\Local\Temp\ccWk9Ssf.s:172    .text.SPI_ConfigClockRate:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccWk9Ssf.s:177    .text.SPI_ConfigClockRate:00000000 SPI_ConfigClockRate
+C:\Users\hdhed\AppData\Local\Temp\ccWk9Ssf.s:210    .text.SPI_CS_Low:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccWk9Ssf.s:215    .text.SPI_CS_Low:00000000 SPI_CS_Low
+C:\Users\hdhed\AppData\Local\Temp\ccWk9Ssf.s:245    .text.SPI_CS_High:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccWk9Ssf.s:280    .text.SPI_SendByte:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccWk9Ssf.s:285    .text.SPI_SendByte:00000000 SPI_SendByte
+C:\Users\hdhed\AppData\Local\Temp\ccWk9Ssf.s:332    .text.SPI_RecvByte:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccWk9Ssf.s:337    .text.SPI_RecvByte:00000000 SPI_RecvByte
+C:\Users\hdhed\AppData\Local\Temp\ccWk9Ssf.s:364    .text.SPI_SendBlock_FIFO:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccWk9Ssf.s:369    .text.SPI_SendBlock_FIFO:00000000 SPI_SendBlock_FIFO
+C:\Users\hdhed\AppData\Local\Temp\ccWk9Ssf.s:482    .text.SPI_RecvBlock_FIFO:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccWk9Ssf.s:487    .text.SPI_RecvBlock_FIFO:00000000 SPI_RecvBlock_FIFO
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+GPIO_SetDir
+PINSEL_ConfigPin
+SSP_ConfigStructInit
+SSP_Init
+CLKPWR_SetPCLKDiv
+SSP_Cmd

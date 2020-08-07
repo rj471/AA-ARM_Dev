@@ -1,0 +1,768 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"lpc17xx_pinsel.c"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.section	.text.set_PinFunc,"ax",%progbits
+  24              		.align	2
+  25              		.thumb
+  26              		.thumb_func
+  28              	set_PinFunc:
+  29              	.LFB29:
+  30              		.file 1 "..//common/src/lpc17xx_pinsel.c"
+   1:..//common/src/lpc17xx_pinsel.c **** /***********************************************************************//**
+   2:..//common/src/lpc17xx_pinsel.c ****  * @file		lpc17xx_pinsel.c
+   3:..//common/src/lpc17xx_pinsel.c ****  * @brief		Contains all functions support for Pin connect block firmware
+   4:..//common/src/lpc17xx_pinsel.c ****  * 				library on LPC17xx
+   5:..//common/src/lpc17xx_pinsel.c ****  * @version		2.0
+   6:..//common/src/lpc17xx_pinsel.c ****  * @date		21. May. 2010
+   7:..//common/src/lpc17xx_pinsel.c ****  * @author		NXP MCU SW Application Team
+   8:..//common/src/lpc17xx_pinsel.c ****  **************************************************************************
+   9:..//common/src/lpc17xx_pinsel.c ****  * Software that is described herein is for illustrative purposes only
+  10:..//common/src/lpc17xx_pinsel.c ****  * which provides customers with programming information regarding the
+  11:..//common/src/lpc17xx_pinsel.c ****  * products. This software is supplied "AS IS" without any warranties.
+  12:..//common/src/lpc17xx_pinsel.c ****  * NXP Semiconductors assumes no responsibility or liability for the
+  13:..//common/src/lpc17xx_pinsel.c ****  * use of the software, conveys no license or title under any patent,
+  14:..//common/src/lpc17xx_pinsel.c ****  * copyright, or mask work right to the product. NXP Semiconductors
+  15:..//common/src/lpc17xx_pinsel.c ****  * reserves the right to make changes in the software without
+  16:..//common/src/lpc17xx_pinsel.c ****  * notification. NXP Semiconductors also make no representation or
+  17:..//common/src/lpc17xx_pinsel.c ****  * warranty that such application will be suitable for the specified
+  18:..//common/src/lpc17xx_pinsel.c ****  * use without further testing or modification.
+  19:..//common/src/lpc17xx_pinsel.c ****  **********************************************************************/
+  20:..//common/src/lpc17xx_pinsel.c **** 
+  21:..//common/src/lpc17xx_pinsel.c **** /* Peripheral group ----------------------------------------------------------- */
+  22:..//common/src/lpc17xx_pinsel.c **** /** @addtogroup PINSEL
+  23:..//common/src/lpc17xx_pinsel.c ****  * @{
+  24:..//common/src/lpc17xx_pinsel.c ****  */
+  25:..//common/src/lpc17xx_pinsel.c **** 
+  26:..//common/src/lpc17xx_pinsel.c **** /* Includes ------------------------------------------------------------------- */
+  27:..//common/src/lpc17xx_pinsel.c **** #include "lpc17xx_pinsel.h"
+  28:..//common/src/lpc17xx_pinsel.c **** 
+  29:..//common/src/lpc17xx_pinsel.c **** /* Public Functions ----------------------------------------------------------- */
+  30:..//common/src/lpc17xx_pinsel.c **** 
+  31:..//common/src/lpc17xx_pinsel.c **** static void set_PinFunc ( uint8_t portnum, uint8_t pinnum, uint8_t funcnum);
+  32:..//common/src/lpc17xx_pinsel.c **** static void set_ResistorMode ( uint8_t portnum, uint8_t pinnum, uint8_t modenum);
+  33:..//common/src/lpc17xx_pinsel.c **** static void set_OpenDrainMode( uint8_t portnum, uint8_t pinnum, uint8_t modenum);
+  34:..//common/src/lpc17xx_pinsel.c **** 
+  35:..//common/src/lpc17xx_pinsel.c **** /*********************************************************************//**
+  36:..//common/src/lpc17xx_pinsel.c ****  * @brief 		Setup the pin selection function
+  37:..//common/src/lpc17xx_pinsel.c ****  * @param[in]	portnum PORT number,
+  38:..//common/src/lpc17xx_pinsel.c ****  * 				should be one of the following:
+  39:..//common/src/lpc17xx_pinsel.c ****  * 				- PINSEL_PORT_0	: Port 0
+  40:..//common/src/lpc17xx_pinsel.c ****  * 				- PINSEL_PORT_1	: Port 1
+  41:..//common/src/lpc17xx_pinsel.c ****  * 				- PINSEL_PORT_2	: Port 2
+  42:..//common/src/lpc17xx_pinsel.c ****  * 				- PINSEL_PORT_3	: Port 3
+  43:..//common/src/lpc17xx_pinsel.c ****  *
+  44:..//common/src/lpc17xx_pinsel.c ****  * @param[in]	pinnum	Pin number,
+  45:..//common/src/lpc17xx_pinsel.c ****  * 				should be one of the following:
+  46:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_0 : Pin 0
+  47:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_1 : Pin 1
+  48:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_2 : Pin 2
+  49:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_3 : Pin 3
+  50:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_4 : Pin 4
+  51:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_5 : Pin 5
+  52:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_6 : Pin 6
+  53:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_7 : Pin 7
+  54:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_8 : Pin 8
+  55:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_9 : Pin 9
+  56:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_10 : Pin 10
+  57:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_11 : Pin 11
+  58:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_12 : Pin 12
+  59:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_13 : Pin 13
+  60:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_14 : Pin 14
+  61:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_15 : Pin 15
+  62:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_16 : Pin 16
+  63:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_17 : Pin 17
+  64:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_18 : Pin 18
+  65:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_19 : Pin 19
+  66:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_20 : Pin 20
+  67:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_21 : Pin 21
+  68:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_22 : Pin 22
+  69:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_23 : Pin 23
+  70:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_24 : Pin 24
+  71:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_25 : Pin 25
+  72:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_26 : Pin 26
+  73:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_27 : Pin 27
+  74:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_28 : Pin 28
+  75:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_29 : Pin 29
+  76:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_30 : Pin 30
+  77:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_31 : Pin 31
+  78:..//common/src/lpc17xx_pinsel.c **** 
+  79:..//common/src/lpc17xx_pinsel.c ****  * @param[in] 	funcnum Function number,
+  80:..//common/src/lpc17xx_pinsel.c ****  * 				should be one of the following:
+  81:..//common/src/lpc17xx_pinsel.c ****  *				- PINSEL_FUNC_0 : default function
+  82:..//common/src/lpc17xx_pinsel.c ****  *				- PINSEL_FUNC_1 : first alternate function
+  83:..//common/src/lpc17xx_pinsel.c ****  *				- PINSEL_FUNC_2 : second alternate function
+  84:..//common/src/lpc17xx_pinsel.c ****  *				- PINSEL_FUNC_3 : third alternate function
+  85:..//common/src/lpc17xx_pinsel.c ****  *
+  86:..//common/src/lpc17xx_pinsel.c ****  * @return 		None
+  87:..//common/src/lpc17xx_pinsel.c ****  **********************************************************************/
+  88:..//common/src/lpc17xx_pinsel.c **** static void set_PinFunc ( uint8_t portnum, uint8_t pinnum, uint8_t funcnum)
+  89:..//common/src/lpc17xx_pinsel.c **** {
+  31              		.loc 1 89 0
+  32              		.cfi_startproc
+  33              		@ args = 0, pretend = 0, frame = 24
+  34              		@ frame_needed = 1, uses_anonymous_args = 0
+  35              		@ link register save eliminated.
+  36 0000 80B4     		push	{r7}
+  37              	.LCFI0:
+  38              		.cfi_def_cfa_offset 4
+  39 0002 87B0     		sub	sp, sp, #28
+  40              	.LCFI1:
+  41              		.cfi_def_cfa_offset 32
+  42 0004 00AF     		add	r7, sp, #0
+  43              		.cfi_offset 7, -4
+  44              	.LCFI2:
+  45              		.cfi_def_cfa_register 7
+  46 0006 1346     		mov	r3, r2
+  47 0008 0246     		mov	r2, r0
+  48 000a FA71     		strb	r2, [r7, #7]
+  49 000c 0A46     		mov	r2, r1
+  50 000e BA71     		strb	r2, [r7, #6]
+  51 0010 7B71     		strb	r3, [r7, #5]
+  90:..//common/src/lpc17xx_pinsel.c **** 	uint32_t pinnum_t = pinnum;
+  52              		.loc 1 90 0
+  53 0012 BB79     		ldrb	r3, [r7, #6]	@ zero_extendqisi2
+  54 0014 FB60     		str	r3, [r7, #12]
+  91:..//common/src/lpc17xx_pinsel.c **** 	uint32_t pinselreg_idx = 2 * portnum;
+  55              		.loc 1 91 0
+  56 0016 FB79     		ldrb	r3, [r7, #7]	@ zero_extendqisi2
+  57 0018 4FEA4303 		lsl	r3, r3, #1
+  58 001c 3B61     		str	r3, [r7, #16]
+  92:..//common/src/lpc17xx_pinsel.c **** 	uint32_t *pPinCon = (uint32_t *)&LPC_PINCON->PINSEL0;
+  59              		.loc 1 92 0
+  60 001e 4CF20003 		movw	r3, #:lower16:1073922048
+  61 0022 C4F20203 		movt	r3, #:upper16:1073922048
+  62 0026 7B61     		str	r3, [r7, #20]
+  93:..//common/src/lpc17xx_pinsel.c **** 
+  94:..//common/src/lpc17xx_pinsel.c **** 	if (pinnum_t >= 16) {
+  63              		.loc 1 94 0
+  64 0028 FB68     		ldr	r3, [r7, #12]
+  65 002a 0F2B     		cmp	r3, #15
+  66 002c 07D9     		bls	.L2
+  95:..//common/src/lpc17xx_pinsel.c **** 		pinnum_t -= 16;
+  67              		.loc 1 95 0
+  68 002e FB68     		ldr	r3, [r7, #12]
+  69 0030 A3F11003 		sub	r3, r3, #16
+  70 0034 FB60     		str	r3, [r7, #12]
+  96:..//common/src/lpc17xx_pinsel.c **** 		pinselreg_idx++;
+  71              		.loc 1 96 0
+  72 0036 3B69     		ldr	r3, [r7, #16]
+  73 0038 03F10103 		add	r3, r3, #1
+  74 003c 3B61     		str	r3, [r7, #16]
+  75              	.L2:
+  97:..//common/src/lpc17xx_pinsel.c **** 	}
+  98:..//common/src/lpc17xx_pinsel.c **** 	*(uint32_t *)(pPinCon + pinselreg_idx) &= ~(0x03UL << (pinnum_t * 2));
+  76              		.loc 1 98 0
+  77 003e 3B69     		ldr	r3, [r7, #16]
+  78 0040 4FEA8302 		lsl	r2, r3, #2
+  79 0044 7B69     		ldr	r3, [r7, #20]
+  80 0046 1344     		add	r3, r2, r3
+  81 0048 3A69     		ldr	r2, [r7, #16]
+  82 004a 4FEA8201 		lsl	r1, r2, #2
+  83 004e 7A69     		ldr	r2, [r7, #20]
+  84 0050 0A44     		add	r2, r1, r2
+  85 0052 1168     		ldr	r1, [r2, #0]
+  86 0054 FA68     		ldr	r2, [r7, #12]
+  87 0056 4FEA4202 		lsl	r2, r2, #1
+  88 005a 4FF00300 		mov	r0, #3
+  89 005e 00FA02F2 		lsl	r2, r0, r2
+  90 0062 6FEA0202 		mvn	r2, r2
+  91 0066 01EA0202 		and	r2, r1, r2
+  92 006a 1A60     		str	r2, [r3, #0]
+  99:..//common/src/lpc17xx_pinsel.c **** 	*(uint32_t *)(pPinCon + pinselreg_idx) |= ((uint32_t)funcnum) << (pinnum_t * 2);
+  93              		.loc 1 99 0
+  94 006c 3B69     		ldr	r3, [r7, #16]
+  95 006e 4FEA8302 		lsl	r2, r3, #2
+  96 0072 7B69     		ldr	r3, [r7, #20]
+  97 0074 1344     		add	r3, r2, r3
+  98 0076 3A69     		ldr	r2, [r7, #16]
+  99 0078 4FEA8201 		lsl	r1, r2, #2
+ 100 007c 7A69     		ldr	r2, [r7, #20]
+ 101 007e 0A44     		add	r2, r1, r2
+ 102 0080 1168     		ldr	r1, [r2, #0]
+ 103 0082 7879     		ldrb	r0, [r7, #5]	@ zero_extendqisi2
+ 104 0084 FA68     		ldr	r2, [r7, #12]
+ 105 0086 4FEA4202 		lsl	r2, r2, #1
+ 106 008a 00FA02F2 		lsl	r2, r0, r2
+ 107 008e 41EA0202 		orr	r2, r1, r2
+ 108 0092 1A60     		str	r2, [r3, #0]
+ 100:..//common/src/lpc17xx_pinsel.c **** }
+ 109              		.loc 1 100 0
+ 110 0094 07F11C07 		add	r7, r7, #28
+ 111 0098 BD46     		mov	sp, r7
+ 112 009a 80BC     		pop	{r7}
+ 113 009c 7047     		bx	lr
+ 114              		.cfi_endproc
+ 115              	.LFE29:
+ 117 009e 00BF     		.section	.text.set_ResistorMode,"ax",%progbits
+ 118              		.align	2
+ 119              		.thumb
+ 120              		.thumb_func
+ 122              	set_ResistorMode:
+ 123              	.LFB30:
+ 101:..//common/src/lpc17xx_pinsel.c **** 
+ 102:..//common/src/lpc17xx_pinsel.c **** /*********************************************************************//**
+ 103:..//common/src/lpc17xx_pinsel.c ****  * @brief 		Setup resistor mode for each pin
+ 104:..//common/src/lpc17xx_pinsel.c ****  * @param[in]	portnum PORT number,
+ 105:..//common/src/lpc17xx_pinsel.c ****  * 				should be one of the following:
+ 106:..//common/src/lpc17xx_pinsel.c ****  * 				- PINSEL_PORT_0	: Port 0
+ 107:..//common/src/lpc17xx_pinsel.c ****  * 				- PINSEL_PORT_1	: Port 1
+ 108:..//common/src/lpc17xx_pinsel.c ****  * 				- PINSEL_PORT_2	: Port 2
+ 109:..//common/src/lpc17xx_pinsel.c ****  * 				- PINSEL_PORT_3	: Port 3
+ 110:..//common/src/lpc17xx_pinsel.c ****  * @param[in]	pinnum	Pin number,
+ 111:..//common/src/lpc17xx_pinsel.c ****  * 				should be one of the following:
+ 112:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_0 : Pin 0
+ 113:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_1 : Pin 1
+ 114:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_2 : Pin 2
+ 115:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_3 : Pin 3
+ 116:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_4 : Pin 4
+ 117:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_5 : Pin 5
+ 118:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_6 : Pin 6
+ 119:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_7 : Pin 7
+ 120:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_8 : Pin 8
+ 121:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_9 : Pin 9
+ 122:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_10 : Pin 10
+ 123:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_11 : Pin 11
+ 124:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_12 : Pin 12
+ 125:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_13 : Pin 13
+ 126:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_14 : Pin 14
+ 127:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_15 : Pin 15
+ 128:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_16 : Pin 16
+ 129:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_17 : Pin 17
+ 130:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_18 : Pin 18
+ 131:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_19 : Pin 19
+ 132:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_20 : Pin 20
+ 133:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_21 : Pin 21
+ 134:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_22 : Pin 22
+ 135:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_23 : Pin 23
+ 136:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_24 : Pin 24
+ 137:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_25 : Pin 25
+ 138:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_26 : Pin 26
+ 139:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_27 : Pin 27
+ 140:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_28 : Pin 28
+ 141:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_29 : Pin 29
+ 142:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_30 : Pin 30
+ 143:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_31 : Pin 31
+ 144:..//common/src/lpc17xx_pinsel.c **** 
+ 145:..//common/src/lpc17xx_pinsel.c ****  * @param[in] 	modenum: Mode number,
+ 146:..//common/src/lpc17xx_pinsel.c ****  * 				should be one of the following:
+ 147:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PINMODE_PULLUP	: Internal pull-up resistor
+ 148:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PINMODE_TRISTATE : Tri-state
+ 149:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PINMODE_PULLDOWN : Internal pull-down resistor
+ 150:..//common/src/lpc17xx_pinsel.c **** 
+ 151:..//common/src/lpc17xx_pinsel.c ****  * @return 		None
+ 152:..//common/src/lpc17xx_pinsel.c ****  **********************************************************************/
+ 153:..//common/src/lpc17xx_pinsel.c **** void set_ResistorMode ( uint8_t portnum, uint8_t pinnum, uint8_t modenum)
+ 154:..//common/src/lpc17xx_pinsel.c **** {
+ 124              		.loc 1 154 0
+ 125              		.cfi_startproc
+ 126              		@ args = 0, pretend = 0, frame = 24
+ 127              		@ frame_needed = 1, uses_anonymous_args = 0
+ 128              		@ link register save eliminated.
+ 129 0000 80B4     		push	{r7}
+ 130              	.LCFI3:
+ 131              		.cfi_def_cfa_offset 4
+ 132 0002 87B0     		sub	sp, sp, #28
+ 133              	.LCFI4:
+ 134              		.cfi_def_cfa_offset 32
+ 135 0004 00AF     		add	r7, sp, #0
+ 136              		.cfi_offset 7, -4
+ 137              	.LCFI5:
+ 138              		.cfi_def_cfa_register 7
+ 139 0006 1346     		mov	r3, r2
+ 140 0008 0246     		mov	r2, r0
+ 141 000a FA71     		strb	r2, [r7, #7]
+ 142 000c 0A46     		mov	r2, r1
+ 143 000e BA71     		strb	r2, [r7, #6]
+ 144 0010 7B71     		strb	r3, [r7, #5]
+ 155:..//common/src/lpc17xx_pinsel.c **** 	uint32_t pinnum_t = pinnum;
+ 145              		.loc 1 155 0
+ 146 0012 BB79     		ldrb	r3, [r7, #6]	@ zero_extendqisi2
+ 147 0014 FB60     		str	r3, [r7, #12]
+ 156:..//common/src/lpc17xx_pinsel.c **** 	uint32_t pinmodereg_idx = 2 * portnum;
+ 148              		.loc 1 156 0
+ 149 0016 FB79     		ldrb	r3, [r7, #7]	@ zero_extendqisi2
+ 150 0018 4FEA4303 		lsl	r3, r3, #1
+ 151 001c 3B61     		str	r3, [r7, #16]
+ 157:..//common/src/lpc17xx_pinsel.c **** 	uint32_t *pPinCon = (uint32_t *)&LPC_PINCON->PINMODE0;
+ 152              		.loc 1 157 0
+ 153 001e 4CF24003 		movw	r3, #:lower16:1073922112
+ 154 0022 C4F20203 		movt	r3, #:upper16:1073922112
+ 155 0026 7B61     		str	r3, [r7, #20]
+ 158:..//common/src/lpc17xx_pinsel.c **** 
+ 159:..//common/src/lpc17xx_pinsel.c **** 	if (pinnum_t >= 16) {
+ 156              		.loc 1 159 0
+ 157 0028 FB68     		ldr	r3, [r7, #12]
+ 158 002a 0F2B     		cmp	r3, #15
+ 159 002c 07D9     		bls	.L5
+ 160:..//common/src/lpc17xx_pinsel.c **** 		pinnum_t -= 16;
+ 160              		.loc 1 160 0
+ 161 002e FB68     		ldr	r3, [r7, #12]
+ 162 0030 A3F11003 		sub	r3, r3, #16
+ 163 0034 FB60     		str	r3, [r7, #12]
+ 161:..//common/src/lpc17xx_pinsel.c **** 		pinmodereg_idx++ ;
+ 164              		.loc 1 161 0
+ 165 0036 3B69     		ldr	r3, [r7, #16]
+ 166 0038 03F10103 		add	r3, r3, #1
+ 167 003c 3B61     		str	r3, [r7, #16]
+ 168              	.L5:
+ 162:..//common/src/lpc17xx_pinsel.c **** 	}
+ 163:..//common/src/lpc17xx_pinsel.c **** 
+ 164:..//common/src/lpc17xx_pinsel.c **** 	*(uint32_t *)(pPinCon + pinmodereg_idx) &= ~(0x03UL << (pinnum_t * 2));
+ 169              		.loc 1 164 0
+ 170 003e 3B69     		ldr	r3, [r7, #16]
+ 171 0040 4FEA8302 		lsl	r2, r3, #2
+ 172 0044 7B69     		ldr	r3, [r7, #20]
+ 173 0046 1344     		add	r3, r2, r3
+ 174 0048 3A69     		ldr	r2, [r7, #16]
+ 175 004a 4FEA8201 		lsl	r1, r2, #2
+ 176 004e 7A69     		ldr	r2, [r7, #20]
+ 177 0050 0A44     		add	r2, r1, r2
+ 178 0052 1168     		ldr	r1, [r2, #0]
+ 179 0054 FA68     		ldr	r2, [r7, #12]
+ 180 0056 4FEA4202 		lsl	r2, r2, #1
+ 181 005a 4FF00300 		mov	r0, #3
+ 182 005e 00FA02F2 		lsl	r2, r0, r2
+ 183 0062 6FEA0202 		mvn	r2, r2
+ 184 0066 01EA0202 		and	r2, r1, r2
+ 185 006a 1A60     		str	r2, [r3, #0]
+ 165:..//common/src/lpc17xx_pinsel.c **** 	*(uint32_t *)(pPinCon + pinmodereg_idx) |= ((uint32_t)modenum) << (pinnum_t * 2);
+ 186              		.loc 1 165 0
+ 187 006c 3B69     		ldr	r3, [r7, #16]
+ 188 006e 4FEA8302 		lsl	r2, r3, #2
+ 189 0072 7B69     		ldr	r3, [r7, #20]
+ 190 0074 1344     		add	r3, r2, r3
+ 191 0076 3A69     		ldr	r2, [r7, #16]
+ 192 0078 4FEA8201 		lsl	r1, r2, #2
+ 193 007c 7A69     		ldr	r2, [r7, #20]
+ 194 007e 0A44     		add	r2, r1, r2
+ 195 0080 1168     		ldr	r1, [r2, #0]
+ 196 0082 7879     		ldrb	r0, [r7, #5]	@ zero_extendqisi2
+ 197 0084 FA68     		ldr	r2, [r7, #12]
+ 198 0086 4FEA4202 		lsl	r2, r2, #1
+ 199 008a 00FA02F2 		lsl	r2, r0, r2
+ 200 008e 41EA0202 		orr	r2, r1, r2
+ 201 0092 1A60     		str	r2, [r3, #0]
+ 166:..//common/src/lpc17xx_pinsel.c **** }
+ 202              		.loc 1 166 0
+ 203 0094 07F11C07 		add	r7, r7, #28
+ 204 0098 BD46     		mov	sp, r7
+ 205 009a 80BC     		pop	{r7}
+ 206 009c 7047     		bx	lr
+ 207              		.cfi_endproc
+ 208              	.LFE30:
+ 210 009e 00BF     		.section	.text.set_OpenDrainMode,"ax",%progbits
+ 211              		.align	2
+ 212              		.thumb
+ 213              		.thumb_func
+ 215              	set_OpenDrainMode:
+ 216              	.LFB31:
+ 167:..//common/src/lpc17xx_pinsel.c **** 
+ 168:..//common/src/lpc17xx_pinsel.c **** /*********************************************************************//**
+ 169:..//common/src/lpc17xx_pinsel.c ****  * @brief 		Setup Open drain mode for each pin
+ 170:..//common/src/lpc17xx_pinsel.c ****  * @param[in]	portnum PORT number,
+ 171:..//common/src/lpc17xx_pinsel.c ****  * 				should be one of the following:
+ 172:..//common/src/lpc17xx_pinsel.c ****  * 				- PINSEL_PORT_0	: Port 0
+ 173:..//common/src/lpc17xx_pinsel.c ****  * 				- PINSEL_PORT_1	: Port 1
+ 174:..//common/src/lpc17xx_pinsel.c ****  * 				- PINSEL_PORT_2	: Port 2
+ 175:..//common/src/lpc17xx_pinsel.c ****  * 				- PINSEL_PORT_3	: Port 3
+ 176:..//common/src/lpc17xx_pinsel.c ****  *
+ 177:..//common/src/lpc17xx_pinsel.c ****  * @param[in]	pinnum	Pin number,
+ 178:..//common/src/lpc17xx_pinsel.c ****  * 				should be one of the following:
+ 179:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_0 : Pin 0
+ 180:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_1 : Pin 1
+ 181:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_2 : Pin 2
+ 182:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_3 : Pin 3
+ 183:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_4 : Pin 4
+ 184:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_5 : Pin 5
+ 185:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_6 : Pin 6
+ 186:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_7 : Pin 7
+ 187:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_8 : Pin 8
+ 188:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_9 : Pin 9
+ 189:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_10 : Pin 10
+ 190:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_11 : Pin 11
+ 191:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_12 : Pin 12
+ 192:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_13 : Pin 13
+ 193:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_14 : Pin 14
+ 194:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_15 : Pin 15
+ 195:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_16 : Pin 16
+ 196:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_17 : Pin 17
+ 197:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_18 : Pin 18
+ 198:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_19 : Pin 19
+ 199:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_20 : Pin 20
+ 200:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_21 : Pin 21
+ 201:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_22 : Pin 22
+ 202:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_23 : Pin 23
+ 203:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_24 : Pin 24
+ 204:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_25 : Pin 25
+ 205:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_26 : Pin 26
+ 206:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_27 : Pin 27
+ 207:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_28 : Pin 28
+ 208:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_29 : Pin 29
+ 209:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_30 : Pin 30
+ 210:..//common/src/lpc17xx_pinsel.c **** 				- PINSEL_PIN_31 : Pin 31
+ 211:..//common/src/lpc17xx_pinsel.c **** 
+ 212:..//common/src/lpc17xx_pinsel.c ****  * @param[in]	modenum  Open drain mode number,
+ 213:..//common/src/lpc17xx_pinsel.c ****  * 				should be one of the following:
+ 214:..//common/src/lpc17xx_pinsel.c ****  * 				- PINSEL_PINMODE_NORMAL : Pin is in the normal (not open drain) mode
+ 215:..//common/src/lpc17xx_pinsel.c ****  * 				- PINSEL_PINMODE_OPENDRAIN : Pin is in the open drain mode
+ 216:..//common/src/lpc17xx_pinsel.c ****  *
+ 217:..//common/src/lpc17xx_pinsel.c ****  * @return 		None
+ 218:..//common/src/lpc17xx_pinsel.c ****  **********************************************************************/
+ 219:..//common/src/lpc17xx_pinsel.c **** void set_OpenDrainMode( uint8_t portnum, uint8_t pinnum, uint8_t modenum)
+ 220:..//common/src/lpc17xx_pinsel.c **** {
+ 217              		.loc 1 220 0
+ 218              		.cfi_startproc
+ 219              		@ args = 0, pretend = 0, frame = 16
+ 220              		@ frame_needed = 1, uses_anonymous_args = 0
+ 221              		@ link register save eliminated.
+ 222 0000 80B4     		push	{r7}
+ 223              	.LCFI6:
+ 224              		.cfi_def_cfa_offset 4
+ 225 0002 85B0     		sub	sp, sp, #20
+ 226              	.LCFI7:
+ 227              		.cfi_def_cfa_offset 24
+ 228 0004 00AF     		add	r7, sp, #0
+ 229              		.cfi_offset 7, -4
+ 230              	.LCFI8:
+ 231              		.cfi_def_cfa_register 7
+ 232 0006 1346     		mov	r3, r2
+ 233 0008 0246     		mov	r2, r0
+ 234 000a FA71     		strb	r2, [r7, #7]
+ 235 000c 0A46     		mov	r2, r1
+ 236 000e BA71     		strb	r2, [r7, #6]
+ 237 0010 7B71     		strb	r3, [r7, #5]
+ 221:..//common/src/lpc17xx_pinsel.c **** 	uint32_t *pPinCon = (uint32_t *)&LPC_PINCON->PINMODE_OD0;
+ 238              		.loc 1 221 0
+ 239 0012 4CF26803 		movw	r3, #:lower16:1073922152
+ 240 0016 C4F20203 		movt	r3, #:upper16:1073922152
+ 241 001a FB60     		str	r3, [r7, #12]
+ 222:..//common/src/lpc17xx_pinsel.c **** 
+ 223:..//common/src/lpc17xx_pinsel.c **** 	if (modenum == PINSEL_PINMODE_OPENDRAIN){
+ 242              		.loc 1 223 0
+ 243 001c 7B79     		ldrb	r3, [r7, #5]	@ zero_extendqisi2
+ 244 001e 012B     		cmp	r3, #1
+ 245 0020 13D1     		bne	.L8
+ 224:..//common/src/lpc17xx_pinsel.c **** 		*(uint32_t *)(pPinCon + portnum) |= (0x01UL << pinnum);
+ 246              		.loc 1 224 0
+ 247 0022 FB79     		ldrb	r3, [r7, #7]	@ zero_extendqisi2
+ 248 0024 4FEA8302 		lsl	r2, r3, #2
+ 249 0028 FB68     		ldr	r3, [r7, #12]
+ 250 002a 1344     		add	r3, r2, r3
+ 251 002c FA79     		ldrb	r2, [r7, #7]	@ zero_extendqisi2
+ 252 002e 4FEA8201 		lsl	r1, r2, #2
+ 253 0032 FA68     		ldr	r2, [r7, #12]
+ 254 0034 0A44     		add	r2, r1, r2
+ 255 0036 1168     		ldr	r1, [r2, #0]
+ 256 0038 BA79     		ldrb	r2, [r7, #6]	@ zero_extendqisi2
+ 257 003a 4FF00100 		mov	r0, #1
+ 258 003e 00FA02F2 		lsl	r2, r0, r2
+ 259 0042 41EA0202 		orr	r2, r1, r2
+ 260 0046 1A60     		str	r2, [r3, #0]
+ 261 0048 14E0     		b	.L10
+ 262              	.L8:
+ 225:..//common/src/lpc17xx_pinsel.c **** 	} else {
+ 226:..//common/src/lpc17xx_pinsel.c **** 		*(uint32_t *)(pPinCon + portnum) &= ~(0x01UL << pinnum);
+ 263              		.loc 1 226 0
+ 264 004a FB79     		ldrb	r3, [r7, #7]	@ zero_extendqisi2
+ 265 004c 4FEA8302 		lsl	r2, r3, #2
+ 266 0050 FB68     		ldr	r3, [r7, #12]
+ 267 0052 1344     		add	r3, r2, r3
+ 268 0054 FA79     		ldrb	r2, [r7, #7]	@ zero_extendqisi2
+ 269 0056 4FEA8201 		lsl	r1, r2, #2
+ 270 005a FA68     		ldr	r2, [r7, #12]
+ 271 005c 0A44     		add	r2, r1, r2
+ 272 005e 1168     		ldr	r1, [r2, #0]
+ 273 0060 BA79     		ldrb	r2, [r7, #6]	@ zero_extendqisi2
+ 274 0062 4FF00100 		mov	r0, #1
+ 275 0066 00FA02F2 		lsl	r2, r0, r2
+ 276 006a 6FEA0202 		mvn	r2, r2
+ 277 006e 01EA0202 		and	r2, r1, r2
+ 278 0072 1A60     		str	r2, [r3, #0]
+ 279              	.L10:
+ 227:..//common/src/lpc17xx_pinsel.c **** 	}
+ 228:..//common/src/lpc17xx_pinsel.c **** }
+ 280              		.loc 1 228 0
+ 281 0074 07F11407 		add	r7, r7, #20
+ 282 0078 BD46     		mov	sp, r7
+ 283 007a 80BC     		pop	{r7}
+ 284 007c 7047     		bx	lr
+ 285              		.cfi_endproc
+ 286              	.LFE31:
+ 288 007e 00BF     		.section	.text.PINSEL_ConfigTraceFunc,"ax",%progbits
+ 289              		.align	2
+ 290              		.global	PINSEL_ConfigTraceFunc
+ 291              		.thumb
+ 292              		.thumb_func
+ 294              	PINSEL_ConfigTraceFunc:
+ 295              	.LFB32:
+ 229:..//common/src/lpc17xx_pinsel.c **** 
+ 230:..//common/src/lpc17xx_pinsel.c **** /* End of Public Functions ---------------------------------------------------- */
+ 231:..//common/src/lpc17xx_pinsel.c **** 
+ 232:..//common/src/lpc17xx_pinsel.c **** /* Public Functions ----------------------------------------------------------- */
+ 233:..//common/src/lpc17xx_pinsel.c **** /** @addtogroup PINSEL_Public_Functions
+ 234:..//common/src/lpc17xx_pinsel.c ****  * @{
+ 235:..//common/src/lpc17xx_pinsel.c ****  */
+ 236:..//common/src/lpc17xx_pinsel.c **** /*********************************************************************//**
+ 237:..//common/src/lpc17xx_pinsel.c ****  * @brief 		Configure trace function
+ 238:..//common/src/lpc17xx_pinsel.c ****  * @param[in] 	NewState State of the Trace function configuration,
+ 239:..//common/src/lpc17xx_pinsel.c ****  * 				should be one of the following:
+ 240:..//common/src/lpc17xx_pinsel.c ****  * 				- ENABLE : Enable Trace Function
+ 241:..//common/src/lpc17xx_pinsel.c ****  * 				- DISABLE : Disable Trace Function
+ 242:..//common/src/lpc17xx_pinsel.c ****  *
+ 243:..//common/src/lpc17xx_pinsel.c ****  * @return 		None
+ 244:..//common/src/lpc17xx_pinsel.c ****  **********************************************************************/
+ 245:..//common/src/lpc17xx_pinsel.c **** void PINSEL_ConfigTraceFunc(FunctionalState NewState)
+ 246:..//common/src/lpc17xx_pinsel.c **** {
+ 296              		.loc 1 246 0
+ 297              		.cfi_startproc
+ 298              		@ args = 0, pretend = 0, frame = 8
+ 299              		@ frame_needed = 1, uses_anonymous_args = 0
+ 300              		@ link register save eliminated.
+ 301 0000 80B4     		push	{r7}
+ 302              	.LCFI9:
+ 303              		.cfi_def_cfa_offset 4
+ 304 0002 83B0     		sub	sp, sp, #12
+ 305              	.LCFI10:
+ 306              		.cfi_def_cfa_offset 16
+ 307 0004 00AF     		add	r7, sp, #0
+ 308              		.cfi_offset 7, -4
+ 309              	.LCFI11:
+ 310              		.cfi_def_cfa_register 7
+ 311 0006 0346     		mov	r3, r0
+ 312 0008 FB71     		strb	r3, [r7, #7]
+ 247:..//common/src/lpc17xx_pinsel.c **** 	if (NewState == ENABLE) {
+ 313              		.loc 1 247 0
+ 314 000a FB79     		ldrb	r3, [r7, #7]	@ zero_extendqisi2
+ 315 000c 012B     		cmp	r3, #1
+ 316 000e 0CD1     		bne	.L12
+ 248:..//common/src/lpc17xx_pinsel.c **** 		LPC_PINCON->PINSEL10 |= (0x01UL << 3);
+ 317              		.loc 1 248 0
+ 318 0010 4CF20003 		movw	r3, #:lower16:1073922048
+ 319 0014 C4F20203 		movt	r3, #:upper16:1073922048
+ 320 0018 4CF20002 		movw	r2, #:lower16:1073922048
+ 321 001c C4F20202 		movt	r2, #:upper16:1073922048
+ 322 0020 926A     		ldr	r2, [r2, #40]
+ 323 0022 42F00802 		orr	r2, r2, #8
+ 324 0026 9A62     		str	r2, [r3, #40]
+ 325 0028 0EE0     		b	.L14
+ 326              	.L12:
+ 249:..//common/src/lpc17xx_pinsel.c **** 	} else if (NewState == DISABLE) {
+ 327              		.loc 1 249 0
+ 328 002a FB79     		ldrb	r3, [r7, #7]	@ zero_extendqisi2
+ 329 002c 002B     		cmp	r3, #0
+ 330 002e 0BD1     		bne	.L14
+ 250:..//common/src/lpc17xx_pinsel.c **** 		LPC_PINCON->PINSEL10 &= ~(0x01UL << 3);
+ 331              		.loc 1 250 0
+ 332 0030 4CF20003 		movw	r3, #:lower16:1073922048
+ 333 0034 C4F20203 		movt	r3, #:upper16:1073922048
+ 334 0038 4CF20002 		movw	r2, #:lower16:1073922048
+ 335 003c C4F20202 		movt	r2, #:upper16:1073922048
+ 336 0040 926A     		ldr	r2, [r2, #40]
+ 337 0042 22F00802 		bic	r2, r2, #8
+ 338 0046 9A62     		str	r2, [r3, #40]
+ 339              	.L14:
+ 251:..//common/src/lpc17xx_pinsel.c **** 	}
+ 252:..//common/src/lpc17xx_pinsel.c **** }
+ 340              		.loc 1 252 0
+ 341 0048 07F10C07 		add	r7, r7, #12
+ 342 004c BD46     		mov	sp, r7
+ 343 004e 80BC     		pop	{r7}
+ 344 0050 7047     		bx	lr
+ 345              		.cfi_endproc
+ 346              	.LFE32:
+ 348 0052 00BF     		.section	.text.PINSEL_SetI2C0Pins,"ax",%progbits
+ 349              		.align	2
+ 350              		.global	PINSEL_SetI2C0Pins
+ 351              		.thumb
+ 352              		.thumb_func
+ 354              	PINSEL_SetI2C0Pins:
+ 355              	.LFB33:
+ 253:..//common/src/lpc17xx_pinsel.c **** 
+ 254:..//common/src/lpc17xx_pinsel.c **** /*********************************************************************//**
+ 255:..//common/src/lpc17xx_pinsel.c ****  * @brief 		Setup I2C0 pins
+ 256:..//common/src/lpc17xx_pinsel.c ****  * @param[in]	i2cPinMode I2C pin mode,
+ 257:..//common/src/lpc17xx_pinsel.c ****  * 				should be one of the following:
+ 258:..//common/src/lpc17xx_pinsel.c ****  * 				- PINSEL_I2C_Normal_Mode : The standard drive mode
+ 259:..//common/src/lpc17xx_pinsel.c ****  * 				- PINSEL_I2C_Fast_Mode : Fast Mode Plus drive mode
+ 260:..//common/src/lpc17xx_pinsel.c ****  *
+ 261:..//common/src/lpc17xx_pinsel.c ****  * @param[in]	filterSlewRateEnable  should be:
+ 262:..//common/src/lpc17xx_pinsel.c ****  * 				- ENABLE: Enable filter and slew rate.
+ 263:..//common/src/lpc17xx_pinsel.c ****  * 				- DISABLE: Disable filter and slew rate.
+ 264:..//common/src/lpc17xx_pinsel.c ****  *
+ 265:..//common/src/lpc17xx_pinsel.c ****  * @return 		None
+ 266:..//common/src/lpc17xx_pinsel.c ****  **********************************************************************/
+ 267:..//common/src/lpc17xx_pinsel.c **** void PINSEL_SetI2C0Pins(uint8_t i2cPinMode, FunctionalState filterSlewRateEnable)
+ 268:..//common/src/lpc17xx_pinsel.c **** {
+ 356              		.loc 1 268 0
+ 357              		.cfi_startproc
+ 358              		@ args = 0, pretend = 0, frame = 16
+ 359              		@ frame_needed = 1, uses_anonymous_args = 0
+ 360              		@ link register save eliminated.
+ 361 0000 80B4     		push	{r7}
+ 362              	.LCFI12:
+ 363              		.cfi_def_cfa_offset 4
+ 364 0002 85B0     		sub	sp, sp, #20
+ 365              	.LCFI13:
+ 366              		.cfi_def_cfa_offset 24
+ 367 0004 00AF     		add	r7, sp, #0
+ 368              		.cfi_offset 7, -4
+ 369              	.LCFI14:
+ 370              		.cfi_def_cfa_register 7
+ 371 0006 0246     		mov	r2, r0
+ 372 0008 0B46     		mov	r3, r1
+ 373 000a FA71     		strb	r2, [r7, #7]
+ 374 000c BB71     		strb	r3, [r7, #6]
+ 269:..//common/src/lpc17xx_pinsel.c **** 	uint32_t regVal;
+ 270:..//common/src/lpc17xx_pinsel.c **** 
+ 271:..//common/src/lpc17xx_pinsel.c **** 	if (i2cPinMode == PINSEL_I2C_Fast_Mode){
+ 375              		.loc 1 271 0
+ 376 000e FB79     		ldrb	r3, [r7, #7]	@ zero_extendqisi2
+ 377 0010 012B     		cmp	r3, #1
+ 378 0012 02D1     		bne	.L16
+ 272:..//common/src/lpc17xx_pinsel.c **** 		regVal = PINSEL_I2CPADCFG_SCLDRV0 | PINSEL_I2CPADCFG_SDADRV0;
+ 379              		.loc 1 272 0
+ 380 0014 4FF00503 		mov	r3, #5
+ 381 0018 FB60     		str	r3, [r7, #12]
+ 382              	.L16:
+ 273:..//common/src/lpc17xx_pinsel.c **** 	}
+ 274:..//common/src/lpc17xx_pinsel.c **** 
+ 275:..//common/src/lpc17xx_pinsel.c **** 	if (filterSlewRateEnable == DISABLE){
+ 383              		.loc 1 275 0
+ 384 001a BB79     		ldrb	r3, [r7, #6]	@ zero_extendqisi2
+ 385 001c 002B     		cmp	r3, #0
+ 386 001e 02D1     		bne	.L17
+ 276:..//common/src/lpc17xx_pinsel.c **** 		regVal = PINSEL_I2CPADCFG_SCLI2C0 | PINSEL_I2CPADCFG_SDAI2C0;
+ 387              		.loc 1 276 0
+ 388 0020 4FF00A03 		mov	r3, #10
+ 389 0024 FB60     		str	r3, [r7, #12]
+ 390              	.L17:
+ 277:..//common/src/lpc17xx_pinsel.c **** 	}
+ 278:..//common/src/lpc17xx_pinsel.c **** 	LPC_PINCON->I2CPADCFG = regVal;
+ 391              		.loc 1 278 0
+ 392 0026 4CF20003 		movw	r3, #:lower16:1073922048
+ 393 002a C4F20203 		movt	r3, #:upper16:1073922048
+ 394 002e FA68     		ldr	r2, [r7, #12]
+ 395 0030 DA67     		str	r2, [r3, #124]
+ 279:..//common/src/lpc17xx_pinsel.c **** }
+ 396              		.loc 1 279 0
+ 397 0032 07F11407 		add	r7, r7, #20
+ 398 0036 BD46     		mov	sp, r7
+ 399 0038 80BC     		pop	{r7}
+ 400 003a 7047     		bx	lr
+ 401              		.cfi_endproc
+ 402              	.LFE33:
+ 404              		.section	.text.PINSEL_ConfigPin,"ax",%progbits
+ 405              		.align	2
+ 406              		.global	PINSEL_ConfigPin
+ 407              		.thumb
+ 408              		.thumb_func
+ 410              	PINSEL_ConfigPin:
+ 411              	.LFB34:
+ 280:..//common/src/lpc17xx_pinsel.c **** 
+ 281:..//common/src/lpc17xx_pinsel.c **** 
+ 282:..//common/src/lpc17xx_pinsel.c **** /*********************************************************************//**
+ 283:..//common/src/lpc17xx_pinsel.c ****  * @brief 		Configure Pin corresponding to specified parameters passed
+ 284:..//common/src/lpc17xx_pinsel.c ****  * 				in the PinCfg
+ 285:..//common/src/lpc17xx_pinsel.c ****  * @param[in]	PinCfg	Pointer to a PINSEL_CFG_Type structure
+ 286:..//common/src/lpc17xx_pinsel.c ****  *                    that contains the configuration information for the
+ 287:..//common/src/lpc17xx_pinsel.c ****  *                    specified pin.
+ 288:..//common/src/lpc17xx_pinsel.c ****  * @return 		None
+ 289:..//common/src/lpc17xx_pinsel.c ****  **********************************************************************/
+ 290:..//common/src/lpc17xx_pinsel.c **** void PINSEL_ConfigPin(PINSEL_CFG_Type *PinCfg)
+ 291:..//common/src/lpc17xx_pinsel.c **** {
+ 412              		.loc 1 291 0
+ 413              		.cfi_startproc
+ 414              		@ args = 0, pretend = 0, frame = 8
+ 415              		@ frame_needed = 1, uses_anonymous_args = 0
+ 416 0000 80B5     		push	{r7, lr}
+ 417              	.LCFI15:
+ 418              		.cfi_def_cfa_offset 8
+ 419 0002 82B0     		sub	sp, sp, #8
+ 420              	.LCFI16:
+ 421              		.cfi_def_cfa_offset 16
+ 422 0004 00AF     		add	r7, sp, #0
+ 423              		.cfi_offset 14, -4
+ 424              		.cfi_offset 7, -8
+ 425              	.LCFI17:
+ 426              		.cfi_def_cfa_register 7
+ 427 0006 7860     		str	r0, [r7, #4]
+ 292:..//common/src/lpc17xx_pinsel.c **** 	set_PinFunc(PinCfg->Portnum, PinCfg->Pinnum, PinCfg->Funcnum);
+ 428              		.loc 1 292 0
+ 429 0008 7B68     		ldr	r3, [r7, #4]
+ 430 000a 1978     		ldrb	r1, [r3, #0]	@ zero_extendqisi2
+ 431 000c 7B68     		ldr	r3, [r7, #4]
+ 432 000e 5A78     		ldrb	r2, [r3, #1]	@ zero_extendqisi2
+ 433 0010 7B68     		ldr	r3, [r7, #4]
+ 434 0012 9B78     		ldrb	r3, [r3, #2]	@ zero_extendqisi2
+ 435 0014 0846     		mov	r0, r1
+ 436 0016 1146     		mov	r1, r2
+ 437 0018 1A46     		mov	r2, r3
+ 438 001a 40F20003 		movw	r3, #:lower16:set_PinFunc
+ 439 001e C0F20003 		movt	r3, #:upper16:set_PinFunc
+ 440 0022 9847     		blx	r3
+ 293:..//common/src/lpc17xx_pinsel.c **** 	set_ResistorMode(PinCfg->Portnum, PinCfg->Pinnum, PinCfg->Pinmode);
+ 441              		.loc 1 293 0
+ 442 0024 7B68     		ldr	r3, [r7, #4]
+ 443 0026 1978     		ldrb	r1, [r3, #0]	@ zero_extendqisi2
+ 444 0028 7B68     		ldr	r3, [r7, #4]
+ 445 002a 5A78     		ldrb	r2, [r3, #1]	@ zero_extendqisi2
+ 446 002c 7B68     		ldr	r3, [r7, #4]
+ 447 002e DB78     		ldrb	r3, [r3, #3]	@ zero_extendqisi2
+ 448 0030 0846     		mov	r0, r1
+ 449 0032 1146     		mov	r1, r2
+ 450 0034 1A46     		mov	r2, r3
+ 451 0036 40F20003 		movw	r3, #:lower16:set_ResistorMode
+ 452 003a C0F20003 		movt	r3, #:upper16:set_ResistorMode
+ 453 003e 9847     		blx	r3
+ 294:..//common/src/lpc17xx_pinsel.c **** 	set_OpenDrainMode(PinCfg->Portnum, PinCfg->Pinnum, PinCfg->OpenDrain);
+ 454              		.loc 1 294 0
+ 455 0040 7B68     		ldr	r3, [r7, #4]
+ 456 0042 1978     		ldrb	r1, [r3, #0]	@ zero_extendqisi2
+ 457 0044 7B68     		ldr	r3, [r7, #4]
+ 458 0046 5A78     		ldrb	r2, [r3, #1]	@ zero_extendqisi2
+ 459 0048 7B68     		ldr	r3, [r7, #4]
+ 460 004a 1B79     		ldrb	r3, [r3, #4]	@ zero_extendqisi2
+ 461 004c 0846     		mov	r0, r1
+ 462 004e 1146     		mov	r1, r2
+ 463 0050 1A46     		mov	r2, r3
+ 464 0052 40F20003 		movw	r3, #:lower16:set_OpenDrainMode
+ 465 0056 C0F20003 		movt	r3, #:upper16:set_OpenDrainMode
+ 466 005a 9847     		blx	r3
+ 295:..//common/src/lpc17xx_pinsel.c **** }
+ 467              		.loc 1 295 0
+ 468 005c 07F10807 		add	r7, r7, #8
+ 469 0060 BD46     		mov	sp, r7
+ 470 0062 80BD     		pop	{r7, pc}
+ 471              		.cfi_endproc
+ 472              	.LFE34:
+ 474              		.text
+ 475              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 lpc17xx_pinsel.c
+C:\Users\hdhed\AppData\Local\Temp\ccsYvT9x.s:24     .text.set_PinFunc:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccsYvT9x.s:28     .text.set_PinFunc:00000000 set_PinFunc
+C:\Users\hdhed\AppData\Local\Temp\ccsYvT9x.s:118    .text.set_ResistorMode:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccsYvT9x.s:122    .text.set_ResistorMode:00000000 set_ResistorMode
+C:\Users\hdhed\AppData\Local\Temp\ccsYvT9x.s:211    .text.set_OpenDrainMode:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccsYvT9x.s:215    .text.set_OpenDrainMode:00000000 set_OpenDrainMode
+C:\Users\hdhed\AppData\Local\Temp\ccsYvT9x.s:289    .text.PINSEL_ConfigTraceFunc:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccsYvT9x.s:294    .text.PINSEL_ConfigTraceFunc:00000000 PINSEL_ConfigTraceFunc
+C:\Users\hdhed\AppData\Local\Temp\ccsYvT9x.s:349    .text.PINSEL_SetI2C0Pins:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccsYvT9x.s:354    .text.PINSEL_SetI2C0Pins:00000000 PINSEL_SetI2C0Pins
+C:\Users\hdhed\AppData\Local\Temp\ccsYvT9x.s:405    .text.PINSEL_ConfigPin:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccsYvT9x.s:410    .text.PINSEL_ConfigPin:00000000 PINSEL_ConfigPin
+                     .debug_frame:00000010 $d
+
+NO UNDEFINED SYMBOLS

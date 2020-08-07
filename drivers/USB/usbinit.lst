@@ -1,0 +1,226 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"usbinit.c"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.section	.bss.abStdReqData,"aw",%nobits
+  24              		.align	2
+  27              	abStdReqData:
+  28 0000 00000000 		.space	8
+  28      00000000 
+  29              		.section	.text.HandleUsbReset,"ax",%progbits
+  30              		.align	2
+  31              		.thumb
+  32              		.thumb_func
+  34              	HandleUsbReset:
+  35              	.LFB0:
+  36              		.file 1 "..//drivers/USB/usbinit.c"
+   1:..//drivers/USB/usbinit.c **** /*
+   2:..//drivers/USB/usbinit.c **** 	LPCUSB, an USB device driver for LPC microcontrollers	
+   3:..//drivers/USB/usbinit.c **** 	Copyright (C) 2006 Bertrik Sikken (bertrik@sikken.nl)
+   4:..//drivers/USB/usbinit.c **** 
+   5:..//drivers/USB/usbinit.c **** 	Redistribution and use in source and binary forms, with or without
+   6:..//drivers/USB/usbinit.c **** 	modification, are permitted provided that the following conditions are met:
+   7:..//drivers/USB/usbinit.c **** 
+   8:..//drivers/USB/usbinit.c **** 	1. Redistributions of source code must retain the above copyright
+   9:..//drivers/USB/usbinit.c **** 	   notice, this list of conditions and the following disclaimer.
+  10:..//drivers/USB/usbinit.c **** 	2. Redistributions in binary form must reproduce the above copyright
+  11:..//drivers/USB/usbinit.c **** 	   notice, this list of conditions and the following disclaimer in the
+  12:..//drivers/USB/usbinit.c **** 	   documentation and/or other materials provided with the distribution.
+  13:..//drivers/USB/usbinit.c **** 	3. The name of the author may not be used to endorse or promote products
+  14:..//drivers/USB/usbinit.c **** 	   derived from this software without specific prior written permission.
+  15:..//drivers/USB/usbinit.c **** 
+  16:..//drivers/USB/usbinit.c **** 	THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+  17:..//drivers/USB/usbinit.c **** 	IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  18:..//drivers/USB/usbinit.c **** 	OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  19:..//drivers/USB/usbinit.c **** 	IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, 
+  20:..//drivers/USB/usbinit.c **** 	INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+  21:..//drivers/USB/usbinit.c **** 	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+  22:..//drivers/USB/usbinit.c **** 	DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+  23:..//drivers/USB/usbinit.c **** 	THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  24:..//drivers/USB/usbinit.c **** 	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+  25:..//drivers/USB/usbinit.c **** 	THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  26:..//drivers/USB/usbinit.c **** */
+  27:..//drivers/USB/usbinit.c **** 
+  28:..//drivers/USB/usbinit.c **** 
+  29:..//drivers/USB/usbinit.c **** /** @file
+  30:..//drivers/USB/usbinit.c **** 	USB stack initialisation
+  31:..//drivers/USB/usbinit.c ****  */
+  32:..//drivers/USB/usbinit.c **** 
+  33:..//drivers/USB/usbinit.c **** // CodeRed - include the LPCUSB type.h file rather than NXP one directly
+  34:..//drivers/USB/usbinit.c **** //#include "type.h"
+  35:..//drivers/USB/usbinit.c **** #include "lpc_types.h"
+  36:..//drivers/USB/usbinit.c **** 
+  37:..//drivers/USB/usbinit.c **** #include "usbdebug.h"
+  38:..//drivers/USB/usbinit.c **** #include "usbapi.h"
+  39:..//drivers/USB/usbinit.c **** 
+  40:..//drivers/USB/usbinit.c **** 
+  41:..//drivers/USB/usbinit.c **** /** data storage area for standard requests */
+  42:..//drivers/USB/usbinit.c **** static uint8_t	abStdReqData[8];
+  43:..//drivers/USB/usbinit.c **** 
+  44:..//drivers/USB/usbinit.c **** 
+  45:..//drivers/USB/usbinit.c **** /**
+  46:..//drivers/USB/usbinit.c **** 	USB reset handler
+  47:..//drivers/USB/usbinit.c **** 	
+  48:..//drivers/USB/usbinit.c **** 	@param [in] bDevStatus	Device status
+  49:..//drivers/USB/usbinit.c ****  */
+  50:..//drivers/USB/usbinit.c **** static void HandleUsbReset(uint8_t bDevStatus)
+  51:..//drivers/USB/usbinit.c **** {
+  37              		.loc 1 51 0
+  38              		.cfi_startproc
+  39              		@ args = 0, pretend = 0, frame = 8
+  40              		@ frame_needed = 1, uses_anonymous_args = 0
+  41              		@ link register save eliminated.
+  42 0000 80B4     		push	{r7}
+  43              	.LCFI0:
+  44              		.cfi_def_cfa_offset 4
+  45 0002 83B0     		sub	sp, sp, #12
+  46              	.LCFI1:
+  47              		.cfi_def_cfa_offset 16
+  48 0004 00AF     		add	r7, sp, #0
+  49              		.cfi_offset 7, -4
+  50              	.LCFI2:
+  51              		.cfi_def_cfa_register 7
+  52 0006 0346     		mov	r3, r0
+  53 0008 FB71     		strb	r3, [r7, #7]
+  52:..//drivers/USB/usbinit.c **** 	if (bDevStatus & DEV_STATUS_RESET) {
+  53:..//drivers/USB/usbinit.c **** 		DBG("\n!");
+  54:..//drivers/USB/usbinit.c **** 	}
+  55:..//drivers/USB/usbinit.c **** }
+  54              		.loc 1 55 0
+  55 000a 07F10C07 		add	r7, r7, #12
+  56 000e BD46     		mov	sp, r7
+  57 0010 80BC     		pop	{r7}
+  58 0012 7047     		bx	lr
+  59              		.cfi_endproc
+  60              	.LFE0:
+  62              		.section	.text.USBInit,"ax",%progbits
+  63              		.align	2
+  64              		.global	USBInit
+  65              		.thumb
+  66              		.thumb_func
+  68              	USBInit:
+  69              	.LFB1:
+  56:..//drivers/USB/usbinit.c **** 
+  57:..//drivers/USB/usbinit.c **** 
+  58:..//drivers/USB/usbinit.c **** /**
+  59:..//drivers/USB/usbinit.c **** 	Initialises the USB hardware and sets up the USB stack by
+  60:..//drivers/USB/usbinit.c **** 	installing default callbacks.
+  61:..//drivers/USB/usbinit.c **** 	
+  62:..//drivers/USB/usbinit.c **** 	@return TRUE if initialisation was successful
+  63:..//drivers/USB/usbinit.c ****  */
+  64:..//drivers/USB/usbinit.c **** BOOL USBInit(void)
+  65:..//drivers/USB/usbinit.c **** {
+  70              		.loc 1 65 0
+  71              		.cfi_startproc
+  72              		@ args = 0, pretend = 0, frame = 0
+  73              		@ frame_needed = 1, uses_anonymous_args = 0
+  74 0000 80B5     		push	{r7, lr}
+  75              	.LCFI3:
+  76              		.cfi_def_cfa_offset 8
+  77 0002 00AF     		add	r7, sp, #0
+  78              		.cfi_offset 14, -4
+  79              		.cfi_offset 7, -8
+  80              	.LCFI4:
+  81              		.cfi_def_cfa_register 7
+  66:..//drivers/USB/usbinit.c **** 	// init hardware
+  67:..//drivers/USB/usbinit.c **** 	USBHwInit();
+  82              		.loc 1 67 0
+  83 0004 40F20003 		movw	r3, #:lower16:USBHwInit
+  84 0008 C0F20003 		movt	r3, #:upper16:USBHwInit
+  85 000c 9847     		blx	r3
+  68:..//drivers/USB/usbinit.c **** 	
+  69:..//drivers/USB/usbinit.c **** 	// register bus reset handler
+  70:..//drivers/USB/usbinit.c **** 	USBHwRegisterDevIntHandler(HandleUsbReset);
+  86              		.loc 1 70 0
+  87 000e 40F20000 		movw	r0, #:lower16:HandleUsbReset
+  88 0012 C0F20000 		movt	r0, #:upper16:HandleUsbReset
+  89 0016 40F20003 		movw	r3, #:lower16:USBHwRegisterDevIntHandler
+  90 001a C0F20003 		movt	r3, #:upper16:USBHwRegisterDevIntHandler
+  91 001e 9847     		blx	r3
+  71:..//drivers/USB/usbinit.c **** 	
+  72:..//drivers/USB/usbinit.c **** 	// register control transfer handler on EP0
+  73:..//drivers/USB/usbinit.c **** 	USBHwRegisterEPIntHandler(0x00, USBHandleControlTransfer);
+  92              		.loc 1 73 0
+  93 0020 4FF00000 		mov	r0, #0
+  94 0024 40F20001 		movw	r1, #:lower16:USBHandleControlTransfer
+  95 0028 C0F20001 		movt	r1, #:upper16:USBHandleControlTransfer
+  96 002c 40F20003 		movw	r3, #:lower16:USBHwRegisterEPIntHandler
+  97 0030 C0F20003 		movt	r3, #:upper16:USBHwRegisterEPIntHandler
+  98 0034 9847     		blx	r3
+  74:..//drivers/USB/usbinit.c **** 	USBHwRegisterEPIntHandler(0x80, USBHandleControlTransfer);
+  99              		.loc 1 74 0
+ 100 0036 4FF08000 		mov	r0, #128
+ 101 003a 40F20001 		movw	r1, #:lower16:USBHandleControlTransfer
+ 102 003e C0F20001 		movt	r1, #:upper16:USBHandleControlTransfer
+ 103 0042 40F20003 		movw	r3, #:lower16:USBHwRegisterEPIntHandler
+ 104 0046 C0F20003 		movt	r3, #:upper16:USBHwRegisterEPIntHandler
+ 105 004a 9847     		blx	r3
+  75:..//drivers/USB/usbinit.c **** 	
+  76:..//drivers/USB/usbinit.c **** 	// setup control endpoints
+  77:..//drivers/USB/usbinit.c **** 	USBHwEPConfig(0x00, MAX_PACKET_SIZE0);
+ 106              		.loc 1 77 0
+ 107 004c 4FF00000 		mov	r0, #0
+ 108 0050 4FF04001 		mov	r1, #64
+ 109 0054 40F20003 		movw	r3, #:lower16:USBHwEPConfig
+ 110 0058 C0F20003 		movt	r3, #:upper16:USBHwEPConfig
+ 111 005c 9847     		blx	r3
+  78:..//drivers/USB/usbinit.c **** 	USBHwEPConfig(0x80, MAX_PACKET_SIZE0);
+ 112              		.loc 1 78 0
+ 113 005e 4FF08000 		mov	r0, #128
+ 114 0062 4FF04001 		mov	r1, #64
+ 115 0066 40F20003 		movw	r3, #:lower16:USBHwEPConfig
+ 116 006a C0F20003 		movt	r3, #:upper16:USBHwEPConfig
+ 117 006e 9847     		blx	r3
+  79:..//drivers/USB/usbinit.c **** 	
+  80:..//drivers/USB/usbinit.c **** 	// register standard request handler
+  81:..//drivers/USB/usbinit.c **** 	USBRegisterRequestHandler(REQTYPE_TYPE_STANDARD, USBHandleStandardRequest, abStdReqData);
+ 118              		.loc 1 81 0
+ 119 0070 4FF00000 		mov	r0, #0
+ 120 0074 40F20001 		movw	r1, #:lower16:USBHandleStandardRequest
+ 121 0078 C0F20001 		movt	r1, #:upper16:USBHandleStandardRequest
+ 122 007c 40F20002 		movw	r2, #:lower16:abStdReqData
+ 123 0080 C0F20002 		movt	r2, #:upper16:abStdReqData
+ 124 0084 40F20003 		movw	r3, #:lower16:USBRegisterRequestHandler
+ 125 0088 C0F20003 		movt	r3, #:upper16:USBRegisterRequestHandler
+ 126 008c 9847     		blx	r3
+  82:..//drivers/USB/usbinit.c **** 
+  83:..//drivers/USB/usbinit.c **** 	return TRUE;
+ 127              		.loc 1 83 0
+ 128 008e 4FF00103 		mov	r3, #1
+  84:..//drivers/USB/usbinit.c **** }
+ 129              		.loc 1 84 0
+ 130 0092 1846     		mov	r0, r3
+ 131 0094 80BD     		pop	{r7, pc}
+ 132              		.cfi_endproc
+ 133              	.LFE1:
+ 135 0096 00BF     		.text
+ 136              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 usbinit.c
+C:\Users\hdhed\AppData\Local\Temp\cccCV8OI.s:24     .bss.abStdReqData:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\cccCV8OI.s:27     .bss.abStdReqData:00000000 abStdReqData
+C:\Users\hdhed\AppData\Local\Temp\cccCV8OI.s:30     .text.HandleUsbReset:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cccCV8OI.s:34     .text.HandleUsbReset:00000000 HandleUsbReset
+C:\Users\hdhed\AppData\Local\Temp\cccCV8OI.s:63     .text.USBInit:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\cccCV8OI.s:68     .text.USBInit:00000000 USBInit
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+USBHwInit
+USBHwRegisterDevIntHandler
+USBHandleControlTransfer
+USBHwRegisterEPIntHandler
+USBHwEPConfig
+USBHandleStandardRequest
+USBRegisterRequestHandler

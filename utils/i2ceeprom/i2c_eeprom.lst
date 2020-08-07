@@ -1,0 +1,1488 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"i2c_eeprom.c"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.section	.text.i2cEEPROM_read32,"ax",%progbits
+  24              		.align	2
+  25              		.global	i2cEEPROM_read32
+  26              		.thumb
+  27              		.thumb_func
+  29              	i2cEEPROM_read32:
+  30              	.LFB29:
+  31              		.file 1 "..//utils/i2ceeprom/i2c_eeprom.c"
+   1:..//utils/i2ceeprom/i2c_eeprom.c **** /*****************************************************************************
+   2:..//utils/i2ceeprom/i2c_eeprom.c ****  *   i2ctest.c:  main C entry file for NXP LPC11xx Family Microprocessors
+   3:..//utils/i2ceeprom/i2c_eeprom.c ****  *
+   4:..//utils/i2ceeprom/i2c_eeprom.c ****  *   Copyright(C) 2008, NXP Semiconductor
+   5:..//utils/i2ceeprom/i2c_eeprom.c ****  *   All rights reserved.
+   6:..//utils/i2ceeprom/i2c_eeprom.c ****  *
+   7:..//utils/i2ceeprom/i2c_eeprom.c ****  *   History
+   8:..//utils/i2ceeprom/i2c_eeprom.c ****  *   2009.12.07  ver 1.00    Preliminary version, first Release
+   9:..//utils/i2ceeprom/i2c_eeprom.c ****  *
+  10:..//utils/i2ceeprom/i2c_eeprom.c **** ******************************************************************************/
+  11:..//utils/i2ceeprom/i2c_eeprom.c **** #include "LPC17xx.h"			/* LPC17xx Peripheral Registers */
+  12:..//utils/i2ceeprom/i2c_eeprom.c **** #include "type.h"
+  13:..//utils/i2ceeprom/i2c_eeprom.c **** #include <string.h>
+  14:..//utils/i2ceeprom/i2c_eeprom.c **** #include "i2c_eeprom.h"
+  15:..//utils/i2ceeprom/i2c_eeprom.c **** 
+  16:..//utils/i2ceeprom/i2c_eeprom.c **** #define MC24LC64_ADDR_BLK0 0xA0		/* I2C address of the 24LC64 EEPROM */
+  17:..//utils/i2ceeprom/i2c_eeprom.c **** #define MC24LC64_ADDR_BLK1 0xA2	//block 1 address
+  18:..//utils/i2ceeprom/i2c_eeprom.c **** #define MC24LC64_ADDR_BLK2 0xA4	//block 2 address
+  19:..//utils/i2ceeprom/i2c_eeprom.c **** #define MC24LC64_ADDR_BLK3 0xA6	//block 3 address
+  20:..//utils/i2ceeprom/i2c_eeprom.c **** #define MC24LC64_ADDR_BLK4 0xA8	//block 4 address
+  21:..//utils/i2ceeprom/i2c_eeprom.c **** #define MC24LC64_ADDR_BLK5 0xAA	//block 5 address
+  22:..//utils/i2ceeprom/i2c_eeprom.c **** #define MC24LC64_ADDR_BLK6 0xAC	//block 6 address
+  23:..//utils/i2ceeprom/i2c_eeprom.c **** #define MC24LC64_ADDR_BLK7 0xAE	//block 7 address
+  24:..//utils/i2ceeprom/i2c_eeprom.c **** 
+  25:..//utils/i2ceeprom/i2c_eeprom.c **** /*******************************************************************************
+  26:..//utils/i2ceeprom/i2c_eeprom.c **** **   Main Function  main()
+  27:..//utils/i2ceeprom/i2c_eeprom.c **** *******************************************************************************/
+  28:..//utils/i2ceeprom/i2c_eeprom.c **** // int write_byte_to_24LC64_EEPROM(unsigned int address, unsigned char databyte, unsigned char byte
+  29:..//utils/i2ceeprom/i2c_eeprom.c **** 	
+  30:..//utils/i2ceeprom/i2c_eeprom.c **** 	// if ( I2CInit( (uint32_t)I2CMASTER ) == 0 ){		/* initialize I2c */
+  31:..//utils/i2ceeprom/i2c_eeprom.c **** 		// return 1;				/* Fatal error */
+  32:..//utils/i2ceeprom/i2c_eeprom.c **** 	// }
+  33:..//utils/i2ceeprom/i2c_eeprom.c **** 	
+  34:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CWriteLength = bytes;
+  35:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CReadLength = 0;
+  36:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CMasterBuffer[0] = MC24LC64_ADDR;
+  37:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CMasterBuffer[1] = address >> 8;			/* address MSB */
+  38:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CMasterBuffer[2] = address;				/* address LSB */
+  39:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CMasterBuffer[3] = databyte;				/* address LSB */	
+  40:..//utils/i2ceeprom/i2c_eeprom.c **** 	// uint32_t fin_state = I2CEngine();	
+  41:..//utils/i2ceeprom/i2c_eeprom.c **** 	// return fin_state;
+  42:..//utils/i2ceeprom/i2c_eeprom.c **** // }
+  43:..//utils/i2ceeprom/i2c_eeprom.c **** 
+  44:..//utils/i2ceeprom/i2c_eeprom.c **** 
+  45:..//utils/i2ceeprom/i2c_eeprom.c **** // int read_byte_from_24LC64_EEPROM(unsigned int address, unsigned char bytes){
+  46:..//utils/i2ceeprom/i2c_eeprom.c **** 	// uint32_t i;
+  47:..//utils/i2ceeprom/i2c_eeprom.c **** 	// if ( I2CInit( (uint32_t)I2CMASTER ) == 0 ){		/* initialize I2c */
+  48:..//utils/i2ceeprom/i2c_eeprom.c **** 		// return 1;				/* Fatal error */
+  49:..//utils/i2ceeprom/i2c_eeprom.c **** 	// }
+  50:..//utils/i2ceeprom/i2c_eeprom.c **** 	// for ( i = 0; i < I2C_SLAVE_BUFSIZE; i++ ){
+  51:..//utils/i2ceeprom/i2c_eeprom.c **** 		// I2CSlaveBuffer[i] = 0x00;
+  52:..//utils/i2ceeprom/i2c_eeprom.c **** 	// }
+  53:..//utils/i2ceeprom/i2c_eeprom.c **** 	// /* Write SLA(W), address, SLA(R), and read 4 bytes back. */
+  54:..//utils/i2ceeprom/i2c_eeprom.c **** 
+  55:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CWriteLength = 3;
+  56:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CReadLength = bytes;
+  57:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CMasterBuffer[0] = MC24LC64_ADDR;
+  58:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CMasterBuffer[1] = address >> 8;			/* address MSB */
+  59:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CMasterBuffer[2] = address;				/* address LSB */
+  60:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CMasterBuffer[3] = MC24LC64_ADDR | RD_BIT;
+  61:..//utils/i2ceeprom/i2c_eeprom.c **** 
+  62:..//utils/i2ceeprom/i2c_eeprom.c **** 	// i=0;
+  63:..//utils/i2ceeprom/i2c_eeprom.c **** 	// while (I2CEngine() == I2CSTATE_SLA_NACK)
+  64:..//utils/i2ceeprom/i2c_eeprom.c **** 		// i++;	
+  65:..//utils/i2ceeprom/i2c_eeprom.c **** 	// return 0;
+  66:..//utils/i2ceeprom/i2c_eeprom.c **** // }
+  67:..//utils/i2ceeprom/i2c_eeprom.c **** 
+  68:..//utils/i2ceeprom/i2c_eeprom.c **** // int write_page_to_24LC64_EEPROM(unsigned int address, unsigned char* pdata, unsigned char bytes)
+  69:..//utils/i2ceeprom/i2c_eeprom.c **** 	// unsigned int i;
+  70:..//utils/i2ceeprom/i2c_eeprom.c **** 	// unsigned char temp_str[bytes];
+  71:..//utils/i2ceeprom/i2c_eeprom.c **** 	// if ( I2CInit( (uint32_t)I2CMASTER ) == 0 ){		/* initialize I2c */
+  72:..//utils/i2ceeprom/i2c_eeprom.c **** 		// return 1;				/* Fatal error */
+  73:..//utils/i2ceeprom/i2c_eeprom.c **** 	// }	
+  74:..//utils/i2ceeprom/i2c_eeprom.c **** 	
+  75:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CWriteLength = I2C_MASTER_BUFSIZE;
+  76:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CReadLength = 0;
+  77:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CMasterBuffer[0] = MC24LC64_ADDR;
+  78:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CMasterBuffer[1] = address >> 8;			/* address MSB */
+  79:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CMasterBuffer[2] = address;				/* address LSB */	
+  80:..//utils/i2ceeprom/i2c_eeprom.c **** 	
+  81:..//utils/i2ceeprom/i2c_eeprom.c **** 	// memcpy(temp_str,pdata,bytes);		
+  82:..//utils/i2ceeprom/i2c_eeprom.c **** 	// memcpy((I2CMasterBuffer+3),temp_str,bytes);	
+  83:..//utils/i2ceeprom/i2c_eeprom.c **** 	// // uint32_t fin_state = I2CEngine();	
+  84:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CEngine();	
+  85:..//utils/i2ceeprom/i2c_eeprom.c **** 	// return 0;
+  86:..//utils/i2ceeprom/i2c_eeprom.c **** // }
+  87:..//utils/i2ceeprom/i2c_eeprom.c **** 
+  88:..//utils/i2ceeprom/i2c_eeprom.c **** // int read_page_from_24LC64_EEPROM(unsigned int address, unsigned char* pdata, unsigned char bytes
+  89:..//utils/i2ceeprom/i2c_eeprom.c **** 	// unsigned int i;
+  90:..//utils/i2ceeprom/i2c_eeprom.c **** 	// if ( I2CInit( (uint32_t)I2CMASTER ) == 0 ){		/* initialize I2c */
+  91:..//utils/i2ceeprom/i2c_eeprom.c **** 		// return 1;				/* Fatal error */
+  92:..//utils/i2ceeprom/i2c_eeprom.c **** 	// }
+  93:..//utils/i2ceeprom/i2c_eeprom.c **** 	// for ( i = 0; i < I2C_SLAVE_BUFSIZE; i++ ){
+  94:..//utils/i2ceeprom/i2c_eeprom.c **** 		// I2CSlaveBuffer[i] = 0x00;
+  95:..//utils/i2ceeprom/i2c_eeprom.c **** 	// }
+  96:..//utils/i2ceeprom/i2c_eeprom.c **** 	// /* Write SLA(W), address, SLA(R), and read 4 bytes back. */
+  97:..//utils/i2ceeprom/i2c_eeprom.c **** 
+  98:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CWriteLength = 3;
+  99:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CReadLength = I2C_SLAVE_BUFSIZE;
+ 100:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CMasterBuffer[0] = MC24LC64_ADDR;
+ 101:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CMasterBuffer[1] = address >> 8;			/* address MSB */
+ 102:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CMasterBuffer[2] = address;				/* address LSB */
+ 103:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CMasterBuffer[3] = MC24LC64_ADDR | RD_BIT;
+ 104:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 105:..//utils/i2ceeprom/i2c_eeprom.c **** 	// i=0;
+ 106:..//utils/i2ceeprom/i2c_eeprom.c **** 	// while (I2CEngine() == I2CSTATE_SLA_NACK)
+ 107:..//utils/i2ceeprom/i2c_eeprom.c **** 		// i++;
+ 108:..//utils/i2ceeprom/i2c_eeprom.c **** 		
+ 109:..//utils/i2ceeprom/i2c_eeprom.c **** 	// // for ( i = 0; i < I2C_SLAVE_BUFSIZE; i++ ){
+ 110:..//utils/i2ceeprom/i2c_eeprom.c **** 		// // printf("\nRCVD: %d",(I2CSlaveBuffer[i]));
+ 111:..//utils/i2ceeprom/i2c_eeprom.c **** 	// // }
+ 112:..//utils/i2ceeprom/i2c_eeprom.c **** 	// memcpy(pdata,I2CSlaveBuffer,bytes);	
+ 113:..//utils/i2ceeprom/i2c_eeprom.c **** 	// return 0;
+ 114:..//utils/i2ceeprom/i2c_eeprom.c **** // }
+ 115:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 116:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 117:..//utils/i2ceeprom/i2c_eeprom.c **** int i2cEEPROM_read32(unsigned int address, char* pdata, unsigned char bytes){
+  32              		.loc 1 117 0
+  33              		.cfi_startproc
+  34              		@ args = 0, pretend = 0, frame = 24
+  35              		@ frame_needed = 1, uses_anonymous_args = 0
+  36 0000 80B5     		push	{r7, lr}
+  37              	.LCFI0:
+  38              		.cfi_def_cfa_offset 8
+  39 0002 86B0     		sub	sp, sp, #24
+  40              	.LCFI1:
+  41              		.cfi_def_cfa_offset 32
+  42 0004 00AF     		add	r7, sp, #0
+  43              		.cfi_offset 14, -4
+  44              		.cfi_offset 7, -8
+  45              	.LCFI2:
+  46              		.cfi_def_cfa_register 7
+  47 0006 F860     		str	r0, [r7, #12]
+  48 0008 B960     		str	r1, [r7, #8]
+  49 000a 1346     		mov	r3, r2
+  50 000c FB71     		strb	r3, [r7, #7]
+ 118:..//utils/i2ceeprom/i2c_eeprom.c **** 	unsigned int i;
+ 119:..//utils/i2ceeprom/i2c_eeprom.c **** 	if ( I2CInit( (uint32_t)I2CMASTER ) == 0 ){		/* initialize I2c */
+  51              		.loc 1 119 0
+  52 000e 4FF00100 		mov	r0, #1
+  53 0012 40F20003 		movw	r3, #:lower16:I2CInit
+  54 0016 C0F20003 		movt	r3, #:upper16:I2CInit
+  55 001a 9847     		blx	r3
+  56 001c 0346     		mov	r3, r0
+  57 001e 002B     		cmp	r3, #0
+  58 0020 02D1     		bne	.L2
+ 120:..//utils/i2ceeprom/i2c_eeprom.c **** 		return 1;				/* Fatal error */
+  59              		.loc 1 120 0
+  60 0022 4FF00103 		mov	r3, #1
+  61 0026 5EE0     		b	.L3
+  62              	.L2:
+ 121:..//utils/i2ceeprom/i2c_eeprom.c **** 	}
+ 122:..//utils/i2ceeprom/i2c_eeprom.c **** 	for ( i = 0; i < I2C_SLAVE_BUFSIZE; i++ ){
+  63              		.loc 1 122 0
+  64 0028 4FF00003 		mov	r3, #0
+  65 002c 7B61     		str	r3, [r7, #20]
+  66 002e 0BE0     		b	.L4
+  67              	.L5:
+ 123:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CSlaveBuffer[i] = 0x00;
+  68              		.loc 1 123 0
+  69 0030 7A69     		ldr	r2, [r7, #20]
+  70 0032 40F20003 		movw	r3, #:lower16:I2CSlaveBuffer
+  71 0036 C0F20003 		movt	r3, #:upper16:I2CSlaveBuffer
+  72 003a 4FF00001 		mov	r1, #0
+  73 003e 9954     		strb	r1, [r3, r2]
+  74              		.loc 1 122 0
+  75 0040 7B69     		ldr	r3, [r7, #20]
+  76 0042 03F10103 		add	r3, r3, #1
+  77 0046 7B61     		str	r3, [r7, #20]
+  78              	.L4:
+  79 0048 7B69     		ldr	r3, [r7, #20]
+  80 004a 0F2B     		cmp	r3, #15
+  81 004c F0D9     		bls	.L5
+ 124:..//utils/i2ceeprom/i2c_eeprom.c **** 	}
+ 125:..//utils/i2ceeprom/i2c_eeprom.c **** 	/* Write SLA(W), address, SLA(R), and read 4 bytes back. */
+ 126:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 127:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CWriteLength = 3;
+  82              		.loc 1 127 0
+  83 004e 40F20003 		movw	r3, #:lower16:I2CWriteLength
+  84 0052 C0F20003 		movt	r3, #:upper16:I2CWriteLength
+  85 0056 4FF00302 		mov	r2, #3
+  86 005a 1A60     		str	r2, [r3, #0]
+ 128:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CReadLength = I2C_SLAVE_BUFSIZE;
+  87              		.loc 1 128 0
+  88 005c 40F20003 		movw	r3, #:lower16:I2CReadLength
+  89 0060 C0F20003 		movt	r3, #:upper16:I2CReadLength
+  90 0064 4FF01002 		mov	r2, #16
+  91 0068 1A60     		str	r2, [r3, #0]
+ 129:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CMasterBuffer[0] = MC24LC64_ADDR_BLK0;
+  92              		.loc 1 129 0
+  93 006a 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+  94 006e C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+  95 0072 6FF05F02 		mvn	r2, #95
+  96 0076 1A70     		strb	r2, [r3, #0]
+ 130:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CMasterBuffer[1] = address>>8;			/* address MSB */
+  97              		.loc 1 130 0
+  98 0078 FB68     		ldr	r3, [r7, #12]
+  99 007a 4FEA1323 		lsr	r3, r3, #8
+ 100 007e DAB2     		uxtb	r2, r3
+ 101 0080 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 102 0084 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 103 0088 5A70     		strb	r2, [r3, #1]
+ 131:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CMasterBuffer[2] = address&0xff;				/* address LSB */
+ 104              		.loc 1 131 0
+ 105 008a FB68     		ldr	r3, [r7, #12]
+ 106 008c DAB2     		uxtb	r2, r3
+ 107 008e 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 108 0092 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 109 0096 9A70     		strb	r2, [r3, #2]
+ 132:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CMasterBuffer[3] = MC24LC64_ADDR_BLK0 | RD_BIT;
+ 110              		.loc 1 132 0
+ 111 0098 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 112 009c C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 113 00a0 6FF05E02 		mvn	r2, #94
+ 114 00a4 DA70     		strb	r2, [r3, #3]
+ 133:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 134:..//utils/i2ceeprom/i2c_eeprom.c **** 	i=0;
+ 115              		.loc 1 134 0
+ 116 00a6 4FF00003 		mov	r3, #0
+ 117 00aa 7B61     		str	r3, [r7, #20]
+ 135:..//utils/i2ceeprom/i2c_eeprom.c **** 	while (I2CEngine() == I2CSTATE_SLA_NACK)
+ 118              		.loc 1 135 0
+ 119 00ac 03E0     		b	.L6
+ 120              	.L7:
+ 136:..//utils/i2ceeprom/i2c_eeprom.c **** 		i++;
+ 121              		.loc 1 136 0
+ 122 00ae 7B69     		ldr	r3, [r7, #20]
+ 123 00b0 03F10103 		add	r3, r3, #1
+ 124 00b4 7B61     		str	r3, [r7, #20]
+ 125              	.L6:
+ 126              		.loc 1 135 0
+ 127 00b6 40F20003 		movw	r3, #:lower16:I2CEngine
+ 128 00ba C0F20003 		movt	r3, #:upper16:I2CEngine
+ 129 00be 9847     		blx	r3
+ 130 00c0 0246     		mov	r2, r0
+ 131 00c2 40F20313 		movw	r3, #259
+ 132 00c6 9A42     		cmp	r2, r3
+ 133 00c8 F1D0     		beq	.L7
+ 137:..//utils/i2ceeprom/i2c_eeprom.c **** 		
+ 138:..//utils/i2ceeprom/i2c_eeprom.c **** 	// for ( i = 0; i < I2C_SLAVE_BUFSIZE; i++ ){
+ 139:..//utils/i2ceeprom/i2c_eeprom.c **** 		// printf("%d, ",(I2CSlaveBuffer[i]));
+ 140:..//utils/i2ceeprom/i2c_eeprom.c **** 	// }
+ 141:..//utils/i2ceeprom/i2c_eeprom.c **** 	// printf("\n");
+ 142:..//utils/i2ceeprom/i2c_eeprom.c **** 	memcpy(pdata,I2CSlaveBuffer,bytes);	
+ 134              		.loc 1 142 0
+ 135 00ca FB79     		ldrb	r3, [r7, #7]	@ zero_extendqisi2
+ 136 00cc B868     		ldr	r0, [r7, #8]
+ 137 00ce 40F20001 		movw	r1, #:lower16:I2CSlaveBuffer
+ 138 00d2 C0F20001 		movt	r1, #:upper16:I2CSlaveBuffer
+ 139 00d6 1A46     		mov	r2, r3
+ 140 00d8 40F20003 		movw	r3, #:lower16:memcpy
+ 141 00dc C0F20003 		movt	r3, #:upper16:memcpy
+ 142 00e0 9847     		blx	r3
+ 143:..//utils/i2ceeprom/i2c_eeprom.c **** 	return 0;
+ 143              		.loc 1 143 0
+ 144 00e2 4FF00003 		mov	r3, #0
+ 145              	.L3:
+ 144:..//utils/i2ceeprom/i2c_eeprom.c **** }
+ 146              		.loc 1 144 0
+ 147 00e6 1846     		mov	r0, r3
+ 148 00e8 07F11807 		add	r7, r7, #24
+ 149 00ec BD46     		mov	sp, r7
+ 150 00ee 80BD     		pop	{r7, pc}
+ 151              		.cfi_endproc
+ 152              	.LFE29:
+ 154              		.section	.text.i2cEEPROM_write32,"ax",%progbits
+ 155              		.align	2
+ 156              		.global	i2cEEPROM_write32
+ 157              		.thumb
+ 158              		.thumb_func
+ 160              	i2cEEPROM_write32:
+ 161              	.LFB30:
+ 145:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 146:..//utils/i2ceeprom/i2c_eeprom.c **** int i2cEEPROM_write32(int16_t addr, char *s){
+ 162              		.loc 1 146 0
+ 163              		.cfi_startproc
+ 164              		@ args = 0, pretend = 0, frame = 16
+ 165              		@ frame_needed = 1, uses_anonymous_args = 0
+ 166 0000 80B5     		push	{r7, lr}
+ 167              	.LCFI3:
+ 168              		.cfi_def_cfa_offset 8
+ 169 0002 84B0     		sub	sp, sp, #16
+ 170              	.LCFI4:
+ 171              		.cfi_def_cfa_offset 24
+ 172 0004 00AF     		add	r7, sp, #0
+ 173              		.cfi_offset 14, -4
+ 174              		.cfi_offset 7, -8
+ 175              	.LCFI5:
+ 176              		.cfi_def_cfa_register 7
+ 177 0006 0346     		mov	r3, r0
+ 178 0008 3960     		str	r1, [r7, #0]
+ 179 000a FB80     		strh	r3, [r7, #6]	@ movhi
+ 147:..//utils/i2ceeprom/i2c_eeprom.c **** 	uint32_t i;
+ 148:..//utils/i2ceeprom/i2c_eeprom.c **** 	uint32_t len;
+ 149:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 150:..//utils/i2ceeprom/i2c_eeprom.c **** 	if ( I2CInit( (uint32_t)I2CMASTER ) == 0 )	/* initialize I2c */
+ 180              		.loc 1 150 0
+ 181 000c 4FF00100 		mov	r0, #1
+ 182 0010 40F20003 		movw	r3, #:lower16:I2CInit
+ 183 0014 C0F20003 		movt	r3, #:upper16:I2CInit
+ 184 0018 9847     		blx	r3
+ 185 001a 0346     		mov	r3, r0
+ 186 001c 002B     		cmp	r3, #0
+ 187 001e 02D1     		bne	.L10
+ 151:..//utils/i2ceeprom/i2c_eeprom.c **** 	{
+ 152:..//utils/i2ceeprom/i2c_eeprom.c **** 		return 1;				/* Fatal error */
+ 188              		.loc 1 152 0
+ 189 0020 4FF00103 		mov	r3, #1
+ 190 0024 66E0     		b	.L11
+ 191              	.L10:
+ 153:..//utils/i2ceeprom/i2c_eeprom.c **** 	}
+ 154:..//utils/i2ceeprom/i2c_eeprom.c **** 	
+ 155:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CWriteLength = I2C_MASTER_BUFSIZE; // set the write len
+ 192              		.loc 1 155 0
+ 193 0026 40F20003 		movw	r3, #:lower16:I2CWriteLength
+ 194 002a C0F20003 		movt	r3, #:upper16:I2CWriteLength
+ 195 002e 4FF01202 		mov	r2, #18
+ 196 0032 1A60     		str	r2, [r3, #0]
+ 156:..//utils/i2ceeprom/i2c_eeprom.c **** 	len = strlen(s)+3;
+ 197              		.loc 1 156 0
+ 198 0034 3868     		ldr	r0, [r7, #0]
+ 199 0036 40F20003 		movw	r3, #:lower16:strlen
+ 200 003a C0F20003 		movt	r3, #:upper16:strlen
+ 201 003e 9847     		blx	r3
+ 202 0040 0346     		mov	r3, r0
+ 203 0042 03F10303 		add	r3, r3, #3
+ 204 0046 FB60     		str	r3, [r7, #12]
+ 157:..//utils/i2ceeprom/i2c_eeprom.c **** 	if (I2CWriteLength > len)
+ 205              		.loc 1 157 0
+ 206 0048 40F20003 		movw	r3, #:lower16:I2CWriteLength
+ 207 004c C0F20003 		movt	r3, #:upper16:I2CWriteLength
+ 208 0050 1A68     		ldr	r2, [r3, #0]
+ 209 0052 FB68     		ldr	r3, [r7, #12]
+ 210 0054 9A42     		cmp	r2, r3
+ 211 0056 05D9     		bls	.L12
+ 158:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CWriteLength = len;
+ 212              		.loc 1 158 0
+ 213 0058 40F20003 		movw	r3, #:lower16:I2CWriteLength
+ 214 005c C0F20003 		movt	r3, #:upper16:I2CWriteLength
+ 215 0060 FA68     		ldr	r2, [r7, #12]
+ 216 0062 1A60     		str	r2, [r3, #0]
+ 217              	.L12:
+ 159:..//utils/i2ceeprom/i2c_eeprom.c **** 		
+ 160:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CReadLength = 0;
+ 218              		.loc 1 160 0
+ 219 0064 40F20003 		movw	r3, #:lower16:I2CReadLength
+ 220 0068 C0F20003 		movt	r3, #:upper16:I2CReadLength
+ 221 006c 4FF00002 		mov	r2, #0
+ 222 0070 1A60     		str	r2, [r3, #0]
+ 161:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CMasterBuffer[0] = MC24LC64_ADDR_BLK0;
+ 223              		.loc 1 161 0
+ 224 0072 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 225 0076 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 226 007a 6FF05F02 		mvn	r2, #95
+ 227 007e 1A70     		strb	r2, [r3, #0]
+ 162:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CMasterBuffer[1] = addr>>8;		/* address MSB */
+ 228              		.loc 1 162 0
+ 229 0080 B7F90630 		ldrsh	r3, [r7, #6]
+ 230 0084 4FEA2323 		asr	r3, r3, #8
+ 231 0088 9BB2     		uxth	r3, r3
+ 232 008a DAB2     		uxtb	r2, r3
+ 233 008c 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 234 0090 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 235 0094 5A70     		strb	r2, [r3, #1]
+ 163:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CMasterBuffer[2] = addr&0xff;		/* address LSB */
+ 236              		.loc 1 163 0
+ 237 0096 FB88     		ldrh	r3, [r7, #6]	@ movhi
+ 238 0098 DAB2     		uxtb	r2, r3
+ 239 009a 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 240 009e C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 241 00a2 9A70     		strb	r2, [r3, #2]
+ 164:..//utils/i2ceeprom/i2c_eeprom.c **** 	
+ 165:..//utils/i2ceeprom/i2c_eeprom.c **** 	for (i = 3; i  < I2C_MASTER_BUFSIZE; i++) {
+ 242              		.loc 1 165 0
+ 243 00a4 4FF00303 		mov	r3, #3
+ 244 00a8 BB60     		str	r3, [r7, #8]
+ 245 00aa 17E0     		b	.L13
+ 246              	.L16:
+ 166:..//utils/i2ceeprom/i2c_eeprom.c **** 		if (s[i-3] == '\0')	
+ 247              		.loc 1 166 0
+ 248 00ac BB68     		ldr	r3, [r7, #8]
+ 249 00ae A3F10302 		sub	r2, r3, #3
+ 250 00b2 3B68     		ldr	r3, [r7, #0]
+ 251 00b4 1344     		add	r3, r2, r3
+ 252 00b6 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 253 00b8 002B     		cmp	r3, #0
+ 254 00ba 13D0     		beq	.L18
+ 255              	.L14:
+ 167:..//utils/i2ceeprom/i2c_eeprom.c **** 			break;
+ 168:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[i] = s[i-3];
+ 256              		.loc 1 168 0
+ 257 00bc BA68     		ldr	r2, [r7, #8]
+ 258 00be BB68     		ldr	r3, [r7, #8]
+ 259 00c0 A3F10301 		sub	r1, r3, #3
+ 260 00c4 3B68     		ldr	r3, [r7, #0]
+ 261 00c6 0B44     		add	r3, r1, r3
+ 262 00c8 1978     		ldrb	r1, [r3, #0]	@ zero_extendqisi2
+ 263 00ca 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 264 00ce C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 265 00d2 9954     		strb	r1, [r3, r2]
+ 266              		.loc 1 165 0
+ 267 00d4 BB68     		ldr	r3, [r7, #8]
+ 268 00d6 03F10103 		add	r3, r3, #1
+ 269 00da BB60     		str	r3, [r7, #8]
+ 270              	.L13:
+ 271 00dc BB68     		ldr	r3, [r7, #8]
+ 272 00de 112B     		cmp	r3, #17
+ 273 00e0 E4D9     		bls	.L16
+ 274 00e2 00E0     		b	.L15
+ 275              	.L18:
+ 276              		.loc 1 167 0
+ 277 00e4 00BF     		nop
+ 278              	.L15:
+ 169:..//utils/i2ceeprom/i2c_eeprom.c **** 	}
+ 170:..//utils/i2ceeprom/i2c_eeprom.c **** 	
+ 171:..//utils/i2ceeprom/i2c_eeprom.c **** 	// uint32_t fin_state = I2CEngine();
+ 172:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CEngine();
+ 279              		.loc 1 172 0
+ 280 00e6 40F20003 		movw	r3, #:lower16:I2CEngine
+ 281 00ea C0F20003 		movt	r3, #:upper16:I2CEngine
+ 282 00ee 9847     		blx	r3
+ 173:..//utils/i2ceeprom/i2c_eeprom.c **** 	return 0;
+ 283              		.loc 1 173 0
+ 284 00f0 4FF00003 		mov	r3, #0
+ 285              	.L11:
+ 174:..//utils/i2ceeprom/i2c_eeprom.c **** }
+ 286              		.loc 1 174 0
+ 287 00f4 1846     		mov	r0, r3
+ 288 00f6 07F11007 		add	r7, r7, #16
+ 289 00fa BD46     		mov	sp, r7
+ 290 00fc 80BD     		pop	{r7, pc}
+ 291              		.cfi_endproc
+ 292              	.LFE30:
+ 294 00fe 00BF     		.section	.text.i2cEEPROM_write8,"ax",%progbits
+ 295              		.align	2
+ 296              		.global	i2cEEPROM_write8
+ 297              		.thumb
+ 298              		.thumb_func
+ 300              	i2cEEPROM_write8:
+ 301              	.LFB31:
+ 175:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 176:..//utils/i2ceeprom/i2c_eeprom.c **** int i2cEEPROM_write8(int16_t addr, uint8_t *pdata, int size){
+ 302              		.loc 1 176 0
+ 303              		.cfi_startproc
+ 304              		@ args = 0, pretend = 0, frame = 32
+ 305              		@ frame_needed = 1, uses_anonymous_args = 0
+ 306 0000 80B5     		push	{r7, lr}
+ 307              	.LCFI6:
+ 308              		.cfi_def_cfa_offset 8
+ 309 0002 88B0     		sub	sp, sp, #32
+ 310              	.LCFI7:
+ 311              		.cfi_def_cfa_offset 40
+ 312 0004 00AF     		add	r7, sp, #0
+ 313              		.cfi_offset 14, -4
+ 314              		.cfi_offset 7, -8
+ 315              	.LCFI8:
+ 316              		.cfi_def_cfa_register 7
+ 317 0006 0346     		mov	r3, r0
+ 318 0008 B960     		str	r1, [r7, #8]
+ 319 000a 7A60     		str	r2, [r7, #4]
+ 320 000c FB81     		strh	r3, [r7, #14]	@ movhi
+ 177:..//utils/i2ceeprom/i2c_eeprom.c **** 	// printf("\nWRblk=%d,%d,%d\t",block_num,addr,size);
+ 178:..//utils/i2ceeprom/i2c_eeprom.c **** 	uint32_t id;
+ 179:..//utils/i2ceeprom/i2c_eeprom.c **** 	uint32_t len;
+ 180:..//utils/i2ceeprom/i2c_eeprom.c **** 	
+ 181:..//utils/i2ceeprom/i2c_eeprom.c **** 	if ( I2CInit( (uint32_t)I2CMASTER ) == 0 )	/* initialize I2c */
+ 321              		.loc 1 181 0
+ 322 000e 4FF00100 		mov	r0, #1
+ 323 0012 40F20003 		movw	r3, #:lower16:I2CInit
+ 324 0016 C0F20003 		movt	r3, #:upper16:I2CInit
+ 325 001a 9847     		blx	r3
+ 326 001c 0346     		mov	r3, r0
+ 327 001e 002B     		cmp	r3, #0
+ 328 0020 02D1     		bne	.L20
+ 182:..//utils/i2ceeprom/i2c_eeprom.c **** 	{
+ 183:..//utils/i2ceeprom/i2c_eeprom.c **** 		return 1;				/* Fatal error */
+ 329              		.loc 1 183 0
+ 330 0022 4FF00103 		mov	r3, #1
+ 331 0026 D5E0     		b	.L21
+ 332              	.L20:
+ 184:..//utils/i2ceeprom/i2c_eeprom.c **** 	}
+ 185:..//utils/i2ceeprom/i2c_eeprom.c **** 	
+ 186:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CWriteLength=I2C_MASTER_BUFSIZE; // set the write len
+ 333              		.loc 1 186 0
+ 334 0028 40F20003 		movw	r3, #:lower16:I2CWriteLength
+ 335 002c C0F20003 		movt	r3, #:upper16:I2CWriteLength
+ 336 0030 4FF01202 		mov	r2, #18
+ 337 0034 1A60     		str	r2, [r3, #0]
+ 187:..//utils/i2ceeprom/i2c_eeprom.c **** 	len=size+2;
+ 338              		.loc 1 187 0
+ 339 0036 7B68     		ldr	r3, [r7, #4]
+ 340 0038 03F10203 		add	r3, r3, #2
+ 341 003c BB61     		str	r3, [r7, #24]
+ 188:..//utils/i2ceeprom/i2c_eeprom.c **** 	if (I2CWriteLength > len)
+ 342              		.loc 1 188 0
+ 343 003e 40F20003 		movw	r3, #:lower16:I2CWriteLength
+ 344 0042 C0F20003 		movt	r3, #:upper16:I2CWriteLength
+ 345 0046 1A68     		ldr	r2, [r3, #0]
+ 346 0048 BB69     		ldr	r3, [r7, #24]
+ 347 004a 9A42     		cmp	r2, r3
+ 348 004c 05D9     		bls	.L22
+ 189:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CWriteLength = len;
+ 349              		.loc 1 189 0
+ 350 004e 40F20003 		movw	r3, #:lower16:I2CWriteLength
+ 351 0052 C0F20003 		movt	r3, #:upper16:I2CWriteLength
+ 352 0056 BA69     		ldr	r2, [r7, #24]
+ 353 0058 1A60     		str	r2, [r3, #0]
+ 354              	.L22:
+ 190:..//utils/i2ceeprom/i2c_eeprom.c **** 		
+ 191:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CReadLength = 0;
+ 355              		.loc 1 191 0
+ 356 005a 40F20003 		movw	r3, #:lower16:I2CReadLength
+ 357 005e C0F20003 		movt	r3, #:upper16:I2CReadLength
+ 358 0062 4FF00002 		mov	r2, #0
+ 359 0066 1A60     		str	r2, [r3, #0]
+ 192:..//utils/i2ceeprom/i2c_eeprom.c **** #if 0
+ 193:..//utils/i2ceeprom/i2c_eeprom.c **** 	if(block_num < 16){
+ 194:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK0;
+ 195:..//utils/i2ceeprom/i2c_eeprom.c **** 	}else if(block_num < 32){
+ 196:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK1;
+ 197:..//utils/i2ceeprom/i2c_eeprom.c **** 		addr = addr - 256;
+ 198:..//utils/i2ceeprom/i2c_eeprom.c **** 	}else if(block_num < 48){
+ 199:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK2;
+ 200:..//utils/i2ceeprom/i2c_eeprom.c **** 		addr = addr - 512;
+ 201:..//utils/i2ceeprom/i2c_eeprom.c **** 	}else{
+ 202:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK3;
+ 203:..//utils/i2ceeprom/i2c_eeprom.c **** 		addr = addr - 768;
+ 204:..//utils/i2ceeprom/i2c_eeprom.c **** 	}
+ 205:..//utils/i2ceeprom/i2c_eeprom.c **** #else
+ 206:..//utils/i2ceeprom/i2c_eeprom.c **** 	if(addr < 256){
+ 360              		.loc 1 206 0
+ 361 0068 B7F90E30 		ldrsh	r3, [r7, #14]
+ 362 006c FF2B     		cmp	r3, #255
+ 363 006e 07DC     		bgt	.L23
+ 207:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK0;
+ 364              		.loc 1 207 0
+ 365 0070 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 366 0074 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 367 0078 6FF05F02 		mvn	r2, #95
+ 368 007c 1A70     		strb	r2, [r3, #0]
+ 369 007e 7DE0     		b	.L24
+ 370              	.L23:
+ 208:..//utils/i2ceeprom/i2c_eeprom.c **** 	}else if(addr < 512){
+ 371              		.loc 1 208 0
+ 372 0080 B7F90E20 		ldrsh	r2, [r7, #14]
+ 373 0084 40F2FF13 		movw	r3, #511
+ 374 0088 9A42     		cmp	r2, r3
+ 375 008a 0CDC     		bgt	.L25
+ 209:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK1;
+ 376              		.loc 1 209 0
+ 377 008c 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 378 0090 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 379 0094 6FF05D02 		mvn	r2, #93
+ 380 0098 1A70     		strb	r2, [r3, #0]
+ 210:..//utils/i2ceeprom/i2c_eeprom.c **** 		addr = addr - 256;
+ 381              		.loc 1 210 0
+ 382 009a FB89     		ldrh	r3, [r7, #14]
+ 383 009c A3F58073 		sub	r3, r3, #256
+ 384 00a0 9BB2     		uxth	r3, r3
+ 385 00a2 FB81     		strh	r3, [r7, #14]	@ movhi
+ 386 00a4 6AE0     		b	.L24
+ 387              	.L25:
+ 211:..//utils/i2ceeprom/i2c_eeprom.c **** 	}else if(addr < 768){
+ 388              		.loc 1 211 0
+ 389 00a6 B7F90E20 		ldrsh	r2, [r7, #14]
+ 390 00aa 40F2FF23 		movw	r3, #767
+ 391 00ae 9A42     		cmp	r2, r3
+ 392 00b0 0CDC     		bgt	.L26
+ 212:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK2;
+ 393              		.loc 1 212 0
+ 394 00b2 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 395 00b6 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 396 00ba 6FF05B02 		mvn	r2, #91
+ 397 00be 1A70     		strb	r2, [r3, #0]
+ 213:..//utils/i2ceeprom/i2c_eeprom.c **** 		addr = addr - 512;
+ 398              		.loc 1 213 0
+ 399 00c0 FB89     		ldrh	r3, [r7, #14]
+ 400 00c2 A3F50073 		sub	r3, r3, #512
+ 401 00c6 9BB2     		uxth	r3, r3
+ 402 00c8 FB81     		strh	r3, [r7, #14]	@ movhi
+ 403 00ca 57E0     		b	.L24
+ 404              	.L26:
+ 214:..//utils/i2ceeprom/i2c_eeprom.c **** 	}else if(addr < 1024){
+ 405              		.loc 1 214 0
+ 406 00cc B7F90E20 		ldrsh	r2, [r7, #14]
+ 407 00d0 40F2FF33 		movw	r3, #1023
+ 408 00d4 9A42     		cmp	r2, r3
+ 409 00d6 0CDC     		bgt	.L27
+ 215:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK3;
+ 410              		.loc 1 215 0
+ 411 00d8 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 412 00dc C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 413 00e0 6FF05902 		mvn	r2, #89
+ 414 00e4 1A70     		strb	r2, [r3, #0]
+ 216:..//utils/i2ceeprom/i2c_eeprom.c **** 		addr = addr - 768;
+ 415              		.loc 1 216 0
+ 416 00e6 FB89     		ldrh	r3, [r7, #14]
+ 417 00e8 A3F54073 		sub	r3, r3, #768
+ 418 00ec 9BB2     		uxth	r3, r3
+ 419 00ee FB81     		strh	r3, [r7, #14]	@ movhi
+ 420 00f0 44E0     		b	.L24
+ 421              	.L27:
+ 217:..//utils/i2ceeprom/i2c_eeprom.c **** 	}else if(addr < 1280){
+ 422              		.loc 1 217 0
+ 423 00f2 B7F90E20 		ldrsh	r2, [r7, #14]
+ 424 00f6 40F2FF43 		movw	r3, #1279
+ 425 00fa 9A42     		cmp	r2, r3
+ 426 00fc 0CDC     		bgt	.L28
+ 218:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK4;
+ 427              		.loc 1 218 0
+ 428 00fe 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 429 0102 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 430 0106 6FF05702 		mvn	r2, #87
+ 431 010a 1A70     		strb	r2, [r3, #0]
+ 219:..//utils/i2ceeprom/i2c_eeprom.c **** 		addr = addr - 1024;
+ 432              		.loc 1 219 0
+ 433 010c FB89     		ldrh	r3, [r7, #14]
+ 434 010e A3F58063 		sub	r3, r3, #1024
+ 435 0112 9BB2     		uxth	r3, r3
+ 436 0114 FB81     		strh	r3, [r7, #14]	@ movhi
+ 437 0116 31E0     		b	.L24
+ 438              	.L28:
+ 220:..//utils/i2ceeprom/i2c_eeprom.c **** 	}else if(addr < 1536){
+ 439              		.loc 1 220 0
+ 440 0118 B7F90E20 		ldrsh	r2, [r7, #14]
+ 441 011c 40F2FF53 		movw	r3, #1535
+ 442 0120 9A42     		cmp	r2, r3
+ 443 0122 0CDC     		bgt	.L29
+ 221:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK5;
+ 444              		.loc 1 221 0
+ 445 0124 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 446 0128 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 447 012c 6FF05502 		mvn	r2, #85
+ 448 0130 1A70     		strb	r2, [r3, #0]
+ 222:..//utils/i2ceeprom/i2c_eeprom.c **** 		addr = addr - 1280;
+ 449              		.loc 1 222 0
+ 450 0132 FB89     		ldrh	r3, [r7, #14]
+ 451 0134 A3F5A063 		sub	r3, r3, #1280
+ 452 0138 9BB2     		uxth	r3, r3
+ 453 013a FB81     		strh	r3, [r7, #14]	@ movhi
+ 454 013c 1EE0     		b	.L24
+ 455              	.L29:
+ 223:..//utils/i2ceeprom/i2c_eeprom.c **** 	}else if(addr < 1792){
+ 456              		.loc 1 223 0
+ 457 013e B7F90E20 		ldrsh	r2, [r7, #14]
+ 458 0142 40F2FF63 		movw	r3, #1791
+ 459 0146 9A42     		cmp	r2, r3
+ 460 0148 0CDC     		bgt	.L30
+ 224:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK6;
+ 461              		.loc 1 224 0
+ 462 014a 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 463 014e C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 464 0152 6FF05302 		mvn	r2, #83
+ 465 0156 1A70     		strb	r2, [r3, #0]
+ 225:..//utils/i2ceeprom/i2c_eeprom.c **** 		addr = addr - 1536;
+ 466              		.loc 1 225 0
+ 467 0158 FB89     		ldrh	r3, [r7, #14]
+ 468 015a A3F5C063 		sub	r3, r3, #1536
+ 469 015e 9BB2     		uxth	r3, r3
+ 470 0160 FB81     		strh	r3, [r7, #14]	@ movhi
+ 471 0162 0BE0     		b	.L24
+ 472              	.L30:
+ 226:..//utils/i2ceeprom/i2c_eeprom.c **** 	}else{
+ 227:..//utils/i2ceeprom/i2c_eeprom.c **** 		// printf("\n write");
+ 228:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK7;
+ 473              		.loc 1 228 0
+ 474 0164 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 475 0168 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 476 016c 6FF05102 		mvn	r2, #81
+ 477 0170 1A70     		strb	r2, [r3, #0]
+ 229:..//utils/i2ceeprom/i2c_eeprom.c **** 		addr = addr - 1792;
+ 478              		.loc 1 229 0
+ 479 0172 FB89     		ldrh	r3, [r7, #14]
+ 480 0174 A3F5E063 		sub	r3, r3, #1792
+ 481 0178 9BB2     		uxth	r3, r3
+ 482 017a FB81     		strh	r3, [r7, #14]	@ movhi
+ 483              	.L24:
+ 230:..//utils/i2ceeprom/i2c_eeprom.c **** 	}
+ 231:..//utils/i2ceeprom/i2c_eeprom.c **** #endif
+ 232:..//utils/i2ceeprom/i2c_eeprom.c **** 	
+ 233:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CMasterBuffer[1] = addr&0xff;		/* address LSB */
+ 484              		.loc 1 233 0
+ 485 017c FB89     		ldrh	r3, [r7, #14]	@ movhi
+ 486 017e DAB2     		uxtb	r2, r3
+ 487 0180 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 488 0184 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 489 0188 5A70     		strb	r2, [r3, #1]
+ 234:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CMasterBuffer[1] = addr>>8;		/* address MSB */
+ 235:..//utils/i2ceeprom/i2c_eeprom.c **** 	
+ 236:..//utils/i2ceeprom/i2c_eeprom.c **** 	for (id = 2; id < I2CWriteLength; id++) 
+ 490              		.loc 1 236 0
+ 491 018a 4FF00203 		mov	r3, #2
+ 492 018e 7B61     		str	r3, [r7, #20]
+ 493 0190 0FE0     		b	.L31
+ 494              	.L32:
+ 237:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[id]=*pdata++;
+ 495              		.loc 1 237 0
+ 496 0192 7A69     		ldr	r2, [r7, #20]
+ 497 0194 BB68     		ldr	r3, [r7, #8]
+ 498 0196 1978     		ldrb	r1, [r3, #0]	@ zero_extendqisi2
+ 499 0198 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 500 019c C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 501 01a0 9954     		strb	r1, [r3, r2]
+ 502 01a2 BB68     		ldr	r3, [r7, #8]
+ 503 01a4 03F10103 		add	r3, r3, #1
+ 504 01a8 BB60     		str	r3, [r7, #8]
+ 505              		.loc 1 236 0
+ 506 01aa 7B69     		ldr	r3, [r7, #20]
+ 507 01ac 03F10103 		add	r3, r3, #1
+ 508 01b0 7B61     		str	r3, [r7, #20]
+ 509              	.L31:
+ 510 01b2 40F20003 		movw	r3, #:lower16:I2CWriteLength
+ 511 01b6 C0F20003 		movt	r3, #:upper16:I2CWriteLength
+ 512 01ba 1B68     		ldr	r3, [r3, #0]
+ 513 01bc 7A69     		ldr	r2, [r7, #20]
+ 514 01be 9A42     		cmp	r2, r3
+ 515 01c0 E7D3     		bcc	.L32
+ 238:..//utils/i2ceeprom/i2c_eeprom.c **** 	
+ 239:..//utils/i2ceeprom/i2c_eeprom.c **** 	uint32_t fin_state = I2CEngine();
+ 516              		.loc 1 239 0
+ 517 01c2 40F20003 		movw	r3, #:lower16:I2CEngine
+ 518 01c6 C0F20003 		movt	r3, #:upper16:I2CEngine
+ 519 01ca 9847     		blx	r3
+ 520 01cc 0346     		mov	r3, r0
+ 521 01ce FB61     		str	r3, [r7, #28]
+ 240:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 241:..//utils/i2ceeprom/i2c_eeprom.c **** 	return 0;
+ 522              		.loc 1 241 0
+ 523 01d0 4FF00003 		mov	r3, #0
+ 524              	.L21:
+ 242:..//utils/i2ceeprom/i2c_eeprom.c **** }
+ 525              		.loc 1 242 0
+ 526 01d4 1846     		mov	r0, r3
+ 527 01d6 07F12007 		add	r7, r7, #32
+ 528 01da BD46     		mov	sp, r7
+ 529 01dc 80BD     		pop	{r7, pc}
+ 530              		.cfi_endproc
+ 531              	.LFE31:
+ 533 01de 00BF     		.section	.text.i2cEEPROM_read8,"ax",%progbits
+ 534              		.align	2
+ 535              		.global	i2cEEPROM_read8
+ 536              		.thumb
+ 537              		.thumb_func
+ 539              	i2cEEPROM_read8:
+ 540              	.LFB32:
+ 243:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 244:..//utils/i2ceeprom/i2c_eeprom.c **** int8_t i2cEEPROM_read8(int16_t address, uint8_t *pdata, int size){
+ 541              		.loc 1 244 0
+ 542              		.cfi_startproc
+ 543              		@ args = 0, pretend = 0, frame = 24
+ 544              		@ frame_needed = 1, uses_anonymous_args = 0
+ 545 0000 80B5     		push	{r7, lr}
+ 546              	.LCFI9:
+ 547              		.cfi_def_cfa_offset 8
+ 548 0002 86B0     		sub	sp, sp, #24
+ 549              	.LCFI10:
+ 550              		.cfi_def_cfa_offset 32
+ 551 0004 00AF     		add	r7, sp, #0
+ 552              		.cfi_offset 14, -4
+ 553              		.cfi_offset 7, -8
+ 554              	.LCFI11:
+ 555              		.cfi_def_cfa_register 7
+ 556 0006 0346     		mov	r3, r0
+ 557 0008 B960     		str	r1, [r7, #8]
+ 558 000a 7A60     		str	r2, [r7, #4]
+ 559 000c FB81     		strh	r3, [r7, #14]	@ movhi
+ 245:..//utils/i2ceeprom/i2c_eeprom.c **** 	// printf("\nRDblk=%d,%d\t",block_num, address);
+ 246:..//utils/i2ceeprom/i2c_eeprom.c **** 	int id;	
+ 247:..//utils/i2ceeprom/i2c_eeprom.c **** 	if ( I2CInit( (uint32_t)I2CMASTER ) == 0 ){		/* initialize I2c */
+ 560              		.loc 1 247 0
+ 561 000e 4FF00100 		mov	r0, #1
+ 562 0012 40F20003 		movw	r3, #:lower16:I2CInit
+ 563 0016 C0F20003 		movt	r3, #:upper16:I2CInit
+ 564 001a 9847     		blx	r3
+ 565 001c 0346     		mov	r3, r0
+ 566 001e 002B     		cmp	r3, #0
+ 567 0020 02D1     		bne	.L35
+ 248:..//utils/i2ceeprom/i2c_eeprom.c **** 		return 1;				/* Fatal error */
+ 568              		.loc 1 248 0
+ 569 0022 4FF00103 		mov	r3, #1
+ 570 0026 1FE1     		b	.L36
+ 571              	.L35:
+ 249:..//utils/i2ceeprom/i2c_eeprom.c **** 	}
+ 250:..//utils/i2ceeprom/i2c_eeprom.c **** 	for ( id = 0; id < I2C_SLAVE_BUFSIZE; id++ ){
+ 572              		.loc 1 250 0
+ 573 0028 4FF00003 		mov	r3, #0
+ 574 002c 7B61     		str	r3, [r7, #20]
+ 575 002e 12E0     		b	.L37
+ 576              	.L38:
+ 251:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CSlaveBuffer[id] = 0x00;
+ 577              		.loc 1 251 0
+ 578 0030 7A69     		ldr	r2, [r7, #20]
+ 579 0032 40F20003 		movw	r3, #:lower16:I2CSlaveBuffer
+ 580 0036 C0F20003 		movt	r3, #:upper16:I2CSlaveBuffer
+ 581 003a 4FF00001 		mov	r1, #0
+ 582 003e 9954     		strb	r1, [r3, r2]
+ 252:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = 0x00;
+ 583              		.loc 1 252 0
+ 584 0040 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 585 0044 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 586 0048 4FF00002 		mov	r2, #0
+ 587 004c 1A70     		strb	r2, [r3, #0]
+ 588              		.loc 1 250 0
+ 589 004e 7B69     		ldr	r3, [r7, #20]
+ 590 0050 03F10103 		add	r3, r3, #1
+ 591 0054 7B61     		str	r3, [r7, #20]
+ 592              	.L37:
+ 593 0056 7B69     		ldr	r3, [r7, #20]
+ 594 0058 0F2B     		cmp	r3, #15
+ 595 005a E9DD     		ble	.L38
+ 253:..//utils/i2ceeprom/i2c_eeprom.c **** 	}
+ 254:..//utils/i2ceeprom/i2c_eeprom.c **** 	/* Write SLA(W), address, SLA(R), and read 4 bytes back. */
+ 255:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 256:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CWriteLength = 2;	
+ 596              		.loc 1 256 0
+ 597 005c 40F20003 		movw	r3, #:lower16:I2CWriteLength
+ 598 0060 C0F20003 		movt	r3, #:upper16:I2CWriteLength
+ 599 0064 4FF00202 		mov	r2, #2
+ 600 0068 1A60     		str	r2, [r3, #0]
+ 257:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CReadLength = 0;
+ 601              		.loc 1 257 0
+ 602 006a 40F20003 		movw	r3, #:lower16:I2CReadLength
+ 603 006e C0F20003 		movt	r3, #:upper16:I2CReadLength
+ 604 0072 4FF00002 		mov	r2, #0
+ 605 0076 1A60     		str	r2, [r3, #0]
+ 258:..//utils/i2ceeprom/i2c_eeprom.c **** 	
+ 259:..//utils/i2ceeprom/i2c_eeprom.c **** #if 0
+ 260:..//utils/i2ceeprom/i2c_eeprom.c **** 	if(block_num < 16){
+ 261:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK0;
+ 262:..//utils/i2ceeprom/i2c_eeprom.c **** 	}else if(block_num < 32){
+ 263:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK1;
+ 264:..//utils/i2ceeprom/i2c_eeprom.c **** 		address = address-256;
+ 265:..//utils/i2ceeprom/i2c_eeprom.c **** 	}else if(block_num < 48){
+ 266:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK2;
+ 267:..//utils/i2ceeprom/i2c_eeprom.c **** 		address = address - 512;
+ 268:..//utils/i2ceeprom/i2c_eeprom.c **** 	}else{
+ 269:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK3;
+ 270:..//utils/i2ceeprom/i2c_eeprom.c **** 		address = address - 768;
+ 271:..//utils/i2ceeprom/i2c_eeprom.c **** 	}
+ 272:..//utils/i2ceeprom/i2c_eeprom.c **** #else
+ 273:..//utils/i2ceeprom/i2c_eeprom.c **** 	if(address < 256){
+ 606              		.loc 1 273 0
+ 607 0078 B7F90E30 		ldrsh	r3, [r7, #14]
+ 608 007c FF2B     		cmp	r3, #255
+ 609 007e 07DC     		bgt	.L39
+ 274:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK0;
+ 610              		.loc 1 274 0
+ 611 0080 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 612 0084 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 613 0088 6FF05F02 		mvn	r2, #95
+ 614 008c 1A70     		strb	r2, [r3, #0]
+ 615 008e 7DE0     		b	.L40
+ 616              	.L39:
+ 275:..//utils/i2ceeprom/i2c_eeprom.c **** 	}else if(address < 512){
+ 617              		.loc 1 275 0
+ 618 0090 B7F90E20 		ldrsh	r2, [r7, #14]
+ 619 0094 40F2FF13 		movw	r3, #511
+ 620 0098 9A42     		cmp	r2, r3
+ 621 009a 0CDC     		bgt	.L41
+ 276:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK1;
+ 622              		.loc 1 276 0
+ 623 009c 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 624 00a0 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 625 00a4 6FF05D02 		mvn	r2, #93
+ 626 00a8 1A70     		strb	r2, [r3, #0]
+ 277:..//utils/i2ceeprom/i2c_eeprom.c **** 		address = address-256;
+ 627              		.loc 1 277 0
+ 628 00aa FB89     		ldrh	r3, [r7, #14]
+ 629 00ac A3F58073 		sub	r3, r3, #256
+ 630 00b0 9BB2     		uxth	r3, r3
+ 631 00b2 FB81     		strh	r3, [r7, #14]	@ movhi
+ 632 00b4 6AE0     		b	.L40
+ 633              	.L41:
+ 278:..//utils/i2ceeprom/i2c_eeprom.c **** 	}else if(address < 768){
+ 634              		.loc 1 278 0
+ 635 00b6 B7F90E20 		ldrsh	r2, [r7, #14]
+ 636 00ba 40F2FF23 		movw	r3, #767
+ 637 00be 9A42     		cmp	r2, r3
+ 638 00c0 0CDC     		bgt	.L42
+ 279:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK2;
+ 639              		.loc 1 279 0
+ 640 00c2 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 641 00c6 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 642 00ca 6FF05B02 		mvn	r2, #91
+ 643 00ce 1A70     		strb	r2, [r3, #0]
+ 280:..//utils/i2ceeprom/i2c_eeprom.c **** 		address = address - 512;
+ 644              		.loc 1 280 0
+ 645 00d0 FB89     		ldrh	r3, [r7, #14]
+ 646 00d2 A3F50073 		sub	r3, r3, #512
+ 647 00d6 9BB2     		uxth	r3, r3
+ 648 00d8 FB81     		strh	r3, [r7, #14]	@ movhi
+ 649 00da 57E0     		b	.L40
+ 650              	.L42:
+ 281:..//utils/i2ceeprom/i2c_eeprom.c **** 	}else if(address < 1024){
+ 651              		.loc 1 281 0
+ 652 00dc B7F90E20 		ldrsh	r2, [r7, #14]
+ 653 00e0 40F2FF33 		movw	r3, #1023
+ 654 00e4 9A42     		cmp	r2, r3
+ 655 00e6 0CDC     		bgt	.L43
+ 282:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK3;
+ 656              		.loc 1 282 0
+ 657 00e8 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 658 00ec C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 659 00f0 6FF05902 		mvn	r2, #89
+ 660 00f4 1A70     		strb	r2, [r3, #0]
+ 283:..//utils/i2ceeprom/i2c_eeprom.c **** 		address = address - 768;
+ 661              		.loc 1 283 0
+ 662 00f6 FB89     		ldrh	r3, [r7, #14]
+ 663 00f8 A3F54073 		sub	r3, r3, #768
+ 664 00fc 9BB2     		uxth	r3, r3
+ 665 00fe FB81     		strh	r3, [r7, #14]	@ movhi
+ 666 0100 44E0     		b	.L40
+ 667              	.L43:
+ 284:..//utils/i2ceeprom/i2c_eeprom.c **** 	}else if(address < 1280){
+ 668              		.loc 1 284 0
+ 669 0102 B7F90E20 		ldrsh	r2, [r7, #14]
+ 670 0106 40F2FF43 		movw	r3, #1279
+ 671 010a 9A42     		cmp	r2, r3
+ 672 010c 0CDC     		bgt	.L44
+ 285:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK4;
+ 673              		.loc 1 285 0
+ 674 010e 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 675 0112 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 676 0116 6FF05702 		mvn	r2, #87
+ 677 011a 1A70     		strb	r2, [r3, #0]
+ 286:..//utils/i2ceeprom/i2c_eeprom.c **** 		address = address - 1024;
+ 678              		.loc 1 286 0
+ 679 011c FB89     		ldrh	r3, [r7, #14]
+ 680 011e A3F58063 		sub	r3, r3, #1024
+ 681 0122 9BB2     		uxth	r3, r3
+ 682 0124 FB81     		strh	r3, [r7, #14]	@ movhi
+ 683 0126 31E0     		b	.L40
+ 684              	.L44:
+ 287:..//utils/i2ceeprom/i2c_eeprom.c **** 	}else if(address < 1536){
+ 685              		.loc 1 287 0
+ 686 0128 B7F90E20 		ldrsh	r2, [r7, #14]
+ 687 012c 40F2FF53 		movw	r3, #1535
+ 688 0130 9A42     		cmp	r2, r3
+ 689 0132 0CDC     		bgt	.L45
+ 288:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 289:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK5;
+ 690              		.loc 1 289 0
+ 691 0134 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 692 0138 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 693 013c 6FF05502 		mvn	r2, #85
+ 694 0140 1A70     		strb	r2, [r3, #0]
+ 290:..//utils/i2ceeprom/i2c_eeprom.c **** 		address = address - 1280;
+ 695              		.loc 1 290 0
+ 696 0142 FB89     		ldrh	r3, [r7, #14]
+ 697 0144 A3F5A063 		sub	r3, r3, #1280
+ 698 0148 9BB2     		uxth	r3, r3
+ 699 014a FB81     		strh	r3, [r7, #14]	@ movhi
+ 700 014c 1EE0     		b	.L40
+ 701              	.L45:
+ 291:..//utils/i2ceeprom/i2c_eeprom.c **** 	}else if(address < 1792){
+ 702              		.loc 1 291 0
+ 703 014e B7F90E20 		ldrsh	r2, [r7, #14]
+ 704 0152 40F2FF63 		movw	r3, #1791
+ 705 0156 9A42     		cmp	r2, r3
+ 706 0158 0CDC     		bgt	.L46
+ 292:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK6;
+ 707              		.loc 1 292 0
+ 708 015a 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 709 015e C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 710 0162 6FF05302 		mvn	r2, #83
+ 711 0166 1A70     		strb	r2, [r3, #0]
+ 293:..//utils/i2ceeprom/i2c_eeprom.c **** 		address = address - 1536;
+ 712              		.loc 1 293 0
+ 713 0168 FB89     		ldrh	r3, [r7, #14]
+ 714 016a A3F5C063 		sub	r3, r3, #1536
+ 715 016e 9BB2     		uxth	r3, r3
+ 716 0170 FB81     		strh	r3, [r7, #14]	@ movhi
+ 717 0172 0BE0     		b	.L40
+ 718              	.L46:
+ 294:..//utils/i2ceeprom/i2c_eeprom.c **** 	}else{
+ 295:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 296:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CMasterBuffer[0] = MC24LC64_ADDR_BLK7;
+ 719              		.loc 1 296 0
+ 720 0174 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 721 0178 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 722 017c 6FF05102 		mvn	r2, #81
+ 723 0180 1A70     		strb	r2, [r3, #0]
+ 297:..//utils/i2ceeprom/i2c_eeprom.c **** 		address = address - 1792;
+ 724              		.loc 1 297 0
+ 725 0182 FB89     		ldrh	r3, [r7, #14]
+ 726 0184 A3F5E063 		sub	r3, r3, #1792
+ 727 0188 9BB2     		uxth	r3, r3
+ 728 018a FB81     		strh	r3, [r7, #14]	@ movhi
+ 729              	.L40:
+ 298:..//utils/i2ceeprom/i2c_eeprom.c **** 	}
+ 299:..//utils/i2ceeprom/i2c_eeprom.c **** #endif
+ 300:..//utils/i2ceeprom/i2c_eeprom.c **** 	
+ 301:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CMasterBuffer[0] = MC24LC64_ADDR_BLK0;
+ 302:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CMasterBuffer[1] = address&0xff;			/* address MSB */
+ 730              		.loc 1 302 0
+ 731 018c FB89     		ldrh	r3, [r7, #14]	@ movhi
+ 732 018e DAB2     		uxtb	r2, r3
+ 733 0190 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 734 0194 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 735 0198 5A70     		strb	r2, [r3, #1]
+ 303:..//utils/i2ceeprom/i2c_eeprom.c **** 	// I2CMasterBuffer[2] = address&0xff;			/* address LSB */
+ 304:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 305:..//utils/i2ceeprom/i2c_eeprom.c **** 	id=0;
+ 736              		.loc 1 305 0
+ 737 019a 4FF00003 		mov	r3, #0
+ 738 019e 7B61     		str	r3, [r7, #20]
+ 306:..//utils/i2ceeprom/i2c_eeprom.c **** 	while (I2CEngine() == I2CSTATE_SLA_NACK)
+ 739              		.loc 1 306 0
+ 740 01a0 03E0     		b	.L47
+ 741              	.L48:
+ 307:..//utils/i2ceeprom/i2c_eeprom.c **** 		id++;
+ 742              		.loc 1 307 0
+ 743 01a2 7B69     		ldr	r3, [r7, #20]
+ 744 01a4 03F10103 		add	r3, r3, #1
+ 745 01a8 7B61     		str	r3, [r7, #20]
+ 746              	.L47:
+ 747              		.loc 1 306 0
+ 748 01aa 40F20003 		movw	r3, #:lower16:I2CEngine
+ 749 01ae C0F20003 		movt	r3, #:upper16:I2CEngine
+ 750 01b2 9847     		blx	r3
+ 751 01b4 0246     		mov	r2, r0
+ 752 01b6 40F20313 		movw	r3, #259
+ 753 01ba 9A42     		cmp	r2, r3
+ 754 01bc F1D0     		beq	.L48
+ 308:..//utils/i2ceeprom/i2c_eeprom.c **** 		
+ 309:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CWriteLength = 1;
+ 755              		.loc 1 309 0
+ 756 01be 40F20003 		movw	r3, #:lower16:I2CWriteLength
+ 757 01c2 C0F20003 		movt	r3, #:upper16:I2CWriteLength
+ 758 01c6 4FF00102 		mov	r2, #1
+ 759 01ca 1A60     		str	r2, [r3, #0]
+ 310:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CReadLength = I2C_SLAVE_BUFSIZE;
+ 760              		.loc 1 310 0
+ 761 01cc 40F20003 		movw	r3, #:lower16:I2CReadLength
+ 762 01d0 C0F20003 		movt	r3, #:upper16:I2CReadLength
+ 763 01d4 4FF01002 		mov	r2, #16
+ 764 01d8 1A60     		str	r2, [r3, #0]
+ 311:..//utils/i2ceeprom/i2c_eeprom.c **** 	I2CMasterBuffer[0] = I2CMasterBuffer[0] | RD_BIT;
+ 765              		.loc 1 311 0
+ 766 01da 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 767 01de C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 768 01e2 1B78     		ldrb	r3, [r3, #0]
+ 769 01e4 DBB2     		uxtb	r3, r3
+ 770 01e6 43F00103 		orr	r3, r3, #1
+ 771 01ea DAB2     		uxtb	r2, r3
+ 772 01ec 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 773 01f0 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 774 01f4 1A70     		strb	r2, [r3, #0]
+ 312:..//utils/i2ceeprom/i2c_eeprom.c **** 	
+ 313:..//utils/i2ceeprom/i2c_eeprom.c **** 	id=0;
+ 775              		.loc 1 313 0
+ 776 01f6 4FF00003 		mov	r3, #0
+ 777 01fa 7B61     		str	r3, [r7, #20]
+ 314:..//utils/i2ceeprom/i2c_eeprom.c **** 	while (I2CEngine() == I2CSTATE_SLA_NACK)
+ 778              		.loc 1 314 0
+ 779 01fc 03E0     		b	.L49
+ 780              	.L50:
+ 315:..//utils/i2ceeprom/i2c_eeprom.c **** 		id++;	
+ 781              		.loc 1 315 0
+ 782 01fe 7B69     		ldr	r3, [r7, #20]
+ 783 0200 03F10103 		add	r3, r3, #1
+ 784 0204 7B61     		str	r3, [r7, #20]
+ 785              	.L49:
+ 786              		.loc 1 314 0
+ 787 0206 40F20003 		movw	r3, #:lower16:I2CEngine
+ 788 020a C0F20003 		movt	r3, #:upper16:I2CEngine
+ 789 020e 9847     		blx	r3
+ 790 0210 0246     		mov	r2, r0
+ 791 0212 40F20313 		movw	r3, #259
+ 792 0216 9A42     		cmp	r2, r3
+ 793 0218 F1D0     		beq	.L50
+ 316:..//utils/i2ceeprom/i2c_eeprom.c **** 		
+ 317:..//utils/i2ceeprom/i2c_eeprom.c **** 	for ( id = 0; id < size; id++ )
+ 794              		.loc 1 317 0
+ 795 021a 4FF00003 		mov	r3, #0
+ 796 021e 7B61     		str	r3, [r7, #20]
+ 797 0220 10E0     		b	.L51
+ 798              	.L52:
+ 318:..//utils/i2ceeprom/i2c_eeprom.c **** 		*pdata++=I2CSlaveBuffer[id];
+ 799              		.loc 1 318 0
+ 800 0222 7A69     		ldr	r2, [r7, #20]
+ 801 0224 40F20003 		movw	r3, #:lower16:I2CSlaveBuffer
+ 802 0228 C0F20003 		movt	r3, #:upper16:I2CSlaveBuffer
+ 803 022c 9B5C     		ldrb	r3, [r3, r2]
+ 804 022e DAB2     		uxtb	r2, r3
+ 805 0230 BB68     		ldr	r3, [r7, #8]
+ 806 0232 1A70     		strb	r2, [r3, #0]
+ 807 0234 BB68     		ldr	r3, [r7, #8]
+ 808 0236 03F10103 		add	r3, r3, #1
+ 809 023a BB60     		str	r3, [r7, #8]
+ 810              		.loc 1 317 0
+ 811 023c 7B69     		ldr	r3, [r7, #20]
+ 812 023e 03F10103 		add	r3, r3, #1
+ 813 0242 7B61     		str	r3, [r7, #20]
+ 814              	.L51:
+ 815 0244 7A69     		ldr	r2, [r7, #20]
+ 816 0246 7B68     		ldr	r3, [r7, #4]
+ 817 0248 9A42     		cmp	r2, r3
+ 818 024a EADB     		blt	.L52
+ 319:..//utils/i2ceeprom/i2c_eeprom.c **** 	
+ 320:..//utils/i2ceeprom/i2c_eeprom.c **** 	for ( id = 0; id < size; id++ ){
+ 819              		.loc 1 320 0
+ 820 024c 4FF00003 		mov	r3, #0
+ 821 0250 7B61     		str	r3, [r7, #20]
+ 822 0252 03E0     		b	.L53
+ 823              	.L54:
+ 824 0254 7B69     		ldr	r3, [r7, #20]
+ 825 0256 03F10103 		add	r3, r3, #1
+ 826 025a 7B61     		str	r3, [r7, #20]
+ 827              	.L53:
+ 828 025c 7A69     		ldr	r2, [r7, #20]
+ 829 025e 7B68     		ldr	r3, [r7, #4]
+ 830 0260 9A42     		cmp	r2, r3
+ 831 0262 F7DB     		blt	.L54
+ 321:..//utils/i2ceeprom/i2c_eeprom.c **** 		// printf("%x, ",(I2CSlaveBuffer[id]));
+ 322:..//utils/i2ceeprom/i2c_eeprom.c **** 	}
+ 323:..//utils/i2ceeprom/i2c_eeprom.c **** 	// printf("\n");
+ 324:..//utils/i2ceeprom/i2c_eeprom.c **** 	
+ 325:..//utils/i2ceeprom/i2c_eeprom.c **** 	
+ 326:..//utils/i2ceeprom/i2c_eeprom.c **** 	return 0;
+ 832              		.loc 1 326 0
+ 833 0264 4FF00003 		mov	r3, #0
+ 834              	.L36:
+ 835 0268 5BB2     		sxtb	r3, r3
+ 327:..//utils/i2ceeprom/i2c_eeprom.c **** }
+ 836              		.loc 1 327 0
+ 837 026a 1846     		mov	r0, r3
+ 838 026c 07F11807 		add	r7, r7, #24
+ 839 0270 BD46     		mov	sp, r7
+ 840 0272 80BD     		pop	{r7, pc}
+ 841              		.cfi_endproc
+ 842              	.LFE32:
+ 844              		.section	.text.i2ctest_wr,"ax",%progbits
+ 845              		.align	2
+ 846              		.global	i2ctest_wr
+ 847              		.thumb
+ 848              		.thumb_func
+ 850              	i2ctest_wr:
+ 851              	.LFB33:
+ 328:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 329:..//utils/i2ceeprom/i2c_eeprom.c **** int i2ctest_wr (void)
+ 330:..//utils/i2ceeprom/i2c_eeprom.c **** {
+ 852              		.loc 1 330 0
+ 853              		.cfi_startproc
+ 854              		@ args = 0, pretend = 0, frame = 8
+ 855              		@ frame_needed = 1, uses_anonymous_args = 0
+ 856 0000 80B5     		push	{r7, lr}
+ 857              	.LCFI12:
+ 858              		.cfi_def_cfa_offset 8
+ 859 0002 82B0     		sub	sp, sp, #8
+ 860              	.LCFI13:
+ 861              		.cfi_def_cfa_offset 16
+ 862 0004 00AF     		add	r7, sp, #0
+ 863              		.cfi_offset 14, -4
+ 864              		.cfi_offset 7, -8
+ 865              	.LCFI14:
+ 866              		.cfi_def_cfa_register 7
+ 331:..//utils/i2ceeprom/i2c_eeprom.c **** 	  /* Basic chip initialization is taken care of in SystemInit() called
+ 332:..//utils/i2ceeprom/i2c_eeprom.c **** 	   * from the startup code. SystemInit() and chip settings are defined
+ 333:..//utils/i2ceeprom/i2c_eeprom.c **** 	   * in the CMSIS system_<part family>.c file.
+ 334:..//utils/i2ceeprom/i2c_eeprom.c **** 	   */
+ 335:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 336:..//utils/i2ceeprom/i2c_eeprom.c ****   uint32_t i;
+ 337:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 338:..//utils/i2ceeprom/i2c_eeprom.c ****   if ( I2CInit( (uint32_t)I2CMASTER ) == 0 )	/* initialize I2c */
+ 867              		.loc 1 338 0
+ 868 0006 4FF00100 		mov	r0, #1
+ 869 000a 40F20003 		movw	r3, #:lower16:I2CInit
+ 870 000e C0F20003 		movt	r3, #:upper16:I2CInit
+ 871 0012 9847     		blx	r3
+ 872 0014 0346     		mov	r3, r0
+ 873 0016 002B     		cmp	r3, #0
+ 874 0018 02D1     		bne	.L57
+ 339:..//utils/i2ceeprom/i2c_eeprom.c ****   {
+ 340:..//utils/i2ceeprom/i2c_eeprom.c **** 	return 1;				/* Fatal error */
+ 875              		.loc 1 340 0
+ 876 001a 4FF00103 		mov	r3, #1
+ 877 001e 5AE0     		b	.L58
+ 878              	.L57:
+ 341:..//utils/i2ceeprom/i2c_eeprom.c ****   }
+ 342:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 343:..//utils/i2ceeprom/i2c_eeprom.c ****   /* In order to start the I2CEngine, the all the parameters 
+ 344:..//utils/i2ceeprom/i2c_eeprom.c ****   must be set in advance, including I2CWriteLength, I2CReadLength,
+ 345:..//utils/i2ceeprom/i2c_eeprom.c ****   I2CCmd, and the I2cMasterBuffer which contains the stream
+ 346:..//utils/i2ceeprom/i2c_eeprom.c ****   command/data to the I2c slave device. 
+ 347:..//utils/i2ceeprom/i2c_eeprom.c ****   (1) If it's a I2C write only, the number of bytes to be written is 
+ 348:..//utils/i2ceeprom/i2c_eeprom.c ****   I2CWriteLength, I2CReadLength is zero, the content will be filled 
+ 349:..//utils/i2ceeprom/i2c_eeprom.c ****   in the I2CMasterBuffer. 
+ 350:..//utils/i2ceeprom/i2c_eeprom.c ****   (2) If it's a I2C read only, the number of bytes to be read is 
+ 351:..//utils/i2ceeprom/i2c_eeprom.c ****   I2CReadLength, I2CWriteLength is 0, the read value will be filled 
+ 352:..//utils/i2ceeprom/i2c_eeprom.c ****   in the I2CMasterBuffer. 
+ 353:..//utils/i2ceeprom/i2c_eeprom.c ****   (3) If it's a I2C Write/Read with repeated start, specify the 
+ 354:..//utils/i2ceeprom/i2c_eeprom.c ****   I2CWriteLength, fill the content of bytes to be written in 
+ 355:..//utils/i2ceeprom/i2c_eeprom.c ****   I2CMasterBuffer, specify the I2CReadLength, after the repeated 
+ 356:..//utils/i2ceeprom/i2c_eeprom.c ****   start and the device address with RD bit set, the content of the 
+ 357:..//utils/i2ceeprom/i2c_eeprom.c ****   reading will be filled in I2CMasterBuffer index at 
+ 358:..//utils/i2ceeprom/i2c_eeprom.c ****   I2CMasterBuffer[I2CWriteLength+2]. 
+ 359:..//utils/i2ceeprom/i2c_eeprom.c ****   
+ 360:..//utils/i2ceeprom/i2c_eeprom.c ****   e.g. Start, DevAddr(W), WRByte1...WRByteN, Repeated-Start, DevAddr(R), 
+ 361:..//utils/i2ceeprom/i2c_eeprom.c ****   RDByte1...RDByteN Stop. The content of the reading will be filled 
+ 362:..//utils/i2ceeprom/i2c_eeprom.c ****   after (I2CWriteLength + two devaddr) bytes. */
+ 363:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 364:..//utils/i2ceeprom/i2c_eeprom.c ****   /* Write SLA(W), address and one data byte */
+ 365:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 366:..//utils/i2ceeprom/i2c_eeprom.c ****   for (i = 3; i  < I2C_MASTER_BUFSIZE; i++) I2CMasterBuffer[i] = 0xAA;
+ 879              		.loc 1 366 0
+ 880 0020 4FF00303 		mov	r3, #3
+ 881 0024 3B60     		str	r3, [r7, #0]
+ 882 0026 0BE0     		b	.L59
+ 883              	.L60:
+ 884 0028 3A68     		ldr	r2, [r7, #0]
+ 885 002a 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 886 002e C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 887 0032 6FF05501 		mvn	r1, #85
+ 888 0036 9954     		strb	r1, [r3, r2]
+ 889 0038 3B68     		ldr	r3, [r7, #0]
+ 890 003a 03F10103 		add	r3, r3, #1
+ 891 003e 3B60     		str	r3, [r7, #0]
+ 892              	.L59:
+ 893 0040 3B68     		ldr	r3, [r7, #0]
+ 894 0042 112B     		cmp	r3, #17
+ 895 0044 F0D9     		bls	.L60
+ 367:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 368:..//utils/i2ceeprom/i2c_eeprom.c ****   I2CWriteLength = I2C_MASTER_BUFSIZE;
+ 896              		.loc 1 368 0
+ 897 0046 40F20003 		movw	r3, #:lower16:I2CWriteLength
+ 898 004a C0F20003 		movt	r3, #:upper16:I2CWriteLength
+ 899 004e 4FF01202 		mov	r2, #18
+ 900 0052 1A60     		str	r2, [r3, #0]
+ 369:..//utils/i2ceeprom/i2c_eeprom.c ****   I2CReadLength = 0;
+ 901              		.loc 1 369 0
+ 902 0054 40F20003 		movw	r3, #:lower16:I2CReadLength
+ 903 0058 C0F20003 		movt	r3, #:upper16:I2CReadLength
+ 904 005c 4FF00002 		mov	r2, #0
+ 905 0060 1A60     		str	r2, [r3, #0]
+ 370:..//utils/i2ceeprom/i2c_eeprom.c ****   I2CMasterBuffer[0] = MC24LC64_ADDR_BLK0;
+ 906              		.loc 1 370 0
+ 907 0062 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 908 0066 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 909 006a 6FF05F02 		mvn	r2, #95
+ 910 006e 1A70     		strb	r2, [r3, #0]
+ 371:..//utils/i2ceeprom/i2c_eeprom.c ****   I2CMasterBuffer[1] = 0x00;		/* address MSB */
+ 911              		.loc 1 371 0
+ 912 0070 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 913 0074 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 914 0078 4FF00002 		mov	r2, #0
+ 915 007c 5A70     		strb	r2, [r3, #1]
+ 372:..//utils/i2ceeprom/i2c_eeprom.c ****   I2CMasterBuffer[2] = 0x00;		/* address LSB */
+ 916              		.loc 1 372 0
+ 917 007e 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 918 0082 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 919 0086 4FF00002 		mov	r2, #0
+ 920 008a 9A70     		strb	r2, [r3, #2]
+ 373:..//utils/i2ceeprom/i2c_eeprom.c ****   I2CMasterBuffer[3] = 0x55;		/* Data0 */
+ 921              		.loc 1 373 0
+ 922 008c 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 923 0090 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 924 0094 4FF05502 		mov	r2, #85
+ 925 0098 DA70     		strb	r2, [r3, #3]
+ 374:..//utils/i2ceeprom/i2c_eeprom.c ****   I2CMasterBuffer[4] = 0xAA;		/* Data1 */
+ 926              		.loc 1 374 0
+ 927 009a 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 928 009e C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 929 00a2 6FF05502 		mvn	r2, #85
+ 930 00a6 1A71     		strb	r2, [r3, #4]
+ 375:..//utils/i2ceeprom/i2c_eeprom.c ****   I2CMasterBuffer[5] = 0x12;		/* Data2 */
+ 931              		.loc 1 375 0
+ 932 00a8 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 933 00ac C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 934 00b0 4FF01202 		mov	r2, #18
+ 935 00b4 5A71     		strb	r2, [r3, #5]
+ 376:..//utils/i2ceeprom/i2c_eeprom.c ****   I2CMasterBuffer[6] = 0x34;		/* Data3 */
+ 936              		.loc 1 376 0
+ 937 00b6 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 938 00ba C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 939 00be 4FF03402 		mov	r2, #52
+ 940 00c2 9A71     		strb	r2, [r3, #6]
+ 377:..//utils/i2ceeprom/i2c_eeprom.c ****   uint32_t fin_state = I2CEngine();
+ 941              		.loc 1 377 0
+ 942 00c4 40F20003 		movw	r3, #:lower16:I2CEngine
+ 943 00c8 C0F20003 		movt	r3, #:upper16:I2CEngine
+ 944 00cc 9847     		blx	r3
+ 945 00ce 0346     		mov	r3, r0
+ 946 00d0 7B60     		str	r3, [r7, #4]
+ 378:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 379:..//utils/i2ceeprom/i2c_eeprom.c ****   return 0;
+ 947              		.loc 1 379 0
+ 948 00d2 4FF00003 		mov	r3, #0
+ 949              	.L58:
+ 380:..//utils/i2ceeprom/i2c_eeprom.c **** }
+ 950              		.loc 1 380 0
+ 951 00d6 1846     		mov	r0, r3
+ 952 00d8 07F10807 		add	r7, r7, #8
+ 953 00dc BD46     		mov	sp, r7
+ 954 00de 80BD     		pop	{r7, pc}
+ 955              		.cfi_endproc
+ 956              	.LFE33:
+ 958              		.section	.text.i2ctest_rd,"ax",%progbits
+ 959              		.align	2
+ 960              		.global	i2ctest_rd
+ 961              		.thumb
+ 962              		.thumb_func
+ 964              	i2ctest_rd:
+ 965              	.LFB34:
+ 381:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 382:..//utils/i2ceeprom/i2c_eeprom.c **** int i2ctest_rd (void)
+ 383:..//utils/i2ceeprom/i2c_eeprom.c **** {
+ 966              		.loc 1 383 0
+ 967              		.cfi_startproc
+ 968              		@ args = 0, pretend = 0, frame = 8
+ 969              		@ frame_needed = 1, uses_anonymous_args = 0
+ 970 0000 80B5     		push	{r7, lr}
+ 971              	.LCFI15:
+ 972              		.cfi_def_cfa_offset 8
+ 973 0002 82B0     		sub	sp, sp, #8
+ 974              	.LCFI16:
+ 975              		.cfi_def_cfa_offset 16
+ 976 0004 00AF     		add	r7, sp, #0
+ 977              		.cfi_offset 14, -4
+ 978              		.cfi_offset 7, -8
+ 979              	.LCFI17:
+ 980              		.cfi_def_cfa_register 7
+ 384:..//utils/i2ceeprom/i2c_eeprom.c **** 	  uint32_t i;
+ 385:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 386:..//utils/i2ceeprom/i2c_eeprom.c **** 	  if ( I2CInit( (uint32_t)I2CMASTER ) == 0 )	/* initialize I2c */
+ 981              		.loc 1 386 0
+ 982 0006 4FF00100 		mov	r0, #1
+ 983 000a 40F20003 		movw	r3, #:lower16:I2CInit
+ 984 000e C0F20003 		movt	r3, #:upper16:I2CInit
+ 985 0012 9847     		blx	r3
+ 986 0014 0346     		mov	r3, r0
+ 987 0016 002B     		cmp	r3, #0
+ 988 0018 02D1     		bne	.L63
+ 387:..//utils/i2ceeprom/i2c_eeprom.c **** 	  {
+ 388:..//utils/i2ceeprom/i2c_eeprom.c **** 		return 1;				/* Fatal error */
+ 989              		.loc 1 388 0
+ 990 001a 4FF00103 		mov	r3, #1
+ 991 001e 50E0     		b	.L64
+ 992              	.L63:
+ 389:..//utils/i2ceeprom/i2c_eeprom.c **** 	  }
+ 390:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 391:..//utils/i2ceeprom/i2c_eeprom.c **** 	  for ( i = 0; i < I2C_SLAVE_BUFSIZE; i++ )
+ 993              		.loc 1 391 0
+ 994 0020 4FF00003 		mov	r3, #0
+ 995 0024 7B60     		str	r3, [r7, #4]
+ 996 0026 0BE0     		b	.L65
+ 997              	.L66:
+ 392:..//utils/i2ceeprom/i2c_eeprom.c **** 	  {
+ 393:..//utils/i2ceeprom/i2c_eeprom.c **** 		I2CSlaveBuffer[i] = 0xbb;
+ 998              		.loc 1 393 0
+ 999 0028 7A68     		ldr	r2, [r7, #4]
+ 1000 002a 40F20003 		movw	r3, #:lower16:I2CSlaveBuffer
+ 1001 002e C0F20003 		movt	r3, #:upper16:I2CSlaveBuffer
+ 1002 0032 6FF04401 		mvn	r1, #68
+ 1003 0036 9954     		strb	r1, [r3, r2]
+ 1004              		.loc 1 391 0
+ 1005 0038 7B68     		ldr	r3, [r7, #4]
+ 1006 003a 03F10103 		add	r3, r3, #1
+ 1007 003e 7B60     		str	r3, [r7, #4]
+ 1008              	.L65:
+ 1009 0040 7B68     		ldr	r3, [r7, #4]
+ 1010 0042 0F2B     		cmp	r3, #15
+ 1011 0044 F0D9     		bls	.L66
+ 394:..//utils/i2ceeprom/i2c_eeprom.c **** 	  }
+ 395:..//utils/i2ceeprom/i2c_eeprom.c **** 	  /* Write SLA(W), address, SLA(R), and read 4 bytes back. */
+ 396:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 397:..//utils/i2ceeprom/i2c_eeprom.c **** 	  I2CWriteLength = 3;
+ 1012              		.loc 1 397 0
+ 1013 0046 40F20003 		movw	r3, #:lower16:I2CWriteLength
+ 1014 004a C0F20003 		movt	r3, #:upper16:I2CWriteLength
+ 1015 004e 4FF00302 		mov	r2, #3
+ 1016 0052 1A60     		str	r2, [r3, #0]
+ 398:..//utils/i2ceeprom/i2c_eeprom.c **** 	  I2CReadLength = I2C_SLAVE_BUFSIZE;
+ 1017              		.loc 1 398 0
+ 1018 0054 40F20003 		movw	r3, #:lower16:I2CReadLength
+ 1019 0058 C0F20003 		movt	r3, #:upper16:I2CReadLength
+ 1020 005c 4FF01002 		mov	r2, #16
+ 1021 0060 1A60     		str	r2, [r3, #0]
+ 399:..//utils/i2ceeprom/i2c_eeprom.c **** 	  I2CMasterBuffer[0] = MC24LC64_ADDR_BLK0;
+ 1022              		.loc 1 399 0
+ 1023 0062 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 1024 0066 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 1025 006a 6FF05F02 		mvn	r2, #95
+ 1026 006e 1A70     		strb	r2, [r3, #0]
+ 400:..//utils/i2ceeprom/i2c_eeprom.c **** 	  I2CMasterBuffer[1] = 0x00;		/* address MSB */
+ 1027              		.loc 1 400 0
+ 1028 0070 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 1029 0074 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 1030 0078 4FF00002 		mov	r2, #0
+ 1031 007c 5A70     		strb	r2, [r3, #1]
+ 401:..//utils/i2ceeprom/i2c_eeprom.c **** 	  I2CMasterBuffer[2] = 0x00;		/* address LSB */
+ 1032              		.loc 1 401 0
+ 1033 007e 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 1034 0082 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 1035 0086 4FF00002 		mov	r2, #0
+ 1036 008a 9A70     		strb	r2, [r3, #2]
+ 402:..//utils/i2ceeprom/i2c_eeprom.c **** 	  I2CMasterBuffer[3] = MC24LC64_ADDR_BLK0 | RD_BIT;
+ 1037              		.loc 1 402 0
+ 1038 008c 40F20003 		movw	r3, #:lower16:I2CMasterBuffer
+ 1039 0090 C0F20003 		movt	r3, #:upper16:I2CMasterBuffer
+ 1040 0094 6FF05E02 		mvn	r2, #94
+ 1041 0098 DA70     		strb	r2, [r3, #3]
+ 403:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 404:..//utils/i2ceeprom/i2c_eeprom.c **** 	  i=0;
+ 1042              		.loc 1 404 0
+ 1043 009a 4FF00003 		mov	r3, #0
+ 1044 009e 7B60     		str	r3, [r7, #4]
+ 405:..//utils/i2ceeprom/i2c_eeprom.c **** 	  while (I2CEngine() == I2CSTATE_SLA_NACK)
+ 1045              		.loc 1 405 0
+ 1046 00a0 03E0     		b	.L67
+ 1047              	.L68:
+ 406:..//utils/i2ceeprom/i2c_eeprom.c **** 		  i++;
+ 1048              		.loc 1 406 0
+ 1049 00a2 7B68     		ldr	r3, [r7, #4]
+ 1050 00a4 03F10103 		add	r3, r3, #1
+ 1051 00a8 7B60     		str	r3, [r7, #4]
+ 1052              	.L67:
+ 1053              		.loc 1 405 0
+ 1054 00aa 40F20003 		movw	r3, #:lower16:I2CEngine
+ 1055 00ae C0F20003 		movt	r3, #:upper16:I2CEngine
+ 1056 00b2 9847     		blx	r3
+ 1057 00b4 0246     		mov	r2, r0
+ 1058 00b6 40F20313 		movw	r3, #259
+ 1059 00ba 9A42     		cmp	r2, r3
+ 1060 00bc F1D0     		beq	.L68
+ 407:..//utils/i2ceeprom/i2c_eeprom.c **** 
+ 408:..//utils/i2ceeprom/i2c_eeprom.c **** 	  return 0;
+ 1061              		.loc 1 408 0
+ 1062 00be 4FF00003 		mov	r3, #0
+ 1063              	.L64:
+ 409:..//utils/i2ceeprom/i2c_eeprom.c **** }
+ 1064              		.loc 1 409 0
+ 1065 00c2 1846     		mov	r0, r3
+ 1066 00c4 07F10807 		add	r7, r7, #8
+ 1067 00c8 BD46     		mov	sp, r7
+ 1068 00ca 80BD     		pop	{r7, pc}
+ 1069              		.cfi_endproc
+ 1070              	.LFE34:
+ 1072              		.text
+ 1073              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 i2c_eeprom.c
+C:\Users\hdhed\AppData\Local\Temp\ccYBoDBF.s:24     .text.i2cEEPROM_read32:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccYBoDBF.s:29     .text.i2cEEPROM_read32:00000000 i2cEEPROM_read32
+C:\Users\hdhed\AppData\Local\Temp\ccYBoDBF.s:155    .text.i2cEEPROM_write32:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccYBoDBF.s:160    .text.i2cEEPROM_write32:00000000 i2cEEPROM_write32
+C:\Users\hdhed\AppData\Local\Temp\ccYBoDBF.s:295    .text.i2cEEPROM_write8:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccYBoDBF.s:300    .text.i2cEEPROM_write8:00000000 i2cEEPROM_write8
+C:\Users\hdhed\AppData\Local\Temp\ccYBoDBF.s:534    .text.i2cEEPROM_read8:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccYBoDBF.s:539    .text.i2cEEPROM_read8:00000000 i2cEEPROM_read8
+C:\Users\hdhed\AppData\Local\Temp\ccYBoDBF.s:845    .text.i2ctest_wr:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccYBoDBF.s:850    .text.i2ctest_wr:00000000 i2ctest_wr
+C:\Users\hdhed\AppData\Local\Temp\ccYBoDBF.s:959    .text.i2ctest_rd:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccYBoDBF.s:964    .text.i2ctest_rd:00000000 i2ctest_rd
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+I2CInit
+I2CSlaveBuffer
+I2CWriteLength
+I2CReadLength
+I2CMasterBuffer
+I2CEngine
+memcpy
+strlen

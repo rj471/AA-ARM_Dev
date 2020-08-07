@@ -1,0 +1,1332 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"usbstdreq.c"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.section	.bss.bConfiguration,"aw",%nobits
+  26              	bConfiguration:
+  27 0000 00       		.space	1
+  28              		.section	.bss.pfnHandleCustomReq,"aw",%nobits
+  29              		.align	2
+  32              	pfnHandleCustomReq:
+  33 0000 00000000 		.space	4
+  34              		.section	.bss.pabDescrip,"aw",%nobits
+  35              		.align	2
+  38              	pabDescrip:
+  39 0000 00000000 		.space	4
+  40              		.section	.text.USBRegisterDescriptors,"ax",%progbits
+  41              		.align	2
+  42              		.global	USBRegisterDescriptors
+  43              		.thumb
+  44              		.thumb_func
+  46              	USBRegisterDescriptors:
+  47              	.LFB0:
+  48              		.file 1 "..//drivers/USB/usbstdreq.c"
+   1:..//drivers/USB/usbstdreq.c **** /*
+   2:..//drivers/USB/usbstdreq.c **** 	LPCUSB, an USB device driver for LPC microcontrollers	
+   3:..//drivers/USB/usbstdreq.c **** 	Copyright (C) 2006 Bertrik Sikken (bertrik@sikken.nl)
+   4:..//drivers/USB/usbstdreq.c **** 
+   5:..//drivers/USB/usbstdreq.c **** 	Redistribution and use in source and binary forms, with or without
+   6:..//drivers/USB/usbstdreq.c **** 	modification, are permitted provided that the following conditions are met:
+   7:..//drivers/USB/usbstdreq.c **** 
+   8:..//drivers/USB/usbstdreq.c **** 	1. Redistributions of source code must retain the above copyright
+   9:..//drivers/USB/usbstdreq.c **** 	   notice, this list of conditions and the following disclaimer.
+  10:..//drivers/USB/usbstdreq.c **** 	2. Redistributions in binary form must reproduce the above copyright
+  11:..//drivers/USB/usbstdreq.c **** 	   notice, this list of conditions and the following disclaimer in the
+  12:..//drivers/USB/usbstdreq.c **** 	   documentation and/or other materials provided with the distribution.
+  13:..//drivers/USB/usbstdreq.c **** 	3. The name of the author may not be used to endorse or promote products
+  14:..//drivers/USB/usbstdreq.c **** 	   derived from this software without specific prior written permission.
+  15:..//drivers/USB/usbstdreq.c **** 
+  16:..//drivers/USB/usbstdreq.c **** 	THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+  17:..//drivers/USB/usbstdreq.c **** 	IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  18:..//drivers/USB/usbstdreq.c **** 	OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  19:..//drivers/USB/usbstdreq.c **** 	IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, 
+  20:..//drivers/USB/usbstdreq.c **** 	INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+  21:..//drivers/USB/usbstdreq.c **** 	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+  22:..//drivers/USB/usbstdreq.c **** 	DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+  23:..//drivers/USB/usbstdreq.c **** 	THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  24:..//drivers/USB/usbstdreq.c **** 	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+  25:..//drivers/USB/usbstdreq.c **** 	THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  26:..//drivers/USB/usbstdreq.c **** */
+  27:..//drivers/USB/usbstdreq.c **** 
+  28:..//drivers/USB/usbstdreq.c **** 
+  29:..//drivers/USB/usbstdreq.c **** /** @file
+  30:..//drivers/USB/usbstdreq.c **** 	Standard request handler.
+  31:..//drivers/USB/usbstdreq.c **** 	
+  32:..//drivers/USB/usbstdreq.c **** 	This modules handles the 'chapter 9' processing, specifically the
+  33:..//drivers/USB/usbstdreq.c **** 	standard device requests in table 9-3 from the universal serial bus
+  34:..//drivers/USB/usbstdreq.c **** 	specification revision 2.0
+  35:..//drivers/USB/usbstdreq.c **** 	
+  36:..//drivers/USB/usbstdreq.c **** 	Specific types of devices may specify additional requests (for example
+  37:..//drivers/USB/usbstdreq.c **** 	HID devices add a GET_DESCRIPTOR request for interfaces), but they
+  38:..//drivers/USB/usbstdreq.c **** 	will not be part of this module.
+  39:..//drivers/USB/usbstdreq.c **** 
+  40:..//drivers/USB/usbstdreq.c **** 	@todo some requests have to return a request error if device not configured:
+  41:..//drivers/USB/usbstdreq.c **** 	@todo GET_INTERFACE, GET_STATUS, SET_INTERFACE, SYNCH_FRAME
+  42:..//drivers/USB/usbstdreq.c **** 	@todo this applies to the following if endpoint != 0:
+  43:..//drivers/USB/usbstdreq.c **** 	@todo SET_FEATURE, GET_FEATURE 
+  44:..//drivers/USB/usbstdreq.c **** */
+  45:..//drivers/USB/usbstdreq.c **** 
+  46:..//drivers/USB/usbstdreq.c **** // CodeRed - include the LPCUSB type.h file rather than NXP one directly
+  47:..//drivers/USB/usbstdreq.c **** //#include "type.h"
+  48:..//drivers/USB/usbstdreq.c **** #include "types.h"
+  49:..//drivers/USB/usbstdreq.c **** 
+  50:..//drivers/USB/usbstdreq.c **** #include "usbdebug.h"
+  51:..//drivers/USB/usbstdreq.c **** #include "usbstruct.h"
+  52:..//drivers/USB/usbstdreq.c **** #include "usbapi.h"
+  53:..//drivers/USB/usbstdreq.c **** 
+  54:..//drivers/USB/usbstdreq.c **** #define MAX_DESC_HANDLERS	4		/**< device, interface, endpoint, other */
+  55:..//drivers/USB/usbstdreq.c **** 
+  56:..//drivers/USB/usbstdreq.c **** 
+  57:..//drivers/USB/usbstdreq.c **** /* general descriptor field offsets */
+  58:..//drivers/USB/usbstdreq.c **** #define DESC_bLength					0	/**< length offset */
+  59:..//drivers/USB/usbstdreq.c **** #define DESC_bDescriptorType			1	/**< descriptor type offset */	
+  60:..//drivers/USB/usbstdreq.c **** 
+  61:..//drivers/USB/usbstdreq.c **** /* config descriptor field offsets */
+  62:..//drivers/USB/usbstdreq.c **** #define CONF_DESC_wTotalLength			2	/**< total length offset */
+  63:..//drivers/USB/usbstdreq.c **** #define CONF_DESC_bConfigurationValue	5	/**< configuration value offset */	
+  64:..//drivers/USB/usbstdreq.c **** #define CONF_DESC_bmAttributes			7	/**< configuration characteristics */
+  65:..//drivers/USB/usbstdreq.c **** 
+  66:..//drivers/USB/usbstdreq.c **** /* interface descriptor field offsets */
+  67:..//drivers/USB/usbstdreq.c **** #define INTF_DESC_bAlternateSetting		3	/**< alternate setting offset */
+  68:..//drivers/USB/usbstdreq.c **** 
+  69:..//drivers/USB/usbstdreq.c **** /* endpoint descriptor field offsets */
+  70:..//drivers/USB/usbstdreq.c **** #define ENDP_DESC_bEndpointAddress		2	/**< endpoint address offset */
+  71:..//drivers/USB/usbstdreq.c **** #define ENDP_DESC_wMaxPacketSize		4	/**< maximum packet size offset */
+  72:..//drivers/USB/usbstdreq.c **** 
+  73:..//drivers/USB/usbstdreq.c **** 
+  74:..//drivers/USB/usbstdreq.c **** /** Currently selected configuration */
+  75:..//drivers/USB/usbstdreq.c **** static uint8_t				bConfiguration = 0;
+  76:..//drivers/USB/usbstdreq.c **** /** Installed custom request handler */
+  77:..//drivers/USB/usbstdreq.c **** static TFnHandleRequest	*pfnHandleCustomReq = NULL;
+  78:..//drivers/USB/usbstdreq.c **** /** Pointer to registered descriptors */
+  79:..//drivers/USB/usbstdreq.c **** static const uint8_t			*pabDescrip = NULL;
+  80:..//drivers/USB/usbstdreq.c **** 
+  81:..//drivers/USB/usbstdreq.c **** 
+  82:..//drivers/USB/usbstdreq.c **** /**
+  83:..//drivers/USB/usbstdreq.c **** 	Registers a pointer to a descriptor block containing all descriptors
+  84:..//drivers/USB/usbstdreq.c **** 	for the device.
+  85:..//drivers/USB/usbstdreq.c **** 
+  86:..//drivers/USB/usbstdreq.c **** 	@param [in]	pabDescriptors	The descriptor byte array
+  87:..//drivers/USB/usbstdreq.c ****  */
+  88:..//drivers/USB/usbstdreq.c **** void USBRegisterDescriptors(const uint8_t *pabDescriptors)
+  89:..//drivers/USB/usbstdreq.c **** {
+  49              		.loc 1 89 0
+  50              		.cfi_startproc
+  51              		@ args = 0, pretend = 0, frame = 8
+  52              		@ frame_needed = 1, uses_anonymous_args = 0
+  53              		@ link register save eliminated.
+  54 0000 80B4     		push	{r7}
+  55              	.LCFI0:
+  56              		.cfi_def_cfa_offset 4
+  57 0002 83B0     		sub	sp, sp, #12
+  58              	.LCFI1:
+  59              		.cfi_def_cfa_offset 16
+  60 0004 00AF     		add	r7, sp, #0
+  61              		.cfi_offset 7, -4
+  62              	.LCFI2:
+  63              		.cfi_def_cfa_register 7
+  64 0006 7860     		str	r0, [r7, #4]
+  90:..//drivers/USB/usbstdreq.c **** 	pabDescrip = pabDescriptors;
+  65              		.loc 1 90 0
+  66 0008 40F20003 		movw	r3, #:lower16:pabDescrip
+  67 000c C0F20003 		movt	r3, #:upper16:pabDescrip
+  68 0010 7A68     		ldr	r2, [r7, #4]
+  69 0012 1A60     		str	r2, [r3, #0]
+  91:..//drivers/USB/usbstdreq.c **** }
+  70              		.loc 1 91 0
+  71 0014 07F10C07 		add	r7, r7, #12
+  72 0018 BD46     		mov	sp, r7
+  73 001a 80BC     		pop	{r7}
+  74 001c 7047     		bx	lr
+  75              		.cfi_endproc
+  76              	.LFE0:
+  78 001e 00BF     		.section	.text.USBGetDescriptor,"ax",%progbits
+  79              		.align	2
+  80              		.global	USBGetDescriptor
+  81              		.thumb
+  82              		.thumb_func
+  84              	USBGetDescriptor:
+  85              	.LFB1:
+  92:..//drivers/USB/usbstdreq.c **** 
+  93:..//drivers/USB/usbstdreq.c **** 
+  94:..//drivers/USB/usbstdreq.c **** /**
+  95:..//drivers/USB/usbstdreq.c **** 	Parses the list of installed USB descriptors and attempts to find
+  96:..//drivers/USB/usbstdreq.c **** 	the specified USB descriptor.
+  97:..//drivers/USB/usbstdreq.c **** 		
+  98:..//drivers/USB/usbstdreq.c **** 	@param [in]		wTypeIndex	Type and index of the descriptor
+  99:..//drivers/USB/usbstdreq.c **** 	@param [in]		wLangID		Language ID of the descriptor (currently unused)
+ 100:..//drivers/USB/usbstdreq.c **** 	@param [out]	*piLen		Descriptor length
+ 101:..//drivers/USB/usbstdreq.c **** 	@param [out]	*ppbData	Descriptor data
+ 102:..//drivers/USB/usbstdreq.c **** 	
+ 103:..//drivers/USB/usbstdreq.c **** 	@return True if the descriptor was found, False otherwise
+ 104:..//drivers/USB/usbstdreq.c ****  */
+ 105:..//drivers/USB/usbstdreq.c **** BOOL USBGetDescriptor(U16 wTypeIndex, U16 wLangID, int *piLen, uint8_t **ppbData)
+ 106:..//drivers/USB/usbstdreq.c **** {
+  86              		.loc 1 106 0
+  87              		.cfi_startproc
+  88              		@ args = 0, pretend = 0, frame = 32
+  89              		@ frame_needed = 1, uses_anonymous_args = 0
+  90              		@ link register save eliminated.
+  91 0000 80B4     		push	{r7}
+  92              	.LCFI3:
+  93              		.cfi_def_cfa_offset 4
+  94 0002 89B0     		sub	sp, sp, #36
+  95              	.LCFI4:
+  96              		.cfi_def_cfa_offset 40
+  97 0004 00AF     		add	r7, sp, #0
+  98              		.cfi_offset 7, -4
+  99              	.LCFI5:
+ 100              		.cfi_def_cfa_register 7
+ 101 0006 BA60     		str	r2, [r7, #8]
+ 102 0008 7B60     		str	r3, [r7, #4]
+ 103 000a 0346     		mov	r3, r0	@ movhi
+ 104 000c FB81     		strh	r3, [r7, #14]	@ movhi
+ 105 000e 0B46     		mov	r3, r1	@ movhi
+ 106 0010 BB81     		strh	r3, [r7, #12]	@ movhi
+ 107:..//drivers/USB/usbstdreq.c **** 	uint8_t	bType, bIndex;
+ 108:..//drivers/USB/usbstdreq.c **** 	uint8_t	*pab;
+ 109:..//drivers/USB/usbstdreq.c **** 	int iCurIndex;
+ 110:..//drivers/USB/usbstdreq.c **** 	wLangID = wLangID;
+ 111:..//drivers/USB/usbstdreq.c **** 	ASSERT(pabDescrip != NULL);
+ 112:..//drivers/USB/usbstdreq.c **** 
+ 113:..//drivers/USB/usbstdreq.c **** 	bType = GET_DESC_TYPE(wTypeIndex);
+ 107              		.loc 1 113 0
+ 108 0012 FB89     		ldrh	r3, [r7, #14]
+ 109 0014 4FEA1323 		lsr	r3, r3, #8
+ 110 0018 9BB2     		uxth	r3, r3
+ 111 001a BB75     		strb	r3, [r7, #22]
+ 114:..//drivers/USB/usbstdreq.c **** 	bIndex = GET_DESC_INDEX(wTypeIndex);
+ 112              		.loc 1 114 0
+ 113 001c FB89     		ldrh	r3, [r7, #14]	@ movhi
+ 114 001e FB75     		strb	r3, [r7, #23]
+ 115:..//drivers/USB/usbstdreq.c **** 	
+ 116:..//drivers/USB/usbstdreq.c **** 	pab = (uint8_t *)pabDescrip;
+ 115              		.loc 1 116 0
+ 116 0020 40F20003 		movw	r3, #:lower16:pabDescrip
+ 117 0024 C0F20003 		movt	r3, #:upper16:pabDescrip
+ 118 0028 1B68     		ldr	r3, [r3, #0]
+ 119 002a BB61     		str	r3, [r7, #24]
+ 117:..//drivers/USB/usbstdreq.c **** 	iCurIndex = 0;
+ 120              		.loc 1 117 0
+ 121 002c 4FF00003 		mov	r3, #0
+ 122 0030 FB61     		str	r3, [r7, #28]
+ 118:..//drivers/USB/usbstdreq.c **** 	
+ 119:..//drivers/USB/usbstdreq.c **** 	while (pab[DESC_bLength] != 0) {
+ 123              		.loc 1 119 0
+ 124 0032 31E0     		b	.L4
+ 125              	.L10:
+ 120:..//drivers/USB/usbstdreq.c **** 		if (pab[DESC_bDescriptorType] == bType) {
+ 126              		.loc 1 120 0
+ 127 0034 BB69     		ldr	r3, [r7, #24]
+ 128 0036 03F10103 		add	r3, r3, #1
+ 129 003a 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 130 003c BA7D     		ldrb	r2, [r7, #22]	@ zero_extendqisi2
+ 131 003e 9A42     		cmp	r2, r3
+ 132 0040 25D1     		bne	.L5
+ 121:..//drivers/USB/usbstdreq.c **** 			if (iCurIndex == bIndex) {
+ 133              		.loc 1 121 0
+ 134 0042 FA7D     		ldrb	r2, [r7, #23]	@ zero_extendqisi2
+ 135 0044 FB69     		ldr	r3, [r7, #28]
+ 136 0046 9A42     		cmp	r2, r3
+ 137 0048 1DD1     		bne	.L6
+ 122:..//drivers/USB/usbstdreq.c **** 				// set data pointer
+ 123:..//drivers/USB/usbstdreq.c **** 				*ppbData = pab;
+ 138              		.loc 1 123 0
+ 139 004a 7B68     		ldr	r3, [r7, #4]
+ 140 004c BA69     		ldr	r2, [r7, #24]
+ 141 004e 1A60     		str	r2, [r3, #0]
+ 124:..//drivers/USB/usbstdreq.c **** 				// get length from structure
+ 125:..//drivers/USB/usbstdreq.c **** 				if (bType == DESC_CONFIGURATION) {
+ 142              		.loc 1 125 0
+ 143 0050 BB7D     		ldrb	r3, [r7, #22]	@ zero_extendqisi2
+ 144 0052 022B     		cmp	r3, #2
+ 145 0054 0FD1     		bne	.L7
+ 126:..//drivers/USB/usbstdreq.c **** 					// configuration descriptor is an exception, length is at offset 2 and 3
+ 127:..//drivers/USB/usbstdreq.c **** 					*piLen =	(pab[CONF_DESC_wTotalLength]) |
+ 146              		.loc 1 127 0
+ 147 0056 BB69     		ldr	r3, [r7, #24]
+ 148 0058 03F10203 		add	r3, r3, #2
+ 149 005c 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 150 005e 1A46     		mov	r2, r3
+ 128:..//drivers/USB/usbstdreq.c **** 								(pab[CONF_DESC_wTotalLength + 1] << 8);
+ 151              		.loc 1 128 0
+ 152 0060 BB69     		ldr	r3, [r7, #24]
+ 153 0062 03F10303 		add	r3, r3, #3
+ 154 0066 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 155 0068 4FEA0323 		lsl	r3, r3, #8
+ 156              		.loc 1 127 0
+ 157 006c 42EA0302 		orr	r2, r2, r3
+ 158 0070 BB68     		ldr	r3, [r7, #8]
+ 159 0072 1A60     		str	r2, [r3, #0]
+ 160 0074 04E0     		b	.L8
+ 161              	.L7:
+ 129:..//drivers/USB/usbstdreq.c **** 				}
+ 130:..//drivers/USB/usbstdreq.c **** 				else {
+ 131:..//drivers/USB/usbstdreq.c **** 					// normally length is at offset 0
+ 132:..//drivers/USB/usbstdreq.c **** 					*piLen = pab[DESC_bLength];
+ 162              		.loc 1 132 0
+ 163 0076 BB69     		ldr	r3, [r7, #24]
+ 164 0078 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 165 007a 1A46     		mov	r2, r3
+ 166 007c BB68     		ldr	r3, [r7, #8]
+ 167 007e 1A60     		str	r2, [r3, #0]
+ 168              	.L8:
+ 133:..//drivers/USB/usbstdreq.c **** 				}
+ 134:..//drivers/USB/usbstdreq.c **** 				return True;
+ 169              		.loc 1 134 0
+ 170 0080 4FF00103 		mov	r3, #1
+ 171 0084 0EE0     		b	.L9
+ 172              	.L6:
+ 135:..//drivers/USB/usbstdreq.c **** 			}
+ 136:..//drivers/USB/usbstdreq.c **** 			iCurIndex++;
+ 173              		.loc 1 136 0
+ 174 0086 FB69     		ldr	r3, [r7, #28]
+ 175 0088 03F10103 		add	r3, r3, #1
+ 176 008c FB61     		str	r3, [r7, #28]
+ 177              	.L5:
+ 137:..//drivers/USB/usbstdreq.c **** 		}
+ 138:..//drivers/USB/usbstdreq.c **** 		// skip to next descriptor
+ 139:..//drivers/USB/usbstdreq.c **** 		pab += pab[DESC_bLength];
+ 178              		.loc 1 139 0
+ 179 008e BB69     		ldr	r3, [r7, #24]
+ 180 0090 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 181 0092 BA69     		ldr	r2, [r7, #24]
+ 182 0094 1344     		add	r3, r2, r3
+ 183 0096 BB61     		str	r3, [r7, #24]
+ 184              	.L4:
+ 185              		.loc 1 119 0
+ 186 0098 BB69     		ldr	r3, [r7, #24]
+ 187 009a 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 188 009c 002B     		cmp	r3, #0
+ 189 009e C9D1     		bne	.L10
+ 140:..//drivers/USB/usbstdreq.c **** 	}
+ 141:..//drivers/USB/usbstdreq.c **** 	// nothing found
+ 142:..//drivers/USB/usbstdreq.c **** 	DBG("Desc %x not found!\n", wTypeIndex);
+ 143:..//drivers/USB/usbstdreq.c **** 	return False;
+ 190              		.loc 1 143 0
+ 191 00a0 4FF00003 		mov	r3, #0
+ 192              	.L9:
+ 144:..//drivers/USB/usbstdreq.c **** }
+ 193              		.loc 1 144 0
+ 194 00a4 1846     		mov	r0, r3
+ 195 00a6 07F12407 		add	r7, r7, #36
+ 196 00aa BD46     		mov	sp, r7
+ 197 00ac 80BC     		pop	{r7}
+ 198 00ae 7047     		bx	lr
+ 199              		.cfi_endproc
+ 200              	.LFE1:
+ 202              		.section	.text.USBSetConfiguration,"ax",%progbits
+ 203              		.align	2
+ 204              		.thumb
+ 205              		.thumb_func
+ 207              	USBSetConfiguration:
+ 208              	.LFB2:
+ 145:..//drivers/USB/usbstdreq.c **** 
+ 146:..//drivers/USB/usbstdreq.c **** 
+ 147:..//drivers/USB/usbstdreq.c **** /**
+ 148:..//drivers/USB/usbstdreq.c **** 	Configures the device according to the specified configuration index and
+ 149:..//drivers/USB/usbstdreq.c **** 	alternate setting by parsing the installed USB descriptor list.
+ 150:..//drivers/USB/usbstdreq.c **** 	A configuration index of 0 unconfigures the device.
+ 151:..//drivers/USB/usbstdreq.c **** 		
+ 152:..//drivers/USB/usbstdreq.c **** 	@param [in]		bConfigIndex	Configuration index
+ 153:..//drivers/USB/usbstdreq.c **** 	@param [in]		bAltSetting		Alternate setting number
+ 154:..//drivers/USB/usbstdreq.c **** 	
+ 155:..//drivers/USB/usbstdreq.c **** 	@todo function always returns True, add stricter checking?
+ 156:..//drivers/USB/usbstdreq.c **** 	
+ 157:..//drivers/USB/usbstdreq.c **** 	@return True if successfully configured, False otherwise
+ 158:..//drivers/USB/usbstdreq.c ****  */
+ 159:..//drivers/USB/usbstdreq.c **** static BOOL USBSetConfiguration(uint8_t bConfigIndex, uint8_t bAltSetting)
+ 160:..//drivers/USB/usbstdreq.c **** {
+ 209              		.loc 1 160 0
+ 210              		.cfi_startproc
+ 211              		@ args = 0, pretend = 0, frame = 24
+ 212              		@ frame_needed = 1, uses_anonymous_args = 0
+ 213 0000 80B5     		push	{r7, lr}
+ 214              	.LCFI6:
+ 215              		.cfi_def_cfa_offset 8
+ 216 0002 86B0     		sub	sp, sp, #24
+ 217              	.LCFI7:
+ 218              		.cfi_def_cfa_offset 32
+ 219 0004 00AF     		add	r7, sp, #0
+ 220              		.cfi_offset 14, -4
+ 221              		.cfi_offset 7, -8
+ 222              	.LCFI8:
+ 223              		.cfi_def_cfa_register 7
+ 224 0006 0246     		mov	r2, r0
+ 225 0008 0B46     		mov	r3, r1
+ 226 000a FA71     		strb	r2, [r7, #7]
+ 227 000c BB71     		strb	r3, [r7, #6]
+ 161:..//drivers/USB/usbstdreq.c **** 	uint8_t	*pab;
+ 162:..//drivers/USB/usbstdreq.c **** 	uint8_t	bCurConfig, bCurAltSetting;
+ 163:..//drivers/USB/usbstdreq.c **** 	uint8_t	bEP;
+ 164:..//drivers/USB/usbstdreq.c **** 	U16	wMaxPktSize;
+ 165:..//drivers/USB/usbstdreq.c **** 	
+ 166:..//drivers/USB/usbstdreq.c **** 	ASSERT(pabDescrip != NULL);
+ 167:..//drivers/USB/usbstdreq.c **** 
+ 168:..//drivers/USB/usbstdreq.c **** 	if (bConfigIndex == 0) {
+ 228              		.loc 1 168 0
+ 229 000e FB79     		ldrb	r3, [r7, #7]	@ zero_extendqisi2
+ 230 0010 002B     		cmp	r3, #0
+ 231 0012 07D1     		bne	.L13
+ 169:..//drivers/USB/usbstdreq.c **** 		// unconfigure device
+ 170:..//drivers/USB/usbstdreq.c **** 		USBHwConfigDevice(False);
+ 232              		.loc 1 170 0
+ 233 0014 4FF00000 		mov	r0, #0
+ 234 0018 40F20003 		movw	r3, #:lower16:USBHwConfigDevice
+ 235 001c C0F20003 		movt	r3, #:upper16:USBHwConfigDevice
+ 236 0020 9847     		blx	r3
+ 237 0022 58E0     		b	.L14
+ 238              	.L13:
+ 171:..//drivers/USB/usbstdreq.c **** 	}
+ 172:..//drivers/USB/usbstdreq.c **** 	else {
+ 173:..//drivers/USB/usbstdreq.c **** 		// configure endpoints for this configuration/altsetting
+ 174:..//drivers/USB/usbstdreq.c **** 		pab = (uint8_t *)pabDescrip;
+ 239              		.loc 1 174 0
+ 240 0024 40F20003 		movw	r3, #:lower16:pabDescrip
+ 241 0028 C0F20003 		movt	r3, #:upper16:pabDescrip
+ 242 002c 1B68     		ldr	r3, [r3, #0]
+ 243 002e FB60     		str	r3, [r7, #12]
+ 175:..//drivers/USB/usbstdreq.c **** 		bCurConfig = 0xFF;
+ 244              		.loc 1 175 0
+ 245 0030 4FF0FF33 		mov	r3, #-1
+ 246 0034 FB74     		strb	r3, [r7, #19]
+ 176:..//drivers/USB/usbstdreq.c **** 		bCurAltSetting = 0xFF;
+ 247              		.loc 1 176 0
+ 248 0036 4FF0FF33 		mov	r3, #-1
+ 249 003a 3B75     		strb	r3, [r7, #20]
+ 177:..//drivers/USB/usbstdreq.c **** 
+ 178:..//drivers/USB/usbstdreq.c **** 		while (pab[DESC_bLength] != 0) {
+ 250              		.loc 1 178 0
+ 251 003c 40E0     		b	.L15
+ 252              	.L20:
+ 179:..//drivers/USB/usbstdreq.c **** 
+ 180:..//drivers/USB/usbstdreq.c **** 			switch (pab[DESC_bDescriptorType]) {
+ 253              		.loc 1 180 0
+ 254 003e FB68     		ldr	r3, [r7, #12]
+ 255 0040 03F10103 		add	r3, r3, #1
+ 256 0044 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 257 0046 042B     		cmp	r3, #4
+ 258 0048 09D0     		beq	.L18
+ 259 004a 052B     		cmp	r3, #5
+ 260 004c 0DD0     		beq	.L19
+ 261 004e 022B     		cmp	r3, #2
+ 262 0050 31D1     		bne	.L16
+ 263              	.L17:
+ 181:..//drivers/USB/usbstdreq.c **** 
+ 182:..//drivers/USB/usbstdreq.c **** 			case DESC_CONFIGURATION:
+ 183:..//drivers/USB/usbstdreq.c **** 				// remember current configuration index
+ 184:..//drivers/USB/usbstdreq.c **** 				bCurConfig = pab[CONF_DESC_bConfigurationValue];
+ 264              		.loc 1 184 0
+ 265 0052 FB68     		ldr	r3, [r7, #12]
+ 266 0054 03F10503 		add	r3, r3, #5
+ 267 0058 1B78     		ldrb	r3, [r3, #0]
+ 268 005a FB74     		strb	r3, [r7, #19]
+ 185:..//drivers/USB/usbstdreq.c **** 				break;
+ 269              		.loc 1 185 0
+ 270 005c 2BE0     		b	.L16
+ 271              	.L18:
+ 186:..//drivers/USB/usbstdreq.c **** 
+ 187:..//drivers/USB/usbstdreq.c **** 			case DESC_INTERFACE:
+ 188:..//drivers/USB/usbstdreq.c **** 				// remember current alternate setting
+ 189:..//drivers/USB/usbstdreq.c **** 				bCurAltSetting = pab[INTF_DESC_bAlternateSetting];
+ 272              		.loc 1 189 0
+ 273 005e FB68     		ldr	r3, [r7, #12]
+ 274 0060 03F10303 		add	r3, r3, #3
+ 275 0064 1B78     		ldrb	r3, [r3, #0]
+ 276 0066 3B75     		strb	r3, [r7, #20]
+ 190:..//drivers/USB/usbstdreq.c **** 				break;
+ 277              		.loc 1 190 0
+ 278 0068 25E0     		b	.L16
+ 279              	.L19:
+ 191:..//drivers/USB/usbstdreq.c **** 
+ 192:..//drivers/USB/usbstdreq.c **** 			case DESC_ENDPOINT:
+ 193:..//drivers/USB/usbstdreq.c **** 				if ((bCurConfig == bConfigIndex) &&
+ 280              		.loc 1 193 0
+ 281 006a FA7C     		ldrb	r2, [r7, #19]	@ zero_extendqisi2
+ 282 006c FB79     		ldrb	r3, [r7, #7]	@ zero_extendqisi2
+ 283 006e 9A42     		cmp	r2, r3
+ 284 0070 21D1     		bne	.L16
+ 285 0072 3A7D     		ldrb	r2, [r7, #20]	@ zero_extendqisi2
+ 286 0074 BB79     		ldrb	r3, [r7, #6]	@ zero_extendqisi2
+ 287 0076 9A42     		cmp	r2, r3
+ 288 0078 1DD1     		bne	.L16
+ 194:..//drivers/USB/usbstdreq.c **** 					(bCurAltSetting == bAltSetting)) {
+ 195:..//drivers/USB/usbstdreq.c **** 					// endpoint found for desired config and alternate setting
+ 196:..//drivers/USB/usbstdreq.c **** 					bEP = pab[ENDP_DESC_bEndpointAddress];
+ 289              		.loc 1 196 0
+ 290 007a FB68     		ldr	r3, [r7, #12]
+ 291 007c 03F10203 		add	r3, r3, #2
+ 292 0080 1B78     		ldrb	r3, [r3, #0]
+ 293 0082 7B75     		strb	r3, [r7, #21]
+ 197:..//drivers/USB/usbstdreq.c **** 					wMaxPktSize = 	(pab[ENDP_DESC_wMaxPacketSize]) |
+ 294              		.loc 1 197 0
+ 295 0084 FB68     		ldr	r3, [r7, #12]
+ 296 0086 03F10403 		add	r3, r3, #4
+ 297 008a 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 298 008c 1A46     		mov	r2, r3
+ 198:..//drivers/USB/usbstdreq.c **** 									(pab[ENDP_DESC_wMaxPacketSize + 1] << 8);
+ 299              		.loc 1 198 0
+ 300 008e FB68     		ldr	r3, [r7, #12]
+ 301 0090 03F10503 		add	r3, r3, #5
+ 302 0094 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 303 0096 4FEA0323 		lsl	r3, r3, #8
+ 304              		.loc 1 197 0
+ 305 009a 9BB2     		uxth	r3, r3
+ 306 009c 42EA0303 		orr	r3, r2, r3
+ 307 00a0 9BB2     		uxth	r3, r3
+ 308 00a2 FB82     		strh	r3, [r7, #22]	@ movhi
+ 199:..//drivers/USB/usbstdreq.c **** 					// configure endpoint
+ 200:..//drivers/USB/usbstdreq.c **** 					USBHwEPConfig(bEP, wMaxPktSize);
+ 309              		.loc 1 200 0
+ 310 00a4 7A7D     		ldrb	r2, [r7, #21]	@ zero_extendqisi2
+ 311 00a6 FB8A     		ldrh	r3, [r7, #22]
+ 312 00a8 1046     		mov	r0, r2
+ 313 00aa 1946     		mov	r1, r3
+ 314 00ac 40F20003 		movw	r3, #:lower16:USBHwEPConfig
+ 315 00b0 C0F20003 		movt	r3, #:upper16:USBHwEPConfig
+ 316 00b4 9847     		blx	r3
+ 317              	.L16:
+ 201:..//drivers/USB/usbstdreq.c **** 				}
+ 202:..//drivers/USB/usbstdreq.c **** 				break;
+ 203:..//drivers/USB/usbstdreq.c **** 
+ 204:..//drivers/USB/usbstdreq.c **** 			default:
+ 205:..//drivers/USB/usbstdreq.c **** 				break;
+ 206:..//drivers/USB/usbstdreq.c **** 			}
+ 207:..//drivers/USB/usbstdreq.c **** 			// skip to next descriptor
+ 208:..//drivers/USB/usbstdreq.c **** 			pab += pab[DESC_bLength];
+ 318              		.loc 1 208 0
+ 319 00b6 FB68     		ldr	r3, [r7, #12]
+ 320 00b8 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 321 00ba FA68     		ldr	r2, [r7, #12]
+ 322 00bc 1344     		add	r3, r2, r3
+ 323 00be FB60     		str	r3, [r7, #12]
+ 324              	.L15:
+ 325              		.loc 1 178 0
+ 326 00c0 FB68     		ldr	r3, [r7, #12]
+ 327 00c2 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 328 00c4 002B     		cmp	r3, #0
+ 329 00c6 BAD1     		bne	.L20
+ 209:..//drivers/USB/usbstdreq.c **** 		}
+ 210:..//drivers/USB/usbstdreq.c **** 		
+ 211:..//drivers/USB/usbstdreq.c **** 		// configure device
+ 212:..//drivers/USB/usbstdreq.c **** 		USBHwConfigDevice(True);
+ 330              		.loc 1 212 0
+ 331 00c8 4FF00100 		mov	r0, #1
+ 332 00cc 40F20003 		movw	r3, #:lower16:USBHwConfigDevice
+ 333 00d0 C0F20003 		movt	r3, #:upper16:USBHwConfigDevice
+ 334 00d4 9847     		blx	r3
+ 335              	.L14:
+ 213:..//drivers/USB/usbstdreq.c **** 	}
+ 214:..//drivers/USB/usbstdreq.c **** 
+ 215:..//drivers/USB/usbstdreq.c **** 	return True;
+ 336              		.loc 1 215 0
+ 337 00d6 4FF00103 		mov	r3, #1
+ 216:..//drivers/USB/usbstdreq.c **** }
+ 338              		.loc 1 216 0
+ 339 00da 1846     		mov	r0, r3
+ 340 00dc 07F11807 		add	r7, r7, #24
+ 341 00e0 BD46     		mov	sp, r7
+ 342 00e2 80BD     		pop	{r7, pc}
+ 343              		.cfi_endproc
+ 344              	.LFE2:
+ 346              		.section	.text.HandleStdDeviceReq,"ax",%progbits
+ 347              		.align	2
+ 348              		.thumb
+ 349              		.thumb_func
+ 351              	HandleStdDeviceReq:
+ 352              	.LFB3:
+ 217:..//drivers/USB/usbstdreq.c **** 
+ 218:..//drivers/USB/usbstdreq.c **** 
+ 219:..//drivers/USB/usbstdreq.c **** /**
+ 220:..//drivers/USB/usbstdreq.c **** 	Local function to handle a standard device request
+ 221:..//drivers/USB/usbstdreq.c **** 		
+ 222:..//drivers/USB/usbstdreq.c **** 	@param [in]		pSetup		The setup packet
+ 223:..//drivers/USB/usbstdreq.c **** 	@param [in,out]	*piLen		Pointer to data length
+ 224:..//drivers/USB/usbstdreq.c **** 	@param [in,out]	ppbData		Data buffer.
+ 225:..//drivers/USB/usbstdreq.c **** 
+ 226:..//drivers/USB/usbstdreq.c **** 	@return True if the request was handled successfully
+ 227:..//drivers/USB/usbstdreq.c ****  */
+ 228:..//drivers/USB/usbstdreq.c **** static BOOL HandleStdDeviceReq(TSetupPacket *pSetup, int *piLen, uint8_t **ppbData)
+ 229:..//drivers/USB/usbstdreq.c **** {
+ 353              		.loc 1 229 0
+ 354              		.cfi_startproc
+ 355              		@ args = 0, pretend = 0, frame = 24
+ 356              		@ frame_needed = 1, uses_anonymous_args = 0
+ 357 0000 80B5     		push	{r7, lr}
+ 358              	.LCFI9:
+ 359              		.cfi_def_cfa_offset 8
+ 360 0002 86B0     		sub	sp, sp, #24
+ 361              	.LCFI10:
+ 362              		.cfi_def_cfa_offset 32
+ 363 0004 00AF     		add	r7, sp, #0
+ 364              		.cfi_offset 14, -4
+ 365              		.cfi_offset 7, -8
+ 366              	.LCFI11:
+ 367              		.cfi_def_cfa_register 7
+ 368 0006 F860     		str	r0, [r7, #12]
+ 369 0008 B960     		str	r1, [r7, #8]
+ 370 000a 7A60     		str	r2, [r7, #4]
+ 230:..//drivers/USB/usbstdreq.c **** 	uint8_t	*pbData = *ppbData;
+ 371              		.loc 1 230 0
+ 372 000c 7B68     		ldr	r3, [r7, #4]
+ 373 000e 1B68     		ldr	r3, [r3, #0]
+ 374 0010 7B61     		str	r3, [r7, #20]
+ 231:..//drivers/USB/usbstdreq.c **** 
+ 232:..//drivers/USB/usbstdreq.c **** 	switch (pSetup->bRequest) {
+ 375              		.loc 1 232 0
+ 376 0012 FB68     		ldr	r3, [r7, #12]
+ 377 0014 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+ 378 0016 092B     		cmp	r3, #9
+ 379 0018 6AD8     		bhi	.L23
+ 380 001a 01A2     		adr	r2, .L31
+ 381 001c 52F823F0 		ldr	pc, [r2, r3, lsl #2]
+ 382              		.align	2
+ 383              	.L31:
+ 384 0020 49000000 		.word	.L24+1
+ 385 0024 E5000000 		.word	.L25+1
+ 386 0028 F1000000 		.word	.L23+1
+ 387 002c E5000000 		.word	.L25+1
+ 388 0030 F1000000 		.word	.L23+1
+ 389 0034 67000000 		.word	.L26+1
+ 390 0038 7B000000 		.word	.L27+1
+ 391 003c EB000000 		.word	.L28+1
+ 392 0040 99000000 		.word	.L29+1
+ 393 0044 B1000000 		.word	.L30+1
+ 394              	.L24:
+ 233:..//drivers/USB/usbstdreq.c **** 	
+ 234:..//drivers/USB/usbstdreq.c **** 	case REQ_GET_STATUS:
+ 235:..//drivers/USB/usbstdreq.c **** 		// bit 0: self-powered
+ 236:..//drivers/USB/usbstdreq.c **** 		// bit 1: remote wakeup = not supported
+ 237:..//drivers/USB/usbstdreq.c **** 		pbData[0] = 0;
+ 395              		.loc 1 237 0
+ 396 0048 7B69     		ldr	r3, [r7, #20]
+ 397 004a 4FF00002 		mov	r2, #0
+ 398 004e 1A70     		strb	r2, [r3, #0]
+ 238:..//drivers/USB/usbstdreq.c **** 		pbData[1] = 0;
+ 399              		.loc 1 238 0
+ 400 0050 7B69     		ldr	r3, [r7, #20]
+ 401 0052 03F10103 		add	r3, r3, #1
+ 402 0056 4FF00002 		mov	r2, #0
+ 403 005a 1A70     		strb	r2, [r3, #0]
+ 239:..//drivers/USB/usbstdreq.c **** 		*piLen = 2;
+ 404              		.loc 1 239 0
+ 405 005c BB68     		ldr	r3, [r7, #8]
+ 406 005e 4FF00202 		mov	r2, #2
+ 407 0062 1A60     		str	r2, [r3, #0]
+ 240:..//drivers/USB/usbstdreq.c **** 		break;
+ 408              		.loc 1 240 0
+ 409 0064 47E0     		b	.L32
+ 410              	.L26:
+ 241:..//drivers/USB/usbstdreq.c **** 		
+ 242:..//drivers/USB/usbstdreq.c **** 	case REQ_SET_ADDRESS:
+ 243:..//drivers/USB/usbstdreq.c **** 		USBHwSetAddress(pSetup->wValue);
+ 411              		.loc 1 243 0
+ 412 0066 FB68     		ldr	r3, [r7, #12]
+ 413 0068 5B88     		ldrh	r3, [r3, #2]
+ 414 006a DBB2     		uxtb	r3, r3
+ 415 006c 1846     		mov	r0, r3
+ 416 006e 40F20003 		movw	r3, #:lower16:USBHwSetAddress
+ 417 0072 C0F20003 		movt	r3, #:upper16:USBHwSetAddress
+ 418 0076 9847     		blx	r3
+ 244:..//drivers/USB/usbstdreq.c **** 		break;
+ 419              		.loc 1 244 0
+ 420 0078 3DE0     		b	.L32
+ 421              	.L27:
+ 245:..//drivers/USB/usbstdreq.c **** 
+ 246:..//drivers/USB/usbstdreq.c **** 	case REQ_GET_DESCRIPTOR:
+ 247:..//drivers/USB/usbstdreq.c **** 		DBG("D%x", pSetup->wValue);
+ 248:..//drivers/USB/usbstdreq.c **** 		return USBGetDescriptor(pSetup->wValue, pSetup->wIndex, piLen, ppbData);
+ 422              		.loc 1 248 0
+ 423 007a FB68     		ldr	r3, [r7, #12]
+ 424 007c 5A88     		ldrh	r2, [r3, #2]
+ 425 007e FB68     		ldr	r3, [r7, #12]
+ 426 0080 9B88     		ldrh	r3, [r3, #4]
+ 427 0082 1046     		mov	r0, r2
+ 428 0084 1946     		mov	r1, r3
+ 429 0086 BA68     		ldr	r2, [r7, #8]
+ 430 0088 7B68     		ldr	r3, [r7, #4]
+ 431 008a 40F2000C 		movw	ip, #:lower16:USBGetDescriptor
+ 432 008e C0F2000C 		movt	ip, #:upper16:USBGetDescriptor
+ 433 0092 E047     		blx	ip
+ 434 0094 0346     		mov	r3, r0
+ 435 0096 30E0     		b	.L33
+ 436              	.L29:
+ 249:..//drivers/USB/usbstdreq.c **** 
+ 250:..//drivers/USB/usbstdreq.c **** 	case REQ_GET_CONFIGURATION:
+ 251:..//drivers/USB/usbstdreq.c **** 		// indicate if we are configured
+ 252:..//drivers/USB/usbstdreq.c **** 		pbData[0] = bConfiguration;
+ 437              		.loc 1 252 0
+ 438 0098 40F20003 		movw	r3, #:lower16:bConfiguration
+ 439 009c C0F20003 		movt	r3, #:upper16:bConfiguration
+ 440 00a0 1A78     		ldrb	r2, [r3, #0]	@ zero_extendqisi2
+ 441 00a2 7B69     		ldr	r3, [r7, #20]
+ 442 00a4 1A70     		strb	r2, [r3, #0]
+ 253:..//drivers/USB/usbstdreq.c **** 		*piLen = 1;
+ 443              		.loc 1 253 0
+ 444 00a6 BB68     		ldr	r3, [r7, #8]
+ 445 00a8 4FF00102 		mov	r2, #1
+ 446 00ac 1A60     		str	r2, [r3, #0]
+ 254:..//drivers/USB/usbstdreq.c **** 		break;
+ 447              		.loc 1 254 0
+ 448 00ae 22E0     		b	.L32
+ 449              	.L30:
+ 255:..//drivers/USB/usbstdreq.c **** 
+ 256:..//drivers/USB/usbstdreq.c **** 	case REQ_SET_CONFIGURATION:
+ 257:..//drivers/USB/usbstdreq.c **** 		if (!USBSetConfiguration(pSetup->wValue & 0xFF, 0)) {
+ 450              		.loc 1 257 0
+ 451 00b0 FB68     		ldr	r3, [r7, #12]
+ 452 00b2 5B88     		ldrh	r3, [r3, #2]
+ 453 00b4 DBB2     		uxtb	r3, r3
+ 454 00b6 1846     		mov	r0, r3
+ 455 00b8 4FF00001 		mov	r1, #0
+ 456 00bc 40F20003 		movw	r3, #:lower16:USBSetConfiguration
+ 457 00c0 C0F20003 		movt	r3, #:upper16:USBSetConfiguration
+ 458 00c4 9847     		blx	r3
+ 459 00c6 0346     		mov	r3, r0
+ 460 00c8 002B     		cmp	r3, #0
+ 461 00ca 02D1     		bne	.L34
+ 258:..//drivers/USB/usbstdreq.c **** 			DBG("USBSetConfiguration failed!\n");
+ 259:..//drivers/USB/usbstdreq.c **** 			return False;
+ 462              		.loc 1 259 0
+ 463 00cc 4FF00003 		mov	r3, #0
+ 464 00d0 13E0     		b	.L33
+ 465              	.L34:
+ 260:..//drivers/USB/usbstdreq.c **** 		}
+ 261:..//drivers/USB/usbstdreq.c **** 		// configuration successful, update current configuration
+ 262:..//drivers/USB/usbstdreq.c **** 		bConfiguration = pSetup->wValue & 0xFF;	
+ 466              		.loc 1 262 0
+ 467 00d2 FB68     		ldr	r3, [r7, #12]
+ 468 00d4 5B88     		ldrh	r3, [r3, #2]
+ 469 00d6 DAB2     		uxtb	r2, r3
+ 470 00d8 40F20003 		movw	r3, #:lower16:bConfiguration
+ 471 00dc C0F20003 		movt	r3, #:upper16:bConfiguration
+ 472 00e0 1A70     		strb	r2, [r3, #0]
+ 263:..//drivers/USB/usbstdreq.c **** 		break;
+ 473              		.loc 1 263 0
+ 474 00e2 08E0     		b	.L32
+ 475              	.L25:
+ 264:..//drivers/USB/usbstdreq.c **** 
+ 265:..//drivers/USB/usbstdreq.c **** 	case REQ_CLEAR_FEATURE:
+ 266:..//drivers/USB/usbstdreq.c **** 	case REQ_SET_FEATURE:
+ 267:..//drivers/USB/usbstdreq.c **** 		if (pSetup->wValue == FEA_REMOTE_WAKEUP) {
+ 268:..//drivers/USB/usbstdreq.c **** 			// put DEVICE_REMOTE_WAKEUP code here
+ 269:..//drivers/USB/usbstdreq.c **** 		}
+ 270:..//drivers/USB/usbstdreq.c **** 		if (pSetup->wValue == FEA_TEST_MODE) {
+ 271:..//drivers/USB/usbstdreq.c **** 			// put TEST_MODE code here
+ 272:..//drivers/USB/usbstdreq.c **** 		}
+ 273:..//drivers/USB/usbstdreq.c **** 		return False;
+ 476              		.loc 1 273 0
+ 477 00e4 4FF00003 		mov	r3, #0
+ 478 00e8 07E0     		b	.L33
+ 479              	.L28:
+ 274:..//drivers/USB/usbstdreq.c **** 
+ 275:..//drivers/USB/usbstdreq.c **** 	case REQ_SET_DESCRIPTOR:
+ 276:..//drivers/USB/usbstdreq.c **** 		DBG("Device req %d not implemented\n", pSetup->bRequest);
+ 277:..//drivers/USB/usbstdreq.c **** 		return False;
+ 480              		.loc 1 277 0
+ 481 00ea 4FF00003 		mov	r3, #0
+ 482 00ee 04E0     		b	.L33
+ 483              	.L23:
+ 278:..//drivers/USB/usbstdreq.c **** 
+ 279:..//drivers/USB/usbstdreq.c **** 	default:
+ 280:..//drivers/USB/usbstdreq.c **** 		DBG("Illegal device req %d\n", pSetup->bRequest);
+ 281:..//drivers/USB/usbstdreq.c **** 		return False;
+ 484              		.loc 1 281 0
+ 485 00f0 4FF00003 		mov	r3, #0
+ 486 00f4 01E0     		b	.L33
+ 487              	.L32:
+ 282:..//drivers/USB/usbstdreq.c **** 	}
+ 283:..//drivers/USB/usbstdreq.c **** 	
+ 284:..//drivers/USB/usbstdreq.c **** 	return True;
+ 488              		.loc 1 284 0
+ 489 00f6 4FF00103 		mov	r3, #1
+ 490              	.L33:
+ 285:..//drivers/USB/usbstdreq.c **** }
+ 491              		.loc 1 285 0
+ 492 00fa 1846     		mov	r0, r3
+ 493 00fc 07F11807 		add	r7, r7, #24
+ 494 0100 BD46     		mov	sp, r7
+ 495 0102 80BD     		pop	{r7, pc}
+ 496              		.cfi_endproc
+ 497              	.LFE3:
+ 499              		.section	.text.HandleStdInterfaceReq,"ax",%progbits
+ 500              		.align	2
+ 501              		.thumb
+ 502              		.thumb_func
+ 504              	HandleStdInterfaceReq:
+ 505              	.LFB4:
+ 286:..//drivers/USB/usbstdreq.c **** 
+ 287:..//drivers/USB/usbstdreq.c **** 
+ 288:..//drivers/USB/usbstdreq.c **** /**
+ 289:..//drivers/USB/usbstdreq.c **** 	Local function to handle a standard interface request
+ 290:..//drivers/USB/usbstdreq.c **** 		
+ 291:..//drivers/USB/usbstdreq.c **** 	@param [in]		pSetup		The setup packet
+ 292:..//drivers/USB/usbstdreq.c **** 	@param [in,out]	*piLen		Pointer to data length
+ 293:..//drivers/USB/usbstdreq.c **** 	@param [in]		ppbData		Data buffer.
+ 294:..//drivers/USB/usbstdreq.c **** 
+ 295:..//drivers/USB/usbstdreq.c **** 	@return True if the request was handled successfully
+ 296:..//drivers/USB/usbstdreq.c ****  */
+ 297:..//drivers/USB/usbstdreq.c **** static BOOL HandleStdInterfaceReq(TSetupPacket	*pSetup, int *piLen, uint8_t **ppbData)
+ 298:..//drivers/USB/usbstdreq.c **** {
+ 506              		.loc 1 298 0
+ 507              		.cfi_startproc
+ 508              		@ args = 0, pretend = 0, frame = 24
+ 509              		@ frame_needed = 1, uses_anonymous_args = 0
+ 510              		@ link register save eliminated.
+ 511 0000 80B4     		push	{r7}
+ 512              	.LCFI12:
+ 513              		.cfi_def_cfa_offset 4
+ 514 0002 87B0     		sub	sp, sp, #28
+ 515              	.LCFI13:
+ 516              		.cfi_def_cfa_offset 32
+ 517 0004 00AF     		add	r7, sp, #0
+ 518              		.cfi_offset 7, -4
+ 519              	.LCFI14:
+ 520              		.cfi_def_cfa_register 7
+ 521 0006 F860     		str	r0, [r7, #12]
+ 522 0008 B960     		str	r1, [r7, #8]
+ 523 000a 7A60     		str	r2, [r7, #4]
+ 299:..//drivers/USB/usbstdreq.c **** 	uint8_t	*pbData = *ppbData;
+ 524              		.loc 1 299 0
+ 525 000c 7B68     		ldr	r3, [r7, #4]
+ 526 000e 1B68     		ldr	r3, [r3, #0]
+ 527 0010 7B61     		str	r3, [r7, #20]
+ 300:..//drivers/USB/usbstdreq.c **** 
+ 301:..//drivers/USB/usbstdreq.c **** 	switch (pSetup->bRequest) {
+ 528              		.loc 1 301 0
+ 529 0012 FB68     		ldr	r3, [r7, #12]
+ 530 0014 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+ 531 0016 0B2B     		cmp	r3, #11
+ 532 0018 41D8     		bhi	.L37
+ 533 001a 01A2     		adr	r2, .L42
+ 534 001c 52F823F0 		ldr	pc, [r2, r3, lsl #2]
+ 535              		.align	2
+ 536              	.L42:
+ 537 0020 51000000 		.word	.L38+1
+ 538 0024 6F000000 		.word	.L39+1
+ 539 0028 9F000000 		.word	.L37+1
+ 540 002c 6F000000 		.word	.L39+1
+ 541 0030 9F000000 		.word	.L37+1
+ 542 0034 9F000000 		.word	.L37+1
+ 543 0038 9F000000 		.word	.L37+1
+ 544 003c 9F000000 		.word	.L37+1
+ 545 0040 9F000000 		.word	.L37+1
+ 546 0044 9F000000 		.word	.L37+1
+ 547 0048 75000000 		.word	.L40+1
+ 548 004c 87000000 		.word	.L41+1
+ 549              	.L38:
+ 302:..//drivers/USB/usbstdreq.c **** 
+ 303:..//drivers/USB/usbstdreq.c **** 	case REQ_GET_STATUS:
+ 304:..//drivers/USB/usbstdreq.c **** 		// no bits specified
+ 305:..//drivers/USB/usbstdreq.c **** 		pbData[0] = 0;
+ 550              		.loc 1 305 0
+ 551 0050 7B69     		ldr	r3, [r7, #20]
+ 552 0052 4FF00002 		mov	r2, #0
+ 553 0056 1A70     		strb	r2, [r3, #0]
+ 306:..//drivers/USB/usbstdreq.c **** 		pbData[1] = 0;
+ 554              		.loc 1 306 0
+ 555 0058 7B69     		ldr	r3, [r7, #20]
+ 556 005a 03F10103 		add	r3, r3, #1
+ 557 005e 4FF00002 		mov	r2, #0
+ 558 0062 1A70     		strb	r2, [r3, #0]
+ 307:..//drivers/USB/usbstdreq.c **** 		*piLen = 2;
+ 559              		.loc 1 307 0
+ 560 0064 BB68     		ldr	r3, [r7, #8]
+ 561 0066 4FF00202 		mov	r2, #2
+ 562 006a 1A60     		str	r2, [r3, #0]
+ 308:..//drivers/USB/usbstdreq.c **** 		break;
+ 563              		.loc 1 308 0
+ 564 006c 1AE0     		b	.L43
+ 565              	.L39:
+ 309:..//drivers/USB/usbstdreq.c **** 
+ 310:..//drivers/USB/usbstdreq.c **** 	case REQ_CLEAR_FEATURE:
+ 311:..//drivers/USB/usbstdreq.c **** 	case REQ_SET_FEATURE:
+ 312:..//drivers/USB/usbstdreq.c **** 		// not defined for interface
+ 313:..//drivers/USB/usbstdreq.c **** 		return False;
+ 566              		.loc 1 313 0
+ 567 006e 4FF00003 		mov	r3, #0
+ 568 0072 19E0     		b	.L44
+ 569              	.L40:
+ 314:..//drivers/USB/usbstdreq.c **** 	
+ 315:..//drivers/USB/usbstdreq.c **** 	case REQ_GET_INTERFACE:	// TODO use bNumInterfaces
+ 316:..//drivers/USB/usbstdreq.c ****         // there is only one interface, return n-1 (= 0)
+ 317:..//drivers/USB/usbstdreq.c **** 		pbData[0] = 0;
+ 570              		.loc 1 317 0
+ 571 0074 7B69     		ldr	r3, [r7, #20]
+ 572 0076 4FF00002 		mov	r2, #0
+ 573 007a 1A70     		strb	r2, [r3, #0]
+ 318:..//drivers/USB/usbstdreq.c **** 		*piLen = 1;
+ 574              		.loc 1 318 0
+ 575 007c BB68     		ldr	r3, [r7, #8]
+ 576 007e 4FF00102 		mov	r2, #1
+ 577 0082 1A60     		str	r2, [r3, #0]
+ 319:..//drivers/USB/usbstdreq.c **** 		break;
+ 578              		.loc 1 319 0
+ 579 0084 0EE0     		b	.L43
+ 580              	.L41:
+ 320:..//drivers/USB/usbstdreq.c **** 	
+ 321:..//drivers/USB/usbstdreq.c **** 	case REQ_SET_INTERFACE:	// TODO use bNumInterfaces
+ 322:..//drivers/USB/usbstdreq.c **** 		// there is only one interface (= 0)
+ 323:..//drivers/USB/usbstdreq.c **** 		if (pSetup->wValue != 0) {
+ 581              		.loc 1 323 0
+ 582 0086 FB68     		ldr	r3, [r7, #12]
+ 583 0088 5B88     		ldrh	r3, [r3, #2]
+ 584 008a 002B     		cmp	r3, #0
+ 585 008c 02D0     		beq	.L45
+ 324:..//drivers/USB/usbstdreq.c **** 			return False;
+ 586              		.loc 1 324 0
+ 587 008e 4FF00003 		mov	r3, #0
+ 588 0092 09E0     		b	.L44
+ 589              	.L45:
+ 325:..//drivers/USB/usbstdreq.c **** 		}
+ 326:..//drivers/USB/usbstdreq.c **** 		*piLen = 0;
+ 590              		.loc 1 326 0
+ 591 0094 BB68     		ldr	r3, [r7, #8]
+ 592 0096 4FF00002 		mov	r2, #0
+ 593 009a 1A60     		str	r2, [r3, #0]
+ 327:..//drivers/USB/usbstdreq.c **** 		break;
+ 594              		.loc 1 327 0
+ 595 009c 02E0     		b	.L43
+ 596              	.L37:
+ 328:..//drivers/USB/usbstdreq.c **** 
+ 329:..//drivers/USB/usbstdreq.c **** 	default:
+ 330:..//drivers/USB/usbstdreq.c **** 		DBG("Illegal interface req %d\n", pSetup->bRequest);
+ 331:..//drivers/USB/usbstdreq.c **** 		return False;
+ 597              		.loc 1 331 0
+ 598 009e 4FF00003 		mov	r3, #0
+ 599 00a2 01E0     		b	.L44
+ 600              	.L43:
+ 332:..//drivers/USB/usbstdreq.c **** 	}
+ 333:..//drivers/USB/usbstdreq.c **** 
+ 334:..//drivers/USB/usbstdreq.c **** 	return True;
+ 601              		.loc 1 334 0
+ 602 00a4 4FF00103 		mov	r3, #1
+ 603              	.L44:
+ 335:..//drivers/USB/usbstdreq.c **** }
+ 604              		.loc 1 335 0
+ 605 00a8 1846     		mov	r0, r3
+ 606 00aa 07F11C07 		add	r7, r7, #28
+ 607 00ae BD46     		mov	sp, r7
+ 608 00b0 80BC     		pop	{r7}
+ 609 00b2 7047     		bx	lr
+ 610              		.cfi_endproc
+ 611              	.LFE4:
+ 613              		.section	.text.HandleStdEndPointReq,"ax",%progbits
+ 614              		.align	2
+ 615              		.thumb
+ 616              		.thumb_func
+ 618              	HandleStdEndPointReq:
+ 619              	.LFB5:
+ 336:..//drivers/USB/usbstdreq.c **** 
+ 337:..//drivers/USB/usbstdreq.c **** 
+ 338:..//drivers/USB/usbstdreq.c **** /**
+ 339:..//drivers/USB/usbstdreq.c **** 	Local function to handle a standard endpoint request
+ 340:..//drivers/USB/usbstdreq.c **** 		
+ 341:..//drivers/USB/usbstdreq.c **** 	@param [in]		pSetup		The setup packet
+ 342:..//drivers/USB/usbstdreq.c **** 	@param [in,out]	*piLen		Pointer to data length
+ 343:..//drivers/USB/usbstdreq.c **** 	@param [in]		ppbData		Data buffer.
+ 344:..//drivers/USB/usbstdreq.c **** 
+ 345:..//drivers/USB/usbstdreq.c **** 	@return True if the request was handled successfully
+ 346:..//drivers/USB/usbstdreq.c ****  */
+ 347:..//drivers/USB/usbstdreq.c **** static BOOL HandleStdEndPointReq(TSetupPacket	*pSetup, int *piLen, uint8_t **ppbData)
+ 348:..//drivers/USB/usbstdreq.c **** {
+ 620              		.loc 1 348 0
+ 621              		.cfi_startproc
+ 622              		@ args = 0, pretend = 0, frame = 24
+ 623              		@ frame_needed = 1, uses_anonymous_args = 0
+ 624 0000 80B5     		push	{r7, lr}
+ 625              	.LCFI15:
+ 626              		.cfi_def_cfa_offset 8
+ 627 0002 86B0     		sub	sp, sp, #24
+ 628              	.LCFI16:
+ 629              		.cfi_def_cfa_offset 32
+ 630 0004 00AF     		add	r7, sp, #0
+ 631              		.cfi_offset 14, -4
+ 632              		.cfi_offset 7, -8
+ 633              	.LCFI17:
+ 634              		.cfi_def_cfa_register 7
+ 635 0006 F860     		str	r0, [r7, #12]
+ 636 0008 B960     		str	r1, [r7, #8]
+ 637 000a 7A60     		str	r2, [r7, #4]
+ 349:..//drivers/USB/usbstdreq.c **** 	uint8_t	*pbData = *ppbData;
+ 638              		.loc 1 349 0
+ 639 000c 7B68     		ldr	r3, [r7, #4]
+ 640 000e 1B68     		ldr	r3, [r3, #0]
+ 641 0010 7B61     		str	r3, [r7, #20]
+ 350:..//drivers/USB/usbstdreq.c **** 
+ 351:..//drivers/USB/usbstdreq.c **** 	switch (pSetup->bRequest) {
+ 642              		.loc 1 351 0
+ 643 0012 FB68     		ldr	r3, [r7, #12]
+ 644 0014 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+ 645 0016 0C2B     		cmp	r3, #12
+ 646 0018 62D8     		bhi	.L48
+ 647 001a 01A2     		adr	r2, .L53
+ 648 001c 52F823F0 		ldr	pc, [r2, r3, lsl #2]
+ 649              		.align	2
+ 650              	.L53:
+ 651 0020 55000000 		.word	.L49+1
+ 652 0024 8F000000 		.word	.L50+1
+ 653 0028 E1000000 		.word	.L48+1
+ 654 002c B5000000 		.word	.L51+1
+ 655 0030 E1000000 		.word	.L48+1
+ 656 0034 E1000000 		.word	.L48+1
+ 657 0038 E1000000 		.word	.L48+1
+ 658 003c E1000000 		.word	.L48+1
+ 659 0040 E1000000 		.word	.L48+1
+ 660 0044 E1000000 		.word	.L48+1
+ 661 0048 E1000000 		.word	.L48+1
+ 662 004c E1000000 		.word	.L48+1
+ 663 0050 DB000000 		.word	.L52+1
+ 664              	.L49:
+ 352:..//drivers/USB/usbstdreq.c **** 	case REQ_GET_STATUS:
+ 353:..//drivers/USB/usbstdreq.c **** 		// bit 0 = endpointed halted or not
+ 354:..//drivers/USB/usbstdreq.c **** 		pbData[0] = (USBHwEPGetStatus(pSetup->wIndex) & EP_STATUS_STALLED) ? 1 : 0;
+ 665              		.loc 1 354 0
+ 666 0054 FB68     		ldr	r3, [r7, #12]
+ 667 0056 9B88     		ldrh	r3, [r3, #4]
+ 668 0058 DBB2     		uxtb	r3, r3
+ 669 005a 1846     		mov	r0, r3
+ 670 005c 40F20003 		movw	r3, #:lower16:USBHwEPGetStatus
+ 671 0060 C0F20003 		movt	r3, #:upper16:USBHwEPGetStatus
+ 672 0064 9847     		blx	r3
+ 673 0066 0346     		mov	r3, r0
+ 674 0068 03F00203 		and	r3, r3, #2
+ 675 006c 002B     		cmp	r3, #0
+ 676 006e 0CBF     		ite	eq
+ 677 0070 0022     		moveq	r2, #0
+ 678 0072 0122     		movne	r2, #1
+ 679 0074 7B69     		ldr	r3, [r7, #20]
+ 680 0076 1A70     		strb	r2, [r3, #0]
+ 355:..//drivers/USB/usbstdreq.c **** 		pbData[1] = 0;
+ 681              		.loc 1 355 0
+ 682 0078 7B69     		ldr	r3, [r7, #20]
+ 683 007a 03F10103 		add	r3, r3, #1
+ 684 007e 4FF00002 		mov	r2, #0
+ 685 0082 1A70     		strb	r2, [r3, #0]
+ 356:..//drivers/USB/usbstdreq.c **** 		*piLen = 2;
+ 686              		.loc 1 356 0
+ 687 0084 BB68     		ldr	r3, [r7, #8]
+ 688 0086 4FF00202 		mov	r2, #2
+ 689 008a 1A60     		str	r2, [r3, #0]
+ 357:..//drivers/USB/usbstdreq.c **** 		break;
+ 690              		.loc 1 357 0
+ 691 008c 2BE0     		b	.L54
+ 692              	.L50:
+ 358:..//drivers/USB/usbstdreq.c **** 		
+ 359:..//drivers/USB/usbstdreq.c **** 	case REQ_CLEAR_FEATURE:
+ 360:..//drivers/USB/usbstdreq.c **** 		if (pSetup->wValue == FEA_ENDPOINT_HALT) {
+ 693              		.loc 1 360 0
+ 694 008e FB68     		ldr	r3, [r7, #12]
+ 695 0090 5B88     		ldrh	r3, [r3, #2]
+ 696 0092 002B     		cmp	r3, #0
+ 697 0094 0BD1     		bne	.L55
+ 361:..//drivers/USB/usbstdreq.c **** 			// clear HALT by unstalling
+ 362:..//drivers/USB/usbstdreq.c **** 			USBHwEPStall(pSetup->wIndex, False);
+ 698              		.loc 1 362 0
+ 699 0096 FB68     		ldr	r3, [r7, #12]
+ 700 0098 9B88     		ldrh	r3, [r3, #4]
+ 701 009a DBB2     		uxtb	r3, r3
+ 702 009c 1846     		mov	r0, r3
+ 703 009e 4FF00001 		mov	r1, #0
+ 704 00a2 40F20003 		movw	r3, #:lower16:USBHwEPStall
+ 705 00a6 C0F20003 		movt	r3, #:upper16:USBHwEPStall
+ 706 00aa 9847     		blx	r3
+ 363:..//drivers/USB/usbstdreq.c **** 			break;
+ 707              		.loc 1 363 0
+ 708 00ac 1BE0     		b	.L54
+ 709              	.L55:
+ 364:..//drivers/USB/usbstdreq.c **** 		}
+ 365:..//drivers/USB/usbstdreq.c **** 		// only ENDPOINT_HALT defined for endpoints
+ 366:..//drivers/USB/usbstdreq.c **** 		return False;
+ 710              		.loc 1 366 0
+ 711 00ae 4FF00003 		mov	r3, #0
+ 712 00b2 1AE0     		b	.L56
+ 713              	.L51:
+ 367:..//drivers/USB/usbstdreq.c **** 	
+ 368:..//drivers/USB/usbstdreq.c **** 	case REQ_SET_FEATURE:
+ 369:..//drivers/USB/usbstdreq.c **** 		if (pSetup->wValue == FEA_ENDPOINT_HALT) {
+ 714              		.loc 1 369 0
+ 715 00b4 FB68     		ldr	r3, [r7, #12]
+ 716 00b6 5B88     		ldrh	r3, [r3, #2]
+ 717 00b8 002B     		cmp	r3, #0
+ 718 00ba 0BD1     		bne	.L57
+ 370:..//drivers/USB/usbstdreq.c **** 			// set HALT by stalling
+ 371:..//drivers/USB/usbstdreq.c **** 			USBHwEPStall(pSetup->wIndex, True);
+ 719              		.loc 1 371 0
+ 720 00bc FB68     		ldr	r3, [r7, #12]
+ 721 00be 9B88     		ldrh	r3, [r3, #4]
+ 722 00c0 DBB2     		uxtb	r3, r3
+ 723 00c2 1846     		mov	r0, r3
+ 724 00c4 4FF00101 		mov	r1, #1
+ 725 00c8 40F20003 		movw	r3, #:lower16:USBHwEPStall
+ 726 00cc C0F20003 		movt	r3, #:upper16:USBHwEPStall
+ 727 00d0 9847     		blx	r3
+ 372:..//drivers/USB/usbstdreq.c **** 			break;
+ 728              		.loc 1 372 0
+ 729 00d2 08E0     		b	.L54
+ 730              	.L57:
+ 373:..//drivers/USB/usbstdreq.c **** 		}
+ 374:..//drivers/USB/usbstdreq.c **** 		// only ENDPOINT_HALT defined for endpoints
+ 375:..//drivers/USB/usbstdreq.c **** 		return False;
+ 731              		.loc 1 375 0
+ 732 00d4 4FF00003 		mov	r3, #0
+ 733 00d8 07E0     		b	.L56
+ 734              	.L52:
+ 376:..//drivers/USB/usbstdreq.c **** 
+ 377:..//drivers/USB/usbstdreq.c **** 	case REQ_SYNCH_FRAME:
+ 378:..//drivers/USB/usbstdreq.c **** 		DBG("EP req %d not implemented\n", pSetup->bRequest);
+ 379:..//drivers/USB/usbstdreq.c **** 		return False;
+ 735              		.loc 1 379 0
+ 736 00da 4FF00003 		mov	r3, #0
+ 737 00de 04E0     		b	.L56
+ 738              	.L48:
+ 380:..//drivers/USB/usbstdreq.c **** 
+ 381:..//drivers/USB/usbstdreq.c **** 	default:
+ 382:..//drivers/USB/usbstdreq.c **** 		DBG("Illegal EP req %d\n", pSetup->bRequest);
+ 383:..//drivers/USB/usbstdreq.c **** 		return False;
+ 739              		.loc 1 383 0
+ 740 00e0 4FF00003 		mov	r3, #0
+ 741 00e4 01E0     		b	.L56
+ 742              	.L54:
+ 384:..//drivers/USB/usbstdreq.c **** 	}
+ 385:..//drivers/USB/usbstdreq.c **** 	
+ 386:..//drivers/USB/usbstdreq.c **** 	return True;
+ 743              		.loc 1 386 0
+ 744 00e6 4FF00103 		mov	r3, #1
+ 745              	.L56:
+ 387:..//drivers/USB/usbstdreq.c **** }
+ 746              		.loc 1 387 0
+ 747 00ea 1846     		mov	r0, r3
+ 748 00ec 07F11807 		add	r7, r7, #24
+ 749 00f0 BD46     		mov	sp, r7
+ 750 00f2 80BD     		pop	{r7, pc}
+ 751              		.cfi_endproc
+ 752              	.LFE5:
+ 754              		.section	.text.USBHandleStandardRequest,"ax",%progbits
+ 755              		.align	2
+ 756              		.global	USBHandleStandardRequest
+ 757              		.thumb
+ 758              		.thumb_func
+ 760              	USBHandleStandardRequest:
+ 761              	.LFB6:
+ 388:..//drivers/USB/usbstdreq.c **** 
+ 389:..//drivers/USB/usbstdreq.c **** 
+ 390:..//drivers/USB/usbstdreq.c **** /**
+ 391:..//drivers/USB/usbstdreq.c **** 	Default handler for standard ('chapter 9') requests
+ 392:..//drivers/USB/usbstdreq.c **** 	
+ 393:..//drivers/USB/usbstdreq.c **** 	If a custom request handler was installed, this handler is called first.
+ 394:..//drivers/USB/usbstdreq.c **** 		
+ 395:..//drivers/USB/usbstdreq.c **** 	@param [in]		pSetup		The setup packet
+ 396:..//drivers/USB/usbstdreq.c **** 	@param [in,out]	*piLen		Pointer to data length
+ 397:..//drivers/USB/usbstdreq.c **** 	@param [in]		ppbData		Data buffer.
+ 398:..//drivers/USB/usbstdreq.c **** 
+ 399:..//drivers/USB/usbstdreq.c **** 	@return True if the request was handled successfully
+ 400:..//drivers/USB/usbstdreq.c ****  */
+ 401:..//drivers/USB/usbstdreq.c **** BOOL USBHandleStandardRequest(TSetupPacket	*pSetup, int *piLen, uint8_t **ppbData)
+ 402:..//drivers/USB/usbstdreq.c **** {
+ 762              		.loc 1 402 0
+ 763              		.cfi_startproc
+ 764              		@ args = 0, pretend = 0, frame = 16
+ 765              		@ frame_needed = 1, uses_anonymous_args = 0
+ 766 0000 80B5     		push	{r7, lr}
+ 767              	.LCFI18:
+ 768              		.cfi_def_cfa_offset 8
+ 769 0002 84B0     		sub	sp, sp, #16
+ 770              	.LCFI19:
+ 771              		.cfi_def_cfa_offset 24
+ 772 0004 00AF     		add	r7, sp, #0
+ 773              		.cfi_offset 14, -4
+ 774              		.cfi_offset 7, -8
+ 775              	.LCFI20:
+ 776              		.cfi_def_cfa_register 7
+ 777 0006 F860     		str	r0, [r7, #12]
+ 778 0008 B960     		str	r1, [r7, #8]
+ 779 000a 7A60     		str	r2, [r7, #4]
+ 403:..//drivers/USB/usbstdreq.c **** 	// try the custom request handler first
+ 404:..//drivers/USB/usbstdreq.c **** 	if ((pfnHandleCustomReq != NULL) && pfnHandleCustomReq(pSetup, piLen, ppbData)) {
+ 780              		.loc 1 404 0
+ 781 000c 40F20003 		movw	r3, #:lower16:pfnHandleCustomReq
+ 782 0010 C0F20003 		movt	r3, #:upper16:pfnHandleCustomReq
+ 783 0014 1B68     		ldr	r3, [r3, #0]
+ 784 0016 002B     		cmp	r3, #0
+ 785 0018 0ED0     		beq	.L60
+ 786 001a 40F20003 		movw	r3, #:lower16:pfnHandleCustomReq
+ 787 001e C0F20003 		movt	r3, #:upper16:pfnHandleCustomReq
+ 788 0022 1B68     		ldr	r3, [r3, #0]
+ 789 0024 F868     		ldr	r0, [r7, #12]
+ 790 0026 B968     		ldr	r1, [r7, #8]
+ 791 0028 7A68     		ldr	r2, [r7, #4]
+ 792 002a 9847     		blx	r3
+ 793 002c 0346     		mov	r3, r0
+ 794 002e 002B     		cmp	r3, #0
+ 795 0030 02D0     		beq	.L60
+ 405:..//drivers/USB/usbstdreq.c **** 		return True;
+ 796              		.loc 1 405 0
+ 797 0032 4FF00103 		mov	r3, #1
+ 798 0036 29E0     		b	.L61
+ 799              	.L60:
+ 406:..//drivers/USB/usbstdreq.c **** 	}
+ 407:..//drivers/USB/usbstdreq.c **** 	
+ 408:..//drivers/USB/usbstdreq.c **** 	switch (REQTYPE_GET_RECIP(pSetup->bmRequestType)) {
+ 800              		.loc 1 408 0
+ 801 0038 FB68     		ldr	r3, [r7, #12]
+ 802 003a 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 803 003c 03F01F03 		and	r3, r3, #31
+ 804 0040 012B     		cmp	r3, #1
+ 805 0042 0DD0     		beq	.L64
+ 806 0044 022B     		cmp	r3, #2
+ 807 0046 15D0     		beq	.L65
+ 808 0048 002B     		cmp	r3, #0
+ 809 004a 1DD1     		bne	.L67
+ 810              	.L63:
+ 409:..//drivers/USB/usbstdreq.c **** 	case REQTYPE_RECIP_DEVICE:		return HandleStdDeviceReq(pSetup, piLen, ppbData);
+ 811              		.loc 1 409 0
+ 812 004c F868     		ldr	r0, [r7, #12]
+ 813 004e B968     		ldr	r1, [r7, #8]
+ 814 0050 7A68     		ldr	r2, [r7, #4]
+ 815 0052 40F20003 		movw	r3, #:lower16:HandleStdDeviceReq
+ 816 0056 C0F20003 		movt	r3, #:upper16:HandleStdDeviceReq
+ 817 005a 9847     		blx	r3
+ 818 005c 0346     		mov	r3, r0
+ 819 005e 15E0     		b	.L61
+ 820              	.L64:
+ 410:..//drivers/USB/usbstdreq.c **** 	case REQTYPE_RECIP_INTERFACE:	return HandleStdInterfaceReq(pSetup, piLen, ppbData);
+ 821              		.loc 1 410 0
+ 822 0060 F868     		ldr	r0, [r7, #12]
+ 823 0062 B968     		ldr	r1, [r7, #8]
+ 824 0064 7A68     		ldr	r2, [r7, #4]
+ 825 0066 40F20003 		movw	r3, #:lower16:HandleStdInterfaceReq
+ 826 006a C0F20003 		movt	r3, #:upper16:HandleStdInterfaceReq
+ 827 006e 9847     		blx	r3
+ 828 0070 0346     		mov	r3, r0
+ 829 0072 0BE0     		b	.L61
+ 830              	.L65:
+ 411:..//drivers/USB/usbstdreq.c **** 	case REQTYPE_RECIP_ENDPOINT: 	return HandleStdEndPointReq(pSetup, piLen, ppbData);
+ 831              		.loc 1 411 0
+ 832 0074 F868     		ldr	r0, [r7, #12]
+ 833 0076 B968     		ldr	r1, [r7, #8]
+ 834 0078 7A68     		ldr	r2, [r7, #4]
+ 835 007a 40F20003 		movw	r3, #:lower16:HandleStdEndPointReq
+ 836 007e C0F20003 		movt	r3, #:upper16:HandleStdEndPointReq
+ 837 0082 9847     		blx	r3
+ 838 0084 0346     		mov	r3, r0
+ 839 0086 01E0     		b	.L61
+ 840              	.L67:
+ 412:..//drivers/USB/usbstdreq.c **** 	default: 						return False;
+ 841              		.loc 1 412 0
+ 842 0088 4FF00003 		mov	r3, #0
+ 843              	.L61:
+ 413:..//drivers/USB/usbstdreq.c **** 	}
+ 414:..//drivers/USB/usbstdreq.c **** }
+ 844              		.loc 1 414 0
+ 845 008c 1846     		mov	r0, r3
+ 846 008e 07F11007 		add	r7, r7, #16
+ 847 0092 BD46     		mov	sp, r7
+ 848 0094 80BD     		pop	{r7, pc}
+ 849              		.cfi_endproc
+ 850              	.LFE6:
+ 852 0096 00BF     		.section	.text.USBRegisterCustomReqHandler,"ax",%progbits
+ 853              		.align	2
+ 854              		.global	USBRegisterCustomReqHandler
+ 855              		.thumb
+ 856              		.thumb_func
+ 858              	USBRegisterCustomReqHandler:
+ 859              	.LFB7:
+ 415:..//drivers/USB/usbstdreq.c **** 
+ 416:..//drivers/USB/usbstdreq.c **** 
+ 417:..//drivers/USB/usbstdreq.c **** /**
+ 418:..//drivers/USB/usbstdreq.c **** 	Registers a callback for custom device requests
+ 419:..//drivers/USB/usbstdreq.c **** 	
+ 420:..//drivers/USB/usbstdreq.c **** 	In USBHandleStandardRequest, the custom request handler gets a first
+ 421:..//drivers/USB/usbstdreq.c **** 	chance at handling the request before it is handed over to the 'chapter 9'
+ 422:..//drivers/USB/usbstdreq.c **** 	request handler.
+ 423:..//drivers/USB/usbstdreq.c **** 	
+ 424:..//drivers/USB/usbstdreq.c **** 	This can be used for example in HID devices, where a REQ_GET_DESCRIPTOR
+ 425:..//drivers/USB/usbstdreq.c **** 	request is sent to an interface, which is not covered by the 'chapter 9'
+ 426:..//drivers/USB/usbstdreq.c **** 	specification.
+ 427:..//drivers/USB/usbstdreq.c **** 		
+ 428:..//drivers/USB/usbstdreq.c **** 	@param [in]	pfnHandler	Callback function pointer
+ 429:..//drivers/USB/usbstdreq.c ****  */
+ 430:..//drivers/USB/usbstdreq.c **** void USBRegisterCustomReqHandler(TFnHandleRequest *pfnHandler)
+ 431:..//drivers/USB/usbstdreq.c **** {
+ 860              		.loc 1 431 0
+ 861              		.cfi_startproc
+ 862              		@ args = 0, pretend = 0, frame = 8
+ 863              		@ frame_needed = 1, uses_anonymous_args = 0
+ 864              		@ link register save eliminated.
+ 865 0000 80B4     		push	{r7}
+ 866              	.LCFI21:
+ 867              		.cfi_def_cfa_offset 4
+ 868 0002 83B0     		sub	sp, sp, #12
+ 869              	.LCFI22:
+ 870              		.cfi_def_cfa_offset 16
+ 871 0004 00AF     		add	r7, sp, #0
+ 872              		.cfi_offset 7, -4
+ 873              	.LCFI23:
+ 874              		.cfi_def_cfa_register 7
+ 875 0006 7860     		str	r0, [r7, #4]
+ 432:..//drivers/USB/usbstdreq.c **** 	pfnHandleCustomReq = pfnHandler;
+ 876              		.loc 1 432 0
+ 877 0008 40F20003 		movw	r3, #:lower16:pfnHandleCustomReq
+ 878 000c C0F20003 		movt	r3, #:upper16:pfnHandleCustomReq
+ 879 0010 7A68     		ldr	r2, [r7, #4]
+ 880 0012 1A60     		str	r2, [r3, #0]
+ 433:..//drivers/USB/usbstdreq.c **** }
+ 881              		.loc 1 433 0
+ 882 0014 07F10C07 		add	r7, r7, #12
+ 883 0018 BD46     		mov	sp, r7
+ 884 001a 80BC     		pop	{r7}
+ 885 001c 7047     		bx	lr
+ 886              		.cfi_endproc
+ 887              	.LFE7:
+ 889 001e 00BF     		.text
+ 890              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 usbstdreq.c
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:26     .bss.bConfiguration:00000000 bConfiguration
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:27     .bss.bConfiguration:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:29     .bss.pfnHandleCustomReq:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:32     .bss.pfnHandleCustomReq:00000000 pfnHandleCustomReq
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:35     .bss.pabDescrip:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:38     .bss.pabDescrip:00000000 pabDescrip
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:41     .text.USBRegisterDescriptors:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:46     .text.USBRegisterDescriptors:00000000 USBRegisterDescriptors
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:79     .text.USBGetDescriptor:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:84     .text.USBGetDescriptor:00000000 USBGetDescriptor
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:203    .text.USBSetConfiguration:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:207    .text.USBSetConfiguration:00000000 USBSetConfiguration
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:347    .text.HandleStdDeviceReq:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:351    .text.HandleStdDeviceReq:00000000 HandleStdDeviceReq
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:384    .text.HandleStdDeviceReq:00000020 $d
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:396    .text.HandleStdDeviceReq:00000048 $t
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:500    .text.HandleStdInterfaceReq:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:504    .text.HandleStdInterfaceReq:00000000 HandleStdInterfaceReq
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:537    .text.HandleStdInterfaceReq:00000020 $d
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:551    .text.HandleStdInterfaceReq:00000050 $t
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:614    .text.HandleStdEndPointReq:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:618    .text.HandleStdEndPointReq:00000000 HandleStdEndPointReq
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:651    .text.HandleStdEndPointReq:00000020 $d
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:666    .text.HandleStdEndPointReq:00000054 $t
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:755    .text.USBHandleStandardRequest:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:760    .text.USBHandleStandardRequest:00000000 USBHandleStandardRequest
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:853    .text.USBRegisterCustomReqHandler:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:858    .text.USBRegisterCustomReqHandler:00000000 USBRegisterCustomReqHandler
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+USBHwConfigDevice
+USBHwEPConfig
+USBHwSetAddress
+USBHwEPGetStatus
+USBHwEPStall

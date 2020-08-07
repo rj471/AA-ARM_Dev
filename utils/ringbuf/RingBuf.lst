@@ -1,0 +1,732 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"RingBuf.c"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.section	.text.Ringbuf_Count,"ax",%progbits
+  24              		.align	2
+  25              		.thumb
+  26              		.thumb_func
+  28              	Ringbuf_Count:
+  29              	.LFB0:
+  30              		.file 1 "..//utils/ringbuf/RingBuf.c"
+   1:..//utils/ringbuf/RingBuf.c **** /*
+   2:..//utils/ringbuf/RingBuf.c ****  * RingBuf.c
+   3:..//utils/ringbuf/RingBuf.c ****  *
+   4:..//utils/ringbuf/RingBuf.c ****  *  Created on: Apr 9, 2010
+   5:..//utils/ringbuf/RingBuf.c ****  *      Author: Administrator
+   6:..//utils/ringbuf/RingBuf.c ****  */
+   7:..//utils/ringbuf/RingBuf.c **** 
+   8:..//utils/ringbuf/RingBuf.c **** /*####COPYRIGHTBEGIN####
+   9:..//utils/ringbuf/RingBuf.c ****  -------------------------------------------
+  10:..//utils/ringbuf/RingBuf.c ****  Copyright (C) 2008 by Steve Karg
+  11:..//utils/ringbuf/RingBuf.c **** 
+  12:..//utils/ringbuf/RingBuf.c ****  This program is free software; you can redistribute it and/or
+  13:..//utils/ringbuf/RingBuf.c ****  modify it under the terms of the GNU General Public License
+  14:..//utils/ringbuf/RingBuf.c ****  as published by the Free Software Foundation; either version 2
+  15:..//utils/ringbuf/RingBuf.c ****  of the License, or (at your option) any later version.
+  16:..//utils/ringbuf/RingBuf.c **** 
+  17:..//utils/ringbuf/RingBuf.c ****  This program is distributed in the hope that it will be useful,
+  18:..//utils/ringbuf/RingBuf.c ****  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  19:..//utils/ringbuf/RingBuf.c ****  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  20:..//utils/ringbuf/RingBuf.c ****  GNU General Public License for more details.
+  21:..//utils/ringbuf/RingBuf.c **** 
+  22:..//utils/ringbuf/RingBuf.c ****  You should have received a copy of the GNU General Public License
+  23:..//utils/ringbuf/RingBuf.c ****  along with this program; if not, write to:
+  24:..//utils/ringbuf/RingBuf.c ****  The Free Software Foundation, Inc.
+  25:..//utils/ringbuf/RingBuf.c ****  59 Temple Place - Suite 330
+  26:..//utils/ringbuf/RingBuf.c ****  Boston, MA  02111-1307
+  27:..//utils/ringbuf/RingBuf.c ****  USA.
+  28:..//utils/ringbuf/RingBuf.c **** 
+  29:..//utils/ringbuf/RingBuf.c ****  As a special exception, if other files instantiate templates or
+  30:..//utils/ringbuf/RingBuf.c ****  use macros or inline functions from this file, or you compile
+  31:..//utils/ringbuf/RingBuf.c ****  this file and link it with other works to produce a work based
+  32:..//utils/ringbuf/RingBuf.c ****  on this file, this file does not by itself cause the resulting
+  33:..//utils/ringbuf/RingBuf.c ****  work to be covered by the GNU General Public License. However
+  34:..//utils/ringbuf/RingBuf.c ****  the source code for this file must still be made available in
+  35:..//utils/ringbuf/RingBuf.c ****  accordance with section (3) of the GNU General Public License.
+  36:..//utils/ringbuf/RingBuf.c **** 
+  37:..//utils/ringbuf/RingBuf.c ****  This exception does not invalidate any other reasons why a work
+  38:..//utils/ringbuf/RingBuf.c ****  based on this file might be covered by the GNU General Public
+  39:..//utils/ringbuf/RingBuf.c ****  License.
+  40:..//utils/ringbuf/RingBuf.c ****  -------------------------------------------
+  41:..//utils/ringbuf/RingBuf.c **** ####COPYRIGHTEND####*/
+  42:..//utils/ringbuf/RingBuf.c **** 
+  43:..//utils/ringbuf/RingBuf.c **** /* Functional Description: Generic ring buffer library for deeply
+  44:..//utils/ringbuf/RingBuf.c ****    embedded system. See the unit tests for usage examples. */
+  45:..//utils/ringbuf/RingBuf.c **** 
+  46:..//utils/ringbuf/RingBuf.c **** #include <stddef.h>
+  47:..//utils/ringbuf/RingBuf.c **** #include <stdbool.h>
+  48:..//utils/ringbuf/RingBuf.c **** #include <stdint.h>
+  49:..//utils/ringbuf/RingBuf.c **** #include "RingBuf.h"
+  50:..//utils/ringbuf/RingBuf.c **** 
+  51:..//utils/ringbuf/RingBuf.c **** /****************************************************************************
+  52:..//utils/ringbuf/RingBuf.c **** * DESCRIPTION: Returns the number of elements in the ring buffer
+  53:..//utils/ringbuf/RingBuf.c **** * RETURN:      Number of elements in the ring buffer
+  54:..//utils/ringbuf/RingBuf.c **** * ALGORITHM:   none
+  55:..//utils/ringbuf/RingBuf.c **** * NOTES:       none
+  56:..//utils/ringbuf/RingBuf.c **** *****************************************************************************/
+  57:..//utils/ringbuf/RingBuf.c **** static unsigned Ringbuf_Count (RING_BUFFER const *b){
+  31              		.loc 1 57 0
+  32              		.cfi_startproc
+  33              		@ args = 0, pretend = 0, frame = 8
+  34              		@ frame_needed = 1, uses_anonymous_args = 0
+  35              		@ link register save eliminated.
+  36 0000 80B4     		push	{r7}
+  37              	.LCFI0:
+  38              		.cfi_def_cfa_offset 4
+  39 0002 83B0     		sub	sp, sp, #12
+  40              	.LCFI1:
+  41              		.cfi_def_cfa_offset 16
+  42 0004 00AF     		add	r7, sp, #0
+  43              		.cfi_offset 7, -4
+  44              	.LCFI2:
+  45              		.cfi_def_cfa_register 7
+  46 0006 7860     		str	r0, [r7, #4]
+  58:..//utils/ringbuf/RingBuf.c ****     return (b ? (b->head - b->tail) : 0);
+  47              		.loc 1 58 0
+  48 0008 7B68     		ldr	r3, [r7, #4]
+  49 000a 002B     		cmp	r3, #0
+  50 000c 06D0     		beq	.L2
+  51 000e 7B68     		ldr	r3, [r7, #4]
+  52 0010 DA68     		ldr	r2, [r3, #12]
+  53 0012 7B68     		ldr	r3, [r7, #4]
+  54 0014 1B69     		ldr	r3, [r3, #16]
+  55 0016 C3EB0203 		rsb	r3, r3, r2
+  56 001a 01E0     		b	.L3
+  57              	.L2:
+  58 001c 4FF00003 		mov	r3, #0
+  59              	.L3:
+  59:..//utils/ringbuf/RingBuf.c **** }
+  60              		.loc 1 59 0
+  61 0020 1846     		mov	r0, r3
+  62 0022 07F10C07 		add	r7, r7, #12
+  63 0026 BD46     		mov	sp, r7
+  64 0028 80BC     		pop	{r7}
+  65 002a 7047     		bx	lr
+  66              		.cfi_endproc
+  67              	.LFE0:
+  69              		.section	.text.Ringbuf_Full,"ax",%progbits
+  70              		.align	2
+  71              		.thumb
+  72              		.thumb_func
+  74              	Ringbuf_Full:
+  75              	.LFB1:
+  60:..//utils/ringbuf/RingBuf.c **** 
+  61:..//utils/ringbuf/RingBuf.c **** /****************************************************************************
+  62:..//utils/ringbuf/RingBuf.c **** * DESCRIPTION: Returns the empty/full status of the ring buffer
+  63:..//utils/ringbuf/RingBuf.c **** * RETURN:      true if the ring buffer is full, false if it is not.
+  64:..//utils/ringbuf/RingBuf.c **** * ALGORITHM:   none
+  65:..//utils/ringbuf/RingBuf.c **** * NOTES:       none
+  66:..//utils/ringbuf/RingBuf.c **** *****************************************************************************/
+  67:..//utils/ringbuf/RingBuf.c **** static bool Ringbuf_Full (RING_BUFFER const *b){
+  76              		.loc 1 67 0
+  77              		.cfi_startproc
+  78              		@ args = 0, pretend = 0, frame = 8
+  79              		@ frame_needed = 1, uses_anonymous_args = 0
+  80 0000 80B5     		push	{r7, lr}
+  81              	.LCFI3:
+  82              		.cfi_def_cfa_offset 8
+  83 0002 82B0     		sub	sp, sp, #8
+  84              	.LCFI4:
+  85              		.cfi_def_cfa_offset 16
+  86 0004 00AF     		add	r7, sp, #0
+  87              		.cfi_offset 14, -4
+  88              		.cfi_offset 7, -8
+  89              	.LCFI5:
+  90              		.cfi_def_cfa_register 7
+  91 0006 7860     		str	r0, [r7, #4]
+  68:..//utils/ringbuf/RingBuf.c ****     return (b ? (Ringbuf_Count(b) == b->element_count) : true);
+  92              		.loc 1 68 0
+  93 0008 7B68     		ldr	r3, [r7, #4]
+  94 000a 002B     		cmp	r3, #0
+  95 000c 0AD0     		beq	.L6
+  96 000e 7868     		ldr	r0, [r7, #4]
+  97 0010 40F20003 		movw	r3, #:lower16:Ringbuf_Count
+  98 0014 C0F20003 		movt	r3, #:upper16:Ringbuf_Count
+  99 0018 9847     		blx	r3
+ 100 001a 0246     		mov	r2, r0
+ 101 001c 7B68     		ldr	r3, [r7, #4]
+ 102 001e 9B68     		ldr	r3, [r3, #8]
+ 103 0020 9A42     		cmp	r2, r3
+ 104 0022 02D1     		bne	.L7
+ 105              	.L6:
+ 106 0024 4FF00103 		mov	r3, #1
+ 107 0028 01E0     		b	.L8
+ 108              	.L7:
+ 109 002a 4FF00003 		mov	r3, #0
+ 110              	.L8:
+ 111 002e DBB2     		uxtb	r3, r3
+  69:..//utils/ringbuf/RingBuf.c **** }
+ 112              		.loc 1 69 0
+ 113 0030 1846     		mov	r0, r3
+ 114 0032 07F10807 		add	r7, r7, #8
+ 115 0036 BD46     		mov	sp, r7
+ 116 0038 80BD     		pop	{r7, pc}
+ 117              		.cfi_endproc
+ 118              	.LFE1:
+ 120 003a 00BF     		.section	.text.Ringbuf_Empty,"ax",%progbits
+ 121              		.align	2
+ 122              		.global	Ringbuf_Empty
+ 123              		.thumb
+ 124              		.thumb_func
+ 126              	Ringbuf_Empty:
+ 127              	.LFB2:
+  70:..//utils/ringbuf/RingBuf.c **** 
+  71:..//utils/ringbuf/RingBuf.c **** /****************************************************************************
+  72:..//utils/ringbuf/RingBuf.c **** * DESCRIPTION: Returns the empty/full status of the ring buffer
+  73:..//utils/ringbuf/RingBuf.c **** * RETURN:      true if the ring buffer is empty, false if it is not.
+  74:..//utils/ringbuf/RingBuf.c **** * ALGORITHM:   none
+  75:..//utils/ringbuf/RingBuf.c **** * NOTES:       none
+  76:..//utils/ringbuf/RingBuf.c **** *****************************************************************************/
+  77:..//utils/ringbuf/RingBuf.c **** bool Ringbuf_Empty(RING_BUFFER const *b){
+ 128              		.loc 1 77 0
+ 129              		.cfi_startproc
+ 130              		@ args = 0, pretend = 0, frame = 8
+ 131              		@ frame_needed = 1, uses_anonymous_args = 0
+ 132 0000 80B5     		push	{r7, lr}
+ 133              	.LCFI6:
+ 134              		.cfi_def_cfa_offset 8
+ 135 0002 82B0     		sub	sp, sp, #8
+ 136              	.LCFI7:
+ 137              		.cfi_def_cfa_offset 16
+ 138 0004 00AF     		add	r7, sp, #0
+ 139              		.cfi_offset 14, -4
+ 140              		.cfi_offset 7, -8
+ 141              	.LCFI8:
+ 142              		.cfi_def_cfa_register 7
+ 143 0006 7860     		str	r0, [r7, #4]
+  78:..//utils/ringbuf/RingBuf.c ****     return (b ? (Ringbuf_Count(b) == 0) : true);
+ 144              		.loc 1 78 0
+ 145 0008 7B68     		ldr	r3, [r7, #4]
+ 146 000a 002B     		cmp	r3, #0
+ 147 000c 08D0     		beq	.L11
+ 148 000e 7868     		ldr	r0, [r7, #4]
+ 149 0010 40F20003 		movw	r3, #:lower16:Ringbuf_Count
+ 150 0014 C0F20003 		movt	r3, #:upper16:Ringbuf_Count
+ 151 0018 9847     		blx	r3
+ 152 001a 0346     		mov	r3, r0
+ 153 001c 002B     		cmp	r3, #0
+ 154 001e 02D1     		bne	.L12
+ 155              	.L11:
+ 156 0020 4FF00103 		mov	r3, #1
+ 157 0024 01E0     		b	.L13
+ 158              	.L12:
+ 159 0026 4FF00003 		mov	r3, #0
+ 160              	.L13:
+ 161 002a DBB2     		uxtb	r3, r3
+  79:..//utils/ringbuf/RingBuf.c **** }
+ 162              		.loc 1 79 0
+ 163 002c 1846     		mov	r0, r3
+ 164 002e 07F10807 		add	r7, r7, #8
+ 165 0032 BD46     		mov	sp, r7
+ 166 0034 80BD     		pop	{r7, pc}
+ 167              		.cfi_endproc
+ 168              	.LFE2:
+ 170 0036 00BF     		.section	.text.Ringbuf_Get_Front,"ax",%progbits
+ 171              		.align	2
+ 172              		.global	Ringbuf_Get_Front
+ 173              		.thumb
+ 174              		.thumb_func
+ 176              	Ringbuf_Get_Front:
+ 177              	.LFB3:
+  80:..//utils/ringbuf/RingBuf.c **** 
+  81:..//utils/ringbuf/RingBuf.c **** /****************************************************************************
+  82:..//utils/ringbuf/RingBuf.c **** * DESCRIPTION: Looks at the data from the head of the list without removing it
+  83:..//utils/ringbuf/RingBuf.c **** * RETURN:      pointer to the data, or NULL if nothing in the list
+  84:..//utils/ringbuf/RingBuf.c **** * ALGORITHM:   none
+  85:..//utils/ringbuf/RingBuf.c **** * NOTES:       none
+  86:..//utils/ringbuf/RingBuf.c **** *****************************************************************************/
+  87:..//utils/ringbuf/RingBuf.c **** uint8_t *Ringbuf_Get_Front(RING_BUFFER const *b){
+ 178              		.loc 1 87 0
+ 179              		.cfi_startproc
+ 180              		@ args = 0, pretend = 0, frame = 8
+ 181              		@ frame_needed = 1, uses_anonymous_args = 0
+ 182 0000 80B5     		push	{r7, lr}
+ 183              	.LCFI9:
+ 184              		.cfi_def_cfa_offset 8
+ 185 0002 82B0     		sub	sp, sp, #8
+ 186              	.LCFI10:
+ 187              		.cfi_def_cfa_offset 16
+ 188 0004 00AF     		add	r7, sp, #0
+ 189              		.cfi_offset 14, -4
+ 190              		.cfi_offset 7, -8
+ 191              	.LCFI11:
+ 192              		.cfi_def_cfa_register 7
+ 193 0006 7860     		str	r0, [r7, #4]
+  88:..//utils/ringbuf/RingBuf.c ****     if (b) {
+ 194              		.loc 1 88 0
+ 195 0008 7B68     		ldr	r3, [r7, #4]
+ 196 000a 002B     		cmp	r3, #0
+ 197 000c 20D0     		beq	.L16
+  89:..//utils/ringbuf/RingBuf.c ****         return (!Ringbuf_Empty(b) ? &(b->data[(b->tail % b->element_count) * b->element_size]) : NU
+ 198              		.loc 1 89 0
+ 199 000e 7868     		ldr	r0, [r7, #4]
+ 200 0010 40F20003 		movw	r3, #:lower16:Ringbuf_Empty
+ 201 0014 C0F20003 		movt	r3, #:upper16:Ringbuf_Empty
+ 202 0018 9847     		blx	r3
+ 203 001a 0346     		mov	r3, r0
+ 204 001c 83F00103 		eor	r3, r3, #1
+ 205 0020 DBB2     		uxtb	r3, r3
+ 206 0022 002B     		cmp	r3, #0
+ 207 0024 11D0     		beq	.L17
+ 208 0026 7B68     		ldr	r3, [r7, #4]
+ 209 0028 1968     		ldr	r1, [r3, #0]
+ 210 002a 7B68     		ldr	r3, [r7, #4]
+ 211 002c 1B69     		ldr	r3, [r3, #16]
+ 212 002e 7A68     		ldr	r2, [r7, #4]
+ 213 0030 9268     		ldr	r2, [r2, #8]
+ 214 0032 B3FBF2F0 		udiv	r0, r3, r2
+ 215 0036 02FB00F2 		mul	r2, r2, r0
+ 216 003a C2EB0303 		rsb	r3, r2, r3
+ 217 003e 7A68     		ldr	r2, [r7, #4]
+ 218 0040 5268     		ldr	r2, [r2, #4]
+ 219 0042 02FB03F3 		mul	r3, r2, r3
+ 220 0046 0B44     		add	r3, r1, r3
+ 221 0048 01E0     		b	.L18
+ 222              	.L17:
+ 223 004a 4FF00003 		mov	r3, #0
+ 224              	.L18:
+ 225 004e 01E0     		b	.L19
+ 226              	.L16:
+  90:..//utils/ringbuf/RingBuf.c ****     }
+  91:..//utils/ringbuf/RingBuf.c ****     return NULL;
+ 227              		.loc 1 91 0
+ 228 0050 4FF00003 		mov	r3, #0
+ 229              	.L19:
+  92:..//utils/ringbuf/RingBuf.c **** }
+ 230              		.loc 1 92 0
+ 231 0054 1846     		mov	r0, r3
+ 232 0056 07F10807 		add	r7, r7, #8
+ 233 005a BD46     		mov	sp, r7
+ 234 005c 80BD     		pop	{r7, pc}
+ 235              		.cfi_endproc
+ 236              	.LFE3:
+ 238 005e 00BF     		.section	.text.Ringbuf_Pop_Front,"ax",%progbits
+ 239              		.align	2
+ 240              		.global	Ringbuf_Pop_Front
+ 241              		.thumb
+ 242              		.thumb_func
+ 244              	Ringbuf_Pop_Front:
+ 245              	.LFB4:
+  93:..//utils/ringbuf/RingBuf.c **** 
+  94:..//utils/ringbuf/RingBuf.c **** /****************************************************************************
+  95:..//utils/ringbuf/RingBuf.c **** * DESCRIPTION: Gets the data from the front of the list, and removes it
+  96:..//utils/ringbuf/RingBuf.c **** * RETURN:      pointer to the data, or NULL if nothing in the list
+  97:..//utils/ringbuf/RingBuf.c **** * ALGORITHM:   none
+  98:..//utils/ringbuf/RingBuf.c **** * NOTES:       none
+  99:..//utils/ringbuf/RingBuf.c **** *****************************************************************************/
+ 100:..//utils/ringbuf/RingBuf.c **** uint8_t *Ringbuf_Pop_Front(RING_BUFFER * b){
+ 246              		.loc 1 100 0
+ 247              		.cfi_startproc
+ 248              		@ args = 0, pretend = 0, frame = 16
+ 249              		@ frame_needed = 1, uses_anonymous_args = 0
+ 250 0000 80B5     		push	{r7, lr}
+ 251              	.LCFI12:
+ 252              		.cfi_def_cfa_offset 8
+ 253 0002 84B0     		sub	sp, sp, #16
+ 254              	.LCFI13:
+ 255              		.cfi_def_cfa_offset 24
+ 256 0004 00AF     		add	r7, sp, #0
+ 257              		.cfi_offset 14, -4
+ 258              		.cfi_offset 7, -8
+ 259              	.LCFI14:
+ 260              		.cfi_def_cfa_register 7
+ 261 0006 7860     		str	r0, [r7, #4]
+ 101:..//utils/ringbuf/RingBuf.c ****     uint8_t *data = NULL;  /* return value */
+ 262              		.loc 1 101 0
+ 263 0008 4FF00003 		mov	r3, #0
+ 264 000c FB60     		str	r3, [r7, #12]
+ 102:..//utils/ringbuf/RingBuf.c **** 
+ 103:..//utils/ringbuf/RingBuf.c ****     if (!Ringbuf_Empty(b)) {
+ 265              		.loc 1 103 0
+ 266 000e 7868     		ldr	r0, [r7, #4]
+ 267 0010 40F20003 		movw	r3, #:lower16:Ringbuf_Empty
+ 268 0014 C0F20003 		movt	r3, #:upper16:Ringbuf_Empty
+ 269 0018 9847     		blx	r3
+ 270 001a 0346     		mov	r3, r0
+ 271 001c 83F00103 		eor	r3, r3, #1
+ 272 0020 DBB2     		uxtb	r3, r3
+ 273 0022 002B     		cmp	r3, #0
+ 274 0024 17D0     		beq	.L22
+ 104:..//utils/ringbuf/RingBuf.c ****         data = &(b->data[(b->tail % b->element_count) * b->element_size]);
+ 275              		.loc 1 104 0
+ 276 0026 7B68     		ldr	r3, [r7, #4]
+ 277 0028 1968     		ldr	r1, [r3, #0]
+ 278 002a 7B68     		ldr	r3, [r7, #4]
+ 279 002c 1B69     		ldr	r3, [r3, #16]
+ 280 002e 7A68     		ldr	r2, [r7, #4]
+ 281 0030 9268     		ldr	r2, [r2, #8]
+ 282 0032 B3FBF2F0 		udiv	r0, r3, r2
+ 283 0036 02FB00F2 		mul	r2, r2, r0
+ 284 003a C2EB0303 		rsb	r3, r2, r3
+ 285 003e 7A68     		ldr	r2, [r7, #4]
+ 286 0040 5268     		ldr	r2, [r2, #4]
+ 287 0042 02FB03F3 		mul	r3, r2, r3
+ 288 0046 0B44     		add	r3, r1, r3
+ 289 0048 FB60     		str	r3, [r7, #12]
+ 105:..//utils/ringbuf/RingBuf.c ****         b->tail++;
+ 290              		.loc 1 105 0
+ 291 004a 7B68     		ldr	r3, [r7, #4]
+ 292 004c 1B69     		ldr	r3, [r3, #16]
+ 293 004e 03F10102 		add	r2, r3, #1
+ 294 0052 7B68     		ldr	r3, [r7, #4]
+ 295 0054 1A61     		str	r2, [r3, #16]
+ 296              	.L22:
+ 106:..//utils/ringbuf/RingBuf.c ****     }
+ 107:..//utils/ringbuf/RingBuf.c ****     return data;
+ 297              		.loc 1 107 0
+ 298 0056 FB68     		ldr	r3, [r7, #12]
+ 108:..//utils/ringbuf/RingBuf.c **** }
+ 299              		.loc 1 108 0
+ 300 0058 1846     		mov	r0, r3
+ 301 005a 07F11007 		add	r7, r7, #16
+ 302 005e BD46     		mov	sp, r7
+ 303 0060 80BD     		pop	{r7, pc}
+ 304              		.cfi_endproc
+ 305              	.LFE4:
+ 307 0062 00BF     		.section	.text.Ringbuf_Put,"ax",%progbits
+ 308              		.align	2
+ 309              		.global	Ringbuf_Put
+ 310              		.thumb
+ 311              		.thumb_func
+ 313              	Ringbuf_Put:
+ 314              	.LFB5:
+ 109:..//utils/ringbuf/RingBuf.c **** 
+ 110:..//utils/ringbuf/RingBuf.c **** /****************************************************************************
+ 111:..//utils/ringbuf/RingBuf.c **** * DESCRIPTION: Adds an element of data to the ring buffer
+ 112:..//utils/ringbuf/RingBuf.c **** * RETURN:      true on succesful add, false if not added
+ 113:..//utils/ringbuf/RingBuf.c **** * ALGORITHM:   none
+ 114:..//utils/ringbuf/RingBuf.c **** * NOTES:       none
+ 115:..//utils/ringbuf/RingBuf.c **** *****************************************************************************/
+ 116:..//utils/ringbuf/RingBuf.c **** bool Ringbuf_Put(RING_BUFFER * b,uint8_t *data_element){     /* ring buffer structure */
+ 315              		.loc 1 116 0
+ 316              		.cfi_startproc
+ 317              		@ args = 0, pretend = 0, frame = 24
+ 318              		@ frame_needed = 1, uses_anonymous_args = 0
+ 319 0000 80B5     		push	{r7, lr}
+ 320              	.LCFI15:
+ 321              		.cfi_def_cfa_offset 8
+ 322 0002 86B0     		sub	sp, sp, #24
+ 323              	.LCFI16:
+ 324              		.cfi_def_cfa_offset 32
+ 325 0004 00AF     		add	r7, sp, #0
+ 326              		.cfi_offset 14, -4
+ 327              		.cfi_offset 7, -8
+ 328              	.LCFI17:
+ 329              		.cfi_def_cfa_register 7
+ 330 0006 7860     		str	r0, [r7, #4]
+ 331 0008 3960     		str	r1, [r7, #0]
+ 117:..//utils/ringbuf/RingBuf.c **** 															/* one element to add to the ring */
+ 118:..//utils/ringbuf/RingBuf.c ****     bool status = false;        /* return value */
+ 332              		.loc 1 118 0
+ 333 000a 4FF00003 		mov	r3, #0
+ 334 000e FB73     		strb	r3, [r7, #15]
+ 119:..//utils/ringbuf/RingBuf.c ****     uint8_t *ring_data = NULL;     /* used to help point ring data */
+ 335              		.loc 1 119 0
+ 336 0010 4FF00003 		mov	r3, #0
+ 337 0014 3B61     		str	r3, [r7, #16]
+ 120:..//utils/ringbuf/RingBuf.c ****     unsigned i; /* loop counter */
+ 121:..//utils/ringbuf/RingBuf.c **** 
+ 122:..//utils/ringbuf/RingBuf.c ****     if (b && data_element) {
+ 338              		.loc 1 122 0
+ 339 0016 7B68     		ldr	r3, [r7, #4]
+ 340 0018 002B     		cmp	r3, #0
+ 341 001a 3ED0     		beq	.L25
+ 342 001c 3B68     		ldr	r3, [r7, #0]
+ 343 001e 002B     		cmp	r3, #0
+ 344 0020 3BD0     		beq	.L25
+ 123:..//utils/ringbuf/RingBuf.c ****         /* limit the amount of elements that we accept */
+ 124:..//utils/ringbuf/RingBuf.c ****         if (!Ringbuf_Full(b)) {
+ 345              		.loc 1 124 0
+ 346 0022 7868     		ldr	r0, [r7, #4]
+ 347 0024 40F20003 		movw	r3, #:lower16:Ringbuf_Full
+ 348 0028 C0F20003 		movt	r3, #:upper16:Ringbuf_Full
+ 349 002c 9847     		blx	r3
+ 350 002e 0346     		mov	r3, r0
+ 351 0030 83F00103 		eor	r3, r3, #1
+ 352 0034 DBB2     		uxtb	r3, r3
+ 353 0036 002B     		cmp	r3, #0
+ 354 0038 2FD0     		beq	.L25
+ 125:..//utils/ringbuf/RingBuf.c ****             ring_data = b->data + ((b->head % b->element_count) * b->element_size);
+ 355              		.loc 1 125 0
+ 356 003a 7B68     		ldr	r3, [r7, #4]
+ 357 003c 1968     		ldr	r1, [r3, #0]
+ 358 003e 7B68     		ldr	r3, [r7, #4]
+ 359 0040 DB68     		ldr	r3, [r3, #12]
+ 360 0042 7A68     		ldr	r2, [r7, #4]
+ 361 0044 9268     		ldr	r2, [r2, #8]
+ 362 0046 B3FBF2F0 		udiv	r0, r3, r2
+ 363 004a 02FB00F2 		mul	r2, r2, r0
+ 364 004e C2EB0303 		rsb	r3, r2, r3
+ 365 0052 7A68     		ldr	r2, [r7, #4]
+ 366 0054 5268     		ldr	r2, [r2, #4]
+ 367 0056 02FB03F3 		mul	r3, r2, r3
+ 368 005a 0B44     		add	r3, r1, r3
+ 369 005c 3B61     		str	r3, [r7, #16]
+ 126:..//utils/ringbuf/RingBuf.c ****             for (i = 0; i < b->element_size; i++) {
+ 370              		.loc 1 126 0
+ 371 005e 4FF00003 		mov	r3, #0
+ 372 0062 7B61     		str	r3, [r7, #20]
+ 373 0064 0BE0     		b	.L26
+ 374              	.L27:
+ 127:..//utils/ringbuf/RingBuf.c ****                 ring_data[i] = data_element[i];
+ 375              		.loc 1 127 0
+ 376 0066 3A69     		ldr	r2, [r7, #16]
+ 377 0068 7B69     		ldr	r3, [r7, #20]
+ 378 006a 1344     		add	r3, r2, r3
+ 379 006c 3968     		ldr	r1, [r7, #0]
+ 380 006e 7A69     		ldr	r2, [r7, #20]
+ 381 0070 0A44     		add	r2, r1, r2
+ 382 0072 1278     		ldrb	r2, [r2, #0]	@ zero_extendqisi2
+ 383 0074 1A70     		strb	r2, [r3, #0]
+ 384              		.loc 1 126 0
+ 385 0076 7B69     		ldr	r3, [r7, #20]
+ 386 0078 03F10103 		add	r3, r3, #1
+ 387 007c 7B61     		str	r3, [r7, #20]
+ 388              	.L26:
+ 389 007e 7B68     		ldr	r3, [r7, #4]
+ 390 0080 5A68     		ldr	r2, [r3, #4]
+ 391 0082 7B69     		ldr	r3, [r7, #20]
+ 392 0084 9A42     		cmp	r2, r3
+ 393 0086 EED8     		bhi	.L27
+ 128:..//utils/ringbuf/RingBuf.c ****             }
+ 129:..//utils/ringbuf/RingBuf.c ****             b->head++;
+ 394              		.loc 1 129 0
+ 395 0088 7B68     		ldr	r3, [r7, #4]
+ 396 008a DB68     		ldr	r3, [r3, #12]
+ 397 008c 03F10102 		add	r2, r3, #1
+ 398 0090 7B68     		ldr	r3, [r7, #4]
+ 399 0092 DA60     		str	r2, [r3, #12]
+ 130:..//utils/ringbuf/RingBuf.c ****             status = true;
+ 400              		.loc 1 130 0
+ 401 0094 4FF00103 		mov	r3, #1
+ 402 0098 FB73     		strb	r3, [r7, #15]
+ 403              	.L25:
+ 131:..//utils/ringbuf/RingBuf.c ****         }
+ 132:..//utils/ringbuf/RingBuf.c ****     }
+ 133:..//utils/ringbuf/RingBuf.c **** 
+ 134:..//utils/ringbuf/RingBuf.c ****     return status;
+ 404              		.loc 1 134 0
+ 405 009a FB7B     		ldrb	r3, [r7, #15]	@ zero_extendqisi2
+ 135:..//utils/ringbuf/RingBuf.c **** }
+ 406              		.loc 1 135 0
+ 407 009c 1846     		mov	r0, r3
+ 408 009e 07F11807 		add	r7, r7, #24
+ 409 00a2 BD46     		mov	sp, r7
+ 410 00a4 80BD     		pop	{r7, pc}
+ 411              		.cfi_endproc
+ 412              	.LFE5:
+ 414 00a6 00BF     		.section	.text.valid_power_of_two,"ax",%progbits
+ 415              		.align	2
+ 416              		.thumb
+ 417              		.thumb_func
+ 419              	valid_power_of_two:
+ 420              	.LFB6:
+ 136:..//utils/ringbuf/RingBuf.c **** 
+ 137:..//utils/ringbuf/RingBuf.c **** /****************************************************************************
+ 138:..//utils/ringbuf/RingBuf.c **** * DESCRIPTION: Converts to a valid power of two
+ 139:..//utils/ringbuf/RingBuf.c **** * RETURN:      a valid power of two value within the range of the value given
+ 140:..//utils/ringbuf/RingBuf.c **** * ALGORITHM:   none
+ 141:..//utils/ringbuf/RingBuf.c **** * NOTES:       none
+ 142:..//utils/ringbuf/RingBuf.c **** *****************************************************************************/
+ 143:..//utils/ringbuf/RingBuf.c **** static unsigned valid_power_of_two(unsigned k){
+ 421              		.loc 1 143 0
+ 422              		.cfi_startproc
+ 423              		@ args = 0, pretend = 0, frame = 16
+ 424              		@ frame_needed = 1, uses_anonymous_args = 0
+ 425              		@ link register save eliminated.
+ 426 0000 80B4     		push	{r7}
+ 427              	.LCFI18:
+ 428              		.cfi_def_cfa_offset 4
+ 429 0002 85B0     		sub	sp, sp, #20
+ 430              	.LCFI19:
+ 431              		.cfi_def_cfa_offset 24
+ 432 0004 00AF     		add	r7, sp, #0
+ 433              		.cfi_offset 7, -4
+ 434              	.LCFI20:
+ 435              		.cfi_def_cfa_register 7
+ 436 0006 7860     		str	r0, [r7, #4]
+ 144:..//utils/ringbuf/RingBuf.c ****     int i;
+ 145:..//utils/ringbuf/RingBuf.c **** 
+ 146:..//utils/ringbuf/RingBuf.c ****     if ( ((k-1) & k) != 0) {
+ 437              		.loc 1 146 0
+ 438 0008 7B68     		ldr	r3, [r7, #4]
+ 439 000a 03F1FF32 		add	r2, r3, #-1
+ 440 000e 7B68     		ldr	r3, [r7, #4]
+ 441 0010 02EA0303 		and	r3, r2, r3
+ 442 0014 002B     		cmp	r3, #0
+ 443 0016 1CD0     		beq	.L30
+ 147:..//utils/ringbuf/RingBuf.c ****         k--;
+ 444              		.loc 1 147 0
+ 445 0018 7B68     		ldr	r3, [r7, #4]
+ 446 001a 03F1FF33 		add	r3, r3, #-1
+ 447 001e 7B60     		str	r3, [r7, #4]
+ 148:..//utils/ringbuf/RingBuf.c ****         for (i = 1; i < sizeof(unsigned) * 8; i = i * 2) {
+ 448              		.loc 1 148 0
+ 449 0020 4FF00103 		mov	r3, #1
+ 450 0024 FB60     		str	r3, [r7, #12]
+ 451 0026 0BE0     		b	.L31
+ 452              	.L32:
+ 149:..//utils/ringbuf/RingBuf.c ****             k = k | k >> i;
+ 453              		.loc 1 149 0
+ 454 0028 7A68     		ldr	r2, [r7, #4]
+ 455 002a FB68     		ldr	r3, [r7, #12]
+ 456 002c 22FA03F3 		lsr	r3, r2, r3
+ 457 0030 7A68     		ldr	r2, [r7, #4]
+ 458 0032 42EA0303 		orr	r3, r2, r3
+ 459 0036 7B60     		str	r3, [r7, #4]
+ 460              		.loc 1 148 0
+ 461 0038 FB68     		ldr	r3, [r7, #12]
+ 462 003a 4FEA4303 		lsl	r3, r3, #1
+ 463 003e FB60     		str	r3, [r7, #12]
+ 464              	.L31:
+ 465 0040 FB68     		ldr	r3, [r7, #12]
+ 466 0042 1F2B     		cmp	r3, #31
+ 467 0044 F0D9     		bls	.L32
+ 150:..//utils/ringbuf/RingBuf.c ****         }
+ 151:..//utils/ringbuf/RingBuf.c ****         k = (k+1) >> 1;
+ 468              		.loc 1 151 0
+ 469 0046 7B68     		ldr	r3, [r7, #4]
+ 470 0048 03F10103 		add	r3, r3, #1
+ 471 004c 4FEA5303 		lsr	r3, r3, #1
+ 472 0050 7B60     		str	r3, [r7, #4]
+ 473              	.L30:
+ 152:..//utils/ringbuf/RingBuf.c ****     }
+ 153:..//utils/ringbuf/RingBuf.c ****     return k;
+ 474              		.loc 1 153 0
+ 475 0052 7B68     		ldr	r3, [r7, #4]
+ 154:..//utils/ringbuf/RingBuf.c **** }
+ 476              		.loc 1 154 0
+ 477 0054 1846     		mov	r0, r3
+ 478 0056 07F11407 		add	r7, r7, #20
+ 479 005a BD46     		mov	sp, r7
+ 480 005c 80BC     		pop	{r7}
+ 481 005e 7047     		bx	lr
+ 482              		.cfi_endproc
+ 483              	.LFE6:
+ 485              		.section	.text.Ringbuf_Init,"ax",%progbits
+ 486              		.align	2
+ 487              		.global	Ringbuf_Init
+ 488              		.thumb
+ 489              		.thumb_func
+ 491              	Ringbuf_Init:
+ 492              	.LFB7:
+ 155:..//utils/ringbuf/RingBuf.c **** 
+ 156:..//utils/ringbuf/RingBuf.c **** 
+ 157:..//utils/ringbuf/RingBuf.c **** /****************************************************************************
+ 158:..//utils/ringbuf/RingBuf.c **** * DESCRIPTION: Configures the ring buffer
+ 159:..//utils/ringbuf/RingBuf.c **** * RETURN:      none
+ 160:..//utils/ringbuf/RingBuf.c **** * ALGORITHM:   none
+ 161:..//utils/ringbuf/RingBuf.c **** * NOTES:
+ 162:..//utils/ringbuf/RingBuf.c **** *   element_count should be a power of two,
+ 163:..//utils/ringbuf/RingBuf.c **** *   or it will only use the next lower power of two
+ 164:..//utils/ringbuf/RingBuf.c **** *****************************************************************************/
+ 165:..//utils/ringbuf/RingBuf.c **** 
+ 166:..//utils/ringbuf/RingBuf.c **** void Ringbuf_Init(RING_BUFFER * b,  uint8_t *data, unsigned element_size, unsigned element_count){
+ 493              		.loc 1 166 0
+ 494              		.cfi_startproc
+ 495              		@ args = 0, pretend = 0, frame = 16
+ 496              		@ frame_needed = 1, uses_anonymous_args = 0
+ 497 0000 80B5     		push	{r7, lr}
+ 498              	.LCFI21:
+ 499              		.cfi_def_cfa_offset 8
+ 500 0002 84B0     		sub	sp, sp, #16
+ 501              	.LCFI22:
+ 502              		.cfi_def_cfa_offset 24
+ 503 0004 00AF     		add	r7, sp, #0
+ 504              		.cfi_offset 14, -4
+ 505              		.cfi_offset 7, -8
+ 506              	.LCFI23:
+ 507              		.cfi_def_cfa_register 7
+ 508 0006 F860     		str	r0, [r7, #12]
+ 509 0008 B960     		str	r1, [r7, #8]
+ 510 000a 7A60     		str	r2, [r7, #4]
+ 511 000c 3B60     		str	r3, [r7, #0]
+ 167:..//utils/ringbuf/RingBuf.c **** /*unsigned element_size ----- size of one element in the data block */
+ 168:..//utils/ringbuf/RingBuf.c **** /*uint8_t *data ------ data block or array of data */
+ 169:..//utils/ringbuf/RingBuf.c **** /*RING_BUFFER * b ---- ring buffer structure */
+ 170:..//utils/ringbuf/RingBuf.c **** /*unsigned element_count ---- number of elements in the data block */
+ 171:..//utils/ringbuf/RingBuf.c ****     if (b) {
+ 512              		.loc 1 171 0
+ 513 000e FB68     		ldr	r3, [r7, #12]
+ 514 0010 002B     		cmp	r3, #0
+ 515 0012 18D0     		beq	.L36
+ 172:..//utils/ringbuf/RingBuf.c ****         /* limit to a power of two - allows a bit to be used to
+ 173:..//utils/ringbuf/RingBuf.c ****            count the final slot */
+ 174:..//utils/ringbuf/RingBuf.c ****         element_count = valid_power_of_two(element_count);
+ 516              		.loc 1 174 0
+ 517 0014 3868     		ldr	r0, [r7, #0]
+ 518 0016 40F20003 		movw	r3, #:lower16:valid_power_of_two
+ 519 001a C0F20003 		movt	r3, #:upper16:valid_power_of_two
+ 520 001e 9847     		blx	r3
+ 521 0020 0346     		mov	r3, r0
+ 522 0022 3B60     		str	r3, [r7, #0]
+ 175:..//utils/ringbuf/RingBuf.c ****         b->head = 0;
+ 523              		.loc 1 175 0
+ 524 0024 FB68     		ldr	r3, [r7, #12]
+ 525 0026 4FF00002 		mov	r2, #0
+ 526 002a DA60     		str	r2, [r3, #12]
+ 176:..//utils/ringbuf/RingBuf.c ****         b->tail = 0;
+ 527              		.loc 1 176 0
+ 528 002c FB68     		ldr	r3, [r7, #12]
+ 529 002e 4FF00002 		mov	r2, #0
+ 530 0032 1A61     		str	r2, [r3, #16]
+ 177:..//utils/ringbuf/RingBuf.c ****         b->data = data;
+ 531              		.loc 1 177 0
+ 532 0034 FB68     		ldr	r3, [r7, #12]
+ 533 0036 BA68     		ldr	r2, [r7, #8]
+ 534 0038 1A60     		str	r2, [r3, #0]
+ 178:..//utils/ringbuf/RingBuf.c ****         b->element_size = element_size;
+ 535              		.loc 1 178 0
+ 536 003a FB68     		ldr	r3, [r7, #12]
+ 537 003c 7A68     		ldr	r2, [r7, #4]
+ 538 003e 5A60     		str	r2, [r3, #4]
+ 179:..//utils/ringbuf/RingBuf.c ****         b->element_count = element_count;
+ 539              		.loc 1 179 0
+ 540 0040 FB68     		ldr	r3, [r7, #12]
+ 541 0042 3A68     		ldr	r2, [r7, #0]
+ 542 0044 9A60     		str	r2, [r3, #8]
+ 543              	.L36:
+ 180:..//utils/ringbuf/RingBuf.c ****     }
+ 181:..//utils/ringbuf/RingBuf.c ****     return;
+ 182:..//utils/ringbuf/RingBuf.c **** }
+ 544              		.loc 1 182 0
+ 545 0046 07F11007 		add	r7, r7, #16
+ 546 004a BD46     		mov	sp, r7
+ 547 004c 80BD     		pop	{r7, pc}
+ 548              		.cfi_endproc
+ 549              	.LFE7:
+ 551 004e 00BF     		.text
+ 552              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 RingBuf.c
+C:\Users\hdhed\AppData\Local\Temp\ccBy4ieA.s:24     .text.Ringbuf_Count:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccBy4ieA.s:28     .text.Ringbuf_Count:00000000 Ringbuf_Count
+C:\Users\hdhed\AppData\Local\Temp\ccBy4ieA.s:70     .text.Ringbuf_Full:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccBy4ieA.s:74     .text.Ringbuf_Full:00000000 Ringbuf_Full
+C:\Users\hdhed\AppData\Local\Temp\ccBy4ieA.s:121    .text.Ringbuf_Empty:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccBy4ieA.s:126    .text.Ringbuf_Empty:00000000 Ringbuf_Empty
+C:\Users\hdhed\AppData\Local\Temp\ccBy4ieA.s:171    .text.Ringbuf_Get_Front:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccBy4ieA.s:176    .text.Ringbuf_Get_Front:00000000 Ringbuf_Get_Front
+C:\Users\hdhed\AppData\Local\Temp\ccBy4ieA.s:239    .text.Ringbuf_Pop_Front:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccBy4ieA.s:244    .text.Ringbuf_Pop_Front:00000000 Ringbuf_Pop_Front
+C:\Users\hdhed\AppData\Local\Temp\ccBy4ieA.s:308    .text.Ringbuf_Put:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccBy4ieA.s:313    .text.Ringbuf_Put:00000000 Ringbuf_Put
+C:\Users\hdhed\AppData\Local\Temp\ccBy4ieA.s:415    .text.valid_power_of_two:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccBy4ieA.s:419    .text.valid_power_of_two:00000000 valid_power_of_two
+C:\Users\hdhed\AppData\Local\Temp\ccBy4ieA.s:486    .text.Ringbuf_Init:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccBy4ieA.s:491    .text.Ringbuf_Init:00000000 Ringbuf_Init
+                     .debug_frame:00000010 $d
+
+NO UNDEFINED SYMBOLS

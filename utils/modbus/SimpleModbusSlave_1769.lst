@@ -1,0 +1,1593 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"SimpleModbusSlave_1769.cpp"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.global	reg_count
+  24              		.section	.bss.reg_count,"aw",%nobits
+  25              		.align	2
+  28              	reg_count:
+  29 0000 00000000 		.space	4
+  30              		.section	.text._Z16modbus_configureP8modbus_tlijPj,"ax",%progbits
+  31              		.align	2
+  32              		.global	_Z16modbus_configureP8modbus_tlijPj
+  33              		.thumb
+  34              		.thumb_func
+  36              	_Z16modbus_configureP8modbus_tlijPj:
+  37              	.LFB29:
+  38              		.file 1 "..//utils/modbus/SimpleModbusSlave_1769.cpp"
+   1:..//utils/modbus/SimpleModbusSlave_1769.cpp **** #include "SimpleModbusSlave_1769.h"
+   2:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 
+   3:..//utils/modbus/SimpleModbusSlave_1769.cpp **** extern "C"{
+   4:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	#include "usbSerial.h"
+   5:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 
+   6:..//utils/modbus/SimpleModbusSlave_1769.cpp **** }
+   7:..//utils/modbus/SimpleModbusSlave_1769.cpp **** #define BUFFER_SIZE 128
+   8:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 
+   9:..//utils/modbus/SimpleModbusSlave_1769.cpp **** int reg_count = 0;
+  10:..//utils/modbus/SimpleModbusSlave_1769.cpp **** // function definitions
+  11:..//utils/modbus/SimpleModbusSlave_1769.cpp **** void exceptionResponse(modbus_t* mbus,unsigned char exception);
+  12:..//utils/modbus/SimpleModbusSlave_1769.cpp **** unsigned int calculateCRC(modbus_t* mbus,unsigned char bufferSize); 
+  13:..//utils/modbus/SimpleModbusSlave_1769.cpp **** void sendPacket(modbus_t* mbus,unsigned char bufferSize);
+  14:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 
+  15:..//utils/modbus/SimpleModbusSlave_1769.cpp **** int set_holding_registers_values_accel_table(int modbus_cnt, int index_offset);
+  16:..//utils/modbus/SimpleModbusSlave_1769.cpp **** // int set_holding_registers_values(int modbus_cnt);
+  17:..//utils/modbus/SimpleModbusSlave_1769.cpp **** // int apply_modbus_values(int modbus_cnt);
+  18:..//utils/modbus/SimpleModbusSlave_1769.cpp **** int setRegister(modbus_t* mbus,int i, int value);
+  19:..//utils/modbus/SimpleModbusSlave_1769.cpp **** int getRegister(modbus_t* mbus,int i);
+  20:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 
+  21:..//utils/modbus/SimpleModbusSlave_1769.cpp **** void modbus_configure(	modbus_t* mbus,
+  22:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 						long baud,
+  23:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 						int _slaveID,
+  24:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 						unsigned int _holdingRegsSize,
+  25:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 						unsigned int* _regs)
+  26:..//utils/modbus/SimpleModbusSlave_1769.cpp **** {
+  39              		.loc 1 26 0
+  40              		.cfi_startproc
+  41              		@ args = 4, pretend = 0, frame = 16
+  42              		@ frame_needed = 1, uses_anonymous_args = 0
+  43 0000 80B5     		push	{r7, lr}
+  44              	.LCFI0:
+  45              		.cfi_def_cfa_offset 8
+  46 0002 84B0     		sub	sp, sp, #16
+  47              	.LCFI1:
+  48              		.cfi_def_cfa_offset 24
+  49 0004 00AF     		add	r7, sp, #0
+  50              		.cfi_offset 14, -4
+  51              		.cfi_offset 7, -8
+  52              	.LCFI2:
+  53              		.cfi_def_cfa_register 7
+  54 0006 F860     		str	r0, [r7, #12]
+  55 0008 B960     		str	r1, [r7, #8]
+  56 000a 7A60     		str	r2, [r7, #4]
+  57 000c 3B60     		str	r3, [r7, #0]
+  27:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	mbus->slaveID = _slaveID;
+  58              		.loc 1 27 0
+  59 000e 7A68     		ldr	r2, [r7, #4]
+  60 0010 FB68     		ldr	r3, [r7, #12]
+  61 0012 C3F8A420 		str	r2, [r3, #164]
+  28:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	mbus->holdingRegsSize = _holdingRegsSize; 
+  62              		.loc 1 28 0
+  63 0016 FB68     		ldr	r3, [r7, #12]
+  64 0018 3A68     		ldr	r2, [r7, #0]
+  65 001a C3F89820 		str	r2, [r3, #152]
+  29:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	mbus->regs = _regs;	
+  66              		.loc 1 29 0
+  67 001e FB68     		ldr	r3, [r7, #12]
+  68 0020 BA69     		ldr	r2, [r7, #24]
+  69 0022 C3F8A020 		str	r2, [r3, #160]
+  30:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	mbus->errorCount = MB_NO_ERROR; // initialize errorCount
+  70              		.loc 1 30 0
+  71 0026 FB68     		ldr	r3, [r7, #12]
+  72 0028 4FF00002 		mov	r2, #0
+  73 002c C3F8AC20 		str	r2, [r3, #172]
+  31:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	mbus->modbusTimerCount = 0;
+  74              		.loc 1 31 0
+  75 0030 FB68     		ldr	r3, [r7, #12]
+  76 0032 4FF00002 		mov	r2, #0
+  77 0036 5A60     		str	r2, [r3, #4]
+  32:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	/***
+  33:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	int T1_5, T3_5;
+  34:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	if(baud>19200){
+  35:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		T1_5 = 750us;
+  36:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		T3_5 = 1750us;
+  37:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	}else{
+  38:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		T1_5 = 15000000/baud;
+  39:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		T3_5 = 35000000/baud;
+  40:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	}	
+  41:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	***/
+  42:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	
+  43:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	if(baud>19200){
+  78              		.loc 1 43 0
+  79 0038 BB68     		ldr	r3, [r7, #8]
+  80 003a B3F5964F 		cmp	r3, #19200
+  81 003e 04DD     		ble	.L2
+  44:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		mbus->modbus_timeout = 1750; //keep the timeout 100us less than actual
+  82              		.loc 1 44 0
+  83 0040 FB68     		ldr	r3, [r7, #12]
+  84 0042 40F2D662 		movw	r2, #1750
+  85 0046 1A61     		str	r2, [r3, #16]
+  86 0048 09E0     		b	.L3
+  87              	.L2:
+  45:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	}else{
+  46:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		mbus->modbus_timeout = ((int)(35000000/baud)); //keep the timeout 100us less than actual
+  88              		.loc 1 46 0
+  89 004a 40F6C063 		movw	r3, #:lower16:35000000
+  90 004e C0F21623 		movt	r3, #:upper16:35000000
+  91 0052 BA68     		ldr	r2, [r7, #8]
+  92 0054 93FBF2F3 		sdiv	r3, r3, r2
+  93 0058 1A46     		mov	r2, r3
+  94 005a FB68     		ldr	r3, [r7, #12]
+  95 005c 1A61     		str	r2, [r3, #16]
+  96              	.L3:
+  47:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	}
+  48:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	init_timer3_freq(mbus->modbus_timeout); //set timer value
+  97              		.loc 1 48 0
+  98 005e FB68     		ldr	r3, [r7, #12]
+  99 0060 1B69     		ldr	r3, [r3, #16]
+ 100 0062 1846     		mov	r0, r3
+ 101 0064 40F20003 		movw	r3, #:lower16:init_timer3_freq
+ 102 0068 C0F20003 		movt	r3, #:upper16:init_timer3_freq
+ 103 006c 9847     		blx	r3
+  49:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	// printf("\n mbus time out %d",mbus->modbus_timeout);
+  50:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	
+  51:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	
+  52:..//utils/modbus/SimpleModbusSlave_1769.cpp **** }   
+ 104              		.loc 1 52 0
+ 105 006e 07F11007 		add	r7, r7, #16
+ 106 0072 BD46     		mov	sp, r7
+ 107 0074 80BD     		pop	{r7, pc}
+ 108              		.cfi_endproc
+ 109              	.LFE29:
+ 111 0076 00BF     		.section	.text.modbus_update,"ax",%progbits
+ 112              		.align	2
+ 113              		.global	modbus_update
+ 114              		.thumb
+ 115              		.thumb_func
+ 117              	modbus_update:
+ 118              	.LFB30:
+  53:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 
+  54:..//utils/modbus/SimpleModbusSlave_1769.cpp **** unsigned int modbus_update(modbus_t* mbus){
+ 119              		.loc 1 54 0
+ 120              		.cfi_startproc
+ 121              		@ args = 0, pretend = 0, frame = 56
+ 122              		@ frame_needed = 1, uses_anonymous_args = 0
+ 123 0000 80B5     		push	{r7, lr}
+ 124              	.LCFI3:
+ 125              		.cfi_def_cfa_offset 8
+ 126 0002 8EB0     		sub	sp, sp, #56
+ 127              	.LCFI4:
+ 128              		.cfi_def_cfa_offset 64
+ 129 0004 00AF     		add	r7, sp, #0
+ 130              		.cfi_offset 14, -4
+ 131              		.cfi_offset 7, -8
+ 132              	.LCFI5:
+ 133              		.cfi_def_cfa_register 7
+ 134 0006 7860     		str	r0, [r7, #4]
+ 135              	.LBB2:
+  55:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	mbus->errorCount=MB_NO_ERROR;
+ 136              		.loc 1 55 0
+ 137 0008 7B68     		ldr	r3, [r7, #4]
+ 138 000a 4FF00002 		mov	r2, #0
+ 139 000e C3F8AC20 		str	r2, [r3, #172]
+  56:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	// printf("\ndata = %d",mbus->modbus_data_complete);
+  57:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	if (mbus->modbus_data_complete){ //last frame complete
+ 140              		.loc 1 57 0
+ 141 0012 7B68     		ldr	r3, [r7, #4]
+ 142 0014 1B68     		ldr	r3, [r3, #0]
+ 143 0016 002B     		cmp	r3, #0
+ 144 0018 00F06F82 		beq	.L6
+  58:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		mbus->buff = getUartdata(mbus); // get data from ring buffer
+ 145              		.loc 1 58 0
+ 146 001c 7868     		ldr	r0, [r7, #4]
+ 147 001e 40F20003 		movw	r3, #:lower16:getUartdata
+ 148 0022 C0F20003 		movt	r3, #:upper16:getUartdata
+ 149 0026 9847     		blx	r3
+ 150 0028 0346     		mov	r3, r0
+ 151 002a 1A46     		mov	r2, r3
+ 152 002c 7B68     		ldr	r3, [r7, #4]
+ 153 002e 83F8B120 		strb	r2, [r3, #177]
+  59:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		mbus->frame[0] = mbus->ring_slaveID; //was initially removed from ring
+ 154              		.loc 1 59 0
+ 155 0032 7B68     		ldr	r3, [r7, #4]
+ 156 0034 5A7D     		ldrb	r2, [r3, #21]	@ zero_extendqisi2
+ 157 0036 7B68     		ldr	r3, [r7, #4]
+ 158 0038 9A75     		strb	r2, [r3, #22]
+  60:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		mbus->modbusTimerCount = 0;
+ 159              		.loc 1 60 0
+ 160 003a 7B68     		ldr	r3, [r7, #4]
+ 161 003c 4FF00002 		mov	r2, #0
+ 162 0040 5A60     		str	r2, [r3, #4]
+  61:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		mbus->modbus_data_complete = 0;
+ 163              		.loc 1 61 0
+ 164 0042 7B68     		ldr	r3, [r7, #4]
+ 165 0044 4FF00002 		mov	r2, #0
+ 166 0048 1A60     		str	r2, [r3, #0]
+  62:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		// mbus->processed = 1;
+  63:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		// printf("\ngot c1");
+  64:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		
+  65:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		// If an overflow occurred increment the errorCount
+  66:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		// variable and return to the main sketch without 
+  67:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		// responding to the request i.e. force a timeout
+  68:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		if (mbus->ovrflw){
+ 167              		.loc 1 68 0
+ 168 004a 7B68     		ldr	r3, [r7, #4]
+ 169 004c 93F8B030 		ldrb	r3, [r3, #176]	@ zero_extendqisi2
+ 170 0050 002B     		cmp	r3, #0
+ 171 0052 07D0     		beq	.L7
+  69:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			mbus->errorCount = MB_OVERFLOW;
+ 172              		.loc 1 69 0
+ 173 0054 7B68     		ldr	r3, [r7, #4]
+ 174 0056 4FF00102 		mov	r2, #1
+ 175 005a C3F8AC20 		str	r2, [r3, #172]
+  70:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			return MB_OVERFLOW;
+ 176              		.loc 1 70 0
+ 177 005e 4FF00103 		mov	r3, #1
+ 178 0062 4DE2     		b	.L8
+ 179              	.L7:
+  71:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		}
+  72:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		
+  73:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		mbus->broadcastFlag = 0;
+ 180              		.loc 1 73 0
+ 181 0064 7B68     		ldr	r3, [r7, #4]
+ 182 0066 4FF00002 		mov	r2, #0
+ 183 006a 83F89C20 		strb	r2, [r3, #156]
+  74:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		// The minimum request packet is 8 bytes for function 3 & 16
+  75:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		// printf("\nbuffer=%d",buffer);
+  76:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		if (mbus->buff > 7){
+ 184              		.loc 1 76 0
+ 185 006e 7B68     		ldr	r3, [r7, #4]
+ 186 0070 93F8B130 		ldrb	r3, [r3, #177]	@ zero_extendqisi2
+ 187 0074 072B     		cmp	r3, #7
+ 188 0076 40F22D82 		bls	.L9
+ 189              	.LBB3:
+  77:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			unsigned char id = mbus->frame[0];
+ 190              		.loc 1 77 0
+ 191 007a 7B68     		ldr	r3, [r7, #4]
+ 192 007c 9B7D     		ldrb	r3, [r3, #22]
+ 193 007e FB72     		strb	r3, [r7, #11]
+  78:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			mbus->broadcastFlag = 0;
+ 194              		.loc 1 78 0
+ 195 0080 7B68     		ldr	r3, [r7, #4]
+ 196 0082 4FF00002 		mov	r2, #0
+ 197 0086 83F89C20 		strb	r2, [r3, #156]
+  79:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		
+  80:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			if (id == 0){
+ 198              		.loc 1 80 0
+ 199 008a FB7A     		ldrb	r3, [r7, #11]	@ zero_extendqisi2
+ 200 008c 002B     		cmp	r3, #0
+ 201 008e 04D1     		bne	.L10
+  81:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 				mbus->broadcastFlag = 1;
+ 202              		.loc 1 81 0
+ 203 0090 7B68     		ldr	r3, [r7, #4]
+ 204 0092 4FF00102 		mov	r2, #1
+ 205 0096 83F89C20 		strb	r2, [r3, #156]
+ 206              	.L10:
+  82:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			}
+  83:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			if (id == mbus->slaveID || mbus->broadcastFlag){ // if the recieved ID matches the slaveID or br
+ 207              		.loc 1 83 0
+ 208 009a FA7A     		ldrb	r2, [r7, #11]	@ zero_extendqisi2
+ 209 009c 7B68     		ldr	r3, [r7, #4]
+ 210 009e D3F8A430 		ldr	r3, [r3, #164]
+ 211 00a2 9A42     		cmp	r2, r3
+ 212 00a4 05D0     		beq	.L11
+ 213 00a6 7B68     		ldr	r3, [r7, #4]
+ 214 00a8 93F89C30 		ldrb	r3, [r3, #156]	@ zero_extendqisi2
+ 215 00ac 002B     		cmp	r3, #0
+ 216 00ae 00F00B82 		beq	.L12
+ 217              	.L11:
+ 218              	.LBB13:
+  84:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 				unsigned int crc = ((mbus->frame[mbus->buff - 2] << 8) | mbus->frame[mbus->buff - 1]); // combi
+ 219              		.loc 1 84 0
+ 220 00b2 7B68     		ldr	r3, [r7, #4]
+ 221 00b4 93F8B130 		ldrb	r3, [r3, #177]	@ zero_extendqisi2
+ 222 00b8 A3F10202 		sub	r2, r3, #2
+ 223 00bc 7B68     		ldr	r3, [r7, #4]
+ 224 00be 1344     		add	r3, r2, r3
+ 225 00c0 9B7D     		ldrb	r3, [r3, #22]	@ zero_extendqisi2
+ 226 00c2 4FEA0322 		lsl	r2, r3, #8
+ 227 00c6 7B68     		ldr	r3, [r7, #4]
+ 228 00c8 93F8B130 		ldrb	r3, [r3, #177]	@ zero_extendqisi2
+ 229 00cc 03F1FF31 		add	r1, r3, #-1
+ 230 00d0 7B68     		ldr	r3, [r7, #4]
+ 231 00d2 0B44     		add	r3, r1, r3
+ 232 00d4 9B7D     		ldrb	r3, [r3, #22]	@ zero_extendqisi2
+ 233 00d6 42EA0303 		orr	r3, r2, r3
+ 234 00da FB60     		str	r3, [r7, #12]
+  85:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 				if (calculateCRC(mbus,(mbus->buff - 2)) == crc){ // if the calculated crc matches the recieved 
+ 235              		.loc 1 85 0
+ 236 00dc 7B68     		ldr	r3, [r7, #4]
+ 237 00de 93F8B130 		ldrb	r3, [r3, #177]	@ zero_extendqisi2
+ 238 00e2 A3F10203 		sub	r3, r3, #2
+ 239 00e6 DBB2     		uxtb	r3, r3
+ 240 00e8 7868     		ldr	r0, [r7, #4]
+ 241 00ea 1946     		mov	r1, r3
+ 242 00ec 40F20003 		movw	r3, #:lower16:_Z12calculateCRCP8modbus_th
+ 243 00f0 C0F20003 		movt	r3, #:upper16:_Z12calculateCRCP8modbus_th
+ 244 00f4 9847     		blx	r3
+ 245 00f6 0246     		mov	r2, r0
+ 246 00f8 FB68     		ldr	r3, [r7, #12]
+ 247 00fa 9A42     		cmp	r2, r3
+ 248 00fc 14BF     		ite	ne
+ 249 00fe 0023     		movne	r3, #0
+ 250 0100 0123     		moveq	r3, #1
+ 251 0102 DBB2     		uxtb	r3, r3
+ 252 0104 002B     		cmp	r3, #0
+ 253 0106 00F0D981 		beq	.L13
+ 254              	.LBB18:
+  86:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 					mbus->function = mbus->frame[1];
+ 255              		.loc 1 86 0
+ 256 010a 7B68     		ldr	r3, [r7, #4]
+ 257 010c DA7D     		ldrb	r2, [r3, #23]	@ zero_extendqisi2
+ 258 010e 7B68     		ldr	r3, [r7, #4]
+ 259 0110 83F8A820 		strb	r2, [r3, #168]
+  87:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 					unsigned int startingAddress = ((mbus->frame[2] << 8) | mbus->frame[3]); // combine the starti
+ 260              		.loc 1 87 0
+ 261 0114 7B68     		ldr	r3, [r7, #4]
+ 262 0116 1B7E     		ldrb	r3, [r3, #24]	@ zero_extendqisi2
+ 263 0118 4FEA0322 		lsl	r2, r3, #8
+ 264 011c 7B68     		ldr	r3, [r7, #4]
+ 265 011e 5B7E     		ldrb	r3, [r3, #25]	@ zero_extendqisi2
+ 266 0120 42EA0303 		orr	r3, r2, r3
+ 267 0124 3B61     		str	r3, [r7, #16]
+  88:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		
+  89:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 					unsigned int no_of_registers = ((mbus->frame[4] << 8) | mbus->frame[5]); // combine the number
+ 268              		.loc 1 89 0
+ 269 0126 7B68     		ldr	r3, [r7, #4]
+ 270 0128 9B7E     		ldrb	r3, [r3, #26]	@ zero_extendqisi2
+ 271 012a 4FEA0322 		lsl	r2, r3, #8
+ 272 012e 7B68     		ldr	r3, [r7, #4]
+ 273 0130 DB7E     		ldrb	r3, [r3, #27]	@ zero_extendqisi2
+ 274 0132 42EA0303 		orr	r3, r2, r3
+ 275 0136 7B61     		str	r3, [r7, #20]
+  90:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 
+  91:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 					unsigned int maxData = startingAddress + no_of_registers;
+ 276              		.loc 1 91 0
+ 277 0138 3A69     		ldr	r2, [r7, #16]
+ 278 013a 7B69     		ldr	r3, [r7, #20]
+ 279 013c 1344     		add	r3, r2, r3
+ 280 013e BB61     		str	r3, [r7, #24]
+  92:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 					
+  93:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 					unsigned int index;
+  94:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 					unsigned int address;
+  95:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 					unsigned int crc16;
+  96:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 					
+  97:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 					// broadcasting is not supported for function 3 
+  98:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 					if (!mbus->broadcastFlag && (mbus->function == 3)){
+ 281              		.loc 1 98 0
+ 282 0140 7B68     		ldr	r3, [r7, #4]
+ 283 0142 93F89C30 		ldrb	r3, [r3, #156]	@ zero_extendqisi2
+ 284 0146 002B     		cmp	r3, #0
+ 285 0148 40F0A580 		bne	.L14
+ 286 014c 7B68     		ldr	r3, [r7, #4]
+ 287 014e 93F8A830 		ldrb	r3, [r3, #168]	@ zero_extendqisi2
+ 288 0152 032B     		cmp	r3, #3
+ 289 0154 40F09F80 		bne	.L14
+  99:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 
+ 100:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 						if (startingAddress < mbus->holdingRegsSize){ // check exception 2 ILLEGAL DATA ADDRESS
+ 290              		.loc 1 100 0
+ 291 0158 7B68     		ldr	r3, [r7, #4]
+ 292 015a D3F89820 		ldr	r2, [r3, #152]
+ 293 015e 3B69     		ldr	r3, [r7, #16]
+ 294 0160 9A42     		cmp	r2, r3
+ 295 0162 40F28E80 		bls	.L15
+ 101:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 							if (maxData <= mbus->holdingRegsSize){ // check exception 3 ILLEGAL DATA VALUE						  
+ 296              		.loc 1 101 0
+ 297 0166 7B68     		ldr	r3, [r7, #4]
+ 298 0168 D3F89820 		ldr	r2, [r3, #152]
+ 299 016c BB69     		ldr	r3, [r7, #24]
+ 300 016e 9A42     		cmp	r2, r3
+ 301 0170 7ED3     		bcc	.L16
+ 302              	.LBB21:
+ 102:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								unsigned char noOfBytes = no_of_registers * 2; 
+ 303              		.loc 1 102 0
+ 304 0172 7B69     		ldr	r3, [r7, #20]
+ 305 0174 DBB2     		uxtb	r3, r3
+ 306 0176 4FEA4303 		lsl	r3, r3, #1
+ 307 017a 87F82A30 		strb	r3, [r7, #42]
+ 103:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								// ID, function, noOfBytes, (dataLo + dataHi)*number of registers,
+ 104:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								//  crcLo, crcHi
+ 105:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								unsigned char responseFrameSize = 5 + noOfBytes; 
+ 308              		.loc 1 105 0
+ 309 017e 97F82A30 		ldrb	r3, [r7, #42]
+ 310 0182 03F10503 		add	r3, r3, #5
+ 311 0186 87F82B30 		strb	r3, [r7, #43]
+ 106:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 
+ 107:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								mbus->frame[0] = mbus->slaveID;
+ 312              		.loc 1 107 0
+ 313 018a 7B68     		ldr	r3, [r7, #4]
+ 314 018c D3F8A430 		ldr	r3, [r3, #164]
+ 315 0190 DAB2     		uxtb	r2, r3
+ 316 0192 7B68     		ldr	r3, [r7, #4]
+ 317 0194 9A75     		strb	r2, [r3, #22]
+ 108:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								mbus->frame[1] = mbus->function;
+ 318              		.loc 1 108 0
+ 319 0196 7B68     		ldr	r3, [r7, #4]
+ 320 0198 93F8A820 		ldrb	r2, [r3, #168]	@ zero_extendqisi2
+ 321 019c 7B68     		ldr	r3, [r7, #4]
+ 322 019e DA75     		strb	r2, [r3, #23]
+ 109:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								mbus->frame[2] = noOfBytes;
+ 323              		.loc 1 109 0
+ 324 01a0 7B68     		ldr	r3, [r7, #4]
+ 325 01a2 97F82A20 		ldrb	r2, [r7, #42]
+ 326 01a6 1A76     		strb	r2, [r3, #24]
+ 110:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								address = 3; // PDU starts at the 4th byte
+ 327              		.loc 1 110 0
+ 328 01a8 4FF00303 		mov	r3, #3
+ 329 01ac 3B62     		str	r3, [r7, #32]
+ 111:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								unsigned int temp;
+ 112:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								
+ 113:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								for (index = startingAddress; index < maxData; index++){
+ 330              		.loc 1 113 0
+ 331 01ae 3B69     		ldr	r3, [r7, #16]
+ 332 01b0 FB61     		str	r3, [r7, #28]
+ 333 01b2 23E0     		b	.L17
+ 334              	.L18:
+ 114:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 									temp = getRegister(mbus,index);
+ 335              		.loc 1 114 0
+ 336 01b4 FB69     		ldr	r3, [r7, #28]
+ 337 01b6 7868     		ldr	r0, [r7, #4]
+ 338 01b8 1946     		mov	r1, r3
+ 339 01ba 40F20003 		movw	r3, #:lower16:_Z11getRegisterP8modbus_ti
+ 340 01be C0F20003 		movt	r3, #:upper16:_Z11getRegisterP8modbus_ti
+ 341 01c2 9847     		blx	r3
+ 342 01c4 0346     		mov	r3, r0
+ 343 01c6 FB62     		str	r3, [r7, #44]
+ 115:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 									mbus->frame[address] = temp >> 8; // split the register into 2 bytes
+ 344              		.loc 1 115 0
+ 345 01c8 396A     		ldr	r1, [r7, #32]
+ 346 01ca FB6A     		ldr	r3, [r7, #44]
+ 347 01cc 4FEA1323 		lsr	r3, r3, #8
+ 348 01d0 DAB2     		uxtb	r2, r3
+ 349 01d2 7B68     		ldr	r3, [r7, #4]
+ 350 01d4 0B44     		add	r3, r1, r3
+ 351 01d6 9A75     		strb	r2, [r3, #22]
+ 116:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 									address++;
+ 352              		.loc 1 116 0
+ 353 01d8 3B6A     		ldr	r3, [r7, #32]
+ 354 01da 03F10103 		add	r3, r3, #1
+ 355 01de 3B62     		str	r3, [r7, #32]
+ 117:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 									mbus->frame[address] = temp & 0xFF;
+ 356              		.loc 1 117 0
+ 357 01e0 396A     		ldr	r1, [r7, #32]
+ 358 01e2 FB6A     		ldr	r3, [r7, #44]
+ 359 01e4 DAB2     		uxtb	r2, r3
+ 360 01e6 7B68     		ldr	r3, [r7, #4]
+ 361 01e8 0B44     		add	r3, r1, r3
+ 362 01ea 9A75     		strb	r2, [r3, #22]
+ 118:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 									address++;
+ 363              		.loc 1 118 0
+ 364 01ec 3B6A     		ldr	r3, [r7, #32]
+ 365 01ee 03F10103 		add	r3, r3, #1
+ 366 01f2 3B62     		str	r3, [r7, #32]
+ 367              		.loc 1 113 0
+ 368 01f4 FB69     		ldr	r3, [r7, #28]
+ 369 01f6 03F10103 		add	r3, r3, #1
+ 370 01fa FB61     		str	r3, [r7, #28]
+ 371              	.L17:
+ 372 01fc FA69     		ldr	r2, [r7, #28]
+ 373 01fe BB69     		ldr	r3, [r7, #24]
+ 374 0200 9A42     		cmp	r2, r3
+ 375 0202 2CBF     		ite	cs
+ 376 0204 0023     		movcs	r3, #0
+ 377 0206 0123     		movcc	r3, #1
+ 378 0208 DBB2     		uxtb	r3, r3
+ 379 020a 002B     		cmp	r3, #0
+ 380 020c D2D1     		bne	.L18
+ 119:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								}	
+ 120:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 
+ 121:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								crc16 = calculateCRC(mbus,(responseFrameSize - 2));
+ 381              		.loc 1 121 0
+ 382 020e 97F82B30 		ldrb	r3, [r7, #43]
+ 383 0212 A3F10203 		sub	r3, r3, #2
+ 384 0216 DBB2     		uxtb	r3, r3
+ 385 0218 7868     		ldr	r0, [r7, #4]
+ 386 021a 1946     		mov	r1, r3
+ 387 021c 40F20003 		movw	r3, #:lower16:_Z12calculateCRCP8modbus_th
+ 388 0220 C0F20003 		movt	r3, #:upper16:_Z12calculateCRCP8modbus_th
+ 389 0224 9847     		blx	r3
+ 390 0226 0346     		mov	r3, r0
+ 391 0228 7B62     		str	r3, [r7, #36]
+ 122:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								mbus->frame[responseFrameSize - 2] = crc16 >> 8; // split crc into 2 bytes
+ 392              		.loc 1 122 0
+ 393 022a 97F82B30 		ldrb	r3, [r7, #43]	@ zero_extendqisi2
+ 394 022e A3F10201 		sub	r1, r3, #2
+ 395 0232 7B6A     		ldr	r3, [r7, #36]
+ 396 0234 4FEA1323 		lsr	r3, r3, #8
+ 397 0238 DAB2     		uxtb	r2, r3
+ 398 023a 7B68     		ldr	r3, [r7, #4]
+ 399 023c 0B44     		add	r3, r1, r3
+ 400 023e 9A75     		strb	r2, [r3, #22]
+ 123:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								mbus->frame[responseFrameSize - 1] = crc16 & 0xFF;								
+ 401              		.loc 1 123 0
+ 402 0240 97F82B30 		ldrb	r3, [r7, #43]	@ zero_extendqisi2
+ 403 0244 03F1FF31 		add	r1, r3, #-1
+ 404 0248 7B6A     		ldr	r3, [r7, #36]
+ 405 024a DAB2     		uxtb	r2, r3
+ 406 024c 7B68     		ldr	r3, [r7, #4]
+ 407 024e 0B44     		add	r3, r1, r3
+ 408 0250 9A75     		strb	r2, [r3, #22]
+ 124:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								sendPacket(mbus,responseFrameSize);
+ 409              		.loc 1 124 0
+ 410 0252 97F82B30 		ldrb	r3, [r7, #43]	@ zero_extendqisi2
+ 411 0256 7868     		ldr	r0, [r7, #4]
+ 412 0258 1946     		mov	r1, r3
+ 413 025a 40F20003 		movw	r3, #:lower16:_Z10sendPacketP8modbus_th
+ 414 025e C0F20003 		movt	r3, #:upper16:_Z10sendPacketP8modbus_th
+ 415 0262 9847     		blx	r3
+ 125:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								mbus->errorCount = MB_DATA_READ;
+ 416              		.loc 1 125 0
+ 417 0264 7B68     		ldr	r3, [r7, #4]
+ 418 0266 4FF00602 		mov	r2, #6
+ 419 026a C3F8AC20 		str	r2, [r3, #172]
+ 420 026e 10E0     		b	.L20
+ 421              	.L16:
+ 422              	.LBE21:
+ 126:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 							}else	
+ 127:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								exceptionResponse(mbus,3); // exception 3 ILLEGAL DATA VALUE
+ 423              		.loc 1 127 0
+ 424 0270 7868     		ldr	r0, [r7, #4]
+ 425 0272 4FF00301 		mov	r1, #3
+ 426 0276 40F20003 		movw	r3, #:lower16:_Z17exceptionResponseP8modbus_th
+ 427 027a C0F20003 		movt	r3, #:upper16:_Z17exceptionResponseP8modbus_th
+ 428 027e 9847     		blx	r3
+ 429 0280 07E0     		b	.L20
+ 430              	.L15:
+ 128:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 						}else
+ 129:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 							exceptionResponse(mbus,2); // exception 2 ILLEGAL DATA ADDRESS
+ 431              		.loc 1 129 0
+ 432 0282 7868     		ldr	r0, [r7, #4]
+ 433 0284 4FF00201 		mov	r1, #2
+ 434 0288 40F20003 		movw	r3, #:lower16:_Z17exceptionResponseP8modbus_th
+ 435 028c C0F20003 		movt	r3, #:upper16:_Z17exceptionResponseP8modbus_th
+ 436 0290 9847     		blx	r3
+ 437              	.L20:
+ 438              		.loc 1 98 0
+ 439 0292 00BF     		nop
+ 440              	.LBE18:
+ 441              	.LBE13:
+ 442              		.loc 1 83 0
+ 443 0294 31E1     		b	.L6
+ 444              	.L14:
+ 445              	.LBB12:
+ 446              	.LBB22:
+ 130:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 					}
+ 131:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 					else if (mbus->function == 16){
+ 447              		.loc 1 131 0
+ 448 0296 7B68     		ldr	r3, [r7, #4]
+ 449 0298 93F8A830 		ldrb	r3, [r3, #168]	@ zero_extendqisi2
+ 450 029c 102B     		cmp	r3, #16
+ 451 029e 40F08680 		bne	.L22
+ 132:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 							// Check if the recieved number of bytes matches the calculated bytes 
+ 133:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 							// minus the request bytes.
+ 134:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 							// id + function + (2 * address bytes) + (2 * no of register bytes) + 
+ 135:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 							// byte count + (2 * CRC bytes) = 9 bytes
+ 136:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 							if(mbus->frame[6] == (mbus->buff - 9)){						
+ 452              		.loc 1 136 0
+ 453 02a2 7B68     		ldr	r3, [r7, #4]
+ 454 02a4 1B7F     		ldrb	r3, [r3, #28]	@ zero_extendqisi2
+ 455 02a6 1A46     		mov	r2, r3
+ 456 02a8 7B68     		ldr	r3, [r7, #4]
+ 457 02aa 93F8B130 		ldrb	r3, [r3, #177]	@ zero_extendqisi2
+ 458 02ae A3F10903 		sub	r3, r3, #9
+ 459 02b2 9A42     		cmp	r2, r3
+ 460 02b4 75D1     		bne	.L23
+ 137:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								if (startingAddress < mbus->holdingRegsSize){ // check exception 2 ILLEGAL DATA ADDRESS				
+ 461              		.loc 1 137 0
+ 462 02b6 7B68     		ldr	r3, [r7, #4]
+ 463 02b8 D3F89820 		ldr	r2, [r3, #152]
+ 464 02bc 3B69     		ldr	r3, [r7, #16]
+ 465 02be 9A42     		cmp	r2, r3
+ 466 02c0 66D9     		bls	.L24
+ 138:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 									if (maxData <= mbus->holdingRegsSize){ // check exception 3 ILLEGAL DATA VALUE							  
+ 467              		.loc 1 138 0
+ 468 02c2 7B68     		ldr	r3, [r7, #4]
+ 469 02c4 D3F89820 		ldr	r2, [r3, #152]
+ 470 02c8 BB69     		ldr	r3, [r7, #24]
+ 471 02ca 9A42     		cmp	r2, r3
+ 472 02cc 57D3     		bcc	.L25
+ 139:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										address = 7; // start at the 8th byte in the frame
+ 473              		.loc 1 139 0
+ 474 02ce 4FF00703 		mov	r3, #7
+ 475 02d2 3B62     		str	r3, [r7, #32]
+ 140:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										for (index = startingAddress; index < maxData; index++){
+ 476              		.loc 1 140 0
+ 477 02d4 3B69     		ldr	r3, [r7, #16]
+ 478 02d6 FB61     		str	r3, [r7, #28]
+ 479 02d8 20E0     		b	.L26
+ 480              	.L27:
+ 481              	.LBB20:
+ 141:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 											unsigned int temp = ((mbus->frame[address] << 8) | mbus->frame[address + 1]);
+ 482              		.loc 1 141 0
+ 483 02da 3A6A     		ldr	r2, [r7, #32]
+ 484 02dc 7B68     		ldr	r3, [r7, #4]
+ 485 02de 1344     		add	r3, r2, r3
+ 486 02e0 9B7D     		ldrb	r3, [r3, #22]	@ zero_extendqisi2
+ 487 02e2 4FEA0322 		lsl	r2, r3, #8
+ 488 02e6 3B6A     		ldr	r3, [r7, #32]
+ 489 02e8 03F10101 		add	r1, r3, #1
+ 490 02ec 7B68     		ldr	r3, [r7, #4]
+ 491 02ee 0B44     		add	r3, r1, r3
+ 492 02f0 9B7D     		ldrb	r3, [r3, #22]	@ zero_extendqisi2
+ 493 02f2 42EA0303 		orr	r3, r2, r3
+ 494 02f6 3B63     		str	r3, [r7, #48]
+ 142:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 											setRegister(mbus,index,temp);
+ 495              		.loc 1 142 0
+ 496 02f8 FA69     		ldr	r2, [r7, #28]
+ 497 02fa 3B6B     		ldr	r3, [r7, #48]
+ 498 02fc 7868     		ldr	r0, [r7, #4]
+ 499 02fe 1146     		mov	r1, r2
+ 500 0300 1A46     		mov	r2, r3
+ 501 0302 40F20003 		movw	r3, #:lower16:_Z11setRegisterP8modbus_tii
+ 502 0306 C0F20003 		movt	r3, #:upper16:_Z11setRegisterP8modbus_tii
+ 503 030a 9847     		blx	r3
+ 143:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 											address += 2;
+ 504              		.loc 1 143 0
+ 505 030c 3B6A     		ldr	r3, [r7, #32]
+ 506 030e 03F10203 		add	r3, r3, #2
+ 507 0312 3B62     		str	r3, [r7, #32]
+ 508              	.LBE20:
+ 509              		.loc 1 140 0
+ 510 0314 FB69     		ldr	r3, [r7, #28]
+ 511 0316 03F10103 		add	r3, r3, #1
+ 512 031a FB61     		str	r3, [r7, #28]
+ 513              	.L26:
+ 514 031c FA69     		ldr	r2, [r7, #28]
+ 515 031e BB69     		ldr	r3, [r7, #24]
+ 516 0320 9A42     		cmp	r2, r3
+ 517 0322 2CBF     		ite	cs
+ 518 0324 0023     		movcs	r3, #0
+ 519 0326 0123     		movcc	r3, #1
+ 520 0328 DBB2     		uxtb	r3, r3
+ 521 032a 002B     		cmp	r3, #0
+ 522 032c D5D1     		bne	.L27
+ 144:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										}	
+ 145:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										// printf("\nF16");
+ 146:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										// only the first 6 bytes are used for CRC calculation
+ 147:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										crc16 = calculateCRC(mbus,6); 
+ 523              		.loc 1 147 0
+ 524 032e 7868     		ldr	r0, [r7, #4]
+ 525 0330 4FF00601 		mov	r1, #6
+ 526 0334 40F20003 		movw	r3, #:lower16:_Z12calculateCRCP8modbus_th
+ 527 0338 C0F20003 		movt	r3, #:upper16:_Z12calculateCRCP8modbus_th
+ 528 033c 9847     		blx	r3
+ 529 033e 0346     		mov	r3, r0
+ 530 0340 7B62     		str	r3, [r7, #36]
+ 148:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										mbus->frame[6] = crc16 >> 8; // split crc into 2 bytes
+ 531              		.loc 1 148 0
+ 532 0342 7B6A     		ldr	r3, [r7, #36]
+ 533 0344 4FEA1323 		lsr	r3, r3, #8
+ 534 0348 DAB2     		uxtb	r2, r3
+ 535 034a 7B68     		ldr	r3, [r7, #4]
+ 536 034c 1A77     		strb	r2, [r3, #28]
+ 149:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										mbus->frame[7] = crc16 & 0xFF;
+ 537              		.loc 1 149 0
+ 538 034e 7B6A     		ldr	r3, [r7, #36]
+ 539 0350 DAB2     		uxtb	r2, r3
+ 540 0352 7B68     		ldr	r3, [r7, #4]
+ 541 0354 5A77     		strb	r2, [r3, #29]
+ 150:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 									
+ 151:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										// a function 16 response is an echo of the first 6 bytes from 
+ 152:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										// the request + 2 crc bytes
+ 153:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										if (!mbus->broadcastFlag){ // don't respond if it's a broadcast message
+ 542              		.loc 1 153 0
+ 543 0356 7B68     		ldr	r3, [r7, #4]
+ 544 0358 93F89C30 		ldrb	r3, [r3, #156]	@ zero_extendqisi2
+ 545 035c 002B     		cmp	r3, #0
+ 546 035e 40F0C980 		bne	.L43
+ 154:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 											sendPacket(mbus,8);
+ 547              		.loc 1 154 0
+ 548 0362 7868     		ldr	r0, [r7, #4]
+ 549 0364 4FF00801 		mov	r1, #8
+ 550 0368 40F20003 		movw	r3, #:lower16:_Z10sendPacketP8modbus_th
+ 551 036c C0F20003 		movt	r3, #:upper16:_Z10sendPacketP8modbus_th
+ 552 0370 9847     		blx	r3
+ 155:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 											mbus->errorCount = MB_DATA_WRITTEN;
+ 553              		.loc 1 155 0
+ 554 0372 7B68     		ldr	r3, [r7, #4]
+ 555 0374 4FF00202 		mov	r2, #2
+ 556 0378 C3F8AC20 		str	r2, [r3, #172]
+ 557              	.LBE22:
+ 558              	.LBE12:
+ 559              		.loc 1 83 0
+ 560 037c BDE0     		b	.L6
+ 561              	.L25:
+ 562              	.LBB11:
+ 563              	.LBB17:
+ 156:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										}	
+ 157:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 									}else	
+ 158:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										exceptionResponse(mbus,3); // exception 3 ILLEGAL DATA VALUE
+ 564              		.loc 1 158 0
+ 565 037e 7868     		ldr	r0, [r7, #4]
+ 566 0380 4FF00301 		mov	r1, #3
+ 567 0384 40F20003 		movw	r3, #:lower16:_Z17exceptionResponseP8modbus_th
+ 568 0388 C0F20003 		movt	r3, #:upper16:_Z17exceptionResponseP8modbus_th
+ 569 038c 9847     		blx	r3
+ 570              	.LBE17:
+ 571              	.LBE11:
+ 572              		.loc 1 83 0
+ 573 038e B4E0     		b	.L6
+ 574              	.L24:
+ 575              	.LBB10:
+ 576              	.LBB23:
+ 159:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								}else
+ 160:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 									exceptionResponse(mbus,2); // exception 2 ILLEGAL DATA ADDRESS
+ 577              		.loc 1 160 0
+ 578 0390 7868     		ldr	r0, [r7, #4]
+ 579 0392 4FF00201 		mov	r1, #2
+ 580 0396 40F20003 		movw	r3, #:lower16:_Z17exceptionResponseP8modbus_th
+ 581 039a C0F20003 		movt	r3, #:upper16:_Z17exceptionResponseP8modbus_th
+ 582 039e 9847     		blx	r3
+ 583              	.LBE23:
+ 584              	.LBE10:
+ 585              		.loc 1 83 0
+ 586 03a0 ABE0     		b	.L6
+ 587              	.L23:
+ 588              	.LBB9:
+ 589              	.LBB16:
+ 161:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 							}else 
+ 162:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								mbus->errorCount=MB_CORRUPT_PACKET; // corrupted packet
+ 590              		.loc 1 162 0
+ 591 03a2 7B68     		ldr	r3, [r7, #4]
+ 592 03a4 4FF00302 		mov	r2, #3
+ 593 03a8 C3F8AC20 		str	r2, [r3, #172]
+ 594              	.LBE16:
+ 595              	.LBE9:
+ 596              		.loc 1 83 0
+ 597 03ac A5E0     		b	.L6
+ 598              	.L22:
+ 599              	.LBB8:
+ 600              	.LBB24:
+ 163:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								// errorCount++; // corrupted packet
+ 164:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 						}
+ 165:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 						else if(mbus->function == 6){
+ 601              		.loc 1 165 0
+ 602 03ae 7B68     		ldr	r3, [r7, #4]
+ 603 03b0 93F8A830 		ldrb	r3, [r3, #168]	@ zero_extendqisi2
+ 604 03b4 062B     		cmp	r3, #6
+ 605 03b6 78D1     		bne	.L32
+ 166:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								// Check if the recieved number of bytes matches the calculated bytes 
+ 167:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								// minus the request bytes.
+ 168:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								// id + function + (2 * address bytes) + (2 * no of register bytes) + 
+ 169:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								// byte count + (2 * CRC bytes) = 9 bytes
+ 170:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								// if(frame[6] == (buffer - 9)){
+ 171:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								if(startingAddress < mbus->holdingRegsSize){ // check exception 2 ILLEGAL DATA ADDRESS
+ 606              		.loc 1 171 0
+ 607 03b8 7B68     		ldr	r3, [r7, #4]
+ 608 03ba D3F89820 		ldr	r2, [r3, #152]
+ 609 03be 3B69     		ldr	r3, [r7, #16]
+ 610 03c0 9A42     		cmp	r2, r3
+ 611 03c2 69D9     		bls	.L33
+ 172:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 									maxData = startingAddress+1; //1 is added bcoz function6 dosent provide how many register 
+ 612              		.loc 1 172 0
+ 613 03c4 3B69     		ldr	r3, [r7, #16]
+ 614 03c6 03F10103 		add	r3, r3, #1
+ 615 03ca BB61     		str	r3, [r7, #24]
+ 173:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 									// printf("\n%d",maxData);
+ 174:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 									if (maxData <= mbus->holdingRegsSize){ // check exception 3 ILLEGAL DATA VALUE
+ 616              		.loc 1 174 0
+ 617 03cc 7B68     		ldr	r3, [r7, #4]
+ 618 03ce D3F89820 		ldr	r2, [r3, #152]
+ 619 03d2 BB69     		ldr	r3, [r7, #24]
+ 620 03d4 9A42     		cmp	r2, r3
+ 621 03d6 56D3     		bcc	.L34
+ 175:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										address = 4; // start at the 6th byte in the frame
+ 622              		.loc 1 175 0
+ 623 03d8 4FF00403 		mov	r3, #4
+ 624 03dc 3B62     		str	r3, [r7, #32]
+ 176:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										// printf("\n%d",address);
+ 177:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										for (index = startingAddress; index < maxData; index++){
+ 625              		.loc 1 177 0
+ 626 03de 3B69     		ldr	r3, [r7, #16]
+ 627 03e0 FB61     		str	r3, [r7, #28]
+ 628 03e2 20E0     		b	.L35
+ 629              	.L36:
+ 630              	.LBB19:
+ 178:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 											unsigned int temp = ((mbus->frame[address] << 8) | mbus->frame[address + 1]);
+ 631              		.loc 1 178 0
+ 632 03e4 3A6A     		ldr	r2, [r7, #32]
+ 633 03e6 7B68     		ldr	r3, [r7, #4]
+ 634 03e8 1344     		add	r3, r2, r3
+ 635 03ea 9B7D     		ldrb	r3, [r3, #22]	@ zero_extendqisi2
+ 636 03ec 4FEA0322 		lsl	r2, r3, #8
+ 637 03f0 3B6A     		ldr	r3, [r7, #32]
+ 638 03f2 03F10101 		add	r1, r3, #1
+ 639 03f6 7B68     		ldr	r3, [r7, #4]
+ 640 03f8 0B44     		add	r3, r1, r3
+ 641 03fa 9B7D     		ldrb	r3, [r3, #22]	@ zero_extendqisi2
+ 642 03fc 42EA0303 		orr	r3, r2, r3
+ 643 0400 7B63     		str	r3, [r7, #52]
+ 179:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 											setRegister(mbus,index,temp);
+ 644              		.loc 1 179 0
+ 645 0402 FA69     		ldr	r2, [r7, #28]
+ 646 0404 7B6B     		ldr	r3, [r7, #52]
+ 647 0406 7868     		ldr	r0, [r7, #4]
+ 648 0408 1146     		mov	r1, r2
+ 649 040a 1A46     		mov	r2, r3
+ 650 040c 40F20003 		movw	r3, #:lower16:_Z11setRegisterP8modbus_tii
+ 651 0410 C0F20003 		movt	r3, #:upper16:_Z11setRegisterP8modbus_tii
+ 652 0414 9847     		blx	r3
+ 180:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 											// mbus->regs[index] = ((mbus->frame[address] << 8) | mbus->frame[address + 1]);
+ 181:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 											address += 2;
+ 653              		.loc 1 181 0
+ 654 0416 3B6A     		ldr	r3, [r7, #32]
+ 655 0418 03F10203 		add	r3, r3, #2
+ 656 041c 3B62     		str	r3, [r7, #32]
+ 657              	.LBE19:
+ 658              		.loc 1 177 0
+ 659 041e FB69     		ldr	r3, [r7, #28]
+ 660 0420 03F10103 		add	r3, r3, #1
+ 661 0424 FB61     		str	r3, [r7, #28]
+ 662              	.L35:
+ 663 0426 FA69     		ldr	r2, [r7, #28]
+ 664 0428 BB69     		ldr	r3, [r7, #24]
+ 665 042a 9A42     		cmp	r2, r3
+ 666 042c 2CBF     		ite	cs
+ 667 042e 0023     		movcs	r3, #0
+ 668 0430 0123     		movcc	r3, #1
+ 669 0432 DBB2     		uxtb	r3, r3
+ 670 0434 002B     		cmp	r3, #0
+ 671 0436 D5D1     		bne	.L36
+ 182:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										}
+ 183:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 									
+ 184:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										// only the first 6 bytes are used for CRC calculation
+ 185:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										crc16 = calculateCRC(mbus,6);
+ 672              		.loc 1 185 0
+ 673 0438 7868     		ldr	r0, [r7, #4]
+ 674 043a 4FF00601 		mov	r1, #6
+ 675 043e 40F20003 		movw	r3, #:lower16:_Z12calculateCRCP8modbus_th
+ 676 0442 C0F20003 		movt	r3, #:upper16:_Z12calculateCRCP8modbus_th
+ 677 0446 9847     		blx	r3
+ 678 0448 0346     		mov	r3, r0
+ 679 044a 7B62     		str	r3, [r7, #36]
+ 186:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										mbus->frame[6] = crc16 >> 8; // split crc into 2 bytes
+ 680              		.loc 1 186 0
+ 681 044c 7B6A     		ldr	r3, [r7, #36]
+ 682 044e 4FEA1323 		lsr	r3, r3, #8
+ 683 0452 DAB2     		uxtb	r2, r3
+ 684 0454 7B68     		ldr	r3, [r7, #4]
+ 685 0456 1A77     		strb	r2, [r3, #28]
+ 187:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										mbus->frame[7] = crc16 & 0xFF;
+ 686              		.loc 1 187 0
+ 687 0458 7B6A     		ldr	r3, [r7, #36]
+ 688 045a DAB2     		uxtb	r2, r3
+ 689 045c 7B68     		ldr	r3, [r7, #4]
+ 690 045e 5A77     		strb	r2, [r3, #29]
+ 188:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 									
+ 189:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										// a function 16 response is an echo of the first 6 bytes from 
+ 190:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										// the request + 2 crc bytes
+ 191:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										if (!mbus->broadcastFlag){ // don't respond if it's a broadcast message
+ 691              		.loc 1 191 0
+ 692 0460 7B68     		ldr	r3, [r7, #4]
+ 693 0462 93F89C30 		ldrb	r3, [r3, #156]	@ zero_extendqisi2
+ 694 0466 002B     		cmp	r3, #0
+ 695 0468 46D1     		bne	.L44
+ 192:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 											sendPacket(mbus,8);
+ 696              		.loc 1 192 0
+ 697 046a 7868     		ldr	r0, [r7, #4]
+ 698 046c 4FF00801 		mov	r1, #8
+ 699 0470 40F20003 		movw	r3, #:lower16:_Z10sendPacketP8modbus_th
+ 700 0474 C0F20003 		movt	r3, #:upper16:_Z10sendPacketP8modbus_th
+ 701 0478 9847     		blx	r3
+ 193:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 											mbus->errorCount = MB_DATA_WRITTEN;
+ 702              		.loc 1 193 0
+ 703 047a 7B68     		ldr	r3, [r7, #4]
+ 704 047c 4FF00202 		mov	r2, #2
+ 705 0480 C3F8AC20 		str	r2, [r3, #172]
+ 706              	.LBE24:
+ 707              	.LBE8:
+ 708              		.loc 1 83 0
+ 709 0484 39E0     		b	.L6
+ 710              	.L34:
+ 711              	.LBB7:
+ 712              	.LBB15:
+ 194:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										}
+ 195:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 									}else
+ 196:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 										exceptionResponse(mbus,3); // exception 3 ILLEGAL DATA VALUE
+ 713              		.loc 1 196 0
+ 714 0486 7868     		ldr	r0, [r7, #4]
+ 715 0488 4FF00301 		mov	r1, #3
+ 716 048c 40F20003 		movw	r3, #:lower16:_Z17exceptionResponseP8modbus_th
+ 717 0490 C0F20003 		movt	r3, #:upper16:_Z17exceptionResponseP8modbus_th
+ 718 0494 9847     		blx	r3
+ 719              	.LBE15:
+ 720              	.LBE7:
+ 721              		.loc 1 83 0
+ 722 0496 30E0     		b	.L6
+ 723              	.L33:
+ 724              	.LBB6:
+ 725              	.LBB25:
+ 197:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								}else
+ 198:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 									exceptionResponse(mbus,2); // exception 2 ILLEGAL DATA ADDRESS
+ 726              		.loc 1 198 0
+ 727 0498 7868     		ldr	r0, [r7, #4]
+ 728 049a 4FF00201 		mov	r1, #2
+ 729 049e 40F20003 		movw	r3, #:lower16:_Z17exceptionResponseP8modbus_th
+ 730 04a2 C0F20003 		movt	r3, #:upper16:_Z17exceptionResponseP8modbus_th
+ 731 04a6 9847     		blx	r3
+ 732              	.LBE25:
+ 733              	.LBE6:
+ 734              		.loc 1 83 0
+ 735 04a8 27E0     		b	.L6
+ 736              	.L32:
+ 737              	.LBB5:
+ 738              	.LBB14:
+ 199:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 							}else
+ 200:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 								exceptionResponse(mbus,1); // exception 1 ILLEGAL FUNCTION
+ 739              		.loc 1 200 0
+ 740 04aa 7868     		ldr	r0, [r7, #4]
+ 741 04ac 4FF00101 		mov	r1, #1
+ 742 04b0 40F20003 		movw	r3, #:lower16:_Z17exceptionResponseP8modbus_th
+ 743 04b4 C0F20003 		movt	r3, #:upper16:_Z17exceptionResponseP8modbus_th
+ 744 04b8 9847     		blx	r3
+ 745              	.LBE14:
+ 746              	.LBE5:
+ 747              		.loc 1 83 0
+ 748 04ba 1EE0     		b	.L6
+ 749              	.L13:
+ 750              	.LBB4:
+ 201:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 						}else // checksum failed
+ 202:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 							mbus->errorCount=MB_CHECKSUM_FAILED;
+ 751              		.loc 1 202 0
+ 752 04bc 7B68     		ldr	r3, [r7, #4]
+ 753 04be 4FF00402 		mov	r2, #4
+ 754 04c2 C3F8AC20 		str	r2, [r3, #172]
+ 755              	.LBE4:
+ 756              		.loc 1 83 0
+ 757 04c6 18E0     		b	.L6
+ 758              	.L12:
+ 203:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 							// errorCount++;
+ 204:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 					}else // incorrect id
+ 205:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 						mbus->errorCount=MB_INCORRECT_ID;
+ 759              		.loc 1 205 0
+ 760 04c8 7B68     		ldr	r3, [r7, #4]
+ 761 04ca 4FF00502 		mov	r2, #5
+ 762 04ce C3F8AC20 		str	r2, [r3, #172]
+ 763 04d2 12E0     		b	.L6
+ 764              	.L9:
+ 765              	.LBE3:
+ 206:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 				}else if (mbus->buff > 0 && mbus->buff < 8)
+ 766              		.loc 1 206 0
+ 767 04d4 7B68     		ldr	r3, [r7, #4]
+ 768 04d6 93F8B130 		ldrb	r3, [r3, #177]	@ zero_extendqisi2
+ 769 04da 002B     		cmp	r3, #0
+ 770 04dc 0DD0     		beq	.L6
+ 771 04de 7B68     		ldr	r3, [r7, #4]
+ 772 04e0 93F8B130 		ldrb	r3, [r3, #177]	@ zero_extendqisi2
+ 773 04e4 072B     		cmp	r3, #7
+ 774 04e6 08D8     		bhi	.L6
+ 207:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 					mbus->errorCount=MB_CORRUPT_PACKET; // corrupted packet
+ 775              		.loc 1 207 0
+ 776 04e8 7B68     		ldr	r3, [r7, #4]
+ 777 04ea 4FF00302 		mov	r2, #3
+ 778 04ee C3F8AC20 		str	r2, [r3, #172]
+ 779 04f2 02E0     		b	.L6
+ 780              	.L43:
+ 781              	.LBB26:
+ 782              		.loc 1 83 0
+ 783 04f4 00BF     		nop
+ 784 04f6 00E0     		b	.L6
+ 785              	.L44:
+ 786 04f8 00BF     		nop
+ 787              	.L6:
+ 788              	.LBE26:
+ 208:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 				// errorCount++; // corrupted packet
+ 209:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	}	
+ 210:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	return mbus->errorCount;
+ 789              		.loc 1 210 0
+ 790 04fa 7B68     		ldr	r3, [r7, #4]
+ 791 04fc D3F8AC30 		ldr	r3, [r3, #172]
+ 792              	.L8:
+ 793              	.LBE2:
+ 211:..//utils/modbus/SimpleModbusSlave_1769.cpp **** }
+ 794              		.loc 1 211 0
+ 795 0500 1846     		mov	r0, r3
+ 796 0502 07F13807 		add	r7, r7, #56
+ 797 0506 BD46     		mov	sp, r7
+ 798 0508 80BD     		pop	{r7, pc}
+ 799              		.cfi_endproc
+ 800              	.LFE30:
+ 802 050a 00BF     		.section	.text._Z17exceptionResponseP8modbus_th,"ax",%progbits
+ 803              		.align	2
+ 804              		.global	_Z17exceptionResponseP8modbus_th
+ 805              		.thumb
+ 806              		.thumb_func
+ 808              	_Z17exceptionResponseP8modbus_th:
+ 809              	.LFB31:
+ 212:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 
+ 213:..//utils/modbus/SimpleModbusSlave_1769.cpp **** void exceptionResponse(modbus_t* mbus,unsigned char exception){
+ 810              		.loc 1 213 0
+ 811              		.cfi_startproc
+ 812              		@ args = 0, pretend = 0, frame = 16
+ 813              		@ frame_needed = 1, uses_anonymous_args = 0
+ 814 0000 80B5     		push	{r7, lr}
+ 815              	.LCFI6:
+ 816              		.cfi_def_cfa_offset 8
+ 817 0002 84B0     		sub	sp, sp, #16
+ 818              	.LCFI7:
+ 819              		.cfi_def_cfa_offset 24
+ 820 0004 00AF     		add	r7, sp, #0
+ 821              		.cfi_offset 14, -4
+ 822              		.cfi_offset 7, -8
+ 823              	.LCFI8:
+ 824              		.cfi_def_cfa_register 7
+ 825 0006 7860     		str	r0, [r7, #4]
+ 826 0008 0B46     		mov	r3, r1
+ 827 000a FB70     		strb	r3, [r7, #3]
+ 828              	.LBB27:
+ 214:..//utils/modbus/SimpleModbusSlave_1769.cpp ****   // each call to exceptionResponse() will increment the mbus->errorCount
+ 215:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	// mbus->errorCount++;
+ 216:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	if (!mbus->broadcastFlag){ // don't respond if its a broadcast message
+ 829              		.loc 1 216 0
+ 830 000c 7B68     		ldr	r3, [r7, #4]
+ 831 000e 93F89C30 		ldrb	r3, [r3, #156]	@ zero_extendqisi2
+ 832 0012 002B     		cmp	r3, #0
+ 833 0014 2ED1     		bne	.L47
+ 834              	.LBB28:
+ 217:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		mbus->frame[0] = mbus->slaveID;
+ 835              		.loc 1 217 0
+ 836 0016 7B68     		ldr	r3, [r7, #4]
+ 837 0018 D3F8A430 		ldr	r3, [r3, #164]
+ 838 001c DAB2     		uxtb	r2, r3
+ 839 001e 7B68     		ldr	r3, [r7, #4]
+ 840 0020 9A75     		strb	r2, [r3, #22]
+ 218:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		mbus->frame[1] = (mbus->function | 0x80); // set MSB bit high, informs the master of an exception
+ 841              		.loc 1 218 0
+ 842 0022 7B68     		ldr	r3, [r7, #4]
+ 843 0024 93F8A830 		ldrb	r3, [r3, #168]	@ zero_extendqisi2
+ 844 0028 6FEA4363 		mvn	r3, r3, lsl #25
+ 845 002c 6FEA5363 		mvn	r3, r3, lsr #25
+ 846 0030 DAB2     		uxtb	r2, r3
+ 847 0032 7B68     		ldr	r3, [r7, #4]
+ 848 0034 DA75     		strb	r2, [r3, #23]
+ 219:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		mbus->frame[2] = exception;
+ 849              		.loc 1 219 0
+ 850 0036 7B68     		ldr	r3, [r7, #4]
+ 851 0038 FA78     		ldrb	r2, [r7, #3]
+ 852 003a 1A76     		strb	r2, [r3, #24]
+ 220:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		unsigned int crc16 = calculateCRC(mbus,3); // ID, mbus->function|0x80, exception code
+ 853              		.loc 1 220 0
+ 854 003c 7868     		ldr	r0, [r7, #4]
+ 855 003e 4FF00301 		mov	r1, #3
+ 856 0042 40F20003 		movw	r3, #:lower16:_Z12calculateCRCP8modbus_th
+ 857 0046 C0F20003 		movt	r3, #:upper16:_Z12calculateCRCP8modbus_th
+ 858 004a 9847     		blx	r3
+ 859 004c 0346     		mov	r3, r0
+ 860 004e FB60     		str	r3, [r7, #12]
+ 221:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		mbus->frame[3] = crc16 >> 8;
+ 861              		.loc 1 221 0
+ 862 0050 FB68     		ldr	r3, [r7, #12]
+ 863 0052 4FEA1323 		lsr	r3, r3, #8
+ 864 0056 DAB2     		uxtb	r2, r3
+ 865 0058 7B68     		ldr	r3, [r7, #4]
+ 866 005a 5A76     		strb	r2, [r3, #25]
+ 222:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		mbus->frame[4] = crc16 & 0xFF;
+ 867              		.loc 1 222 0
+ 868 005c FB68     		ldr	r3, [r7, #12]
+ 869 005e DAB2     		uxtb	r2, r3
+ 870 0060 7B68     		ldr	r3, [r7, #4]
+ 871 0062 9A76     		strb	r2, [r3, #26]
+ 223:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		// exception response is always 5 bytes 
+ 224:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		// ID, mbus->function + 0x80, exception code, 2 bytes crc
+ 225:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		sendPacket(mbus,5); 
+ 872              		.loc 1 225 0
+ 873 0064 7868     		ldr	r0, [r7, #4]
+ 874 0066 4FF00501 		mov	r1, #5
+ 875 006a 40F20003 		movw	r3, #:lower16:_Z10sendPacketP8modbus_th
+ 876 006e C0F20003 		movt	r3, #:upper16:_Z10sendPacketP8modbus_th
+ 877 0072 9847     		blx	r3
+ 878              	.L47:
+ 879              	.LBE28:
+ 880              	.LBE27:
+ 226:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	}
+ 227:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	// printf("\nException%d %d",exception,mbus->function);
+ 228:..//utils/modbus/SimpleModbusSlave_1769.cpp **** }
+ 881              		.loc 1 228 0
+ 882 0074 07F11007 		add	r7, r7, #16
+ 883 0078 BD46     		mov	sp, r7
+ 884 007a 80BD     		pop	{r7, pc}
+ 885              		.cfi_endproc
+ 886              	.LFE31:
+ 888              		.section	.text._Z12calculateCRCP8modbus_th,"ax",%progbits
+ 889              		.align	2
+ 890              		.global	_Z12calculateCRCP8modbus_th
+ 891              		.thumb
+ 892              		.thumb_func
+ 894              	_Z12calculateCRCP8modbus_th:
+ 895              	.LFB32:
+ 229:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 
+ 230:..//utils/modbus/SimpleModbusSlave_1769.cpp **** unsigned int calculateCRC(modbus_t* mbus,unsigned char bufferSize) {
+ 896              		.loc 1 230 0
+ 897              		.cfi_startproc
+ 898              		@ args = 0, pretend = 0, frame = 24
+ 899              		@ frame_needed = 1, uses_anonymous_args = 0
+ 900              		@ link register save eliminated.
+ 901 0000 80B4     		push	{r7}
+ 902              	.LCFI9:
+ 903              		.cfi_def_cfa_offset 4
+ 904 0002 87B0     		sub	sp, sp, #28
+ 905              	.LCFI10:
+ 906              		.cfi_def_cfa_offset 32
+ 907 0004 00AF     		add	r7, sp, #0
+ 908              		.cfi_offset 7, -4
+ 909              	.LCFI11:
+ 910              		.cfi_def_cfa_register 7
+ 911 0006 7860     		str	r0, [r7, #4]
+ 912 0008 0B46     		mov	r3, r1
+ 913 000a FB70     		strb	r3, [r7, #3]
+ 914              	.LBB29:
+ 231:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	unsigned int temp, temp2, flag;
+ 232:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	temp = 0xFFFF;
+ 915              		.loc 1 232 0
+ 916 000c 4FF6FF73 		movw	r3, #65535
+ 917 0010 BB60     		str	r3, [r7, #8]
+ 918              	.LBB30:
+ 233:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	for (unsigned char i = 0; i < bufferSize; i++){
+ 919              		.loc 1 233 0
+ 920 0012 4FF00003 		mov	r3, #0
+ 921 0016 BB75     		strb	r3, [r7, #22]
+ 922 0018 2CE0     		b	.L49
+ 923              	.L53:
+ 234:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		temp = temp ^ mbus->frame[i];
+ 924              		.loc 1 234 0
+ 925 001a BA7D     		ldrb	r2, [r7, #22]	@ zero_extendqisi2
+ 926 001c 7B68     		ldr	r3, [r7, #4]
+ 927 001e 1344     		add	r3, r2, r3
+ 928 0020 9B7D     		ldrb	r3, [r3, #22]	@ zero_extendqisi2
+ 929 0022 BA68     		ldr	r2, [r7, #8]
+ 930 0024 82EA0303 		eor	r3, r2, r3
+ 931 0028 BB60     		str	r3, [r7, #8]
+ 932              	.LBB31:
+ 235:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		for (unsigned char j = 1; j <= 8; j++){
+ 933              		.loc 1 235 0
+ 934 002a 4FF00103 		mov	r3, #1
+ 935 002e FB75     		strb	r3, [r7, #23]
+ 936 0030 14E0     		b	.L50
+ 937              	.L52:
+ 236:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			flag = temp & 0x0001;
+ 938              		.loc 1 236 0
+ 939 0032 BB68     		ldr	r3, [r7, #8]
+ 940 0034 03F00103 		and	r3, r3, #1
+ 941 0038 3B61     		str	r3, [r7, #16]
+ 237:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			temp >>= 1;
+ 942              		.loc 1 237 0
+ 943 003a BB68     		ldr	r3, [r7, #8]
+ 944 003c 4FEA5303 		lsr	r3, r3, #1
+ 945 0040 BB60     		str	r3, [r7, #8]
+ 238:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			if (flag)
+ 946              		.loc 1 238 0
+ 947 0042 3B69     		ldr	r3, [r7, #16]
+ 948 0044 002B     		cmp	r3, #0
+ 949 0046 05D0     		beq	.L51
+ 239:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 				temp ^= 0xA001;
+ 950              		.loc 1 239 0
+ 951 0048 BA68     		ldr	r2, [r7, #8]
+ 952 004a 4AF20103 		movw	r3, #40961
+ 953 004e 82EA0303 		eor	r3, r2, r3
+ 954 0052 BB60     		str	r3, [r7, #8]
+ 955              	.L51:
+ 956              		.loc 1 235 0
+ 957 0054 FB7D     		ldrb	r3, [r7, #23]
+ 958 0056 03F10103 		add	r3, r3, #1
+ 959 005a FB75     		strb	r3, [r7, #23]
+ 960              	.L50:
+ 961 005c FB7D     		ldrb	r3, [r7, #23]	@ zero_extendqisi2
+ 962 005e 082B     		cmp	r3, #8
+ 963 0060 8CBF     		ite	hi
+ 964 0062 0023     		movhi	r3, #0
+ 965 0064 0123     		movls	r3, #1
+ 966 0066 DBB2     		uxtb	r3, r3
+ 967 0068 002B     		cmp	r3, #0
+ 968 006a E2D1     		bne	.L52
+ 969              	.LBE31:
+ 970              		.loc 1 233 0
+ 971 006c BB7D     		ldrb	r3, [r7, #22]
+ 972 006e 03F10103 		add	r3, r3, #1
+ 973 0072 BB75     		strb	r3, [r7, #22]
+ 974              	.L49:
+ 975 0074 BA7D     		ldrb	r2, [r7, #22]	@ zero_extendqisi2
+ 976 0076 FB78     		ldrb	r3, [r7, #3]	@ zero_extendqisi2
+ 977 0078 9A42     		cmp	r2, r3
+ 978 007a 2CBF     		ite	cs
+ 979 007c 0023     		movcs	r3, #0
+ 980 007e 0123     		movcc	r3, #1
+ 981 0080 DBB2     		uxtb	r3, r3
+ 982 0082 002B     		cmp	r3, #0
+ 983 0084 C9D1     		bne	.L53
+ 984              	.LBE30:
+ 240:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		}
+ 241:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	}
+ 242:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	// Reverse byte order. 
+ 243:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	temp2 = temp >> 8;
+ 985              		.loc 1 243 0
+ 986 0086 BB68     		ldr	r3, [r7, #8]
+ 987 0088 4FEA1323 		lsr	r3, r3, #8
+ 988 008c FB60     		str	r3, [r7, #12]
+ 244:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	temp = (temp << 8) | temp2;
+ 989              		.loc 1 244 0
+ 990 008e BB68     		ldr	r3, [r7, #8]
+ 991 0090 4FEA0322 		lsl	r2, r3, #8
+ 992 0094 FB68     		ldr	r3, [r7, #12]
+ 993 0096 42EA0303 		orr	r3, r2, r3
+ 994 009a BB60     		str	r3, [r7, #8]
+ 245:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	temp &= 0xFFFF; 
+ 995              		.loc 1 245 0
+ 996 009c BB68     		ldr	r3, [r7, #8]
+ 997 009e 4FEA0343 		lsl	r3, r3, #16
+ 998 00a2 4FEA1343 		lsr	r3, r3, #16
+ 999 00a6 BB60     		str	r3, [r7, #8]
+ 246:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	// the returned value is already swapped
+ 247:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	// crcLo byte is first & crcHi byte is last
+ 248:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	return temp; 
+ 1000              		.loc 1 248 0
+ 1001 00a8 BB68     		ldr	r3, [r7, #8]
+ 1002              	.LBE29:
+ 249:..//utils/modbus/SimpleModbusSlave_1769.cpp **** }
+ 1003              		.loc 1 249 0
+ 1004 00aa 1846     		mov	r0, r3
+ 1005 00ac 07F11C07 		add	r7, r7, #28
+ 1006 00b0 BD46     		mov	sp, r7
+ 1007 00b2 80BC     		pop	{r7}
+ 1008 00b4 7047     		bx	lr
+ 1009              		.cfi_endproc
+ 1010              	.LFE32:
+ 1012 00b6 00BF     		.section	.text._Z10sendPacketP8modbus_th,"ax",%progbits
+ 1013              		.align	2
+ 1014              		.global	_Z10sendPacketP8modbus_th
+ 1015              		.thumb
+ 1016              		.thumb_func
+ 1018              	_Z10sendPacketP8modbus_th:
+ 1019              	.LFB33:
+ 250:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 
+ 251:..//utils/modbus/SimpleModbusSlave_1769.cpp **** void sendPacket(modbus_t* mbus,unsigned char bufferSize){
+ 1020              		.loc 1 251 0
+ 1021              		.cfi_startproc
+ 1022              		@ args = 0, pretend = 0, frame = 16
+ 1023              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1024 0000 80B5     		push	{r7, lr}
+ 1025              	.LCFI12:
+ 1026              		.cfi_def_cfa_offset 8
+ 1027 0002 84B0     		sub	sp, sp, #16
+ 1028              	.LCFI13:
+ 1029              		.cfi_def_cfa_offset 24
+ 1030 0004 00AF     		add	r7, sp, #0
+ 1031              		.cfi_offset 14, -4
+ 1032              		.cfi_offset 7, -8
+ 1033              	.LCFI14:
+ 1034              		.cfi_def_cfa_register 7
+ 1035 0006 7860     		str	r0, [r7, #4]
+ 1036 0008 0B46     		mov	r3, r1
+ 1037 000a FB70     		strb	r3, [r7, #3]
+ 1038              	.LBB32:
+ 252:..//utils/modbus/SimpleModbusSlave_1769.cpp ****   // digitalWrite(TxEnablePin, HIGH);
+ 253:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	switch(mbus->uart_port){
+ 1039              		.loc 1 253 0
+ 1040 000c 7B68     		ldr	r3, [r7, #4]
+ 1041 000e 1B7B     		ldrb	r3, [r3, #12]	@ zero_extendqisi2
+ 1042 0010 022B     		cmp	r3, #2
+ 1043 0012 02D0     		beq	.L57
+ 1044 0014 042B     		cmp	r3, #4
+ 1045 0016 11D0     		beq	.L58
+ 1046 0018 2BE0     		b	.L61
+ 1047              	.L57:
+ 254:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		case 2: //uart 2.. actual (buffersize+1).. uartputchar is not sending the last frame. so send one
+ 255:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			// printf("\nSend1");
+ 256:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			ENABLE485_ON_2; //enable transmision of rs485
+ 257:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			// for (unsigned char i = 0; i < (bufferSize); i++){ //after disabling tx fifo reset
+ 258:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 				// Uart_PutCharBuf2(mbus->frame[i]); //
+ 259:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 				// printf("F:%d",mbus->frame[i]);
+ 260:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			// }	
+ 261:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			Uart_SendCharArray2(mbus->frame,bufferSize);
+ 1048              		.loc 1 261 0
+ 1049 001a 7B68     		ldr	r3, [r7, #4]
+ 1050 001c 03F11602 		add	r2, r3, #22
+ 1051 0020 FB78     		ldrb	r3, [r7, #3]	@ zero_extendqisi2
+ 1052 0022 1046     		mov	r0, r2
+ 1053 0024 1946     		mov	r1, r3
+ 1054 0026 40F20003 		movw	r3, #:lower16:Uart_SendCharArray2
+ 1055 002a C0F20003 		movt	r3, #:upper16:Uart_SendCharArray2
+ 1056 002e 9847     		blx	r3
+ 262:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			uart2TxRxEnable();
+ 1057              		.loc 1 262 0
+ 1058 0030 40F20003 		movw	r3, #:lower16:uart2TxRxEnable
+ 1059 0034 C0F20003 		movt	r3, #:upper16:uart2TxRxEnable
+ 1060 0038 9847     		blx	r3
+ 263:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			break;
+ 1061              		.loc 1 263 0
+ 1062 003a 1AE0     		b	.L61
+ 1063              	.L58:
+ 1064              	.LBB33:
+ 264:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		
+ 265:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		case 4: //usb... (buffersize - 1) if bufferSize passed is (actual+1)
+ 266:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			for(unsigned char i = 0; i < (bufferSize); i++){
+ 1065              		.loc 1 266 0
+ 1066 003c 4FF00003 		mov	r3, #0
+ 1067 0040 FB73     		strb	r3, [r7, #15]
+ 1068 0042 0DE0     		b	.L59
+ 1069              	.L60:
+ 267:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 				VCOM_putchar(mbus->frame[i]); //
+ 1070              		.loc 1 267 0
+ 1071 0044 FA7B     		ldrb	r2, [r7, #15]	@ zero_extendqisi2
+ 1072 0046 7B68     		ldr	r3, [r7, #4]
+ 1073 0048 1344     		add	r3, r2, r3
+ 1074 004a 9B7D     		ldrb	r3, [r3, #22]	@ zero_extendqisi2
+ 1075 004c 1846     		mov	r0, r3
+ 1076 004e 40F20003 		movw	r3, #:lower16:VCOM_putchar
+ 1077 0052 C0F20003 		movt	r3, #:upper16:VCOM_putchar
+ 1078 0056 9847     		blx	r3
+ 1079              		.loc 1 266 0
+ 1080 0058 FB7B     		ldrb	r3, [r7, #15]
+ 1081 005a 03F10103 		add	r3, r3, #1
+ 1082 005e FB73     		strb	r3, [r7, #15]
+ 1083              	.L59:
+ 1084 0060 FA7B     		ldrb	r2, [r7, #15]	@ zero_extendqisi2
+ 1085 0062 FB78     		ldrb	r3, [r7, #3]	@ zero_extendqisi2
+ 1086 0064 9A42     		cmp	r2, r3
+ 1087 0066 2CBF     		ite	cs
+ 1088 0068 0023     		movcs	r3, #0
+ 1089 006a 0123     		movcc	r3, #1
+ 1090 006c DBB2     		uxtb	r3, r3
+ 1091 006e 002B     		cmp	r3, #0
+ 1092 0070 E8D1     		bne	.L60
+ 1093              	.L61:
+ 1094              	.LBE33:
+ 1095              	.LBE32:
+ 268:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			}
+ 269:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			break;
+ 270:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	}
+ 271:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	// allow a mbus->frame delay to indicate end of transmission
+ 272:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	// my_delay(T3_5); 
+ 273:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	
+ 274:..//utils/modbus/SimpleModbusSlave_1769.cpp ****   // digitalWrite(TxEnablePin, LOW);
+ 275:..//utils/modbus/SimpleModbusSlave_1769.cpp **** }
+ 1096              		.loc 1 275 0
+ 1097 0072 07F11007 		add	r7, r7, #16
+ 1098 0076 BD46     		mov	sp, r7
+ 1099 0078 80BD     		pop	{r7, pc}
+ 1100              		.cfi_endproc
+ 1101              	.LFE33:
+ 1103 007a 00BF     		.section	.text._Z11getRegisterP8modbus_ti,"ax",%progbits
+ 1104              		.align	2
+ 1105              		.global	_Z11getRegisterP8modbus_ti
+ 1106              		.thumb
+ 1107              		.thumb_func
+ 1109              	_Z11getRegisterP8modbus_ti:
+ 1110              	.LFB34:
+ 276:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 
+ 277:..//utils/modbus/SimpleModbusSlave_1769.cpp **** int getRegister(modbus_t* mbus,int i){
+ 1111              		.loc 1 277 0
+ 1112              		.cfi_startproc
+ 1113              		@ args = 0, pretend = 0, frame = 16
+ 1114              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1115 0000 80B5     		push	{r7, lr}
+ 1116              	.LCFI15:
+ 1117              		.cfi_def_cfa_offset 8
+ 1118 0002 84B0     		sub	sp, sp, #16
+ 1119              	.LCFI16:
+ 1120              		.cfi_def_cfa_offset 24
+ 1121 0004 00AF     		add	r7, sp, #0
+ 1122              		.cfi_offset 14, -4
+ 1123              		.cfi_offset 7, -8
+ 1124              	.LCFI17:
+ 1125              		.cfi_def_cfa_register 7
+ 1126 0006 7860     		str	r0, [r7, #4]
+ 1127 0008 3960     		str	r1, [r7, #0]
+ 1128              	.LBB34:
+ 278:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 
+ 279:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	if(i<400){
+ 1129              		.loc 1 279 0
+ 1130 000a 3A68     		ldr	r2, [r7, #0]
+ 1131 000c 40F28F13 		movw	r3, #399
+ 1132 0010 9A42     		cmp	r2, r3
+ 1133 0012 23DC     		bgt	.L63
+ 1134              	.LBB35:
+ 280:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		int extract = i/ACCEL_REG_NUM;
+ 1135              		.loc 1 280 0
+ 1136 0014 3A68     		ldr	r2, [r7, #0]
+ 1137 0016 45F25653 		movw	r3, #:lower16:1431655766
+ 1138 001a C5F25553 		movt	r3, #:upper16:1431655766
+ 1139 001e 83FB0201 		smull	r0, r1, r3, r2
+ 1140 0022 4FEAE273 		asr	r3, r2, #31
+ 1141 0026 C3EB0103 		rsb	r3, r3, r1
+ 1142 002a FB60     		str	r3, [r7, #12]
+ 281:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		set_holding_registers_values_accel_table((i%ACCEL_REG_NUM),extract);
+ 1143              		.loc 1 281 0
+ 1144 002c 3968     		ldr	r1, [r7, #0]
+ 1145 002e 45F25653 		movw	r3, #:lower16:1431655766
+ 1146 0032 C5F25553 		movt	r3, #:upper16:1431655766
+ 1147 0036 83FB0102 		smull	r0, r2, r3, r1
+ 1148 003a 4FEAE173 		asr	r3, r1, #31
+ 1149 003e C3EB0202 		rsb	r2, r3, r2
+ 1150 0042 1346     		mov	r3, r2
+ 1151 0044 4FEA4303 		lsl	r3, r3, #1
+ 1152 0048 1344     		add	r3, r3, r2
+ 1153 004a C3EB0102 		rsb	r2, r3, r1
+ 1154 004e 1046     		mov	r0, r2
+ 1155 0050 F968     		ldr	r1, [r7, #12]
+ 1156 0052 40F20003 		movw	r3, #:lower16:_Z40set_holding_registers_values_accel_tableii
+ 1157 0056 C0F20003 		movt	r3, #:upper16:_Z40set_holding_registers_values_accel_tableii
+ 1158 005a 9847     		blx	r3
+ 1159              	.L63:
+ 1160              	.LBE35:
+ 282:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	}
+ 283:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	if(i>=400){
+ 1161              		.loc 1 283 0
+ 1162 005c 3A68     		ldr	r2, [r7, #0]
+ 1163 005e 40F28F13 		movw	r3, #399
+ 1164 0062 9A42     		cmp	r2, r3
+ 1165 0064 05DD     		ble	.L64
+ 284:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		set_holding_registers_values(i);
+ 1166              		.loc 1 284 0
+ 1167 0066 3868     		ldr	r0, [r7, #0]
+ 1168 0068 40F20003 		movw	r3, #:lower16:set_holding_registers_values
+ 1169 006c C0F20003 		movt	r3, #:upper16:set_holding_registers_values
+ 1170 0070 9847     		blx	r3
+ 1171              	.L64:
+ 285:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	}
+ 286:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	// printf("\nGet %d %d",i,(mbus->regs[i]));
+ 287:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	return (mbus->regs[i]);
+ 1172              		.loc 1 287 0
+ 1173 0072 7B68     		ldr	r3, [r7, #4]
+ 1174 0074 D3F8A020 		ldr	r2, [r3, #160]
+ 1175 0078 3B68     		ldr	r3, [r7, #0]
+ 1176 007a 4FEA8303 		lsl	r3, r3, #2
+ 1177 007e 1344     		add	r3, r2, r3
+ 1178 0080 1B68     		ldr	r3, [r3, #0]
+ 1179              	.LBE34:
+ 288:..//utils/modbus/SimpleModbusSlave_1769.cpp **** }
+ 1180              		.loc 1 288 0
+ 1181 0082 1846     		mov	r0, r3
+ 1182 0084 07F11007 		add	r7, r7, #16
+ 1183 0088 BD46     		mov	sp, r7
+ 1184 008a 80BD     		pop	{r7, pc}
+ 1185              		.cfi_endproc
+ 1186              	.LFE34:
+ 1188              		.section	.text._Z11setRegisterP8modbus_tii,"ax",%progbits
+ 1189              		.align	2
+ 1190              		.global	_Z11setRegisterP8modbus_tii
+ 1191              		.thumb
+ 1192              		.thumb_func
+ 1194              	_Z11setRegisterP8modbus_tii:
+ 1195              	.LFB35:
+ 289:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 
+ 290:..//utils/modbus/SimpleModbusSlave_1769.cpp **** int setRegister(modbus_t* mbus,int i, int value){
+ 1196              		.loc 1 290 0
+ 1197              		.cfi_startproc
+ 1198              		@ args = 0, pretend = 0, frame = 16
+ 1199              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1200 0000 80B5     		push	{r7, lr}
+ 1201              	.LCFI18:
+ 1202              		.cfi_def_cfa_offset 8
+ 1203 0002 84B0     		sub	sp, sp, #16
+ 1204              	.LCFI19:
+ 1205              		.cfi_def_cfa_offset 24
+ 1206 0004 00AF     		add	r7, sp, #0
+ 1207              		.cfi_offset 14, -4
+ 1208              		.cfi_offset 7, -8
+ 1209              	.LCFI20:
+ 1210              		.cfi_def_cfa_register 7
+ 1211 0006 F860     		str	r0, [r7, #12]
+ 1212 0008 B960     		str	r1, [r7, #8]
+ 1213 000a 7A60     		str	r2, [r7, #4]
+ 291:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	mbus->regs[i] = value;//write new value to holding register
+ 1214              		.loc 1 291 0
+ 1215 000c FB68     		ldr	r3, [r7, #12]
+ 1216 000e D3F8A020 		ldr	r2, [r3, #160]
+ 1217 0012 BB68     		ldr	r3, [r7, #8]
+ 1218 0014 4FEA8303 		lsl	r3, r3, #2
+ 1219 0018 1344     		add	r3, r2, r3
+ 1220 001a 7A68     		ldr	r2, [r7, #4]
+ 1221 001c 1A60     		str	r2, [r3, #0]
+ 292:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	
+ 293:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	if(mbus->function == 16){
+ 1222              		.loc 1 293 0
+ 1223 001e FB68     		ldr	r3, [r7, #12]
+ 1224 0020 93F8A830 		ldrb	r3, [r3, #168]	@ zero_extendqisi2
+ 1225 0024 102B     		cmp	r3, #16
+ 1226 0026 23D1     		bne	.L67
+ 294:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		if(reg_count){
+ 1227              		.loc 1 294 0
+ 1228 0028 40F20003 		movw	r3, #:lower16:reg_count
+ 1229 002c C0F20003 		movt	r3, #:upper16:reg_count
+ 1230 0030 1B68     		ldr	r3, [r3, #0]
+ 1231 0032 002B     		cmp	r3, #0
+ 1232 0034 0FD0     		beq	.L68
+ 295:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			apply_modbus_values(i-1);
+ 1233              		.loc 1 295 0
+ 1234 0036 BB68     		ldr	r3, [r7, #8]
+ 1235 0038 03F1FF33 		add	r3, r3, #-1
+ 1236 003c 1846     		mov	r0, r3
+ 1237 003e 40F20003 		movw	r3, #:lower16:apply_modbus_values
+ 1238 0042 C0F20003 		movt	r3, #:upper16:apply_modbus_values
+ 1239 0046 9847     		blx	r3
+ 296:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 			reg_count = -1;
+ 1240              		.loc 1 296 0
+ 1241 0048 40F20003 		movw	r3, #:lower16:reg_count
+ 1242 004c C0F20003 		movt	r3, #:upper16:reg_count
+ 1243 0050 4FF0FF32 		mov	r2, #-1
+ 1244 0054 1A60     		str	r2, [r3, #0]
+ 1245              	.L68:
+ 297:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		}
+ 298:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		reg_count++;
+ 1246              		.loc 1 298 0
+ 1247 0056 40F20003 		movw	r3, #:lower16:reg_count
+ 1248 005a C0F20003 		movt	r3, #:upper16:reg_count
+ 1249 005e 1B68     		ldr	r3, [r3, #0]
+ 1250 0060 03F10102 		add	r2, r3, #1
+ 1251 0064 40F20003 		movw	r3, #:lower16:reg_count
+ 1252 0068 C0F20003 		movt	r3, #:upper16:reg_count
+ 1253 006c 1A60     		str	r2, [r3, #0]
+ 1254 006e 05E0     		b	.L69
+ 1255              	.L67:
+ 299:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	}
+ 300:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	else{
+ 301:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		// printf("\nhi how_are_you?");
+ 302:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 		apply_modbus_values(i);
+ 1256              		.loc 1 302 0
+ 1257 0070 B868     		ldr	r0, [r7, #8]
+ 1258 0072 40F20003 		movw	r3, #:lower16:apply_modbus_values
+ 1259 0076 C0F20003 		movt	r3, #:upper16:apply_modbus_values
+ 1260 007a 9847     		blx	r3
+ 1261              	.L69:
+ 303:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	}
+ 304:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 
+ 305:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	holdingRegs_prev[i] = value;//update after apply_modbus_values.. since this value is used for comp
+ 1262              		.loc 1 305 0
+ 1263 007c BA68     		ldr	r2, [r7, #8]
+ 1264 007e 7968     		ldr	r1, [r7, #4]
+ 1265 0080 40F20003 		movw	r3, #:lower16:holdingRegs_prev
+ 1266 0084 C0F20003 		movt	r3, #:upper16:holdingRegs_prev
+ 1267 0088 43F82210 		str	r1, [r3, r2, lsl #2]
+ 306:..//utils/modbus/SimpleModbusSlave_1769.cpp **** 	return 1;
+ 1268              		.loc 1 306 0
+ 1269 008c 4FF00103 		mov	r3, #1
+ 307:..//utils/modbus/SimpleModbusSlave_1769.cpp **** }
+ 1270              		.loc 1 307 0
+ 1271 0090 1846     		mov	r0, r3
+ 1272 0092 07F11007 		add	r7, r7, #16
+ 1273 0096 BD46     		mov	sp, r7
+ 1274 0098 80BD     		pop	{r7, pc}
+ 1275              		.cfi_endproc
+ 1276              	.LFE35:
+ 1278 009a 00BF     		.text
+ 1279              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 SimpleModbusSlave_1769.cpp
+C:\Users\hdhed\AppData\Local\Temp\ccIiVZJw.s:28     .bss.reg_count:00000000 reg_count
+C:\Users\hdhed\AppData\Local\Temp\ccIiVZJw.s:25     .bss.reg_count:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccIiVZJw.s:31     .text._Z16modbus_configureP8modbus_tlijPj:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccIiVZJw.s:36     .text._Z16modbus_configureP8modbus_tlijPj:00000000 _Z16modbus_configureP8modbus_tlijPj
+C:\Users\hdhed\AppData\Local\Temp\ccIiVZJw.s:112    .text.modbus_update:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccIiVZJw.s:117    .text.modbus_update:00000000 modbus_update
+C:\Users\hdhed\AppData\Local\Temp\ccIiVZJw.s:894    .text._Z12calculateCRCP8modbus_th:00000000 _Z12calculateCRCP8modbus_th
+C:\Users\hdhed\AppData\Local\Temp\ccIiVZJw.s:1109   .text._Z11getRegisterP8modbus_ti:00000000 _Z11getRegisterP8modbus_ti
+C:\Users\hdhed\AppData\Local\Temp\ccIiVZJw.s:1018   .text._Z10sendPacketP8modbus_th:00000000 _Z10sendPacketP8modbus_th
+C:\Users\hdhed\AppData\Local\Temp\ccIiVZJw.s:808    .text._Z17exceptionResponseP8modbus_th:00000000 _Z17exceptionResponseP8modbus_th
+C:\Users\hdhed\AppData\Local\Temp\ccIiVZJw.s:1194   .text._Z11setRegisterP8modbus_tii:00000000 _Z11setRegisterP8modbus_tii
+C:\Users\hdhed\AppData\Local\Temp\ccIiVZJw.s:803    .text._Z17exceptionResponseP8modbus_th:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccIiVZJw.s:889    .text._Z12calculateCRCP8modbus_th:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccIiVZJw.s:1013   .text._Z10sendPacketP8modbus_th:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccIiVZJw.s:1104   .text._Z11getRegisterP8modbus_ti:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccIiVZJw.s:1189   .text._Z11setRegisterP8modbus_tii:00000000 $t
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+init_timer3_freq
+getUartdata
+Uart_SendCharArray2
+uart2TxRxEnable
+VCOM_putchar
+_Z40set_holding_registers_values_accel_tableii
+set_holding_registers_values
+apply_modbus_values
+holdingRegs_prev

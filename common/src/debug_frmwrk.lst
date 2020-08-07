@@ -1,0 +1,1499 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"debug_frmwrk.c"
+  21              	.Ltext0:
+  22              		.cfi_sections	.debug_frame
+  23              		.comm	_db_msg,4,4
+  24              		.comm	_db_msg_,4,4
+  25              		.comm	_db_char,4,4
+  26              		.comm	_db_dec,4,4
+  27              		.comm	_db_dec_16,4,4
+  28              		.comm	_db_dec_32,4,4
+  29              		.comm	_db_hex,4,4
+  30              		.comm	_db_hex_16,4,4
+  31              		.comm	_db_hex_32,4,4
+  32              		.comm	_db_get_char,4,4
+  33              		.section	.text.UARTPutChar,"ax",%progbits
+  34              		.align	2
+  35              		.global	UARTPutChar
+  36              		.thumb
+  37              		.thumb_func
+  39              	UARTPutChar:
+  40              	.LFB29:
+  41              		.file 1 "..//common/src/debug_frmwrk.c"
+   1:..//common/src/debug_frmwrk.c **** /***********************************************************************//**
+   2:..//common/src/debug_frmwrk.c ****  * @file		debug_frmwrk.c
+   3:..//common/src/debug_frmwrk.c ****  * @brief		Contains some utilities that used for debugging through UART
+   4:..//common/src/debug_frmwrk.c ****  * @version		2.0
+   5:..//common/src/debug_frmwrk.c ****  * @date		21. May. 2010
+   6:..//common/src/debug_frmwrk.c ****  * @author		NXP MCU SW Application Team
+   7:..//common/src/debug_frmwrk.c ****  *----------------------------------------------------------------------------
+   8:..//common/src/debug_frmwrk.c ****  * Software that is described herein is for illustrative purposes only
+   9:..//common/src/debug_frmwrk.c ****  * which provides customers with programming information regarding the
+  10:..//common/src/debug_frmwrk.c ****  * products. This software is supplied "AS IS" without any warranties.
+  11:..//common/src/debug_frmwrk.c ****  * NXP Semiconductors assumes no responsibility or liability for the
+  12:..//common/src/debug_frmwrk.c ****  * use of the software, conveys no license or title under any patent,
+  13:..//common/src/debug_frmwrk.c ****  * copyright, or mask work right to the product. NXP Semiconductors
+  14:..//common/src/debug_frmwrk.c ****  * reserves the right to make changes in the software without
+  15:..//common/src/debug_frmwrk.c ****  * notification. NXP Semiconductors also make no representation or
+  16:..//common/src/debug_frmwrk.c ****  * warranty that such application will be suitable for the specified
+  17:..//common/src/debug_frmwrk.c ****  * use without further testing or modification.
+  18:..//common/src/debug_frmwrk.c ****  **********************************************************************/
+  19:..//common/src/debug_frmwrk.c **** 
+  20:..//common/src/debug_frmwrk.c **** #include "debug_frmwrk.h"
+  21:..//common/src/debug_frmwrk.c **** #include "lpc17xx_pinsel.h"
+  22:..//common/src/debug_frmwrk.c **** 
+  23:..//common/src/debug_frmwrk.c **** /* If this source file built with example, the LPC17xx FW library configuration
+  24:..//common/src/debug_frmwrk.c ****  * file in each example directory ("lpc17xx_libcfg.h") must be included,
+  25:..//common/src/debug_frmwrk.c ****  * otherwise the default FW library configuration file must be included instead
+  26:..//common/src/debug_frmwrk.c ****  */
+  27:..//common/src/debug_frmwrk.c **** #ifdef __BUILD_WITH_EXAMPLE__
+  28:..//common/src/debug_frmwrk.c **** #include "lpc17xx_libcfg.h"
+  29:..//common/src/debug_frmwrk.c **** #else
+  30:..//common/src/debug_frmwrk.c **** #include "lpc17xx_libcfg_default.h"
+  31:..//common/src/debug_frmwrk.c **** #endif /* __BUILD_WITH_EXAMPLE__ */
+  32:..//common/src/debug_frmwrk.c **** 
+  33:..//common/src/debug_frmwrk.c **** #ifdef _DBGFWK
+  34:..//common/src/debug_frmwrk.c **** /* Debug framework */
+  35:..//common/src/debug_frmwrk.c **** 
+  36:..//common/src/debug_frmwrk.c **** void (*_db_msg)(LPC_UART_TypeDef *UARTx, const void *s);
+  37:..//common/src/debug_frmwrk.c **** void (*_db_msg_)(LPC_UART_TypeDef *UARTx, const void *s);
+  38:..//common/src/debug_frmwrk.c **** void (*_db_char)(LPC_UART_TypeDef *UARTx, uint8_t ch);
+  39:..//common/src/debug_frmwrk.c **** void (*_db_dec)(LPC_UART_TypeDef *UARTx, uint8_t decn);
+  40:..//common/src/debug_frmwrk.c **** void (*_db_dec_16)(LPC_UART_TypeDef *UARTx, uint16_t decn);
+  41:..//common/src/debug_frmwrk.c **** void (*_db_dec_32)(LPC_UART_TypeDef *UARTx, uint32_t decn);
+  42:..//common/src/debug_frmwrk.c **** void (*_db_hex)(LPC_UART_TypeDef *UARTx, uint8_t hexn);
+  43:..//common/src/debug_frmwrk.c **** void (*_db_hex_16)(LPC_UART_TypeDef *UARTx, uint16_t hexn);
+  44:..//common/src/debug_frmwrk.c **** void (*_db_hex_32)(LPC_UART_TypeDef *UARTx, uint32_t hexn);
+  45:..//common/src/debug_frmwrk.c **** uint8_t (*_db_get_char)(LPC_UART_TypeDef *UARTx);
+  46:..//common/src/debug_frmwrk.c **** 
+  47:..//common/src/debug_frmwrk.c **** 
+  48:..//common/src/debug_frmwrk.c **** /*********************************************************************//**
+  49:..//common/src/debug_frmwrk.c ****  * @brief		Puts a character to UART port
+  50:..//common/src/debug_frmwrk.c ****  * @param[in]	UARTx	Pointer to UART peripheral
+  51:..//common/src/debug_frmwrk.c ****  * @param[in]	ch		Character to put
+  52:..//common/src/debug_frmwrk.c ****  * @return		None
+  53:..//common/src/debug_frmwrk.c ****  **********************************************************************/
+  54:..//common/src/debug_frmwrk.c **** void UARTPutChar (LPC_UART_TypeDef *UARTx, uint8_t ch)
+  55:..//common/src/debug_frmwrk.c **** {
+  42              		.loc 1 55 0
+  43              		.cfi_startproc
+  44              		@ args = 0, pretend = 0, frame = 8
+  45              		@ frame_needed = 1, uses_anonymous_args = 0
+  46 0000 80B5     		push	{r7, lr}
+  47              	.LCFI0:
+  48              		.cfi_def_cfa_offset 8
+  49 0002 82B0     		sub	sp, sp, #8
+  50              	.LCFI1:
+  51              		.cfi_def_cfa_offset 16
+  52 0004 00AF     		add	r7, sp, #0
+  53              		.cfi_offset 14, -4
+  54              		.cfi_offset 7, -8
+  55              	.LCFI2:
+  56              		.cfi_def_cfa_register 7
+  57 0006 7860     		str	r0, [r7, #4]
+  58 0008 0B46     		mov	r3, r1
+  59 000a FB70     		strb	r3, [r7, #3]
+  56:..//common/src/debug_frmwrk.c **** 	UART_Send(UARTx, &ch, 1, BLOCKING);
+  60              		.loc 1 56 0
+  61 000c 07F10303 		add	r3, r7, #3
+  62 0010 7868     		ldr	r0, [r7, #4]
+  63 0012 1946     		mov	r1, r3
+  64 0014 4FF00102 		mov	r2, #1
+  65 0018 4FF00103 		mov	r3, #1
+  66 001c 40F2000C 		movw	ip, #:lower16:UART_Send
+  67 0020 C0F2000C 		movt	ip, #:upper16:UART_Send
+  68 0024 E047     		blx	ip
+  57:..//common/src/debug_frmwrk.c **** }
+  69              		.loc 1 57 0
+  70 0026 07F10807 		add	r7, r7, #8
+  71 002a BD46     		mov	sp, r7
+  72 002c 80BD     		pop	{r7, pc}
+  73              		.cfi_endproc
+  74              	.LFE29:
+  76 002e 00BF     		.section	.text.UARTGetChar,"ax",%progbits
+  77              		.align	2
+  78              		.global	UARTGetChar
+  79              		.thumb
+  80              		.thumb_func
+  82              	UARTGetChar:
+  83              	.LFB30:
+  58:..//common/src/debug_frmwrk.c **** 
+  59:..//common/src/debug_frmwrk.c **** 
+  60:..//common/src/debug_frmwrk.c **** /*********************************************************************//**
+  61:..//common/src/debug_frmwrk.c ****  * @brief		Get a character to UART port
+  62:..//common/src/debug_frmwrk.c ****  * @param[in]	UARTx	Pointer to UART peripheral
+  63:..//common/src/debug_frmwrk.c ****  * @return		character value that returned
+  64:..//common/src/debug_frmwrk.c ****  **********************************************************************/
+  65:..//common/src/debug_frmwrk.c **** uint8_t UARTGetChar (LPC_UART_TypeDef *UARTx)
+  66:..//common/src/debug_frmwrk.c **** {
+  84              		.loc 1 66 0
+  85              		.cfi_startproc
+  86              		@ args = 0, pretend = 0, frame = 16
+  87              		@ frame_needed = 1, uses_anonymous_args = 0
+  88 0000 80B5     		push	{r7, lr}
+  89              	.LCFI3:
+  90              		.cfi_def_cfa_offset 8
+  91 0002 84B0     		sub	sp, sp, #16
+  92              	.LCFI4:
+  93              		.cfi_def_cfa_offset 24
+  94 0004 00AF     		add	r7, sp, #0
+  95              		.cfi_offset 14, -4
+  96              		.cfi_offset 7, -8
+  97              	.LCFI5:
+  98              		.cfi_def_cfa_register 7
+  99 0006 7860     		str	r0, [r7, #4]
+  67:..//common/src/debug_frmwrk.c **** 	uint8_t tmp = 0;
+ 100              		.loc 1 67 0
+ 101 0008 4FF00003 		mov	r3, #0
+ 102 000c FB73     		strb	r3, [r7, #15]
+  68:..//common/src/debug_frmwrk.c **** 	UART_Receive(UARTx, &tmp, 1, BLOCKING);
+ 103              		.loc 1 68 0
+ 104 000e 07F10F03 		add	r3, r7, #15
+ 105 0012 7868     		ldr	r0, [r7, #4]
+ 106 0014 1946     		mov	r1, r3
+ 107 0016 4FF00102 		mov	r2, #1
+ 108 001a 4FF00103 		mov	r3, #1
+ 109 001e 40F2000C 		movw	ip, #:lower16:UART_Receive
+ 110 0022 C0F2000C 		movt	ip, #:upper16:UART_Receive
+ 111 0026 E047     		blx	ip
+  69:..//common/src/debug_frmwrk.c **** 	return(tmp);
+ 112              		.loc 1 69 0
+ 113 0028 FB7B     		ldrb	r3, [r7, #15]	@ zero_extendqisi2
+  70:..//common/src/debug_frmwrk.c **** }
+ 114              		.loc 1 70 0
+ 115 002a 1846     		mov	r0, r3
+ 116 002c 07F11007 		add	r7, r7, #16
+ 117 0030 BD46     		mov	sp, r7
+ 118 0032 80BD     		pop	{r7, pc}
+ 119              		.cfi_endproc
+ 120              	.LFE30:
+ 122              		.section	.text.UARTPuts,"ax",%progbits
+ 123              		.align	2
+ 124              		.global	UARTPuts
+ 125              		.thumb
+ 126              		.thumb_func
+ 128              	UARTPuts:
+ 129              	.LFB31:
+  71:..//common/src/debug_frmwrk.c **** 
+  72:..//common/src/debug_frmwrk.c **** 
+  73:..//common/src/debug_frmwrk.c **** /*********************************************************************//**
+  74:..//common/src/debug_frmwrk.c ****  * @brief		Puts a string to UART port
+  75:..//common/src/debug_frmwrk.c ****  * @param[in]	UARTx 	Pointer to UART peripheral
+  76:..//common/src/debug_frmwrk.c ****  * @param[in]	str 	string to put
+  77:..//common/src/debug_frmwrk.c ****  * @return		None
+  78:..//common/src/debug_frmwrk.c ****  **********************************************************************/
+  79:..//common/src/debug_frmwrk.c **** void UARTPuts(LPC_UART_TypeDef *UARTx, const void *str)
+  80:..//common/src/debug_frmwrk.c **** {
+ 130              		.loc 1 80 0
+ 131              		.cfi_startproc
+ 132              		@ args = 0, pretend = 0, frame = 16
+ 133              		@ frame_needed = 1, uses_anonymous_args = 0
+ 134 0000 80B5     		push	{r7, lr}
+ 135              	.LCFI6:
+ 136              		.cfi_def_cfa_offset 8
+ 137 0002 84B0     		sub	sp, sp, #16
+ 138              	.LCFI7:
+ 139              		.cfi_def_cfa_offset 24
+ 140 0004 00AF     		add	r7, sp, #0
+ 141              		.cfi_offset 14, -4
+ 142              		.cfi_offset 7, -8
+ 143              	.LCFI8:
+ 144              		.cfi_def_cfa_register 7
+ 145 0006 7860     		str	r0, [r7, #4]
+ 146 0008 3960     		str	r1, [r7, #0]
+  81:..//common/src/debug_frmwrk.c **** 	uint8_t *s = (uint8_t *) str;
+ 147              		.loc 1 81 0
+ 148 000a 3B68     		ldr	r3, [r7, #0]
+ 149 000c FB60     		str	r3, [r7, #12]
+  82:..//common/src/debug_frmwrk.c **** 
+  83:..//common/src/debug_frmwrk.c **** 	while (*s)
+ 150              		.loc 1 83 0
+ 151 000e 0CE0     		b	.L6
+ 152              	.L7:
+  84:..//common/src/debug_frmwrk.c **** 	{
+  85:..//common/src/debug_frmwrk.c **** 		UARTPutChar(UARTx, *s++);
+ 153              		.loc 1 85 0
+ 154 0010 FB68     		ldr	r3, [r7, #12]
+ 155 0012 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 156 0014 FA68     		ldr	r2, [r7, #12]
+ 157 0016 02F10102 		add	r2, r2, #1
+ 158 001a FA60     		str	r2, [r7, #12]
+ 159 001c 7868     		ldr	r0, [r7, #4]
+ 160 001e 1946     		mov	r1, r3
+ 161 0020 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 162 0024 C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 163 0028 9847     		blx	r3
+ 164              	.L6:
+ 165              		.loc 1 83 0
+ 166 002a FB68     		ldr	r3, [r7, #12]
+ 167 002c 1B78     		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 168 002e 002B     		cmp	r3, #0
+ 169 0030 EED1     		bne	.L7
+  86:..//common/src/debug_frmwrk.c **** 	}
+  87:..//common/src/debug_frmwrk.c **** }
+ 170              		.loc 1 87 0
+ 171 0032 07F11007 		add	r7, r7, #16
+ 172 0036 BD46     		mov	sp, r7
+ 173 0038 80BD     		pop	{r7, pc}
+ 174              		.cfi_endproc
+ 175              	.LFE31:
+ 177 003a 00BF     		.section	.rodata
+ 178              		.align	2
+ 179              	.LC0:
+ 180 0000 0A0D00   		.ascii	"\012\015\000"
+ 181              		.section	.text.UARTPuts_,"ax",%progbits
+ 182              		.align	2
+ 183              		.global	UARTPuts_
+ 184              		.thumb
+ 185              		.thumb_func
+ 187              	UARTPuts_:
+ 188              	.LFB32:
+  88:..//common/src/debug_frmwrk.c **** 
+  89:..//common/src/debug_frmwrk.c **** 
+  90:..//common/src/debug_frmwrk.c **** /*********************************************************************//**
+  91:..//common/src/debug_frmwrk.c ****  * @brief		Puts a string to UART port and print new line
+  92:..//common/src/debug_frmwrk.c ****  * @param[in]	UARTx	Pointer to UART peripheral
+  93:..//common/src/debug_frmwrk.c ****  * @param[in]	str		String to put
+  94:..//common/src/debug_frmwrk.c ****  * @return		None
+  95:..//common/src/debug_frmwrk.c ****  **********************************************************************/
+  96:..//common/src/debug_frmwrk.c **** void UARTPuts_(LPC_UART_TypeDef *UARTx, const void *str)
+  97:..//common/src/debug_frmwrk.c **** {
+ 189              		.loc 1 97 0
+ 190              		.cfi_startproc
+ 191              		@ args = 0, pretend = 0, frame = 8
+ 192              		@ frame_needed = 1, uses_anonymous_args = 0
+ 193 0000 80B5     		push	{r7, lr}
+ 194              	.LCFI9:
+ 195              		.cfi_def_cfa_offset 8
+ 196 0002 82B0     		sub	sp, sp, #8
+ 197              	.LCFI10:
+ 198              		.cfi_def_cfa_offset 16
+ 199 0004 00AF     		add	r7, sp, #0
+ 200              		.cfi_offset 14, -4
+ 201              		.cfi_offset 7, -8
+ 202              	.LCFI11:
+ 203              		.cfi_def_cfa_register 7
+ 204 0006 7860     		str	r0, [r7, #4]
+ 205 0008 3960     		str	r1, [r7, #0]
+  98:..//common/src/debug_frmwrk.c **** 	UARTPuts (UARTx, str);
+ 206              		.loc 1 98 0
+ 207 000a 7868     		ldr	r0, [r7, #4]
+ 208 000c 3968     		ldr	r1, [r7, #0]
+ 209 000e 40F20003 		movw	r3, #:lower16:UARTPuts
+ 210 0012 C0F20003 		movt	r3, #:upper16:UARTPuts
+ 211 0016 9847     		blx	r3
+  99:..//common/src/debug_frmwrk.c **** 	UARTPuts (UARTx, "\n\r");
+ 212              		.loc 1 99 0
+ 213 0018 7868     		ldr	r0, [r7, #4]
+ 214 001a 40F20001 		movw	r1, #:lower16:.LC0
+ 215 001e C0F20001 		movt	r1, #:upper16:.LC0
+ 216 0022 40F20003 		movw	r3, #:lower16:UARTPuts
+ 217 0026 C0F20003 		movt	r3, #:upper16:UARTPuts
+ 218 002a 9847     		blx	r3
+ 100:..//common/src/debug_frmwrk.c **** }
+ 219              		.loc 1 100 0
+ 220 002c 07F10807 		add	r7, r7, #8
+ 221 0030 BD46     		mov	sp, r7
+ 222 0032 80BD     		pop	{r7, pc}
+ 223              		.cfi_endproc
+ 224              	.LFE32:
+ 226              		.section	.text.UARTPutDec,"ax",%progbits
+ 227              		.align	2
+ 228              		.global	UARTPutDec
+ 229              		.thumb
+ 230              		.thumb_func
+ 232              	UARTPutDec:
+ 233              	.LFB33:
+ 101:..//common/src/debug_frmwrk.c **** 
+ 102:..//common/src/debug_frmwrk.c **** 
+ 103:..//common/src/debug_frmwrk.c **** /*********************************************************************//**
+ 104:..//common/src/debug_frmwrk.c ****  * @brief		Puts a decimal number to UART port
+ 105:..//common/src/debug_frmwrk.c ****  * @param[in]	UARTx	Pointer to UART peripheral
+ 106:..//common/src/debug_frmwrk.c ****  * @param[in]	decnum	Decimal number (8-bit long)
+ 107:..//common/src/debug_frmwrk.c ****  * @return		None
+ 108:..//common/src/debug_frmwrk.c ****  **********************************************************************/
+ 109:..//common/src/debug_frmwrk.c **** void UARTPutDec(LPC_UART_TypeDef *UARTx, uint8_t decnum)
+ 110:..//common/src/debug_frmwrk.c **** {
+ 234              		.loc 1 110 0
+ 235              		.cfi_startproc
+ 236              		@ args = 0, pretend = 0, frame = 16
+ 237              		@ frame_needed = 1, uses_anonymous_args = 0
+ 238 0000 80B5     		push	{r7, lr}
+ 239              	.LCFI12:
+ 240              		.cfi_def_cfa_offset 8
+ 241 0002 84B0     		sub	sp, sp, #16
+ 242              	.LCFI13:
+ 243              		.cfi_def_cfa_offset 24
+ 244 0004 00AF     		add	r7, sp, #0
+ 245              		.cfi_offset 14, -4
+ 246              		.cfi_offset 7, -8
+ 247              	.LCFI14:
+ 248              		.cfi_def_cfa_register 7
+ 249 0006 7860     		str	r0, [r7, #4]
+ 250 0008 0B46     		mov	r3, r1
+ 251 000a FB70     		strb	r3, [r7, #3]
+ 111:..//common/src/debug_frmwrk.c **** 	uint8_t c1=decnum%10;
+ 252              		.loc 1 111 0
+ 253 000c FA78     		ldrb	r2, [r7, #3]	@ zero_extendqisi2
+ 254 000e 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 255 0012 CCF6CC43 		movt	r3, #:upper16:-858993459
+ 256 0016 A3FB0213 		umull	r1, r3, r3, r2
+ 257 001a 4FEAD301 		lsr	r1, r3, #3
+ 258 001e 0B46     		mov	r3, r1
+ 259 0020 4FEA8303 		lsl	r3, r3, #2
+ 260 0024 0B44     		add	r3, r3, r1
+ 261 0026 4FEA4303 		lsl	r3, r3, #1
+ 262 002a C3EB0203 		rsb	r3, r3, r2
+ 263 002e 7B73     		strb	r3, [r7, #13]
+ 112:..//common/src/debug_frmwrk.c **** 	uint8_t c2=(decnum/10)%10;
+ 264              		.loc 1 112 0
+ 265 0030 FA78     		ldrb	r2, [r7, #3]	@ zero_extendqisi2
+ 266 0032 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 267 0036 CCF6CC43 		movt	r3, #:upper16:-858993459
+ 268 003a A3FB0213 		umull	r1, r3, r3, r2
+ 269 003e 4FEAD303 		lsr	r3, r3, #3
+ 270 0042 DAB2     		uxtb	r2, r3
+ 271 0044 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 272 0048 CCF6CC43 		movt	r3, #:upper16:-858993459
+ 273 004c A3FB0213 		umull	r1, r3, r3, r2
+ 274 0050 4FEAD301 		lsr	r1, r3, #3
+ 275 0054 0B46     		mov	r3, r1
+ 276 0056 4FEA8303 		lsl	r3, r3, #2
+ 277 005a 0B44     		add	r3, r3, r1
+ 278 005c 4FEA4303 		lsl	r3, r3, #1
+ 279 0060 C3EB0203 		rsb	r3, r3, r2
+ 280 0064 BB73     		strb	r3, [r7, #14]
+ 113:..//common/src/debug_frmwrk.c **** 	uint8_t c3=(decnum/100)%10;
+ 281              		.loc 1 113 0
+ 282 0066 FA78     		ldrb	r2, [r7, #3]	@ zero_extendqisi2
+ 283 0068 48F21F53 		movw	r3, #:lower16:1374389535
+ 284 006c C5F2EB13 		movt	r3, #:upper16:1374389535
+ 285 0070 A3FB0213 		umull	r1, r3, r3, r2
+ 286 0074 4FEA5313 		lsr	r3, r3, #5
+ 287 0078 DAB2     		uxtb	r2, r3
+ 288 007a 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 289 007e CCF6CC43 		movt	r3, #:upper16:-858993459
+ 290 0082 A3FB0213 		umull	r1, r3, r3, r2
+ 291 0086 4FEAD301 		lsr	r1, r3, #3
+ 292 008a 0B46     		mov	r3, r1
+ 293 008c 4FEA8303 		lsl	r3, r3, #2
+ 294 0090 0B44     		add	r3, r3, r1
+ 295 0092 4FEA4303 		lsl	r3, r3, #1
+ 296 0096 C3EB0203 		rsb	r3, r3, r2
+ 297 009a FB73     		strb	r3, [r7, #15]
+ 114:..//common/src/debug_frmwrk.c **** 	UARTPutChar(UARTx, '0'+c3);
+ 298              		.loc 1 114 0
+ 299 009c FB7B     		ldrb	r3, [r7, #15]
+ 300 009e 03F13003 		add	r3, r3, #48
+ 301 00a2 DBB2     		uxtb	r3, r3
+ 302 00a4 7868     		ldr	r0, [r7, #4]
+ 303 00a6 1946     		mov	r1, r3
+ 304 00a8 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 305 00ac C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 306 00b0 9847     		blx	r3
+ 115:..//common/src/debug_frmwrk.c **** 	UARTPutChar(UARTx, '0'+c2);
+ 307              		.loc 1 115 0
+ 308 00b2 BB7B     		ldrb	r3, [r7, #14]
+ 309 00b4 03F13003 		add	r3, r3, #48
+ 310 00b8 DBB2     		uxtb	r3, r3
+ 311 00ba 7868     		ldr	r0, [r7, #4]
+ 312 00bc 1946     		mov	r1, r3
+ 313 00be 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 314 00c2 C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 315 00c6 9847     		blx	r3
+ 116:..//common/src/debug_frmwrk.c **** 	UARTPutChar(UARTx, '0'+c1);
+ 316              		.loc 1 116 0
+ 317 00c8 7B7B     		ldrb	r3, [r7, #13]
+ 318 00ca 03F13003 		add	r3, r3, #48
+ 319 00ce DBB2     		uxtb	r3, r3
+ 320 00d0 7868     		ldr	r0, [r7, #4]
+ 321 00d2 1946     		mov	r1, r3
+ 322 00d4 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 323 00d8 C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 324 00dc 9847     		blx	r3
+ 117:..//common/src/debug_frmwrk.c **** }
+ 325              		.loc 1 117 0
+ 326 00de 07F11007 		add	r7, r7, #16
+ 327 00e2 BD46     		mov	sp, r7
+ 328 00e4 80BD     		pop	{r7, pc}
+ 329              		.cfi_endproc
+ 330              	.LFE33:
+ 332 00e6 00BF     		.section	.text.UARTPutDec16,"ax",%progbits
+ 333              		.align	2
+ 334              		.global	UARTPutDec16
+ 335              		.thumb
+ 336              		.thumb_func
+ 338              	UARTPutDec16:
+ 339              	.LFB34:
+ 118:..//common/src/debug_frmwrk.c **** 
+ 119:..//common/src/debug_frmwrk.c **** /*********************************************************************//**
+ 120:..//common/src/debug_frmwrk.c ****  * @brief		Puts a decimal number to UART port
+ 121:..//common/src/debug_frmwrk.c ****  * @param[in]	UARTx	Pointer to UART peripheral
+ 122:..//common/src/debug_frmwrk.c ****  * @param[in]	decnum	Decimal number (8-bit long)
+ 123:..//common/src/debug_frmwrk.c ****  * @return		None
+ 124:..//common/src/debug_frmwrk.c ****  **********************************************************************/
+ 125:..//common/src/debug_frmwrk.c **** void UARTPutDec16(LPC_UART_TypeDef *UARTx, uint16_t decnum)
+ 126:..//common/src/debug_frmwrk.c **** {
+ 340              		.loc 1 126 0
+ 341              		.cfi_startproc
+ 342              		@ args = 0, pretend = 0, frame = 16
+ 343              		@ frame_needed = 1, uses_anonymous_args = 0
+ 344 0000 80B5     		push	{r7, lr}
+ 345              	.LCFI15:
+ 346              		.cfi_def_cfa_offset 8
+ 347 0002 84B0     		sub	sp, sp, #16
+ 348              	.LCFI16:
+ 349              		.cfi_def_cfa_offset 24
+ 350 0004 00AF     		add	r7, sp, #0
+ 351              		.cfi_offset 14, -4
+ 352              		.cfi_offset 7, -8
+ 353              	.LCFI17:
+ 354              		.cfi_def_cfa_register 7
+ 355 0006 7860     		str	r0, [r7, #4]
+ 356 0008 0B46     		mov	r3, r1
+ 357 000a 7B80     		strh	r3, [r7, #2]	@ movhi
+ 127:..//common/src/debug_frmwrk.c **** 	uint8_t c1=decnum%10;
+ 358              		.loc 1 127 0
+ 359 000c 7A88     		ldrh	r2, [r7, #2]
+ 360 000e 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 361 0012 CCF6CC43 		movt	r3, #:upper16:-858993459
+ 362 0016 A3FB0213 		umull	r1, r3, r3, r2
+ 363 001a 4FEAD301 		lsr	r1, r3, #3
+ 364 001e 0B46     		mov	r3, r1
+ 365 0020 4FEA8303 		lsl	r3, r3, #2
+ 366 0024 0B44     		add	r3, r3, r1
+ 367 0026 4FEA4303 		lsl	r3, r3, #1
+ 368 002a C3EB0203 		rsb	r3, r3, r2
+ 369 002e 9BB2     		uxth	r3, r3
+ 370 0030 FB72     		strb	r3, [r7, #11]
+ 128:..//common/src/debug_frmwrk.c **** 	uint8_t c2=(decnum/10)%10;
+ 371              		.loc 1 128 0
+ 372 0032 7A88     		ldrh	r2, [r7, #2]
+ 373 0034 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 374 0038 CCF6CC43 		movt	r3, #:upper16:-858993459
+ 375 003c A3FB0213 		umull	r1, r3, r3, r2
+ 376 0040 4FEAD303 		lsr	r3, r3, #3
+ 377 0044 9AB2     		uxth	r2, r3
+ 378 0046 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 379 004a CCF6CC43 		movt	r3, #:upper16:-858993459
+ 380 004e A3FB0213 		umull	r1, r3, r3, r2
+ 381 0052 4FEAD301 		lsr	r1, r3, #3
+ 382 0056 0B46     		mov	r3, r1
+ 383 0058 4FEA8303 		lsl	r3, r3, #2
+ 384 005c 0B44     		add	r3, r3, r1
+ 385 005e 4FEA4303 		lsl	r3, r3, #1
+ 386 0062 C3EB0203 		rsb	r3, r3, r2
+ 387 0066 9BB2     		uxth	r3, r3
+ 388 0068 3B73     		strb	r3, [r7, #12]
+ 129:..//common/src/debug_frmwrk.c **** 	uint8_t c3=(decnum/100)%10;
+ 389              		.loc 1 129 0
+ 390 006a 7A88     		ldrh	r2, [r7, #2]
+ 391 006c 48F21F53 		movw	r3, #:lower16:1374389535
+ 392 0070 C5F2EB13 		movt	r3, #:upper16:1374389535
+ 393 0074 A3FB0213 		umull	r1, r3, r3, r2
+ 394 0078 4FEA5313 		lsr	r3, r3, #5
+ 395 007c 9AB2     		uxth	r2, r3
+ 396 007e 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 397 0082 CCF6CC43 		movt	r3, #:upper16:-858993459
+ 398 0086 A3FB0213 		umull	r1, r3, r3, r2
+ 399 008a 4FEAD301 		lsr	r1, r3, #3
+ 400 008e 0B46     		mov	r3, r1
+ 401 0090 4FEA8303 		lsl	r3, r3, #2
+ 402 0094 0B44     		add	r3, r3, r1
+ 403 0096 4FEA4303 		lsl	r3, r3, #1
+ 404 009a C3EB0203 		rsb	r3, r3, r2
+ 405 009e 9BB2     		uxth	r3, r3
+ 406 00a0 7B73     		strb	r3, [r7, #13]
+ 130:..//common/src/debug_frmwrk.c **** 	uint8_t c4=(decnum/1000)%10;
+ 407              		.loc 1 130 0
+ 408 00a2 7A88     		ldrh	r2, [r7, #2]
+ 409 00a4 44F6D353 		movw	r3, #:lower16:274877907
+ 410 00a8 C1F26203 		movt	r3, #:upper16:274877907
+ 411 00ac A3FB0213 		umull	r1, r3, r3, r2
+ 412 00b0 4FEA9313 		lsr	r3, r3, #6
+ 413 00b4 9AB2     		uxth	r2, r3
+ 414 00b6 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 415 00ba CCF6CC43 		movt	r3, #:upper16:-858993459
+ 416 00be A3FB0213 		umull	r1, r3, r3, r2
+ 417 00c2 4FEAD301 		lsr	r1, r3, #3
+ 418 00c6 0B46     		mov	r3, r1
+ 419 00c8 4FEA8303 		lsl	r3, r3, #2
+ 420 00cc 0B44     		add	r3, r3, r1
+ 421 00ce 4FEA4303 		lsl	r3, r3, #1
+ 422 00d2 C3EB0203 		rsb	r3, r3, r2
+ 423 00d6 9BB2     		uxth	r3, r3
+ 424 00d8 BB73     		strb	r3, [r7, #14]
+ 131:..//common/src/debug_frmwrk.c **** 	uint8_t c5=(decnum/10000)%10;
+ 425              		.loc 1 131 0
+ 426 00da 7A88     		ldrh	r2, [r7, #2]
+ 427 00dc 41F25973 		movw	r3, #:lower16:-776530087
+ 428 00e0 CDF2B713 		movt	r3, #:upper16:-776530087
+ 429 00e4 A3FB0213 		umull	r1, r3, r3, r2
+ 430 00e8 4FEA5333 		lsr	r3, r3, #13
+ 431 00ec 9AB2     		uxth	r2, r3
+ 432 00ee 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 433 00f2 CCF6CC43 		movt	r3, #:upper16:-858993459
+ 434 00f6 A3FB0213 		umull	r1, r3, r3, r2
+ 435 00fa 4FEAD301 		lsr	r1, r3, #3
+ 436 00fe 0B46     		mov	r3, r1
+ 437 0100 4FEA8303 		lsl	r3, r3, #2
+ 438 0104 0B44     		add	r3, r3, r1
+ 439 0106 4FEA4303 		lsl	r3, r3, #1
+ 440 010a C3EB0203 		rsb	r3, r3, r2
+ 441 010e 9BB2     		uxth	r3, r3
+ 442 0110 FB73     		strb	r3, [r7, #15]
+ 132:..//common/src/debug_frmwrk.c **** 	UARTPutChar(UARTx, '0'+c5);
+ 443              		.loc 1 132 0
+ 444 0112 FB7B     		ldrb	r3, [r7, #15]
+ 445 0114 03F13003 		add	r3, r3, #48
+ 446 0118 DBB2     		uxtb	r3, r3
+ 447 011a 7868     		ldr	r0, [r7, #4]
+ 448 011c 1946     		mov	r1, r3
+ 449 011e 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 450 0122 C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 451 0126 9847     		blx	r3
+ 133:..//common/src/debug_frmwrk.c **** 	UARTPutChar(UARTx, '0'+c4);
+ 452              		.loc 1 133 0
+ 453 0128 BB7B     		ldrb	r3, [r7, #14]
+ 454 012a 03F13003 		add	r3, r3, #48
+ 455 012e DBB2     		uxtb	r3, r3
+ 456 0130 7868     		ldr	r0, [r7, #4]
+ 457 0132 1946     		mov	r1, r3
+ 458 0134 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 459 0138 C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 460 013c 9847     		blx	r3
+ 134:..//common/src/debug_frmwrk.c **** 	UARTPutChar(UARTx, '0'+c3);
+ 461              		.loc 1 134 0
+ 462 013e 7B7B     		ldrb	r3, [r7, #13]
+ 463 0140 03F13003 		add	r3, r3, #48
+ 464 0144 DBB2     		uxtb	r3, r3
+ 465 0146 7868     		ldr	r0, [r7, #4]
+ 466 0148 1946     		mov	r1, r3
+ 467 014a 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 468 014e C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 469 0152 9847     		blx	r3
+ 135:..//common/src/debug_frmwrk.c **** 	UARTPutChar(UARTx, '0'+c2);
+ 470              		.loc 1 135 0
+ 471 0154 3B7B     		ldrb	r3, [r7, #12]
+ 472 0156 03F13003 		add	r3, r3, #48
+ 473 015a DBB2     		uxtb	r3, r3
+ 474 015c 7868     		ldr	r0, [r7, #4]
+ 475 015e 1946     		mov	r1, r3
+ 476 0160 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 477 0164 C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 478 0168 9847     		blx	r3
+ 136:..//common/src/debug_frmwrk.c **** 	UARTPutChar(UARTx, '0'+c1);
+ 479              		.loc 1 136 0
+ 480 016a FB7A     		ldrb	r3, [r7, #11]
+ 481 016c 03F13003 		add	r3, r3, #48
+ 482 0170 DBB2     		uxtb	r3, r3
+ 483 0172 7868     		ldr	r0, [r7, #4]
+ 484 0174 1946     		mov	r1, r3
+ 485 0176 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 486 017a C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 487 017e 9847     		blx	r3
+ 137:..//common/src/debug_frmwrk.c **** }
+ 488              		.loc 1 137 0
+ 489 0180 07F11007 		add	r7, r7, #16
+ 490 0184 BD46     		mov	sp, r7
+ 491 0186 80BD     		pop	{r7, pc}
+ 492              		.cfi_endproc
+ 493              	.LFE34:
+ 495              		.section	.text.UARTPutDec32,"ax",%progbits
+ 496              		.align	2
+ 497              		.global	UARTPutDec32
+ 498              		.thumb
+ 499              		.thumb_func
+ 501              	UARTPutDec32:
+ 502              	.LFB35:
+ 138:..//common/src/debug_frmwrk.c **** 
+ 139:..//common/src/debug_frmwrk.c **** /*********************************************************************//**
+ 140:..//common/src/debug_frmwrk.c ****  * @brief		Puts a decimal number to UART port
+ 141:..//common/src/debug_frmwrk.c ****  * @param[in]	UARTx	Pointer to UART peripheral
+ 142:..//common/src/debug_frmwrk.c ****  * @param[in]	decnum	Decimal number (8-bit long)
+ 143:..//common/src/debug_frmwrk.c ****  * @return		None
+ 144:..//common/src/debug_frmwrk.c ****  **********************************************************************/
+ 145:..//common/src/debug_frmwrk.c **** void UARTPutDec32(LPC_UART_TypeDef *UARTx, uint32_t decnum)
+ 146:..//common/src/debug_frmwrk.c **** {
+ 503              		.loc 1 146 0
+ 504              		.cfi_startproc
+ 505              		@ args = 0, pretend = 0, frame = 24
+ 506              		@ frame_needed = 1, uses_anonymous_args = 0
+ 507 0000 80B5     		push	{r7, lr}
+ 508              	.LCFI18:
+ 509              		.cfi_def_cfa_offset 8
+ 510 0002 86B0     		sub	sp, sp, #24
+ 511              	.LCFI19:
+ 512              		.cfi_def_cfa_offset 32
+ 513 0004 00AF     		add	r7, sp, #0
+ 514              		.cfi_offset 14, -4
+ 515              		.cfi_offset 7, -8
+ 516              	.LCFI20:
+ 517              		.cfi_def_cfa_register 7
+ 518 0006 7860     		str	r0, [r7, #4]
+ 519 0008 3960     		str	r1, [r7, #0]
+ 147:..//common/src/debug_frmwrk.c **** 	uint8_t c1=decnum%10;
+ 520              		.loc 1 147 0
+ 521 000a 3968     		ldr	r1, [r7, #0]
+ 522 000c 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 523 0010 CCF6CC43 		movt	r3, #:upper16:-858993459
+ 524 0014 A3FB0123 		umull	r2, r3, r3, r1
+ 525 0018 4FEAD302 		lsr	r2, r3, #3
+ 526 001c 1346     		mov	r3, r2
+ 527 001e 4FEA8303 		lsl	r3, r3, #2
+ 528 0022 1344     		add	r3, r3, r2
+ 529 0024 4FEA4303 		lsl	r3, r3, #1
+ 530 0028 C3EB0102 		rsb	r2, r3, r1
+ 531 002c 1346     		mov	r3, r2
+ 532 002e BB73     		strb	r3, [r7, #14]
+ 148:..//common/src/debug_frmwrk.c **** 	uint8_t c2=(decnum/10)%10;
+ 533              		.loc 1 148 0
+ 534 0030 3A68     		ldr	r2, [r7, #0]
+ 535 0032 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 536 0036 CCF6CC43 		movt	r3, #:upper16:-858993459
+ 537 003a A3FB0213 		umull	r1, r3, r3, r2
+ 538 003e 4FEAD301 		lsr	r1, r3, #3
+ 539 0042 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 540 0046 CCF6CC43 		movt	r3, #:upper16:-858993459
+ 541 004a A3FB0123 		umull	r2, r3, r3, r1
+ 542 004e 4FEAD302 		lsr	r2, r3, #3
+ 543 0052 1346     		mov	r3, r2
+ 544 0054 4FEA8303 		lsl	r3, r3, #2
+ 545 0058 1344     		add	r3, r3, r2
+ 546 005a 4FEA4303 		lsl	r3, r3, #1
+ 547 005e C3EB0102 		rsb	r2, r3, r1
+ 548 0062 1346     		mov	r3, r2
+ 549 0064 FB73     		strb	r3, [r7, #15]
+ 149:..//common/src/debug_frmwrk.c **** 	uint8_t c3=(decnum/100)%10;
+ 550              		.loc 1 149 0
+ 551 0066 3A68     		ldr	r2, [r7, #0]
+ 552 0068 48F21F53 		movw	r3, #:lower16:1374389535
+ 553 006c C5F2EB13 		movt	r3, #:upper16:1374389535
+ 554 0070 A3FB0213 		umull	r1, r3, r3, r2
+ 555 0074 4FEA5311 		lsr	r1, r3, #5
+ 556 0078 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 557 007c CCF6CC43 		movt	r3, #:upper16:-858993459
+ 558 0080 A3FB0123 		umull	r2, r3, r3, r1
+ 559 0084 4FEAD302 		lsr	r2, r3, #3
+ 560 0088 1346     		mov	r3, r2
+ 561 008a 4FEA8303 		lsl	r3, r3, #2
+ 562 008e 1344     		add	r3, r3, r2
+ 563 0090 4FEA4303 		lsl	r3, r3, #1
+ 564 0094 C3EB0102 		rsb	r2, r3, r1
+ 565 0098 1346     		mov	r3, r2
+ 566 009a 3B74     		strb	r3, [r7, #16]
+ 150:..//common/src/debug_frmwrk.c **** 	uint8_t c4=(decnum/1000)%10;
+ 567              		.loc 1 150 0
+ 568 009c 3A68     		ldr	r2, [r7, #0]
+ 569 009e 44F6D353 		movw	r3, #:lower16:274877907
+ 570 00a2 C1F26203 		movt	r3, #:upper16:274877907
+ 571 00a6 A3FB0213 		umull	r1, r3, r3, r2
+ 572 00aa 4FEA9311 		lsr	r1, r3, #6
+ 573 00ae 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 574 00b2 CCF6CC43 		movt	r3, #:upper16:-858993459
+ 575 00b6 A3FB0123 		umull	r2, r3, r3, r1
+ 576 00ba 4FEAD302 		lsr	r2, r3, #3
+ 577 00be 1346     		mov	r3, r2
+ 578 00c0 4FEA8303 		lsl	r3, r3, #2
+ 579 00c4 1344     		add	r3, r3, r2
+ 580 00c6 4FEA4303 		lsl	r3, r3, #1
+ 581 00ca C3EB0102 		rsb	r2, r3, r1
+ 582 00ce 1346     		mov	r3, r2
+ 583 00d0 7B74     		strb	r3, [r7, #17]
+ 151:..//common/src/debug_frmwrk.c **** 	uint8_t c5=(decnum/10000)%10;
+ 584              		.loc 1 151 0
+ 585 00d2 3A68     		ldr	r2, [r7, #0]
+ 586 00d4 41F25973 		movw	r3, #:lower16:-776530087
+ 587 00d8 CDF2B713 		movt	r3, #:upper16:-776530087
+ 588 00dc A3FB0213 		umull	r1, r3, r3, r2
+ 589 00e0 4FEA5331 		lsr	r1, r3, #13
+ 590 00e4 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 591 00e8 CCF6CC43 		movt	r3, #:upper16:-858993459
+ 592 00ec A3FB0123 		umull	r2, r3, r3, r1
+ 593 00f0 4FEAD302 		lsr	r2, r3, #3
+ 594 00f4 1346     		mov	r3, r2
+ 595 00f6 4FEA8303 		lsl	r3, r3, #2
+ 596 00fa 1344     		add	r3, r3, r2
+ 597 00fc 4FEA4303 		lsl	r3, r3, #1
+ 598 0100 C3EB0102 		rsb	r2, r3, r1
+ 599 0104 1346     		mov	r3, r2
+ 600 0106 BB74     		strb	r3, [r7, #18]
+ 152:..//common/src/debug_frmwrk.c **** 	uint8_t c6=(decnum/100000)%10;
+ 601              		.loc 1 152 0
+ 602 0108 3B68     		ldr	r3, [r7, #0]
+ 603 010a 4FEA5312 		lsr	r2, r3, #5
+ 604 010e 45F6C523 		movw	r3, #:lower16:175921861
+ 605 0112 C0F67C23 		movt	r3, #:upper16:175921861
+ 606 0116 A3FB0213 		umull	r1, r3, r3, r2
+ 607 011a 4FEAD311 		lsr	r1, r3, #7
+ 608 011e 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 609 0122 CCF6CC43 		movt	r3, #:upper16:-858993459
+ 610 0126 A3FB0123 		umull	r2, r3, r3, r1
+ 611 012a 4FEAD302 		lsr	r2, r3, #3
+ 612 012e 1346     		mov	r3, r2
+ 613 0130 4FEA8303 		lsl	r3, r3, #2
+ 614 0134 1344     		add	r3, r3, r2
+ 615 0136 4FEA4303 		lsl	r3, r3, #1
+ 616 013a C3EB0102 		rsb	r2, r3, r1
+ 617 013e 1346     		mov	r3, r2
+ 618 0140 FB74     		strb	r3, [r7, #19]
+ 153:..//common/src/debug_frmwrk.c **** 	uint8_t c7=(decnum/1000000)%10;
+ 619              		.loc 1 153 0
+ 620 0142 3A68     		ldr	r2, [r7, #0]
+ 621 0144 4DF68363 		movw	r3, #:lower16:1125899907
+ 622 0148 C4F21B33 		movt	r3, #:upper16:1125899907
+ 623 014c A3FB0213 		umull	r1, r3, r3, r2
+ 624 0150 4FEA9341 		lsr	r1, r3, #18
+ 625 0154 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 626 0158 CCF6CC43 		movt	r3, #:upper16:-858993459
+ 627 015c A3FB0123 		umull	r2, r3, r3, r1
+ 628 0160 4FEAD302 		lsr	r2, r3, #3
+ 629 0164 1346     		mov	r3, r2
+ 630 0166 4FEA8303 		lsl	r3, r3, #2
+ 631 016a 1344     		add	r3, r3, r2
+ 632 016c 4FEA4303 		lsl	r3, r3, #1
+ 633 0170 C3EB0102 		rsb	r2, r3, r1
+ 634 0174 1346     		mov	r3, r2
+ 635 0176 3B75     		strb	r3, [r7, #20]
+ 154:..//common/src/debug_frmwrk.c **** 	uint8_t c8=(decnum/10000000)%10;
+ 636              		.loc 1 154 0
+ 637 0178 3A68     		ldr	r2, [r7, #0]
+ 638 017a 4CF66B23 		movw	r3, #:lower16:1801439851
+ 639 017e C6F65F33 		movt	r3, #:upper16:1801439851
+ 640 0182 A3FB0213 		umull	r1, r3, r3, r2
+ 641 0186 4FEA9351 		lsr	r1, r3, #22
+ 642 018a 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 643 018e CCF6CC43 		movt	r3, #:upper16:-858993459
+ 644 0192 A3FB0123 		umull	r2, r3, r3, r1
+ 645 0196 4FEAD302 		lsr	r2, r3, #3
+ 646 019a 1346     		mov	r3, r2
+ 647 019c 4FEA8303 		lsl	r3, r3, #2
+ 648 01a0 1344     		add	r3, r3, r2
+ 649 01a2 4FEA4303 		lsl	r3, r3, #1
+ 650 01a6 C3EB0102 		rsb	r2, r3, r1
+ 651 01aa 1346     		mov	r3, r2
+ 652 01ac 7B75     		strb	r3, [r7, #21]
+ 155:..//common/src/debug_frmwrk.c **** 	uint8_t c9=(decnum/100000000)%10;
+ 653              		.loc 1 155 0
+ 654 01ae 3A68     		ldr	r2, [r7, #0]
+ 655 01b0 43F68933 		movw	r3, #:lower16:1441151881
+ 656 01b4 C5F2E653 		movt	r3, #:upper16:1441151881
+ 657 01b8 A3FB0213 		umull	r1, r3, r3, r2
+ 658 01bc 4FEA5361 		lsr	r1, r3, #25
+ 659 01c0 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 660 01c4 CCF6CC43 		movt	r3, #:upper16:-858993459
+ 661 01c8 A3FB0123 		umull	r2, r3, r3, r1
+ 662 01cc 4FEAD302 		lsr	r2, r3, #3
+ 663 01d0 1346     		mov	r3, r2
+ 664 01d2 4FEA8303 		lsl	r3, r3, #2
+ 665 01d6 1344     		add	r3, r3, r2
+ 666 01d8 4FEA4303 		lsl	r3, r3, #1
+ 667 01dc C3EB0102 		rsb	r2, r3, r1
+ 668 01e0 1346     		mov	r3, r2
+ 669 01e2 BB75     		strb	r3, [r7, #22]
+ 156:..//common/src/debug_frmwrk.c **** 	uint8_t c10=(decnum/100000000)%10;
+ 670              		.loc 1 156 0
+ 671 01e4 3A68     		ldr	r2, [r7, #0]
+ 672 01e6 43F68933 		movw	r3, #:lower16:1441151881
+ 673 01ea C5F2E653 		movt	r3, #:upper16:1441151881
+ 674 01ee A3FB0213 		umull	r1, r3, r3, r2
+ 675 01f2 4FEA5361 		lsr	r1, r3, #25
+ 676 01f6 4CF6CD43 		movw	r3, #:lower16:-858993459
+ 677 01fa CCF6CC43 		movt	r3, #:upper16:-858993459
+ 678 01fe A3FB0123 		umull	r2, r3, r3, r1
+ 679 0202 4FEAD302 		lsr	r2, r3, #3
+ 680 0206 1346     		mov	r3, r2
+ 681 0208 4FEA8303 		lsl	r3, r3, #2
+ 682 020c 1344     		add	r3, r3, r2
+ 683 020e 4FEA4303 		lsl	r3, r3, #1
+ 684 0212 C3EB0102 		rsb	r2, r3, r1
+ 685 0216 1346     		mov	r3, r2
+ 686 0218 FB75     		strb	r3, [r7, #23]
+ 157:..//common/src/debug_frmwrk.c **** 	UARTPutChar(UARTx, '0'+c10);
+ 687              		.loc 1 157 0
+ 688 021a FB7D     		ldrb	r3, [r7, #23]
+ 689 021c 03F13003 		add	r3, r3, #48
+ 690 0220 DBB2     		uxtb	r3, r3
+ 691 0222 7868     		ldr	r0, [r7, #4]
+ 692 0224 1946     		mov	r1, r3
+ 693 0226 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 694 022a C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 695 022e 9847     		blx	r3
+ 158:..//common/src/debug_frmwrk.c **** 	UARTPutChar(UARTx, '0'+c9);
+ 696              		.loc 1 158 0
+ 697 0230 BB7D     		ldrb	r3, [r7, #22]
+ 698 0232 03F13003 		add	r3, r3, #48
+ 699 0236 DBB2     		uxtb	r3, r3
+ 700 0238 7868     		ldr	r0, [r7, #4]
+ 701 023a 1946     		mov	r1, r3
+ 702 023c 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 703 0240 C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 704 0244 9847     		blx	r3
+ 159:..//common/src/debug_frmwrk.c **** 	UARTPutChar(UARTx, '0'+c8);
+ 705              		.loc 1 159 0
+ 706 0246 7B7D     		ldrb	r3, [r7, #21]
+ 707 0248 03F13003 		add	r3, r3, #48
+ 708 024c DBB2     		uxtb	r3, r3
+ 709 024e 7868     		ldr	r0, [r7, #4]
+ 710 0250 1946     		mov	r1, r3
+ 711 0252 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 712 0256 C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 713 025a 9847     		blx	r3
+ 160:..//common/src/debug_frmwrk.c **** 	UARTPutChar(UARTx, '0'+c7);
+ 714              		.loc 1 160 0
+ 715 025c 3B7D     		ldrb	r3, [r7, #20]
+ 716 025e 03F13003 		add	r3, r3, #48
+ 717 0262 DBB2     		uxtb	r3, r3
+ 718 0264 7868     		ldr	r0, [r7, #4]
+ 719 0266 1946     		mov	r1, r3
+ 720 0268 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 721 026c C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 722 0270 9847     		blx	r3
+ 161:..//common/src/debug_frmwrk.c **** 	UARTPutChar(UARTx, '0'+c6);
+ 723              		.loc 1 161 0
+ 724 0272 FB7C     		ldrb	r3, [r7, #19]
+ 725 0274 03F13003 		add	r3, r3, #48
+ 726 0278 DBB2     		uxtb	r3, r3
+ 727 027a 7868     		ldr	r0, [r7, #4]
+ 728 027c 1946     		mov	r1, r3
+ 729 027e 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 730 0282 C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 731 0286 9847     		blx	r3
+ 162:..//common/src/debug_frmwrk.c **** 	UARTPutChar(UARTx, '0'+c5);
+ 732              		.loc 1 162 0
+ 733 0288 BB7C     		ldrb	r3, [r7, #18]
+ 734 028a 03F13003 		add	r3, r3, #48
+ 735 028e DBB2     		uxtb	r3, r3
+ 736 0290 7868     		ldr	r0, [r7, #4]
+ 737 0292 1946     		mov	r1, r3
+ 738 0294 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 739 0298 C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 740 029c 9847     		blx	r3
+ 163:..//common/src/debug_frmwrk.c **** 	UARTPutChar(UARTx, '0'+c4);
+ 741              		.loc 1 163 0
+ 742 029e 7B7C     		ldrb	r3, [r7, #17]
+ 743 02a0 03F13003 		add	r3, r3, #48
+ 744 02a4 DBB2     		uxtb	r3, r3
+ 745 02a6 7868     		ldr	r0, [r7, #4]
+ 746 02a8 1946     		mov	r1, r3
+ 747 02aa 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 748 02ae C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 749 02b2 9847     		blx	r3
+ 164:..//common/src/debug_frmwrk.c **** 	UARTPutChar(UARTx, '0'+c3);
+ 750              		.loc 1 164 0
+ 751 02b4 3B7C     		ldrb	r3, [r7, #16]
+ 752 02b6 03F13003 		add	r3, r3, #48
+ 753 02ba DBB2     		uxtb	r3, r3
+ 754 02bc 7868     		ldr	r0, [r7, #4]
+ 755 02be 1946     		mov	r1, r3
+ 756 02c0 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 757 02c4 C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 758 02c8 9847     		blx	r3
+ 165:..//common/src/debug_frmwrk.c **** 	UARTPutChar(UARTx, '0'+c2);
+ 759              		.loc 1 165 0
+ 760 02ca FB7B     		ldrb	r3, [r7, #15]
+ 761 02cc 03F13003 		add	r3, r3, #48
+ 762 02d0 DBB2     		uxtb	r3, r3
+ 763 02d2 7868     		ldr	r0, [r7, #4]
+ 764 02d4 1946     		mov	r1, r3
+ 765 02d6 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 766 02da C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 767 02de 9847     		blx	r3
+ 166:..//common/src/debug_frmwrk.c **** 	UARTPutChar(UARTx, '0'+c1);
+ 768              		.loc 1 166 0
+ 769 02e0 BB7B     		ldrb	r3, [r7, #14]
+ 770 02e2 03F13003 		add	r3, r3, #48
+ 771 02e6 DBB2     		uxtb	r3, r3
+ 772 02e8 7868     		ldr	r0, [r7, #4]
+ 773 02ea 1946     		mov	r1, r3
+ 774 02ec 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 775 02f0 C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 776 02f4 9847     		blx	r3
+ 167:..//common/src/debug_frmwrk.c **** }
+ 777              		.loc 1 167 0
+ 778 02f6 07F11807 		add	r7, r7, #24
+ 779 02fa BD46     		mov	sp, r7
+ 780 02fc 80BD     		pop	{r7, pc}
+ 781              		.cfi_endproc
+ 782              	.LFE35:
+ 784 02fe 00BF     		.section	.rodata
+ 785 0003 00       		.align	2
+ 786              	.LC1:
+ 787 0004 307800   		.ascii	"0x\000"
+ 788 0007 00       		.section	.text.UARTPutHex,"ax",%progbits
+ 789              		.align	2
+ 790              		.global	UARTPutHex
+ 791              		.thumb
+ 792              		.thumb_func
+ 794              	UARTPutHex:
+ 795              	.LFB36:
+ 168:..//common/src/debug_frmwrk.c **** 
+ 169:..//common/src/debug_frmwrk.c **** /*********************************************************************//**
+ 170:..//common/src/debug_frmwrk.c ****  * @brief		Puts a hex number to UART port
+ 171:..//common/src/debug_frmwrk.c ****  * @param[in]	UARTx	Pointer to UART peripheral
+ 172:..//common/src/debug_frmwrk.c ****  * @param[in]	hexnum	Hex number (8-bit long)
+ 173:..//common/src/debug_frmwrk.c ****  * @return		None
+ 174:..//common/src/debug_frmwrk.c ****  **********************************************************************/
+ 175:..//common/src/debug_frmwrk.c **** void UARTPutHex (LPC_UART_TypeDef *UARTx, uint8_t hexnum)
+ 176:..//common/src/debug_frmwrk.c **** {
+ 796              		.loc 1 176 0
+ 797              		.cfi_startproc
+ 798              		@ args = 0, pretend = 0, frame = 16
+ 799              		@ frame_needed = 1, uses_anonymous_args = 0
+ 800 0000 80B5     		push	{r7, lr}
+ 801              	.LCFI21:
+ 802              		.cfi_def_cfa_offset 8
+ 803 0002 84B0     		sub	sp, sp, #16
+ 804              	.LCFI22:
+ 805              		.cfi_def_cfa_offset 24
+ 806 0004 00AF     		add	r7, sp, #0
+ 807              		.cfi_offset 14, -4
+ 808              		.cfi_offset 7, -8
+ 809              	.LCFI23:
+ 810              		.cfi_def_cfa_register 7
+ 811 0006 7860     		str	r0, [r7, #4]
+ 812 0008 0B46     		mov	r3, r1
+ 813 000a FB70     		strb	r3, [r7, #3]
+ 177:..//common/src/debug_frmwrk.c **** 	uint8_t nibble, i;
+ 178:..//common/src/debug_frmwrk.c **** 
+ 179:..//common/src/debug_frmwrk.c **** 	UARTPuts(UARTx, "0x");
+ 814              		.loc 1 179 0
+ 815 000c 7868     		ldr	r0, [r7, #4]
+ 816 000e 40F20001 		movw	r1, #:lower16:.LC1
+ 817 0012 C0F20001 		movt	r1, #:upper16:.LC1
+ 818 0016 40F20003 		movw	r3, #:lower16:UARTPuts
+ 819 001a C0F20003 		movt	r3, #:upper16:UARTPuts
+ 820 001e 9847     		blx	r3
+ 180:..//common/src/debug_frmwrk.c **** 	i = 1;
+ 821              		.loc 1 180 0
+ 822 0020 4FF00103 		mov	r3, #1
+ 823 0024 FB73     		strb	r3, [r7, #15]
+ 824              	.L20:
+ 181:..//common/src/debug_frmwrk.c **** 	do {
+ 182:..//common/src/debug_frmwrk.c **** 		nibble = (hexnum >> (4*i)) & 0x0F;
+ 825              		.loc 1 182 0
+ 826 0026 FA78     		ldrb	r2, [r7, #3]	@ zero_extendqisi2
+ 827 0028 FB7B     		ldrb	r3, [r7, #15]	@ zero_extendqisi2
+ 828 002a 4FEA8303 		lsl	r3, r3, #2
+ 829 002e 42FA03F3 		asr	r3, r2, r3
+ 830 0032 DBB2     		uxtb	r3, r3
+ 831 0034 03F00F03 		and	r3, r3, #15
+ 832 0038 BB73     		strb	r3, [r7, #14]
+ 183:..//common/src/debug_frmwrk.c **** 		UARTPutChar(UARTx, (nibble > 9) ? ('A' + nibble - 10) : ('0' + nibble));
+ 833              		.loc 1 183 0
+ 834 003a BB7B     		ldrb	r3, [r7, #14]	@ zero_extendqisi2
+ 835 003c 092B     		cmp	r3, #9
+ 836 003e 04D9     		bls	.L18
+ 837 0040 BB7B     		ldrb	r3, [r7, #14]
+ 838 0042 03F13703 		add	r3, r3, #55
+ 839 0046 DBB2     		uxtb	r3, r3
+ 840 0048 03E0     		b	.L19
+ 841              	.L18:
+ 842 004a BB7B     		ldrb	r3, [r7, #14]
+ 843 004c 03F13003 		add	r3, r3, #48
+ 844 0050 DBB2     		uxtb	r3, r3
+ 845              	.L19:
+ 846 0052 7868     		ldr	r0, [r7, #4]
+ 847 0054 1946     		mov	r1, r3
+ 848 0056 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 849 005a C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 850 005e 9847     		blx	r3
+ 184:..//common/src/debug_frmwrk.c **** 	} while (i--);
+ 851              		.loc 1 184 0
+ 852 0060 FB7B     		ldrb	r3, [r7, #15]	@ zero_extendqisi2
+ 853 0062 002B     		cmp	r3, #0
+ 854 0064 0CBF     		ite	eq
+ 855 0066 0023     		moveq	r3, #0
+ 856 0068 0123     		movne	r3, #1
+ 857 006a DBB2     		uxtb	r3, r3
+ 858 006c FA7B     		ldrb	r2, [r7, #15]
+ 859 006e 02F1FF32 		add	r2, r2, #-1
+ 860 0072 FA73     		strb	r2, [r7, #15]
+ 861 0074 002B     		cmp	r3, #0
+ 862 0076 D6D1     		bne	.L20
+ 185:..//common/src/debug_frmwrk.c **** }
+ 863              		.loc 1 185 0
+ 864 0078 07F11007 		add	r7, r7, #16
+ 865 007c BD46     		mov	sp, r7
+ 866 007e 80BD     		pop	{r7, pc}
+ 867              		.cfi_endproc
+ 868              	.LFE36:
+ 870              		.section	.text.UARTPutHex16,"ax",%progbits
+ 871              		.align	2
+ 872              		.global	UARTPutHex16
+ 873              		.thumb
+ 874              		.thumb_func
+ 876              	UARTPutHex16:
+ 877              	.LFB37:
+ 186:..//common/src/debug_frmwrk.c **** 
+ 187:..//common/src/debug_frmwrk.c **** 
+ 188:..//common/src/debug_frmwrk.c **** /*********************************************************************//**
+ 189:..//common/src/debug_frmwrk.c ****  * @brief		Puts a hex number to UART port
+ 190:..//common/src/debug_frmwrk.c ****  * @param[in]	UARTx	Pointer to UART peripheral
+ 191:..//common/src/debug_frmwrk.c ****  * @param[in]	hexnum	Hex number (16-bit long)
+ 192:..//common/src/debug_frmwrk.c ****  * @return		None
+ 193:..//common/src/debug_frmwrk.c ****  **********************************************************************/
+ 194:..//common/src/debug_frmwrk.c **** void UARTPutHex16 (LPC_UART_TypeDef *UARTx, uint16_t hexnum)
+ 195:..//common/src/debug_frmwrk.c **** {
+ 878              		.loc 1 195 0
+ 879              		.cfi_startproc
+ 880              		@ args = 0, pretend = 0, frame = 16
+ 881              		@ frame_needed = 1, uses_anonymous_args = 0
+ 882 0000 80B5     		push	{r7, lr}
+ 883              	.LCFI24:
+ 884              		.cfi_def_cfa_offset 8
+ 885 0002 84B0     		sub	sp, sp, #16
+ 886              	.LCFI25:
+ 887              		.cfi_def_cfa_offset 24
+ 888 0004 00AF     		add	r7, sp, #0
+ 889              		.cfi_offset 14, -4
+ 890              		.cfi_offset 7, -8
+ 891              	.LCFI26:
+ 892              		.cfi_def_cfa_register 7
+ 893 0006 7860     		str	r0, [r7, #4]
+ 894 0008 0B46     		mov	r3, r1
+ 895 000a 7B80     		strh	r3, [r7, #2]	@ movhi
+ 196:..//common/src/debug_frmwrk.c **** 	uint8_t nibble, i;
+ 197:..//common/src/debug_frmwrk.c **** 
+ 198:..//common/src/debug_frmwrk.c **** 	UARTPuts(UARTx, "0x");
+ 896              		.loc 1 198 0
+ 897 000c 7868     		ldr	r0, [r7, #4]
+ 898 000e 40F20001 		movw	r1, #:lower16:.LC1
+ 899 0012 C0F20001 		movt	r1, #:upper16:.LC1
+ 900 0016 40F20003 		movw	r3, #:lower16:UARTPuts
+ 901 001a C0F20003 		movt	r3, #:upper16:UARTPuts
+ 902 001e 9847     		blx	r3
+ 199:..//common/src/debug_frmwrk.c **** 	i = 3;
+ 903              		.loc 1 199 0
+ 904 0020 4FF00303 		mov	r3, #3
+ 905 0024 FB73     		strb	r3, [r7, #15]
+ 906              	.L25:
+ 200:..//common/src/debug_frmwrk.c **** 	do {
+ 201:..//common/src/debug_frmwrk.c **** 		nibble = (hexnum >> (4*i)) & 0x0F;
+ 907              		.loc 1 201 0
+ 908 0026 7A88     		ldrh	r2, [r7, #2]
+ 909 0028 FB7B     		ldrb	r3, [r7, #15]	@ zero_extendqisi2
+ 910 002a 4FEA8303 		lsl	r3, r3, #2
+ 911 002e 42FA03F3 		asr	r3, r2, r3
+ 912 0032 DBB2     		uxtb	r3, r3
+ 913 0034 03F00F03 		and	r3, r3, #15
+ 914 0038 BB73     		strb	r3, [r7, #14]
+ 202:..//common/src/debug_frmwrk.c **** 		UARTPutChar(UARTx, (nibble > 9) ? ('A' + nibble - 10) : ('0' + nibble));
+ 915              		.loc 1 202 0
+ 916 003a BB7B     		ldrb	r3, [r7, #14]	@ zero_extendqisi2
+ 917 003c 092B     		cmp	r3, #9
+ 918 003e 04D9     		bls	.L23
+ 919 0040 BB7B     		ldrb	r3, [r7, #14]
+ 920 0042 03F13703 		add	r3, r3, #55
+ 921 0046 DBB2     		uxtb	r3, r3
+ 922 0048 03E0     		b	.L24
+ 923              	.L23:
+ 924 004a BB7B     		ldrb	r3, [r7, #14]
+ 925 004c 03F13003 		add	r3, r3, #48
+ 926 0050 DBB2     		uxtb	r3, r3
+ 927              	.L24:
+ 928 0052 7868     		ldr	r0, [r7, #4]
+ 929 0054 1946     		mov	r1, r3
+ 930 0056 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 931 005a C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 932 005e 9847     		blx	r3
+ 203:..//common/src/debug_frmwrk.c **** 	} while (i--);
+ 933              		.loc 1 203 0
+ 934 0060 FB7B     		ldrb	r3, [r7, #15]	@ zero_extendqisi2
+ 935 0062 002B     		cmp	r3, #0
+ 936 0064 0CBF     		ite	eq
+ 937 0066 0023     		moveq	r3, #0
+ 938 0068 0123     		movne	r3, #1
+ 939 006a DBB2     		uxtb	r3, r3
+ 940 006c FA7B     		ldrb	r2, [r7, #15]
+ 941 006e 02F1FF32 		add	r2, r2, #-1
+ 942 0072 FA73     		strb	r2, [r7, #15]
+ 943 0074 002B     		cmp	r3, #0
+ 944 0076 D6D1     		bne	.L25
+ 204:..//common/src/debug_frmwrk.c **** }
+ 945              		.loc 1 204 0
+ 946 0078 07F11007 		add	r7, r7, #16
+ 947 007c BD46     		mov	sp, r7
+ 948 007e 80BD     		pop	{r7, pc}
+ 949              		.cfi_endproc
+ 950              	.LFE37:
+ 952              		.section	.text.UARTPutHex32,"ax",%progbits
+ 953              		.align	2
+ 954              		.global	UARTPutHex32
+ 955              		.thumb
+ 956              		.thumb_func
+ 958              	UARTPutHex32:
+ 959              	.LFB38:
+ 205:..//common/src/debug_frmwrk.c **** 
+ 206:..//common/src/debug_frmwrk.c **** /*********************************************************************//**
+ 207:..//common/src/debug_frmwrk.c ****  * @brief		Puts a hex number to UART port
+ 208:..//common/src/debug_frmwrk.c ****  * @param[in]	UARTx	Pointer to UART peripheral
+ 209:..//common/src/debug_frmwrk.c ****  * @param[in]	hexnum	Hex number (32-bit long)
+ 210:..//common/src/debug_frmwrk.c ****  * @return		None
+ 211:..//common/src/debug_frmwrk.c ****  **********************************************************************/
+ 212:..//common/src/debug_frmwrk.c **** void UARTPutHex32 (LPC_UART_TypeDef *UARTx, uint32_t hexnum)
+ 213:..//common/src/debug_frmwrk.c **** {
+ 960              		.loc 1 213 0
+ 961              		.cfi_startproc
+ 962              		@ args = 0, pretend = 0, frame = 16
+ 963              		@ frame_needed = 1, uses_anonymous_args = 0
+ 964 0000 80B5     		push	{r7, lr}
+ 965              	.LCFI27:
+ 966              		.cfi_def_cfa_offset 8
+ 967 0002 84B0     		sub	sp, sp, #16
+ 968              	.LCFI28:
+ 969              		.cfi_def_cfa_offset 24
+ 970 0004 00AF     		add	r7, sp, #0
+ 971              		.cfi_offset 14, -4
+ 972              		.cfi_offset 7, -8
+ 973              	.LCFI29:
+ 974              		.cfi_def_cfa_register 7
+ 975 0006 7860     		str	r0, [r7, #4]
+ 976 0008 3960     		str	r1, [r7, #0]
+ 214:..//common/src/debug_frmwrk.c **** 	uint8_t nibble, i;
+ 215:..//common/src/debug_frmwrk.c **** 
+ 216:..//common/src/debug_frmwrk.c **** 	UARTPuts(UARTx, "0x");
+ 977              		.loc 1 216 0
+ 978 000a 7868     		ldr	r0, [r7, #4]
+ 979 000c 40F20001 		movw	r1, #:lower16:.LC1
+ 980 0010 C0F20001 		movt	r1, #:upper16:.LC1
+ 981 0014 40F20003 		movw	r3, #:lower16:UARTPuts
+ 982 0018 C0F20003 		movt	r3, #:upper16:UARTPuts
+ 983 001c 9847     		blx	r3
+ 217:..//common/src/debug_frmwrk.c **** 	i = 7;
+ 984              		.loc 1 217 0
+ 985 001e 4FF00703 		mov	r3, #7
+ 986 0022 FB73     		strb	r3, [r7, #15]
+ 987              	.L30:
+ 218:..//common/src/debug_frmwrk.c **** 	do {
+ 219:..//common/src/debug_frmwrk.c **** 		nibble = (hexnum >> (4*i)) & 0x0F;
+ 988              		.loc 1 219 0
+ 989 0024 FB7B     		ldrb	r3, [r7, #15]	@ zero_extendqisi2
+ 990 0026 4FEA8303 		lsl	r3, r3, #2
+ 991 002a 3A68     		ldr	r2, [r7, #0]
+ 992 002c 22FA03F3 		lsr	r3, r2, r3
+ 993 0030 DBB2     		uxtb	r3, r3
+ 994 0032 03F00F03 		and	r3, r3, #15
+ 995 0036 BB73     		strb	r3, [r7, #14]
+ 220:..//common/src/debug_frmwrk.c **** 		UARTPutChar(UARTx, (nibble > 9) ? ('A' + nibble - 10) : ('0' + nibble));
+ 996              		.loc 1 220 0
+ 997 0038 BB7B     		ldrb	r3, [r7, #14]	@ zero_extendqisi2
+ 998 003a 092B     		cmp	r3, #9
+ 999 003c 04D9     		bls	.L28
+ 1000 003e BB7B     		ldrb	r3, [r7, #14]
+ 1001 0040 03F13703 		add	r3, r3, #55
+ 1002 0044 DBB2     		uxtb	r3, r3
+ 1003 0046 03E0     		b	.L29
+ 1004              	.L28:
+ 1005 0048 BB7B     		ldrb	r3, [r7, #14]
+ 1006 004a 03F13003 		add	r3, r3, #48
+ 1007 004e DBB2     		uxtb	r3, r3
+ 1008              	.L29:
+ 1009 0050 7868     		ldr	r0, [r7, #4]
+ 1010 0052 1946     		mov	r1, r3
+ 1011 0054 40F20003 		movw	r3, #:lower16:UARTPutChar
+ 1012 0058 C0F20003 		movt	r3, #:upper16:UARTPutChar
+ 1013 005c 9847     		blx	r3
+ 221:..//common/src/debug_frmwrk.c **** 	} while (i--);
+ 1014              		.loc 1 221 0
+ 1015 005e FB7B     		ldrb	r3, [r7, #15]	@ zero_extendqisi2
+ 1016 0060 002B     		cmp	r3, #0
+ 1017 0062 0CBF     		ite	eq
+ 1018 0064 0023     		moveq	r3, #0
+ 1019 0066 0123     		movne	r3, #1
+ 1020 0068 DBB2     		uxtb	r3, r3
+ 1021 006a FA7B     		ldrb	r2, [r7, #15]
+ 1022 006c 02F1FF32 		add	r2, r2, #-1
+ 1023 0070 FA73     		strb	r2, [r7, #15]
+ 1024 0072 002B     		cmp	r3, #0
+ 1025 0074 D6D1     		bne	.L30
+ 222:..//common/src/debug_frmwrk.c **** }
+ 1026              		.loc 1 222 0
+ 1027 0076 07F11007 		add	r7, r7, #16
+ 1028 007a BD46     		mov	sp, r7
+ 1029 007c 80BD     		pop	{r7, pc}
+ 1030              		.cfi_endproc
+ 1031              	.LFE38:
+ 1033 007e 00BF     		.section	.text.debug_frmwrk_init,"ax",%progbits
+ 1034              		.align	2
+ 1035              		.global	debug_frmwrk_init
+ 1036              		.thumb
+ 1037              		.thumb_func
+ 1039              	debug_frmwrk_init:
+ 1040              	.LFB39:
+ 223:..//common/src/debug_frmwrk.c **** 
+ 224:..//common/src/debug_frmwrk.c **** ///*********************************************************************//**
+ 225:..//common/src/debug_frmwrk.c **** // * @brief		print function that supports format as same as printf()
+ 226:..//common/src/debug_frmwrk.c **** // * 				function of <stdio.h> library
+ 227:..//common/src/debug_frmwrk.c **** // * @param[in]	None
+ 228:..//common/src/debug_frmwrk.c **** // * @return		None
+ 229:..//common/src/debug_frmwrk.c **** // **********************************************************************/
+ 230:..//common/src/debug_frmwrk.c **** //void  _printf (const  char *format, ...)
+ 231:..//common/src/debug_frmwrk.c **** //{
+ 232:..//common/src/debug_frmwrk.c **** //    static  char  buffer[512 + 1];
+ 233:..//common/src/debug_frmwrk.c **** //            va_list     vArgs;
+ 234:..//common/src/debug_frmwrk.c **** //            char	*tmp;
+ 235:..//common/src/debug_frmwrk.c **** //    va_start(vArgs, format);
+ 236:..//common/src/debug_frmwrk.c **** //    vsprintf((char *)buffer, (char const *)format, vArgs);
+ 237:..//common/src/debug_frmwrk.c **** //    va_end(vArgs);
+ 238:..//common/src/debug_frmwrk.c **** //
+ 239:..//common/src/debug_frmwrk.c **** //    _DBG(buffer);
+ 240:..//common/src/debug_frmwrk.c **** //}
+ 241:..//common/src/debug_frmwrk.c **** 
+ 242:..//common/src/debug_frmwrk.c **** /*********************************************************************//**
+ 243:..//common/src/debug_frmwrk.c ****  * @brief		Initialize Debug frame work through initializing UART port
+ 244:..//common/src/debug_frmwrk.c ****  * @param[in]	None
+ 245:..//common/src/debug_frmwrk.c ****  * @return		None
+ 246:..//common/src/debug_frmwrk.c ****  **********************************************************************/
+ 247:..//common/src/debug_frmwrk.c **** void debug_frmwrk_init(void)
+ 248:..//common/src/debug_frmwrk.c **** {
+ 1041              		.loc 1 248 0
+ 1042              		.cfi_startproc
+ 1043              		@ args = 0, pretend = 0, frame = 16
+ 1044              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1045 0000 80B5     		push	{r7, lr}
+ 1046              	.LCFI30:
+ 1047              		.cfi_def_cfa_offset 8
+ 1048 0002 84B0     		sub	sp, sp, #16
+ 1049              	.LCFI31:
+ 1050              		.cfi_def_cfa_offset 24
+ 1051 0004 00AF     		add	r7, sp, #0
+ 1052              		.cfi_offset 14, -4
+ 1053              		.cfi_offset 7, -8
+ 1054              	.LCFI32:
+ 1055              		.cfi_def_cfa_register 7
+ 249:..//common/src/debug_frmwrk.c **** 	UART_CFG_Type UARTConfigStruct;
+ 250:..//common/src/debug_frmwrk.c **** 	PINSEL_CFG_Type PinCfg;
+ 251:..//common/src/debug_frmwrk.c **** 
+ 252:..//common/src/debug_frmwrk.c **** #if (USED_UART_DEBUG_PORT==0)
+ 253:..//common/src/debug_frmwrk.c **** 	/*
+ 254:..//common/src/debug_frmwrk.c **** 	 * Initialize UART0 pin connect
+ 255:..//common/src/debug_frmwrk.c **** 	 */
+ 256:..//common/src/debug_frmwrk.c **** 	PinCfg.Funcnum = 1;
+ 1056              		.loc 1 256 0
+ 1057 0006 4FF00103 		mov	r3, #1
+ 1058 000a BB70     		strb	r3, [r7, #2]
+ 257:..//common/src/debug_frmwrk.c **** 	PinCfg.OpenDrain = 0;
+ 1059              		.loc 1 257 0
+ 1060 000c 4FF00003 		mov	r3, #0
+ 1061 0010 3B71     		strb	r3, [r7, #4]
+ 258:..//common/src/debug_frmwrk.c **** 	PinCfg.Pinmode = 0;
+ 1062              		.loc 1 258 0
+ 1063 0012 4FF00003 		mov	r3, #0
+ 1064 0016 FB70     		strb	r3, [r7, #3]
+ 259:..//common/src/debug_frmwrk.c **** 	PinCfg.Pinnum = 2;
+ 1065              		.loc 1 259 0
+ 1066 0018 4FF00203 		mov	r3, #2
+ 1067 001c 7B70     		strb	r3, [r7, #1]
+ 260:..//common/src/debug_frmwrk.c **** 	PinCfg.Portnum = 0;
+ 1068              		.loc 1 260 0
+ 1069 001e 4FF00003 		mov	r3, #0
+ 1070 0022 3B70     		strb	r3, [r7, #0]
+ 261:..//common/src/debug_frmwrk.c **** 	PINSEL_ConfigPin(&PinCfg);
+ 1071              		.loc 1 261 0
+ 1072 0024 3B46     		mov	r3, r7
+ 1073 0026 1846     		mov	r0, r3
+ 1074 0028 40F20003 		movw	r3, #:lower16:PINSEL_ConfigPin
+ 1075 002c C0F20003 		movt	r3, #:upper16:PINSEL_ConfigPin
+ 1076 0030 9847     		blx	r3
+ 262:..//common/src/debug_frmwrk.c **** 	PinCfg.Pinnum = 3;
+ 1077              		.loc 1 262 0
+ 1078 0032 4FF00303 		mov	r3, #3
+ 1079 0036 7B70     		strb	r3, [r7, #1]
+ 263:..//common/src/debug_frmwrk.c **** 	PINSEL_ConfigPin(&PinCfg);
+ 1080              		.loc 1 263 0
+ 1081 0038 3B46     		mov	r3, r7
+ 1082 003a 1846     		mov	r0, r3
+ 1083 003c 40F20003 		movw	r3, #:lower16:PINSEL_ConfigPin
+ 1084 0040 C0F20003 		movt	r3, #:upper16:PINSEL_ConfigPin
+ 1085 0044 9847     		blx	r3
+ 264:..//common/src/debug_frmwrk.c **** #elif #if (USED_UART_DEBUG_PORT==1)
+ 265:..//common/src/debug_frmwrk.c **** 	/*
+ 266:..//common/src/debug_frmwrk.c **** 	 * Initialize UART1 pin connect
+ 267:..//common/src/debug_frmwrk.c **** 	 */
+ 268:..//common/src/debug_frmwrk.c **** 	PinCfg.Funcnum = 1;
+ 269:..//common/src/debug_frmwrk.c **** 	PinCfg.OpenDrain = 0;
+ 270:..//common/src/debug_frmwrk.c **** 	PinCfg.Pinmode = 0;
+ 271:..//common/src/debug_frmwrk.c **** 	PinCfg.Pinnum = 15;
+ 272:..//common/src/debug_frmwrk.c **** 	PinCfg.Portnum = 0;
+ 273:..//common/src/debug_frmwrk.c **** 	PINSEL_ConfigPin(&PinCfg);
+ 274:..//common/src/debug_frmwrk.c **** 	PinCfg.Pinnum = 16;
+ 275:..//common/src/debug_frmwrk.c **** 	PINSEL_ConfigPin(&PinCfg);
+ 276:..//common/src/debug_frmwrk.c **** #endif
+ 277:..//common/src/debug_frmwrk.c **** 
+ 278:..//common/src/debug_frmwrk.c **** 	/* Initialize UART Configuration parameter structure to default state:
+ 279:..//common/src/debug_frmwrk.c **** 	 * Baudrate = 9600bps
+ 280:..//common/src/debug_frmwrk.c **** 	 * 8 data bit
+ 281:..//common/src/debug_frmwrk.c **** 	 * 1 Stop bit
+ 282:..//common/src/debug_frmwrk.c **** 	 * None parity
+ 283:..//common/src/debug_frmwrk.c **** 	 */
+ 284:..//common/src/debug_frmwrk.c **** 	UART_ConfigStructInit(&UARTConfigStruct);
+ 1086              		.loc 1 284 0
+ 1087 0046 07F10803 		add	r3, r7, #8
+ 1088 004a 1846     		mov	r0, r3
+ 1089 004c 40F20003 		movw	r3, #:lower16:UART_ConfigStructInit
+ 1090 0050 C0F20003 		movt	r3, #:upper16:UART_ConfigStructInit
+ 1091 0054 9847     		blx	r3
+ 285:..//common/src/debug_frmwrk.c **** 	// Re-configure baudrate to 115200bps
+ 286:..//common/src/debug_frmwrk.c **** 	UARTConfigStruct.Baud_rate = 115200;
+ 1092              		.loc 1 286 0
+ 1093 0056 4FF4E133 		mov	r3, #115200
+ 1094 005a BB60     		str	r3, [r7, #8]
+ 287:..//common/src/debug_frmwrk.c **** 
+ 288:..//common/src/debug_frmwrk.c **** 	// Initialize DEBUG_UART_PORT peripheral with given to corresponding parameter
+ 289:..//common/src/debug_frmwrk.c **** 	UART_Init(DEBUG_UART_PORT, &UARTConfigStruct);
+ 1095              		.loc 1 289 0
+ 1096 005c 07F10803 		add	r3, r7, #8
+ 1097 0060 4CF20000 		movw	r0, #:lower16:1073790976
+ 1098 0064 C4F20000 		movt	r0, #:upper16:1073790976
+ 1099 0068 1946     		mov	r1, r3
+ 1100 006a 40F20003 		movw	r3, #:lower16:UART_Init
+ 1101 006e C0F20003 		movt	r3, #:upper16:UART_Init
+ 1102 0072 9847     		blx	r3
+ 290:..//common/src/debug_frmwrk.c **** 
+ 291:..//common/src/debug_frmwrk.c **** 	// Enable UART Transmit
+ 292:..//common/src/debug_frmwrk.c **** 	UART_TxCmd(DEBUG_UART_PORT, ENABLE);
+ 1103              		.loc 1 292 0
+ 1104 0074 4CF20000 		movw	r0, #:lower16:1073790976
+ 1105 0078 C4F20000 		movt	r0, #:upper16:1073790976
+ 1106 007c 4FF00101 		mov	r1, #1
+ 1107 0080 40F20003 		movw	r3, #:lower16:UART_TxCmd
+ 1108 0084 C0F20003 		movt	r3, #:upper16:UART_TxCmd
+ 1109 0088 9847     		blx	r3
+ 293:..//common/src/debug_frmwrk.c **** 
+ 294:..//common/src/debug_frmwrk.c **** 	_db_msg	= UARTPuts;
+ 1110              		.loc 1 294 0
+ 1111 008a 40F20003 		movw	r3, #:lower16:_db_msg
+ 1112 008e C0F20003 		movt	r3, #:upper16:_db_msg
+ 1113 0092 40F20002 		movw	r2, #:lower16:UARTPuts
+ 1114 0096 C0F20002 		movt	r2, #:upper16:UARTPuts
+ 1115 009a 1A60     		str	r2, [r3, #0]
+ 295:..//common/src/debug_frmwrk.c **** 	_db_msg_ = UARTPuts_;
+ 1116              		.loc 1 295 0
+ 1117 009c 40F20003 		movw	r3, #:lower16:_db_msg_
+ 1118 00a0 C0F20003 		movt	r3, #:upper16:_db_msg_
+ 1119 00a4 40F20002 		movw	r2, #:lower16:UARTPuts_
+ 1120 00a8 C0F20002 		movt	r2, #:upper16:UARTPuts_
+ 1121 00ac 1A60     		str	r2, [r3, #0]
+ 296:..//common/src/debug_frmwrk.c **** 	_db_char = UARTPutChar;
+ 1122              		.loc 1 296 0
+ 1123 00ae 40F20003 		movw	r3, #:lower16:_db_char
+ 1124 00b2 C0F20003 		movt	r3, #:upper16:_db_char
+ 1125 00b6 40F20002 		movw	r2, #:lower16:UARTPutChar
+ 1126 00ba C0F20002 		movt	r2, #:upper16:UARTPutChar
+ 1127 00be 1A60     		str	r2, [r3, #0]
+ 297:..//common/src/debug_frmwrk.c **** 	_db_hex = UARTPutHex;
+ 1128              		.loc 1 297 0
+ 1129 00c0 40F20003 		movw	r3, #:lower16:_db_hex
+ 1130 00c4 C0F20003 		movt	r3, #:upper16:_db_hex
+ 1131 00c8 40F20002 		movw	r2, #:lower16:UARTPutHex
+ 1132 00cc C0F20002 		movt	r2, #:upper16:UARTPutHex
+ 1133 00d0 1A60     		str	r2, [r3, #0]
+ 298:..//common/src/debug_frmwrk.c **** 	_db_hex_16 = UARTPutHex16;
+ 1134              		.loc 1 298 0
+ 1135 00d2 40F20003 		movw	r3, #:lower16:_db_hex_16
+ 1136 00d6 C0F20003 		movt	r3, #:upper16:_db_hex_16
+ 1137 00da 40F20002 		movw	r2, #:lower16:UARTPutHex16
+ 1138 00de C0F20002 		movt	r2, #:upper16:UARTPutHex16
+ 1139 00e2 1A60     		str	r2, [r3, #0]
+ 299:..//common/src/debug_frmwrk.c **** 	_db_hex_32 = UARTPutHex32;
+ 1140              		.loc 1 299 0
+ 1141 00e4 40F20003 		movw	r3, #:lower16:_db_hex_32
+ 1142 00e8 C0F20003 		movt	r3, #:upper16:_db_hex_32
+ 1143 00ec 40F20002 		movw	r2, #:lower16:UARTPutHex32
+ 1144 00f0 C0F20002 		movt	r2, #:upper16:UARTPutHex32
+ 1145 00f4 1A60     		str	r2, [r3, #0]
+ 300:..//common/src/debug_frmwrk.c **** 	_db_dec = UARTPutDec;
+ 1146              		.loc 1 300 0
+ 1147 00f6 40F20003 		movw	r3, #:lower16:_db_dec
+ 1148 00fa C0F20003 		movt	r3, #:upper16:_db_dec
+ 1149 00fe 40F20002 		movw	r2, #:lower16:UARTPutDec
+ 1150 0102 C0F20002 		movt	r2, #:upper16:UARTPutDec
+ 1151 0106 1A60     		str	r2, [r3, #0]
+ 301:..//common/src/debug_frmwrk.c **** 	_db_dec_16 = UARTPutDec16;
+ 1152              		.loc 1 301 0
+ 1153 0108 40F20003 		movw	r3, #:lower16:_db_dec_16
+ 1154 010c C0F20003 		movt	r3, #:upper16:_db_dec_16
+ 1155 0110 40F20002 		movw	r2, #:lower16:UARTPutDec16
+ 1156 0114 C0F20002 		movt	r2, #:upper16:UARTPutDec16
+ 1157 0118 1A60     		str	r2, [r3, #0]
+ 302:..//common/src/debug_frmwrk.c **** 	_db_dec_32 = UARTPutDec32;
+ 1158              		.loc 1 302 0
+ 1159 011a 40F20003 		movw	r3, #:lower16:_db_dec_32
+ 1160 011e C0F20003 		movt	r3, #:upper16:_db_dec_32
+ 1161 0122 40F20002 		movw	r2, #:lower16:UARTPutDec32
+ 1162 0126 C0F20002 		movt	r2, #:upper16:UARTPutDec32
+ 1163 012a 1A60     		str	r2, [r3, #0]
+ 303:..//common/src/debug_frmwrk.c **** 	_db_get_char = UARTGetChar;
+ 1164              		.loc 1 303 0
+ 1165 012c 40F20003 		movw	r3, #:lower16:_db_get_char
+ 1166 0130 C0F20003 		movt	r3, #:upper16:_db_get_char
+ 1167 0134 40F20002 		movw	r2, #:lower16:UARTGetChar
+ 1168 0138 C0F20002 		movt	r2, #:upper16:UARTGetChar
+ 1169 013c 1A60     		str	r2, [r3, #0]
+ 304:..//common/src/debug_frmwrk.c **** }
+ 1170              		.loc 1 304 0
+ 1171 013e 07F11007 		add	r7, r7, #16
+ 1172 0142 BD46     		mov	sp, r7
+ 1173 0144 80BD     		pop	{r7, pc}
+ 1174              		.cfi_endproc
+ 1175              	.LFE39:
+ 1177 0146 00BF     		.text
+ 1178              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 debug_frmwrk.c
+                            *COM*:00000004 _db_msg
+                            *COM*:00000004 _db_msg_
+                            *COM*:00000004 _db_char
+                            *COM*:00000004 _db_dec
+                            *COM*:00000004 _db_dec_16
+                            *COM*:00000004 _db_dec_32
+                            *COM*:00000004 _db_hex
+                            *COM*:00000004 _db_hex_16
+                            *COM*:00000004 _db_hex_32
+                            *COM*:00000004 _db_get_char
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:34     .text.UARTPutChar:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:39     .text.UARTPutChar:00000000 UARTPutChar
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:77     .text.UARTGetChar:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:82     .text.UARTGetChar:00000000 UARTGetChar
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:123    .text.UARTPuts:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:128    .text.UARTPuts:00000000 UARTPuts
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:178    .rodata:00000000 $d
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:179    .rodata:00000000 .LC0
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:182    .text.UARTPuts_:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:187    .text.UARTPuts_:00000000 UARTPuts_
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:227    .text.UARTPutDec:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:232    .text.UARTPutDec:00000000 UARTPutDec
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:333    .text.UARTPutDec16:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:338    .text.UARTPutDec16:00000000 UARTPutDec16
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:496    .text.UARTPutDec32:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:501    .text.UARTPutDec32:00000000 UARTPutDec32
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:786    .rodata:00000004 .LC1
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:789    .text.UARTPutHex:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:794    .text.UARTPutHex:00000000 UARTPutHex
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:871    .text.UARTPutHex16:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:876    .text.UARTPutHex16:00000000 UARTPutHex16
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:953    .text.UARTPutHex32:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:958    .text.UARTPutHex32:00000000 UARTPutHex32
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:1034   .text.debug_frmwrk_init:00000000 $t
+C:\Users\hdhed\AppData\Local\Temp\ccHjORQm.s:1039   .text.debug_frmwrk_init:00000000 debug_frmwrk_init
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+UART_Send
+UART_Receive
+PINSEL_ConfigPin
+UART_ConfigStructInit
+UART_Init
+UART_TxCmd
