@@ -300,38 +300,28 @@ void Check_RX_Data(uint16_t *frameArray)
   	switch(frameArray[++i])
   	{
   	 case Set_Byte:
-  	   if(frameArray[++i]==\0) return;
   	   break;
   	 case Set_Word:
-  	  if(frameArray[++i]==\0) return;
   	  	break;
   	 case Reset_All:
   	  	break;
   	 case Init_Ptr:
   	  	break;
   	 case Turn_On_GPIO:
-      if(frameArray[++i]==\0) return;
       	break;
      case Turn_Off_GPIO:
-      if(frameArray[++i]==\0) return;
       	break;
      case Set_Flag:
-      if(frameArray[++i]==\0) return;
       	break;
      case Clear_Flag:
-      if(frameArray[++i]==\0) return;
       	break;
      case Read_byte:
-      if(frameArray[++i]==\0) return;
       	break;
      case Trig_Cam:
-      if(frameArray[++i]==\0) return;
 		break;
      case Set_Delay:
-      if(frameArray[++i]==\0) return;
       	break;
      case Read_Mem:
-      if(frameArray[++i]==\0) return;
 
      default:
        	break;

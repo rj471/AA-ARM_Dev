@@ -505,20 +505,20 @@
  452              	.Letext0:
 DEFINED SYMBOLS
                             *ABS*:00000000 ring.c
-C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:24     .text.ring_init:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:29     .text.ring_init:00000000 ring_init
-C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:79     .text.ring_is_full:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:84     .text.ring_is_full:00000000 ring_is_full
-C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:145    .text.ring_is_empty:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:150    .text.ring_is_empty:00000000 ring_is_empty
-C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:192    .text.ring_putc:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:197    .text.ring_putc:00000000 ring_putc
-C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:266    .text.ring_getc:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:271    .text.ring_getc:00000000 ring_getc
-C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:355    .text.ring_get_capacity:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:360    .text.ring_get_capacity:00000000 ring_get_capacity
-C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:412    .text.ring_clear:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccVIDEAr.s:417    .text.ring_clear:00000000 ring_clear
+C:\Users\ACURAP~1\AppData\Local\Temp\ccobdgsl.s:24     .text.ring_init:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccobdgsl.s:29     .text.ring_init:00000000 ring_init
+C:\Users\ACURAP~1\AppData\Local\Temp\ccobdgsl.s:79     .text.ring_is_full:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccobdgsl.s:84     .text.ring_is_full:00000000 ring_is_full
+C:\Users\ACURAP~1\AppData\Local\Temp\ccobdgsl.s:145    .text.ring_is_empty:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccobdgsl.s:150    .text.ring_is_empty:00000000 ring_is_empty
+C:\Users\ACURAP~1\AppData\Local\Temp\ccobdgsl.s:192    .text.ring_putc:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccobdgsl.s:197    .text.ring_putc:00000000 ring_putc
+C:\Users\ACURAP~1\AppData\Local\Temp\ccobdgsl.s:266    .text.ring_getc:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccobdgsl.s:271    .text.ring_getc:00000000 ring_getc
+C:\Users\ACURAP~1\AppData\Local\Temp\ccobdgsl.s:355    .text.ring_get_capacity:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccobdgsl.s:360    .text.ring_get_capacity:00000000 ring_get_capacity
+C:\Users\ACURAP~1\AppData\Local\Temp\ccobdgsl.s:412    .text.ring_clear:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccobdgsl.s:417    .text.ring_clear:00000000 ring_clear
                      .debug_frame:00000010 $d
 
 NO UNDEFINED SYMBOLS

@@ -916,6 +916,8 @@ Discarded input sections
                 0x00000000        0x4 ..//PHY/main.o
  .bss.flash_write_allowed
                 0x00000000        0x4 ..//PHY/main.o
+ .text._Z13Check_RX_DataPt
+                0x00000000       0x30 ..//PHY/main.o
  .text._Z24modbus_exception_handleri
                 0x00000000       0x18 ..//PHY/main.o
  .text.take_samples
@@ -2590,7 +2592,7 @@ END GROUP
  .comment       0x0000070e       0x2b ..//utils/modbus/SimpleModbusSlave_1769.o
  .comment       0x00000739       0x2b ..//PHY/state_machines/SM_Operation.o
 
-.debug_aranges  0x00000000     0x1528
+.debug_aranges  0x00000000     0x1530
  *(.debug_aranges)
  .debug_aranges
                 0x00000000       0x78 ..//Common/src/syscalls.o
@@ -2669,20 +2671,20 @@ END GROUP
  .debug_aranges
                 0x00001218       0x48 ..//PHY/interrupts.o
  .debug_aranges
-                0x00001260       0x88 ..//PHY/main.o
+                0x00001260       0x90 ..//PHY/main.o
  .debug_aranges
-                0x000012e8       0x78 ..//PHY/config_data.o
+                0x000012f0       0x78 ..//PHY/config_data.o
  .debug_aranges
-                0x00001360       0x98 ..//utils/delay_timer/delay_timer.o
+                0x00001368       0x98 ..//utils/delay_timer/delay_timer.o
  .debug_aranges
-                0x000013f8       0x90 ..//utils/state_machine/state_machine.o
+                0x00001400       0x90 ..//utils/state_machine/state_machine.o
  .debug_aranges
-                0x00001488       0x50 ..//utils/modbus/SimpleModbusSlave_1769.o
+                0x00001490       0x50 ..//utils/modbus/SimpleModbusSlave_1769.o
  .debug_aranges
-                0x000014d8       0x50 ..//PHY/state_machines/SM_Operation.o
+                0x000014e0       0x50 ..//PHY/state_machines/SM_Operation.o
 
 .debug_pubnames
-                0x00000000     0x2fb2
+                0x00000000     0x2fc4
  *(.debug_pubnames)
  .debug_pubnames
                 0x00000000       0xa1 ..//Common/src/syscalls.o
@@ -2761,19 +2763,19 @@ END GROUP
  .debug_pubnames
                 0x00002672       0x8b ..//PHY/interrupts.o
  .debug_pubnames
-                0x000026fd      0x29a ..//PHY/main.o
+                0x000026fd      0x2ac ..//PHY/main.o
  .debug_pubnames
-                0x00002997      0x196 ..//PHY/config_data.o
+                0x000029a9      0x196 ..//PHY/config_data.o
  .debug_pubnames
-                0x00002b2d      0x12e ..//utils/delay_timer/delay_timer.o
+                0x00002b3f      0x12e ..//utils/delay_timer/delay_timer.o
  .debug_pubnames
-                0x00002c5b      0x1d4 ..//utils/state_machine/state_machine.o
+                0x00002c6d      0x1d4 ..//utils/state_machine/state_machine.o
  .debug_pubnames
-                0x00002e2f       0x9d ..//utils/modbus/SimpleModbusSlave_1769.o
+                0x00002e41       0x9d ..//utils/modbus/SimpleModbusSlave_1769.o
  .debug_pubnames
-                0x00002ecc       0xe6 ..//PHY/state_machines/SM_Operation.o
+                0x00002ede       0xe6 ..//PHY/state_machines/SM_Operation.o
 
-.debug_info     0x00000000    0x1535a
+.debug_info     0x00000000    0x15400
  *(.debug_info .gnu.linkonce.wi.*)
  .debug_info    0x00000000      0x4bc ..//Common/src/syscalls.o
  .debug_info    0x000004bc      0x548 ..//common/Core/CM3/core_cm3.o
@@ -2813,14 +2815,14 @@ END GROUP
  .debug_info    0x0001139e      0xcf4 ..//utils/usbSerial/usbSerial.o
  .debug_info    0x00012092      0x302 ..//utils/modbus/modbus.o
  .debug_info    0x00012394      0x41f ..//PHY/interrupts.o
- .debug_info    0x000127b3      0xc99 ..//PHY/main.o
- .debug_info    0x0001344c      0x87d ..//PHY/config_data.o
- .debug_info    0x00013cc9      0x596 ..//utils/delay_timer/delay_timer.o
- .debug_info    0x0001425f      0x52f ..//utils/state_machine/state_machine.o
- .debug_info    0x0001478e      0x5ec ..//utils/modbus/SimpleModbusSlave_1769.o
- .debug_info    0x00014d7a      0x5e0 ..//PHY/state_machines/SM_Operation.o
+ .debug_info    0x000127b3      0xd3f ..//PHY/main.o
+ .debug_info    0x000134f2      0x87d ..//PHY/config_data.o
+ .debug_info    0x00013d6f      0x596 ..//utils/delay_timer/delay_timer.o
+ .debug_info    0x00014305      0x52f ..//utils/state_machine/state_machine.o
+ .debug_info    0x00014834      0x5ec ..//utils/modbus/SimpleModbusSlave_1769.o
+ .debug_info    0x00014e20      0x5e0 ..//PHY/state_machines/SM_Operation.o
 
-.debug_abbrev   0x00000000     0x4209
+.debug_abbrev   0x00000000     0x4227
  *(.debug_abbrev)
  .debug_abbrev  0x00000000      0x118 ..//Common/src/syscalls.o
  .debug_abbrev  0x00000118       0xd7 ..//common/Core/CM3/core_cm3.o
@@ -2860,14 +2862,14 @@ END GROUP
  .debug_abbrev  0x0000326c      0x265 ..//utils/usbSerial/usbSerial.o
  .debug_abbrev  0x000034d1       0xe8 ..//utils/modbus/modbus.o
  .debug_abbrev  0x000035b9      0x116 ..//PHY/interrupts.o
- .debug_abbrev  0x000036cf      0x2a9 ..//PHY/main.o
- .debug_abbrev  0x00003978      0x1c7 ..//PHY/config_data.o
- .debug_abbrev  0x00003b3f      0x170 ..//utils/delay_timer/delay_timer.o
- .debug_abbrev  0x00003caf      0x1a8 ..//utils/state_machine/state_machine.o
- .debug_abbrev  0x00003e57      0x1bd ..//utils/modbus/SimpleModbusSlave_1769.o
- .debug_abbrev  0x00004014      0x1f5 ..//PHY/state_machines/SM_Operation.o
+ .debug_abbrev  0x000036cf      0x2c7 ..//PHY/main.o
+ .debug_abbrev  0x00003996      0x1c7 ..//PHY/config_data.o
+ .debug_abbrev  0x00003b5d      0x170 ..//utils/delay_timer/delay_timer.o
+ .debug_abbrev  0x00003ccd      0x1a8 ..//utils/state_machine/state_machine.o
+ .debug_abbrev  0x00003e75      0x1bd ..//utils/modbus/SimpleModbusSlave_1769.o
+ .debug_abbrev  0x00004032      0x1f5 ..//PHY/state_machines/SM_Operation.o
 
-.debug_line     0x00000000     0x69bc
+.debug_line     0x00000000     0x69d4
  *(.debug_line)
  .debug_line    0x00000000      0x25e ..//Common/src/syscalls.o
  .debug_line    0x0000025e      0x276 ..//common/Core/CM3/core_cm3.o
@@ -2907,14 +2909,14 @@ END GROUP
  .debug_line    0x000052bd      0x4e0 ..//utils/usbSerial/usbSerial.o
  .debug_line    0x0000579d      0x161 ..//utils/modbus/modbus.o
  .debug_line    0x000058fe      0x18e ..//PHY/interrupts.o
- .debug_line    0x00005a8c      0x399 ..//PHY/main.o
- .debug_line    0x00005e25      0x2b7 ..//PHY/config_data.o
- .debug_line    0x000060dc      0x259 ..//utils/delay_timer/delay_timer.o
- .debug_line    0x00006335      0x189 ..//utils/state_machine/state_machine.o
- .debug_line    0x000064be      0x2aa ..//utils/modbus/SimpleModbusSlave_1769.o
- .debug_line    0x00006768      0x254 ..//PHY/state_machines/SM_Operation.o
+ .debug_line    0x00005a8c      0x3b1 ..//PHY/main.o
+ .debug_line    0x00005e3d      0x2b7 ..//PHY/config_data.o
+ .debug_line    0x000060f4      0x259 ..//utils/delay_timer/delay_timer.o
+ .debug_line    0x0000634d      0x189 ..//utils/state_machine/state_machine.o
+ .debug_line    0x000064d6      0x2aa ..//utils/modbus/SimpleModbusSlave_1769.o
+ .debug_line    0x00006780      0x254 ..//PHY/state_machines/SM_Operation.o
 
-.debug_frame    0x00000000     0x51d4
+.debug_frame    0x00000000     0x51f0
  *(.debug_frame)
  .debug_frame   0x00000000      0x168 ..//Common/src/syscalls.o
  .debug_frame   0x00000168      0x248 ..//common/Core/CM3/core_cm3.o
@@ -2954,155 +2956,155 @@ END GROUP
  .debug_frame   0x00003584      0x354 ..//utils/usbSerial/usbSerial.o
  .debug_frame   0x000038d8       0x70 ..//utils/modbus/modbus.o
  .debug_frame   0x00003948       0xb8 ..//PHY/interrupts.o
- .debug_frame   0x00003a00      0x1ac ..//PHY/main.o
- .debug_frame   0x00003bac      0x180 ..//PHY/config_data.o
- .debug_frame   0x00003d2c      0x1fc ..//utils/delay_timer/delay_timer.o
- .debug_frame   0x00003f28      0x1bc ..//utils/state_machine/state_machine.o
- .debug_frame   0x000040e4       0xec ..//utils/modbus/SimpleModbusSlave_1769.o
- .debug_frame   0x000041d0       0xf0 ..//PHY/state_machines/SM_Operation.o
- .debug_frame   0x000042c0       0x34 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libm.a(lib_a-s_ceil.o)
- .debug_frame   0x000042f4       0x28 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-abort.o)
- .debug_frame   0x0000431c       0xd8 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-ecvtbuf.o)
- .debug_frame   0x000043f4       0x30 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-malloc.o)
- .debug_frame   0x00004424       0x3c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-mallocr.o)
- .debug_frame   0x00004460       0x28 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-memcmp.o)
- .debug_frame   0x00004488       0x34 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-memcpy.o)
- .debug_frame   0x000044bc       0x28 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-memset.o)
- .debug_frame   0x000044e4       0x30 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-mlock.o)
- .debug_frame   0x00004514      0x240 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-mprec.o)
- .debug_frame   0x00004754       0x40 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-puts.o)
- .debug_frame   0x00004794       0x3c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-reallocr.o)
- .debug_frame   0x000047d0       0x64 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-reent.o)
- .debug_frame   0x00004834       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-sbrkr.o)
- .debug_frame   0x00004860       0xc0 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-signal.o)
- .debug_frame   0x00004920       0x3c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-signalr.o)
- .debug_frame   0x0000495c       0x28 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-strcat.o)
- .debug_frame   0x00004984       0x20 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-strcpy.o)
- .debug_frame   0x000049a4       0x20 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-strlen.o)
- .debug_frame   0x000049c4       0x44 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-vsprintf.o)
- .debug_frame   0x00004a08       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-callocr.o)
- .debug_frame   0x00004a34       0x64 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-dtoa.o)
- .debug_frame   0x00004a98      0x11c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-findfp.o)
- .debug_frame   0x00004bb4       0x50 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-freer.o)
- .debug_frame   0x00004c04       0x3c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-fvwrite.o)
- .debug_frame   0x00004c40       0x54 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-fwalk.o)
- .debug_frame   0x00004c94       0x28 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-memchr.o)
- .debug_frame   0x00004cbc       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-memmove.o)
- .debug_frame   0x00004ce8       0x70 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-stdio.o)
- .debug_frame   0x00004d58       0x68 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-svfprintf.o)
- .debug_frame   0x00004dc0       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-writer.o)
- .debug_frame   0x00004dec       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-wsetup.o)
- .debug_frame   0x00004e18       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-closer.o)
- .debug_frame   0x00004e44       0x3c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-fclose.o)
- .debug_frame   0x00004e80       0x40 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-fflush.o)
- .debug_frame   0x00004ec0       0x6c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-locale.o)
- .debug_frame   0x00004f2c       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-lseekr.o)
- .debug_frame   0x00004f58       0x34 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-makebuf.o)
- .debug_frame   0x00004f8c       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-readr.o)
- .debug_frame   0x00004fb8       0x20 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-s_isinfd.o)
- .debug_frame   0x00004fd8       0x20 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-s_isnand.o)
- .debug_frame   0x00004ff8       0x30 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-strcmp.o)
- .debug_frame   0x00005028       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-fstatr.o)
- .debug_frame   0x00005054       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-isattyr.o)
- .debug_frame   0x00005080       0x20 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/thumb2\libgcc.a(_udivsi3.o)
- .debug_frame   0x000050a0       0x50 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/thumb2\libgcc.a(bpabi.o)
- .debug_frame   0x000050f0       0x3c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/thumb2\libgcc.a(_divdi3.o)
- .debug_frame   0x0000512c       0x3c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/thumb2\libgcc.a(_udivdi3.o)
- .debug_frame   0x00005168       0x40 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libcs3.a(start_c.o)
- .debug_frame   0x000051a8       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-init.o)
+ .debug_frame   0x00003a00      0x1c8 ..//PHY/main.o
+ .debug_frame   0x00003bc8      0x180 ..//PHY/config_data.o
+ .debug_frame   0x00003d48      0x1fc ..//utils/delay_timer/delay_timer.o
+ .debug_frame   0x00003f44      0x1bc ..//utils/state_machine/state_machine.o
+ .debug_frame   0x00004100       0xec ..//utils/modbus/SimpleModbusSlave_1769.o
+ .debug_frame   0x000041ec       0xf0 ..//PHY/state_machines/SM_Operation.o
+ .debug_frame   0x000042dc       0x34 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libm.a(lib_a-s_ceil.o)
+ .debug_frame   0x00004310       0x28 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-abort.o)
+ .debug_frame   0x00004338       0xd8 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-ecvtbuf.o)
+ .debug_frame   0x00004410       0x30 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-malloc.o)
+ .debug_frame   0x00004440       0x3c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-mallocr.o)
+ .debug_frame   0x0000447c       0x28 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-memcmp.o)
+ .debug_frame   0x000044a4       0x34 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-memcpy.o)
+ .debug_frame   0x000044d8       0x28 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-memset.o)
+ .debug_frame   0x00004500       0x30 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-mlock.o)
+ .debug_frame   0x00004530      0x240 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-mprec.o)
+ .debug_frame   0x00004770       0x40 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-puts.o)
+ .debug_frame   0x000047b0       0x3c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-reallocr.o)
+ .debug_frame   0x000047ec       0x64 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-reent.o)
+ .debug_frame   0x00004850       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-sbrkr.o)
+ .debug_frame   0x0000487c       0xc0 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-signal.o)
+ .debug_frame   0x0000493c       0x3c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-signalr.o)
+ .debug_frame   0x00004978       0x28 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-strcat.o)
+ .debug_frame   0x000049a0       0x20 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-strcpy.o)
+ .debug_frame   0x000049c0       0x20 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-strlen.o)
+ .debug_frame   0x000049e0       0x44 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-vsprintf.o)
+ .debug_frame   0x00004a24       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-callocr.o)
+ .debug_frame   0x00004a50       0x64 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-dtoa.o)
+ .debug_frame   0x00004ab4      0x11c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-findfp.o)
+ .debug_frame   0x00004bd0       0x50 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-freer.o)
+ .debug_frame   0x00004c20       0x3c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-fvwrite.o)
+ .debug_frame   0x00004c5c       0x54 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-fwalk.o)
+ .debug_frame   0x00004cb0       0x28 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-memchr.o)
+ .debug_frame   0x00004cd8       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-memmove.o)
+ .debug_frame   0x00004d04       0x70 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-stdio.o)
+ .debug_frame   0x00004d74       0x68 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-svfprintf.o)
+ .debug_frame   0x00004ddc       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-writer.o)
+ .debug_frame   0x00004e08       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-wsetup.o)
+ .debug_frame   0x00004e34       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-closer.o)
+ .debug_frame   0x00004e60       0x3c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-fclose.o)
+ .debug_frame   0x00004e9c       0x40 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-fflush.o)
+ .debug_frame   0x00004edc       0x6c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-locale.o)
+ .debug_frame   0x00004f48       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-lseekr.o)
+ .debug_frame   0x00004f74       0x34 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-makebuf.o)
+ .debug_frame   0x00004fa8       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-readr.o)
+ .debug_frame   0x00004fd4       0x20 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-s_isinfd.o)
+ .debug_frame   0x00004ff4       0x20 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-s_isnand.o)
+ .debug_frame   0x00005014       0x30 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-strcmp.o)
+ .debug_frame   0x00005044       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-fstatr.o)
+ .debug_frame   0x00005070       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-isattyr.o)
+ .debug_frame   0x0000509c       0x20 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/thumb2\libgcc.a(_udivsi3.o)
+ .debug_frame   0x000050bc       0x50 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/thumb2\libgcc.a(bpabi.o)
+ .debug_frame   0x0000510c       0x3c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/thumb2\libgcc.a(_divdi3.o)
+ .debug_frame   0x00005148       0x3c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/thumb2\libgcc.a(_udivdi3.o)
+ .debug_frame   0x00005184       0x40 c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libcs3.a(start_c.o)
+ .debug_frame   0x000051c4       0x2c c:/program files (x86)/codesourcery/sourcery g++ lite/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/thumb2\libc.a(lib_a-init.o)
 
-.debug_str      0x00000000     0x6626
+.debug_str      0x00000000     0x66ff
  *(.debug_str)
- .debug_str     0x00000000      0x1f7 ..//Common/src/syscalls.o
-                                0x273 (size before relaxing)
- .debug_str     0x000001f7      0x160 ..//common/Core/CM3/core_cm3.o
-                                0x23d (size before relaxing)
- .debug_str     0x00000357      0x178 ..//common/Core/CM3/system_LPC17xx.o
-                                0x249 (size before relaxing)
- .debug_str     0x000004cf      0x437 ..//common/src/lpc17xx_gpio.o
-                                0x532 (size before relaxing)
- .debug_str     0x00000906      0x240 ..//common/src/lpc17xx_pinsel.o
-                                0x347 (size before relaxing)
- .debug_str     0x00000b46      0x412 ..//common/src/lpc17xx_timer.o
-                                0x53c (size before relaxing)
- .debug_str     0x00000f58      0x26f ..//common/src/debug_frmwrk.o
-                                0x3f4 (size before relaxing)
- .debug_str     0x000011c7      0x843 ..//common/src/lpc17xx_uart.o
-                                0xb33 (size before relaxing)
- .debug_str     0x00001a0a      0x113 ..//common/src/lpc17xx_clkpwr.o
-                                0x350 (size before relaxing)
- .debug_str     0x00001b1d       0x6d ..//common/src/lpc17xx_nvic.o
-                                0x1c9 (size before relaxing)
- .debug_str     0x00001b8a      0x358 ..//common/src/lpc17xx_qei.o
-                                0x491 (size before relaxing)
- .debug_str     0x00001ee2       0xff ..//common/src/lpc17xx_spi.o
-                                0x36d (size before relaxing)
- .debug_str     0x00001fe1      0x232 ..//common/src/lpc17xx_ssp.o
-                                0x3f0 (size before relaxing)
- .debug_str     0x00002213      0x643 ..//common/src/lpc17xx_i2c.o
-                                0x81d (size before relaxing)
- .debug_str     0x00002856      0x197 ..//common/src/lpc17xx_rtc.o
-                                0x3de (size before relaxing)
- .debug_str     0x000029ed      0x463 ..//common/src/lpc17xx_emac.o
-                                0x68c (size before relaxing)
- .debug_str     0x00002e50       0x3e ..//common/src/delay.o
-                                0x114 (size before relaxing)
- .debug_str     0x00002e8e      0x525 ..//common/src/mini_cpp.o
-                                0x67c (size before relaxing)
- .debug_str     0x000033b3      0x16e ..//drivers/timer/timer.o
-                                0x66b (size before relaxing)
- .debug_str     0x00003521      0x372 ..//drivers/UART/uart.o
-                                0x971 (size before relaxing)
- .debug_str     0x00003893       0x32 ..//drivers/USB/intenable.o
-                                0x351 (size before relaxing)
- .debug_str     0x000038c5      0x607 ..//drivers/USB/usbhw_lpc.o
-                                0x92a (size before relaxing)
- .debug_str     0x00003ecc       0x56 ..//drivers/USB/serial_fifo.o
-                                0x14c (size before relaxing)
- .debug_str     0x00003f22       0x49 ..//drivers/USB/usbinit.o
-                                0x12b (size before relaxing)
- .debug_str     0x00003f6b      0x115 ..//drivers/USB/usbcontrol.o
-                                0x225 (size before relaxing)
- .debug_str     0x00004080      0x170 ..//drivers/USB/usbstdreq.o
-                                0x2cc (size before relaxing)
- .debug_str     0x000041f0      0x241 ..//drivers/IAP/iap_driver.o
-                                0x32d (size before relaxing)
- .debug_str     0x00004431       0x87 ..//drivers/SPI/ssp_master.o
-                                0x25d (size before relaxing)
- .debug_str     0x000044b8       0x78 ..//utils/ring_buffer/ring.o
-                                0x173 (size before relaxing)
- .debug_str     0x00004530       0xe7 ..//utils/ringbuf/RingBuf.o
-                                0x1c0 (size before relaxing)
- .debug_str     0x00004617      0x116 ..//utils/printf/ee_printf-arg.o
-                                0x2aa (size before relaxing)
- .debug_str     0x0000472d      0x1ba ..//utils/input_output/input_output.o
-                                0x3e9 (size before relaxing)
- .debug_str     0x000048e7      0x655 ..//utils/multi-steppers/multi-steppers.o
-                                0x919 (size before relaxing)
- .debug_str     0x00004f3c       0xd8 ..//utils/i2ceeprom/i2c.o
-                                0x46b (size before relaxing)
- .debug_str     0x00005014       0x91 ..//utils/i2ceeprom/i2c_eeprom.o
-                                0x1cc (size before relaxing)
- .debug_str     0x000050a5      0x1fb ..//utils/usbSerial/usbSerial.o
-                                0x6c7 (size before relaxing)
- .debug_str     0x000052a0       0x54 ..//utils/modbus/modbus.o
-                                0x231 (size before relaxing)
- .debug_str     0x000052f4       0x6a ..//PHY/interrupts.o
-                                0x2b8 (size before relaxing)
- .debug_str     0x0000535e      0x786 ..//PHY/main.o
-                                0xb3f (size before relaxing)
- .debug_str     0x00005ae4      0x403 ..//PHY/config_data.o
-                                0x553 (size before relaxing)
- .debug_str     0x00005ee7      0x282 ..//utils/delay_timer/delay_timer.o
-                                0x39a (size before relaxing)
- .debug_str     0x00006169      0x1ab ..//utils/state_machine/state_machine.o
-                                0x2b2 (size before relaxing)
- .debug_str     0x00006314      0x1d3 ..//utils/modbus/SimpleModbusSlave_1769.o
-                                0x45f (size before relaxing)
- .debug_str     0x000064e7      0x13f ..//PHY/state_machines/SM_Operation.o
-                                0x51d (size before relaxing)
+ .debug_str     0x00000000      0x215 ..//Common/src/syscalls.o
+                                0x291 (size before relaxing)
+ .debug_str     0x00000215      0x160 ..//common/Core/CM3/core_cm3.o
+                                0x25b (size before relaxing)
+ .debug_str     0x00000375      0x178 ..//common/Core/CM3/system_LPC17xx.o
+                                0x267 (size before relaxing)
+ .debug_str     0x000004ed      0x437 ..//common/src/lpc17xx_gpio.o
+                                0x550 (size before relaxing)
+ .debug_str     0x00000924      0x240 ..//common/src/lpc17xx_pinsel.o
+                                0x365 (size before relaxing)
+ .debug_str     0x00000b64      0x412 ..//common/src/lpc17xx_timer.o
+                                0x55a (size before relaxing)
+ .debug_str     0x00000f76      0x26f ..//common/src/debug_frmwrk.o
+                                0x412 (size before relaxing)
+ .debug_str     0x000011e5      0x843 ..//common/src/lpc17xx_uart.o
+                                0xb51 (size before relaxing)
+ .debug_str     0x00001a28      0x113 ..//common/src/lpc17xx_clkpwr.o
+                                0x36e (size before relaxing)
+ .debug_str     0x00001b3b       0x6d ..//common/src/lpc17xx_nvic.o
+                                0x1e7 (size before relaxing)
+ .debug_str     0x00001ba8      0x358 ..//common/src/lpc17xx_qei.o
+                                0x4af (size before relaxing)
+ .debug_str     0x00001f00       0xff ..//common/src/lpc17xx_spi.o
+                                0x38b (size before relaxing)
+ .debug_str     0x00001fff      0x232 ..//common/src/lpc17xx_ssp.o
+                                0x40e (size before relaxing)
+ .debug_str     0x00002231      0x643 ..//common/src/lpc17xx_i2c.o
+                                0x83b (size before relaxing)
+ .debug_str     0x00002874      0x197 ..//common/src/lpc17xx_rtc.o
+                                0x3fc (size before relaxing)
+ .debug_str     0x00002a0b      0x45b ..//common/src/lpc17xx_emac.o
+                                0x6aa (size before relaxing)
+ .debug_str     0x00002e66       0x3e ..//common/src/delay.o
+                                0x132 (size before relaxing)
+ .debug_str     0x00002ea4      0x525 ..//common/src/mini_cpp.o
+                                0x69a (size before relaxing)
+ .debug_str     0x000033c9      0x16e ..//drivers/timer/timer.o
+                                0x689 (size before relaxing)
+ .debug_str     0x00003537      0x372 ..//drivers/UART/uart.o
+                                0x98f (size before relaxing)
+ .debug_str     0x000038a9       0x32 ..//drivers/USB/intenable.o
+                                0x36f (size before relaxing)
+ .debug_str     0x000038db      0x607 ..//drivers/USB/usbhw_lpc.o
+                                0x948 (size before relaxing)
+ .debug_str     0x00003ee2       0x56 ..//drivers/USB/serial_fifo.o
+                                0x16a (size before relaxing)
+ .debug_str     0x00003f38       0x49 ..//drivers/USB/usbinit.o
+                                0x149 (size before relaxing)
+ .debug_str     0x00003f81      0x115 ..//drivers/USB/usbcontrol.o
+                                0x243 (size before relaxing)
+ .debug_str     0x00004096      0x170 ..//drivers/USB/usbstdreq.o
+                                0x2ea (size before relaxing)
+ .debug_str     0x00004206      0x241 ..//drivers/IAP/iap_driver.o
+                                0x34b (size before relaxing)
+ .debug_str     0x00004447       0x87 ..//drivers/SPI/ssp_master.o
+                                0x27b (size before relaxing)
+ .debug_str     0x000044ce       0x78 ..//utils/ring_buffer/ring.o
+                                0x191 (size before relaxing)
+ .debug_str     0x00004546       0xe7 ..//utils/ringbuf/RingBuf.o
+                                0x1de (size before relaxing)
+ .debug_str     0x0000462d      0x116 ..//utils/printf/ee_printf-arg.o
+                                0x2c8 (size before relaxing)
+ .debug_str     0x00004743      0x1ba ..//utils/input_output/input_output.o
+                                0x407 (size before relaxing)
+ .debug_str     0x000048fd      0x655 ..//utils/multi-steppers/multi-steppers.o
+                                0x937 (size before relaxing)
+ .debug_str     0x00004f52       0xd8 ..//utils/i2ceeprom/i2c.o
+                                0x489 (size before relaxing)
+ .debug_str     0x0000502a       0x91 ..//utils/i2ceeprom/i2c_eeprom.o
+                                0x1ea (size before relaxing)
+ .debug_str     0x000050bb      0x1fb ..//utils/usbSerial/usbSerial.o
+                                0x6e5 (size before relaxing)
+ .debug_str     0x000052b6       0x54 ..//utils/modbus/modbus.o
+                                0x24f (size before relaxing)
+ .debug_str     0x0000530a       0x6a ..//PHY/interrupts.o
+                                0x2d6 (size before relaxing)
+ .debug_str     0x00005374      0x849 ..//PHY/main.o
+                                0xc20 (size before relaxing)
+ .debug_str     0x00005bbd      0x403 ..//PHY/config_data.o
+                                0x571 (size before relaxing)
+ .debug_str     0x00005fc0      0x282 ..//utils/delay_timer/delay_timer.o
+                                0x3b8 (size before relaxing)
+ .debug_str     0x00006242      0x1ab ..//utils/state_machine/state_machine.o
+                                0x2d0 (size before relaxing)
+ .debug_str     0x000063ed      0x1d3 ..//utils/modbus/SimpleModbusSlave_1769.o
+                                0x47d (size before relaxing)
+ .debug_str     0x000065c0      0x13f ..//PHY/state_machines/SM_Operation.o
+                                0x53b (size before relaxing)
 
-.debug_loc      0x00000000     0x70ff
+.debug_loc      0x00000000     0x7136
  *(.debug_loc)
  .debug_loc     0x00000000      0x270 ..//Common/src/syscalls.o
  .debug_loc     0x00000270      0x3de ..//common/Core/CM3/core_cm3.o
@@ -3142,12 +3144,12 @@ END GROUP
  .debug_loc     0x00005b16      0x579 ..//utils/usbSerial/usbSerial.o
  .debug_loc     0x0000608f       0xa5 ..//utils/modbus/modbus.o
  .debug_loc     0x00006134      0x102 ..//PHY/interrupts.o
- .debug_loc     0x00006236      0x2c6 ..//PHY/main.o
- .debug_loc     0x000064fc      0x26c ..//PHY/config_data.o
- .debug_loc     0x00006768      0x35a ..//utils/delay_timer/delay_timer.o
- .debug_loc     0x00006ac2      0x339 ..//utils/state_machine/state_machine.o
- .debug_loc     0x00006dfb      0x183 ..//utils/modbus/SimpleModbusSlave_1769.o
- .debug_loc     0x00006f7e      0x181 ..//PHY/state_machines/SM_Operation.o
+ .debug_loc     0x00006236      0x2fd ..//PHY/main.o
+ .debug_loc     0x00006533      0x26c ..//PHY/config_data.o
+ .debug_loc     0x0000679f      0x35a ..//utils/delay_timer/delay_timer.o
+ .debug_loc     0x00006af9      0x339 ..//utils/state_machine/state_machine.o
+ .debug_loc     0x00006e32      0x183 ..//utils/modbus/SimpleModbusSlave_1769.o
+ .debug_loc     0x00006fb5      0x181 ..//PHY/state_machines/SM_Operation.o
 
 .debug_macinfo
  *(.debug_macinfo)
@@ -3399,7 +3401,7 @@ END GROUP
  *(.note.GNU-stack)
 OUTPUT(main.elf elf32-littlearm)
 
-.debug_ranges   0x00000000     0x1488
+.debug_ranges   0x00000000     0x1490
  .debug_ranges  0x00000000       0x70 ..//Common/src/syscalls.o
  .debug_ranges  0x00000070       0xc0 ..//common/Core/CM3/core_cm3.o
  .debug_ranges  0x00000130       0x20 ..//common/Core/CM3/system_LPC17xx.o
@@ -3438,12 +3440,12 @@ OUTPUT(main.elf elf32-littlearm)
  .debug_ranges  0x00000fe0       0xe8 ..//utils/usbSerial/usbSerial.o
  .debug_ranges  0x000010c8       0x28 ..//utils/modbus/modbus.o
  .debug_ranges  0x000010f0       0x40 ..//PHY/interrupts.o
- .debug_ranges  0x00001130       0x80 ..//PHY/main.o
- .debug_ranges  0x000011b0       0x70 ..//PHY/config_data.o
- .debug_ranges  0x00001220       0x90 ..//utils/delay_timer/delay_timer.o
- .debug_ranges  0x000012b0       0x88 ..//utils/state_machine/state_machine.o
- .debug_ranges  0x00001338      0x108 ..//utils/modbus/SimpleModbusSlave_1769.o
- .debug_ranges  0x00001440       0x48 ..//PHY/state_machines/SM_Operation.o
+ .debug_ranges  0x00001130       0x88 ..//PHY/main.o
+ .debug_ranges  0x000011b8       0x70 ..//PHY/config_data.o
+ .debug_ranges  0x00001228       0x90 ..//utils/delay_timer/delay_timer.o
+ .debug_ranges  0x000012b8       0x88 ..//utils/state_machine/state_machine.o
+ .debug_ranges  0x00001340      0x108 ..//utils/modbus/SimpleModbusSlave_1769.o
+ .debug_ranges  0x00001448       0x48 ..//PHY/state_machines/SM_Operation.o
 
 Cross Reference Table
 
@@ -3476,6 +3478,7 @@ CLKPWR_SetPCLKDiv                                 ..//common/src/lpc17xx_clkpwr.
                                                   ..//common/src/lpc17xx_qei.o
                                                   ..//common/src/lpc17xx_timer.o
 CLKPWR_Sleep                                      ..//common/src/lpc17xx_clkpwr.o
+Check_RX_Data(unsigned short*)                    ..//PHY/main.o
 DIR_PIN_OFFSET_NUM                                ..//utils/multi-steppers/multi-steppers.o
 DIR_PORT_CLEAR_NUM                                ..//utils/multi-steppers/multi-steppers.o
 DIR_PORT_DIR_NUM                                  ..//utils/multi-steppers/multi-steppers.o
@@ -3652,8 +3655,8 @@ Ringbuf_Init                                      ..//utils/ringbuf/RingBuf.o
 Ringbuf_Pop_Front                                 ..//utils/ringbuf/RingBuf.o
 Ringbuf_Put                                       ..//utils/ringbuf/RingBuf.o
 SM_OPERATION::SM_OPERATION()                      ..//PHY/state_machines/SM_Operation.o
-                                                  ..//PHY/main.o
 SM_OPERATION::SM_OPERATION()                      ..//PHY/state_machines/SM_Operation.o
+                                                  ..//PHY/main.o
 SM_OPERATION::stop_now()                          ..//PHY/state_machines/SM_Operation.o
                                                   ..//PHY/main.o
 SM_OPERATION::update()                            ..//PHY/state_machines/SM_Operation.o
@@ -3710,8 +3713,8 @@ State_Machine::SM_started()                       ..//utils/state_machine/state_
 State_Machine::SM_stop()                          ..//utils/state_machine/state_machine.o
                                                   ..//PHY/state_machines/SM_Operation.o
 State_Machine::State_Machine()                    ..//utils/state_machine/state_machine.o
-State_Machine::State_Machine()                    ..//utils/state_machine/state_machine.o
                                                   ..//PHY/state_machines/SM_Operation.o
+State_Machine::State_Machine()                    ..//utils/state_machine/state_machine.o
 State_Machine::State_Machine(int)                 ..//utils/state_machine/state_machine.o
 State_Machine::State_Machine(int)                 ..//utils/state_machine/state_machine.o
 State_Machine::next_state()                       ..//utils/state_machine/state_machine.o

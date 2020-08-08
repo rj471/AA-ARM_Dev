@@ -981,16 +981,17 @@
  809 0572 7B68     		ldr	r3, [r7, #4]
  810 0574 9A62     		str	r2, [r3, #40]
  811              	.L18:
- 126:..//PHY/state_machines/SM_Operation.cpp **** 		}
- 127:..//PHY/state_machines/SM_Operation.cpp **** 	}
- 128:..//PHY/state_machines/SM_Operation.cpp ****    
- 129:..//PHY/state_machines/SM_Operation.cpp ****     return retval;
- 812              		.loc 2 129 0
+ 126:..//PHY/state_machines/SM_Operation.cpp **** 			// now one need to implement ejector logic
+ 127:..//PHY/state_machines/SM_Operation.cpp **** 		}
+ 128:..//PHY/state_machines/SM_Operation.cpp **** 	}
+ 129:..//PHY/state_machines/SM_Operation.cpp ****    
+ 130:..//PHY/state_machines/SM_Operation.cpp ****     return retval;
+ 812              		.loc 2 130 0
  813 0576 7B68     		ldr	r3, [r7, #4]
  814 0578 5B69     		ldr	r3, [r3, #20]
  815              	.LBE2:
- 130:..//PHY/state_machines/SM_Operation.cpp **** }
- 816              		.loc 2 130 0
+ 131:..//PHY/state_machines/SM_Operation.cpp **** }
+ 816              		.loc 2 131 0
  817 057a 1846     		mov	r0, r3
  818 057c 07F12807 		add	r7, r7, #40
  819 0580 BD46     		mov	sp, r7
@@ -1004,9 +1005,9 @@
  828              		.thumb_func
  830              	_ZN12SM_OPERATION8stop_nowEv:
  831              	.LFB37:
- 131:..//PHY/state_machines/SM_Operation.cpp **** 
- 132:..//PHY/state_machines/SM_Operation.cpp **** int SM_OPERATION::stop_now(){
- 832              		.loc 2 132 0
+ 132:..//PHY/state_machines/SM_Operation.cpp **** 
+ 133:..//PHY/state_machines/SM_Operation.cpp **** int SM_OPERATION::stop_now(){
+ 832              		.loc 2 133 0
  833              		.cfi_startproc
  834              		@ args = 0, pretend = 0, frame = 8
  835              		@ frame_needed = 1, uses_anonymous_args = 0
@@ -1022,8 +1023,8 @@
  845              	.LCFI14:
  846              		.cfi_def_cfa_register 7
  847 0006 7860     		str	r0, [r7, #4]
- 133:..//PHY/state_machines/SM_Operation.cpp **** 	SM_stop();
- 848              		.loc 2 133 0
+ 134:..//PHY/state_machines/SM_Operation.cpp **** 	SM_stop();
+ 848              		.loc 2 134 0
  849 0008 7B68     		ldr	r3, [r7, #4]
  850 000a 1B68     		ldr	r3, [r3, #0]
  851 000c 03F11403 		add	r3, r3, #20
@@ -1031,12 +1032,12 @@
  853 0012 7A68     		ldr	r2, [r7, #4]
  854 0014 1046     		mov	r0, r2
  855 0016 9847     		blx	r3
- 134:..//PHY/state_machines/SM_Operation.cpp **** 		
- 135:..//PHY/state_machines/SM_Operation.cpp **** 	return 1;
- 856              		.loc 2 135 0
+ 135:..//PHY/state_machines/SM_Operation.cpp **** 		
+ 136:..//PHY/state_machines/SM_Operation.cpp **** 	return 1;
+ 856              		.loc 2 136 0
  857 0018 4FF00103 		mov	r3, #1
- 136:..//PHY/state_machines/SM_Operation.cpp **** }
- 858              		.loc 2 136 0
+ 137:..//PHY/state_machines/SM_Operation.cpp **** }
+ 858              		.loc 2 137 0
  859 001c 1846     		mov	r0, r3
  860 001e 07F10807 		add	r7, r7, #8
  861 0022 BD46     		mov	sp, r7
@@ -1181,27 +1182,27 @@
  993              	.Letext0:
 DEFINED SYMBOLS
                             *ABS*:00000000 SM_Operation.cpp
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:24     .text._ZN13State_MachineD2Ev:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:29     .text._ZN13State_MachineD2Ev:00000000 _ZN13State_MachineD2Ev
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:69     .text._ZN13State_MachineD2Ev:00000030 $d
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:74     .text._ZN12SM_OPERATIONC2Ev:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:79     .text._ZN12SM_OPERATIONC2Ev:00000000 _ZN12SM_OPERATIONC2Ev
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:126    .text._ZN12SM_OPERATIONC2Ev:00000040 $d
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:871    .rodata._ZTV12SM_OPERATION:00000000 _ZTV12SM_OPERATION
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:131    .text._ZN12SM_OPERATIONC1Ev:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:136    .text._ZN12SM_OPERATIONC1Ev:00000000 _ZN12SM_OPERATIONC1Ev
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:182    .text._ZN12SM_OPERATIONC1Ev:00000040 $d
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:187    .text._ZN12SM_OPERATION6updateEv:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:192    .text._ZN12SM_OPERATION6updateEv:00000000 _ZN12SM_OPERATION6updateEv
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:825    .text._ZN12SM_OPERATION8stop_nowEv:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:830    .text._ZN12SM_OPERATION8stop_nowEv:00000000 _ZN12SM_OPERATION8stop_nowEv
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:868    .rodata._ZTV12SM_OPERATION:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:889    .text._ZN12SM_OPERATIOND1Ev:00000000 _ZN12SM_OPERATIOND1Ev
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:944    .text._ZN12SM_OPERATIOND0Ev:00000000 _ZN12SM_OPERATIOND0Ev
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:884    .text._ZN12SM_OPERATIOND1Ev:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:934    .text._ZN12SM_OPERATIOND1Ev:00000040 $d
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:939    .text._ZN12SM_OPERATIOND0Ev:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccU2RrvO.s:988    .text._ZN12SM_OPERATIOND0Ev:00000040 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:24     .text._ZN13State_MachineD2Ev:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:29     .text._ZN13State_MachineD2Ev:00000000 _ZN13State_MachineD2Ev
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:69     .text._ZN13State_MachineD2Ev:00000030 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:74     .text._ZN12SM_OPERATIONC2Ev:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:79     .text._ZN12SM_OPERATIONC2Ev:00000000 _ZN12SM_OPERATIONC2Ev
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:126    .text._ZN12SM_OPERATIONC2Ev:00000040 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:871    .rodata._ZTV12SM_OPERATION:00000000 _ZTV12SM_OPERATION
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:131    .text._ZN12SM_OPERATIONC1Ev:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:136    .text._ZN12SM_OPERATIONC1Ev:00000000 _ZN12SM_OPERATIONC1Ev
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:182    .text._ZN12SM_OPERATIONC1Ev:00000040 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:187    .text._ZN12SM_OPERATION6updateEv:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:192    .text._ZN12SM_OPERATION6updateEv:00000000 _ZN12SM_OPERATION6updateEv
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:825    .text._ZN12SM_OPERATION8stop_nowEv:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:830    .text._ZN12SM_OPERATION8stop_nowEv:00000000 _ZN12SM_OPERATION8stop_nowEv
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:868    .rodata._ZTV12SM_OPERATION:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:889    .text._ZN12SM_OPERATIOND1Ev:00000000 _ZN12SM_OPERATIOND1Ev
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:944    .text._ZN12SM_OPERATIOND0Ev:00000000 _ZN12SM_OPERATIOND0Ev
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:884    .text._ZN12SM_OPERATIOND1Ev:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:934    .text._ZN12SM_OPERATIOND1Ev:00000040 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:939    .text._ZN12SM_OPERATIOND0Ev:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrIxlAW.s:988    .text._ZN12SM_OPERATIOND0Ev:00000040 $d
                      .debug_frame:00000010 $d
 
 UNDEFINED SYMBOLS

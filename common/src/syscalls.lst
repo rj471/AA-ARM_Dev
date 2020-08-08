@@ -597,32 +597,32 @@
  513              	.Letext0:
 DEFINED SYMBOLS
                             *ABS*:00000000 syscalls.c
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:24     .text._kill:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:29     .text._kill:00000000 _kill
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:66     .text._exit:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:71     .text._exit:00000000 _exit
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:96     .text._getpid:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:101    .text._getpid:00000000 _getpid
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:126    .bss.heap_end:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:129    .bss.heap_end:00000000 heap_end
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:132    .text.get_heap_end:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:137    .text.get_heap_end:00000000 get_heap_end
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:164    .text.get_stack_top:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:169    .text.get_stack_top:00000000 get_stack_top
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:195    .text._sbrk:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:200    .text._sbrk:00000000 _sbrk
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:274    .text._close:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:279    .text._close:00000000 _close
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:309    .text._fstat:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:314    .text._fstat:00000000 _fstat
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:349    .text._isatty:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:354    .text._isatty:00000000 _isatty
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:384    .text._lseek:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:389    .text._lseek:00000000 _lseek
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:421    .text._read:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:426    .text._read:00000000 _read
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:458    .text._write:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\cclLhMEV.s:463    .text._write:00000000 _write
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:24     .text._kill:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:29     .text._kill:00000000 _kill
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:66     .text._exit:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:71     .text._exit:00000000 _exit
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:96     .text._getpid:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:101    .text._getpid:00000000 _getpid
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:126    .bss.heap_end:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:129    .bss.heap_end:00000000 heap_end
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:132    .text.get_heap_end:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:137    .text.get_heap_end:00000000 get_heap_end
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:164    .text.get_stack_top:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:169    .text.get_stack_top:00000000 get_stack_top
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:195    .text._sbrk:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:200    .text._sbrk:00000000 _sbrk
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:274    .text._close:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:279    .text._close:00000000 _close
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:309    .text._fstat:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:314    .text._fstat:00000000 _fstat
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:349    .text._isatty:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:354    .text._isatty:00000000 _isatty
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:384    .text._lseek:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:389    .text._lseek:00000000 _lseek
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:421    .text._read:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:426    .text._read:00000000 _read
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:458    .text._write:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccOjasOb.s:463    .text._write:00000000 _write
                      .debug_frame:00000010 $d
 
 UNDEFINED SYMBOLS

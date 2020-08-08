@@ -1294,34 +1294,34 @@
  890              	.Letext0:
 DEFINED SYMBOLS
                             *ABS*:00000000 usbstdreq.c
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:26     .bss.bConfiguration:00000000 bConfiguration
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:27     .bss.bConfiguration:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:29     .bss.pfnHandleCustomReq:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:32     .bss.pfnHandleCustomReq:00000000 pfnHandleCustomReq
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:35     .bss.pabDescrip:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:38     .bss.pabDescrip:00000000 pabDescrip
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:41     .text.USBRegisterDescriptors:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:46     .text.USBRegisterDescriptors:00000000 USBRegisterDescriptors
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:79     .text.USBGetDescriptor:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:84     .text.USBGetDescriptor:00000000 USBGetDescriptor
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:203    .text.USBSetConfiguration:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:207    .text.USBSetConfiguration:00000000 USBSetConfiguration
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:347    .text.HandleStdDeviceReq:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:351    .text.HandleStdDeviceReq:00000000 HandleStdDeviceReq
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:384    .text.HandleStdDeviceReq:00000020 $d
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:396    .text.HandleStdDeviceReq:00000048 $t
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:500    .text.HandleStdInterfaceReq:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:504    .text.HandleStdInterfaceReq:00000000 HandleStdInterfaceReq
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:537    .text.HandleStdInterfaceReq:00000020 $d
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:551    .text.HandleStdInterfaceReq:00000050 $t
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:614    .text.HandleStdEndPointReq:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:618    .text.HandleStdEndPointReq:00000000 HandleStdEndPointReq
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:651    .text.HandleStdEndPointReq:00000020 $d
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:666    .text.HandleStdEndPointReq:00000054 $t
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:755    .text.USBHandleStandardRequest:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:760    .text.USBHandleStandardRequest:00000000 USBHandleStandardRequest
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:853    .text.USBRegisterCustomReqHandler:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccWPM3a2.s:858    .text.USBRegisterCustomReqHandler:00000000 USBRegisterCustomReqHandler
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:26     .bss.bConfiguration:00000000 bConfiguration
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:27     .bss.bConfiguration:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:29     .bss.pfnHandleCustomReq:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:32     .bss.pfnHandleCustomReq:00000000 pfnHandleCustomReq
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:35     .bss.pabDescrip:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:38     .bss.pabDescrip:00000000 pabDescrip
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:41     .text.USBRegisterDescriptors:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:46     .text.USBRegisterDescriptors:00000000 USBRegisterDescriptors
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:79     .text.USBGetDescriptor:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:84     .text.USBGetDescriptor:00000000 USBGetDescriptor
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:203    .text.USBSetConfiguration:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:207    .text.USBSetConfiguration:00000000 USBSetConfiguration
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:347    .text.HandleStdDeviceReq:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:351    .text.HandleStdDeviceReq:00000000 HandleStdDeviceReq
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:384    .text.HandleStdDeviceReq:00000020 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:396    .text.HandleStdDeviceReq:00000048 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:500    .text.HandleStdInterfaceReq:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:504    .text.HandleStdInterfaceReq:00000000 HandleStdInterfaceReq
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:537    .text.HandleStdInterfaceReq:00000020 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:551    .text.HandleStdInterfaceReq:00000050 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:614    .text.HandleStdEndPointReq:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:618    .text.HandleStdEndPointReq:00000000 HandleStdEndPointReq
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:651    .text.HandleStdEndPointReq:00000020 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:666    .text.HandleStdEndPointReq:00000054 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:755    .text.USBHandleStandardRequest:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:760    .text.USBHandleStandardRequest:00000000 USBHandleStandardRequest
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:853    .text.USBRegisterCustomReqHandler:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccdc9CSE.s:858    .text.USBRegisterCustomReqHandler:00000000 USBRegisterCustomReqHandler
                      .debug_frame:00000010 $d
 
 UNDEFINED SYMBOLS

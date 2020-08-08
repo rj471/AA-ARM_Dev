@@ -894,12 +894,12 @@
  582              	.LBE2:
  583              		.cfi_endproc
  584              	.LFE33:
- 586              		.section	.text._Z24modbus_exception_handleri,"ax",%progbits
+ 586              		.section	.text._Z13Check_RX_DataPt,"ax",%progbits
  587              		.align	2
- 588              		.global	_Z24modbus_exception_handleri
+ 588              		.global	_Z13Check_RX_DataPt
  589              		.thumb
  590              		.thumb_func
- 592              	_Z24modbus_exception_handleri:
+ 592              	_Z13Check_RX_DataPt:
  593              	.LFB34:
  266:..//PHY/main.cpp **** 				// printf("\ntog = 1");
  267:..//PHY/main.cpp **** 				// io_set_output(0,1);
@@ -913,673 +913,787 @@
  275:..//PHY/main.cpp **** 	return 0;
  276:..//PHY/main.cpp **** }
  277:..//PHY/main.cpp **** 
- 278:..//PHY/main.cpp **** // extern "C"{
- 279:..//PHY/main.cpp **** int modbus_exception_handler(int modbus_ret){
- 594              		.loc 2 279 0
+ 278:..//PHY/main.cpp **** enum getSerialCommand
+ 279:..//PHY/main.cpp **** {
+ 280:..//PHY/main.cpp **** 	Set_Byte=0x23,
+ 281:..//PHY/main.cpp **** 	Valid_Byte=0x24,
+ 282:..//PHY/main.cpp **** 	Set_Word=0x25,
+ 283:..//PHY/main.cpp **** 	Reset_All=0x26,
+ 284:..//PHY/main.cpp **** 	Init_Ptr=0x27,
+ 285:..//PHY/main.cpp **** 	Turn_On_GPIO=0x28,
+ 286:..//PHY/main.cpp **** 	Turn_Off_GPIO=0x29,
+ 287:..//PHY/main.cpp **** 	Set_Flag=0x2A,
+ 288:..//PHY/main.cpp **** 	Clear_Flag=0x2B,
+ 289:..//PHY/main.cpp **** 	Read_byte=0x2C,
+ 290:..//PHY/main.cpp ****     Trig_Cam=0x2E,
+ 291:..//PHY/main.cpp **** 	Set_Delay=0x2F,
+ 292:..//PHY/main.cpp **** 	Read_Mem=0x30    
+ 293:..//PHY/main.cpp **** };
+ 294:..//PHY/main.cpp **** 
+ 295:..//PHY/main.cpp **** void Check_RX_Data(uint16_t *frameArray)
+ 296:..//PHY/main.cpp **** {
+ 594              		.loc 2 296 0
  595              		.cfi_startproc
- 596              		@ args = 0, pretend = 0, frame = 8
+ 596              		@ args = 0, pretend = 0, frame = 16
  597              		@ frame_needed = 1, uses_anonymous_args = 0
  598              		@ link register save eliminated.
  599 0000 80B4     		push	{r7}
  600              	.LCFI6:
  601              		.cfi_def_cfa_offset 4
- 602 0002 83B0     		sub	sp, sp, #12
+ 602 0002 85B0     		sub	sp, sp, #20
  603              	.LCFI7:
- 604              		.cfi_def_cfa_offset 16
+ 604              		.cfi_def_cfa_offset 24
  605 0004 00AF     		add	r7, sp, #0
  606              		.cfi_offset 7, -4
  607              	.LCFI8:
  608              		.cfi_def_cfa_register 7
  609 0006 7860     		str	r0, [r7, #4]
- 280:..//PHY/main.cpp **** 	switch(modbus_ret){
- 281:..//PHY/main.cpp **** 		case MB_OVERFLOW:
- 282:..//PHY/main.cpp **** 			// do something here..
- 283:..//PHY/main.cpp **** 		break;
- 284:..//PHY/main.cpp **** 		case MB_DATA_WRITTEN:{
- 285:..//PHY/main.cpp **** 			// printf("\n MB_DATA_WRITTEN");
- 286:..//PHY/main.cpp **** 			// int modbus_count;
- 287:..//PHY/main.cpp **** 			// copy the received data to local variables..
- 288:..//PHY/main.cpp **** 			// for(modbus_count=0;modbus_count<HOLDING_REGS_SIZE;modbus_count++){
- 289:..//PHY/main.cpp **** 				// apply_modbus_values(modbus_count);
- 290:..//PHY/main.cpp **** 			// }
- 291:..//PHY/main.cpp **** 			break;
- 292:..//PHY/main.cpp **** 		}
- 293:..//PHY/main.cpp **** 		case MB_CORRUPT_PACKET:
- 294:..//PHY/main.cpp **** 			// printf("\n MB_CORRUPT_PACKET");
- 295:..//PHY/main.cpp **** 			// do something here..
- 296:..//PHY/main.cpp **** 		break;
- 297:..//PHY/main.cpp **** 		case MB_CHECKSUM_FAILED:
- 298:..//PHY/main.cpp **** 			// printf("\n MB_CHECKSUM_FAILED");
- 299:..//PHY/main.cpp **** 			// do something here..
- 300:..//PHY/main.cpp **** 		break;
- 301:..//PHY/main.cpp **** 		case MB_INCORRECT_ID:
- 302:..//PHY/main.cpp **** 			// printf("\n MB_INCORRECT_ID");
- 303:..//PHY/main.cpp **** 			// do something here..
- 304:..//PHY/main.cpp **** 		break;
- 305:..//PHY/main.cpp **** 		case MB_DATA_READ:
- 306:..//PHY/main.cpp **** 			// printf("\n MB_DATA_READ");
- 307:..//PHY/main.cpp **** 			// do something here..
- 308:..//PHY/main.cpp **** 		break;
- 309:..//PHY/main.cpp **** 	}
- 310:..//PHY/main.cpp **** 	return 1;
- 610              		.loc 2 310 0
- 611 0008 4FF00103 		mov	r3, #1
- 311:..//PHY/main.cpp **** }
- 612              		.loc 2 311 0
- 613 000c 1846     		mov	r0, r3
- 614 000e 07F10C07 		add	r7, r7, #12
- 615 0012 BD46     		mov	sp, r7
- 616 0014 80BC     		pop	{r7}
- 617 0016 7047     		bx	lr
- 618              		.cfi_endproc
- 619              	.LFE34:
- 621              		.section	.text._Z40set_holding_registers_values_accel_tableii,"ax",%progbits
- 622              		.align	2
- 623              		.global	_Z40set_holding_registers_values_accel_tableii
- 624              		.thumb
- 625              		.thumb_func
- 627              	_Z40set_holding_registers_values_accel_tableii:
- 628              	.LFB35:
- 312:..//PHY/main.cpp **** 
- 313:..//PHY/main.cpp **** int set_holding_registers_values_accel_table(int modbus_cnt , int index_offset){
- 629              		.loc 2 313 0
- 630              		.cfi_startproc
- 631              		@ args = 0, pretend = 0, frame = 16
- 632              		@ frame_needed = 1, uses_anonymous_args = 0
- 633              		@ link register save eliminated.
- 634 0000 80B4     		push	{r7}
- 635              	.LCFI9:
- 636              		.cfi_def_cfa_offset 4
- 637 0002 85B0     		sub	sp, sp, #20
- 638              	.LCFI10:
- 639              		.cfi_def_cfa_offset 24
- 640 0004 00AF     		add	r7, sp, #0
- 641              		.cfi_offset 7, -4
- 642              	.LCFI11:
- 643              		.cfi_def_cfa_register 7
- 644 0006 7860     		str	r0, [r7, #4]
- 645 0008 3960     		str	r1, [r7, #0]
- 646              	.LBB3:
- 314:..//PHY/main.cpp **** 	unsigned int temp_int=0;
- 647              		.loc 2 314 0
- 648 000a 4FF00003 		mov	r3, #0
- 649 000e FB60     		str	r3, [r7, #12]
- 650              	.LBE3:
- 315:..//PHY/main.cpp **** 	switch(modbus_cnt){
- 316:..//PHY/main.cpp **** 
- 317:..//PHY/main.cpp **** 		case MB_X_ACCEL:
- 318:..//PHY/main.cpp **** 			// temp_int = (unsigned int)(accel_table[index_offset].read_datax);
- 319:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[(modbus_cnt+(index_offset*ACCEL_REG_NUM))]){
- 320:..//PHY/main.cpp **** 			// 	holdingRegs[(modbus_cnt+(index_offset*ACCEL_REG_NUM))] = temp_int;
- 321:..//PHY/main.cpp **** 			// }
- 322:..//PHY/main.cpp **** 			break;
- 323:..//PHY/main.cpp **** 
- 324:..//PHY/main.cpp **** 		case MB_Y_ACCEL:
- 325:..//PHY/main.cpp **** 			// temp_int = (unsigned int)(accel_table[index_offset].read_datay);
- 326:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[(modbus_cnt+(index_offset*ACCEL_REG_NUM))]){
- 327:..//PHY/main.cpp **** 			// 	holdingRegs[(modbus_cnt+(index_offset*ACCEL_REG_NUM))] = temp_int;
- 328:..//PHY/main.cpp **** 			// }
- 329:..//PHY/main.cpp **** 			break;
- 330:..//PHY/main.cpp **** 			
- 331:..//PHY/main.cpp **** 		case MB_Z_ACCEL:
- 332:..//PHY/main.cpp **** 			// temp_int = (unsigned int)(accel_table[index_offset].read_dataz);
- 333:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[(modbus_cnt+(index_offset*ACCEL_REG_NUM))]){
- 334:..//PHY/main.cpp **** 			// 	holdingRegs[(modbus_cnt+(index_offset*ACCEL_REG_NUM))] = temp_int;
- 335:..//PHY/main.cpp **** 			// }
- 336:..//PHY/main.cpp **** 			break;		
- 337:..//PHY/main.cpp **** 	}
+ 610              	.LBB3:
+ 297:..//PHY/main.cpp ****   int i=0;
+ 611              		.loc 2 297 0
+ 612 0008 4FF00003 		mov	r3, #0
+ 613 000c FB60     		str	r3, [r7, #12]
+ 298:..//PHY/main.cpp ****   if(frameArray[i]==Valid_Byte)
+ 614              		.loc 2 298 0
+ 615 000e FB68     		ldr	r3, [r7, #12]
+ 616 0010 4FEA4302 		lsl	r2, r3, #1
+ 617 0014 7B68     		ldr	r3, [r7, #4]
+ 618 0016 1344     		add	r3, r2, r3
+ 619 0018 1B88     		ldrh	r3, [r3, #0]
+ 620 001a 242B     		cmp	r3, #36
+ 621 001c 03D1     		bne	.L26
+ 299:..//PHY/main.cpp ****   {
+ 300:..//PHY/main.cpp ****   	switch(frameArray[++i])
+ 622              		.loc 2 300 0
+ 623 001e FB68     		ldr	r3, [r7, #12]
+ 624 0020 03F10103 		add	r3, r3, #1
+ 625 0024 FB60     		str	r3, [r7, #12]
+ 626              	.L26:
+ 627              	.LBE3:
+ 301:..//PHY/main.cpp ****   	{
+ 302:..//PHY/main.cpp ****   	 case Set_Byte:
+ 303:..//PHY/main.cpp ****   	   break;
+ 304:..//PHY/main.cpp ****   	 case Set_Word:
+ 305:..//PHY/main.cpp ****   	  	break;
+ 306:..//PHY/main.cpp ****   	 case Reset_All:
+ 307:..//PHY/main.cpp ****   	  	break;
+ 308:..//PHY/main.cpp ****   	 case Init_Ptr:
+ 309:..//PHY/main.cpp ****   	  	break;
+ 310:..//PHY/main.cpp ****   	 case Turn_On_GPIO:
+ 311:..//PHY/main.cpp ****       	break;
+ 312:..//PHY/main.cpp ****      case Turn_Off_GPIO:
+ 313:..//PHY/main.cpp ****       	break;
+ 314:..//PHY/main.cpp ****      case Set_Flag:
+ 315:..//PHY/main.cpp ****       	break;
+ 316:..//PHY/main.cpp ****      case Clear_Flag:
+ 317:..//PHY/main.cpp ****       	break;
+ 318:..//PHY/main.cpp ****      case Read_byte:
+ 319:..//PHY/main.cpp ****       	break;
+ 320:..//PHY/main.cpp ****      case Trig_Cam:
+ 321:..//PHY/main.cpp **** 		break;
+ 322:..//PHY/main.cpp ****      case Set_Delay:
+ 323:..//PHY/main.cpp ****       	break;
+ 324:..//PHY/main.cpp ****      case Read_Mem:
+ 325:..//PHY/main.cpp **** 
+ 326:..//PHY/main.cpp ****      default:
+ 327:..//PHY/main.cpp ****        	break;
+ 328:..//PHY/main.cpp **** 
+ 329:..//PHY/main.cpp ****   	}
+ 330:..//PHY/main.cpp ****   }
+ 331:..//PHY/main.cpp ****  else
+ 332:..//PHY/main.cpp ****  {
+ 333:..//PHY/main.cpp **** 
+ 334:..//PHY/main.cpp ****  //implement result checking logic
+ 335:..//PHY/main.cpp ****  }
+ 336:..//PHY/main.cpp **** 
+ 337:..//PHY/main.cpp **** 
  338:..//PHY/main.cpp **** }
- 651              		.loc 2 338 0
- 652 0010 07F11407 		add	r7, r7, #20
- 653 0014 BD46     		mov	sp, r7
- 654 0016 80BC     		pop	{r7}
- 655 0018 7047     		bx	lr
- 656              		.cfi_endproc
- 657              	.LFE35:
- 659 001a 00BF     		.section	.text.set_holding_registers_values,"ax",%progbits
- 660              		.align	2
- 661              		.global	set_holding_registers_values
- 662              		.thumb
- 663              		.thumb_func
- 665              	set_holding_registers_values:
- 666              	.LFB36:
+ 628              		.loc 2 338 0
+ 629 0026 07F11407 		add	r7, r7, #20
+ 630 002a BD46     		mov	sp, r7
+ 631 002c 80BC     		pop	{r7}
+ 632 002e 7047     		bx	lr
+ 633              		.cfi_endproc
+ 634              	.LFE34:
+ 636              		.section	.text._Z24modbus_exception_handleri,"ax",%progbits
+ 637              		.align	2
+ 638              		.global	_Z24modbus_exception_handleri
+ 639              		.thumb
+ 640              		.thumb_func
+ 642              	_Z24modbus_exception_handleri:
+ 643              	.LFB35:
  339:..//PHY/main.cpp **** 
- 340:..//PHY/main.cpp **** int set_holding_registers_values(int modbus_cnt){
- 667              		.loc 2 340 0
- 668              		.cfi_startproc
- 669              		@ args = 0, pretend = 0, frame = 16
- 670              		@ frame_needed = 1, uses_anonymous_args = 0
- 671              		@ link register save eliminated.
- 672 0000 80B4     		push	{r7}
- 673              	.LCFI12:
- 674              		.cfi_def_cfa_offset 4
- 675 0002 85B0     		sub	sp, sp, #20
- 676              	.LCFI13:
- 677              		.cfi_def_cfa_offset 24
- 678 0004 00AF     		add	r7, sp, #0
- 679              		.cfi_offset 7, -4
- 680              	.LCFI14:
- 681              		.cfi_def_cfa_register 7
- 682 0006 7860     		str	r0, [r7, #4]
- 683              	.LBB4:
- 341:..//PHY/main.cpp **** 	unsigned int temp_int=0;
- 684              		.loc 2 341 0
- 685 0008 4FF00003 		mov	r3, #0
- 686 000c FB60     		str	r3, [r7, #12]
- 342:..//PHY/main.cpp **** 	switch(modbus_cnt){
- 343:..//PHY/main.cpp **** 		case MB_MY_IP1:
- 344:..//PHY/main.cpp **** 			// temp_int = (unsigned int)MYIP_1;
- 345:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[MB_MY_IP1]){
- 346:..//PHY/main.cpp **** 			// 	holdingRegs[MB_MY_IP1] = temp_int;
- 347:..//PHY/main.cpp **** 			// }
- 348:..//PHY/main.cpp **** 			
- 349:..//PHY/main.cpp **** 			break;
- 350:..//PHY/main.cpp **** 
- 351:..//PHY/main.cpp **** 		case MB_MY_IP2:
- 352:..//PHY/main.cpp **** 			// temp_int = (unsigned int)MYIP_2;
- 353:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[MB_MY_IP2])
- 354:..//PHY/main.cpp **** 			// 	holdingRegs[MB_MY_IP2] = temp_int;
- 355:..//PHY/main.cpp **** 			break;		
- 356:..//PHY/main.cpp **** 
- 357:..//PHY/main.cpp **** 		case MB_MY_IP3:
- 358:..//PHY/main.cpp **** 			// temp_int = (unsigned int)MYIP_3;
- 359:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[MB_MY_IP3])
- 360:..//PHY/main.cpp **** 			// 	holdingRegs[MB_MY_IP3] = temp_int;
- 361:..//PHY/main.cpp **** 			break;	
- 362:..//PHY/main.cpp **** 
- 363:..//PHY/main.cpp **** 		case MB_MY_IP4:
- 364:..//PHY/main.cpp **** 			// temp_int = (unsigned int)MYIP_4;
- 365:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[MYIP_4]){
- 366:..//PHY/main.cpp **** 			// 	holdingRegs[MB_MY_IP4] = temp_int;
- 367:..//PHY/main.cpp **** 			// }
- 368:..//PHY/main.cpp **** 
- 369:..//PHY/main.cpp **** 			break;
- 370:..//PHY/main.cpp **** 
- 371:..//PHY/main.cpp **** 		case SM_DELAY_SET:
- 372:..//PHY/main.cpp **** 			// temp_int = (unsigned int)delay_val;
- 373:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[SM_DELAY_SET])
- 374:..//PHY/main.cpp **** 			// 	holdingRegs[SM_DELAY_SET] = temp_int;
- 375:..//PHY/main.cpp **** 			break;			
- 376:..//PHY/main.cpp **** 			
- 377:..//PHY/main.cpp **** 		case SM_READ_DATA:
- 378:..//PHY/main.cpp **** 			// temp_int = (unsigned int)read_data_lsm;
- 379:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[SM_READ_DATA])
- 380:..//PHY/main.cpp **** 			// 	holdingRegs[SM_READ_DATA] = temp_int;
- 381:..//PHY/main.cpp **** 			
- 382:..//PHY/main.cpp **** 		break;
- 383:..//PHY/main.cpp **** 
- 384:..//PHY/main.cpp **** 		default:
- 385:..//PHY/main.cpp **** 
- 386:..//PHY/main.cpp **** 			break;
- 387:..//PHY/main.cpp **** 	}
- 388:..//PHY/main.cpp **** 	return 1;
- 687              		.loc 2 388 0
- 688 000e 4FF00103 		mov	r3, #1
- 689              	.LBE4:
+ 340:..//PHY/main.cpp **** 
+ 341:..//PHY/main.cpp **** 
+ 342:..//PHY/main.cpp **** 
+ 343:..//PHY/main.cpp **** 
+ 344:..//PHY/main.cpp **** // extern "C"{
+ 345:..//PHY/main.cpp **** int modbus_exception_handler(int modbus_ret){
+ 644              		.loc 2 345 0
+ 645              		.cfi_startproc
+ 646              		@ args = 0, pretend = 0, frame = 8
+ 647              		@ frame_needed = 1, uses_anonymous_args = 0
+ 648              		@ link register save eliminated.
+ 649 0000 80B4     		push	{r7}
+ 650              	.LCFI9:
+ 651              		.cfi_def_cfa_offset 4
+ 652 0002 83B0     		sub	sp, sp, #12
+ 653              	.LCFI10:
+ 654              		.cfi_def_cfa_offset 16
+ 655 0004 00AF     		add	r7, sp, #0
+ 656              		.cfi_offset 7, -4
+ 657              	.LCFI11:
+ 658              		.cfi_def_cfa_register 7
+ 659 0006 7860     		str	r0, [r7, #4]
+ 346:..//PHY/main.cpp **** 	switch(modbus_ret){
+ 347:..//PHY/main.cpp **** 		case MB_OVERFLOW:
+ 348:..//PHY/main.cpp **** 			// do something here..
+ 349:..//PHY/main.cpp **** 		break;
+ 350:..//PHY/main.cpp **** 		case MB_DATA_WRITTEN:{
+ 351:..//PHY/main.cpp **** 			// printf("\n MB_DATA_WRITTEN");
+ 352:..//PHY/main.cpp **** 			// int modbus_count;
+ 353:..//PHY/main.cpp **** 			// copy the received data to local variables..
+ 354:..//PHY/main.cpp **** 			// for(modbus_count=0;modbus_count<HOLDING_REGS_SIZE;modbus_count++){
+ 355:..//PHY/main.cpp **** 				// apply_modbus_values(modbus_count);
+ 356:..//PHY/main.cpp **** 			// }
+ 357:..//PHY/main.cpp **** 			break;
+ 358:..//PHY/main.cpp **** 		}
+ 359:..//PHY/main.cpp **** 		case MB_CORRUPT_PACKET:
+ 360:..//PHY/main.cpp **** 			// printf("\n MB_CORRUPT_PACKET");
+ 361:..//PHY/main.cpp **** 			// do something here..
+ 362:..//PHY/main.cpp **** 		break;
+ 363:..//PHY/main.cpp **** 		case MB_CHECKSUM_FAILED:
+ 364:..//PHY/main.cpp **** 			// printf("\n MB_CHECKSUM_FAILED");
+ 365:..//PHY/main.cpp **** 			// do something here..
+ 366:..//PHY/main.cpp **** 		break;
+ 367:..//PHY/main.cpp **** 		case MB_INCORRECT_ID:
+ 368:..//PHY/main.cpp **** 			// printf("\n MB_INCORRECT_ID");
+ 369:..//PHY/main.cpp **** 			// do something here..
+ 370:..//PHY/main.cpp **** 		break;
+ 371:..//PHY/main.cpp **** 		case MB_DATA_READ:
+ 372:..//PHY/main.cpp **** 			// printf("\n MB_DATA_READ");
+ 373:..//PHY/main.cpp **** 			// do something here..
+ 374:..//PHY/main.cpp **** 		break;
+ 375:..//PHY/main.cpp **** 	}
+ 376:..//PHY/main.cpp **** 	return 1;
+ 660              		.loc 2 376 0
+ 661 0008 4FF00103 		mov	r3, #1
+ 377:..//PHY/main.cpp **** }
+ 662              		.loc 2 377 0
+ 663 000c 1846     		mov	r0, r3
+ 664 000e 07F10C07 		add	r7, r7, #12
+ 665 0012 BD46     		mov	sp, r7
+ 666 0014 80BC     		pop	{r7}
+ 667 0016 7047     		bx	lr
+ 668              		.cfi_endproc
+ 669              	.LFE35:
+ 671              		.section	.text._Z40set_holding_registers_values_accel_tableii,"ax",%progbits
+ 672              		.align	2
+ 673              		.global	_Z40set_holding_registers_values_accel_tableii
+ 674              		.thumb
+ 675              		.thumb_func
+ 677              	_Z40set_holding_registers_values_accel_tableii:
+ 678              	.LFB36:
+ 378:..//PHY/main.cpp **** 
+ 379:..//PHY/main.cpp **** int set_holding_registers_values_accel_table(int modbus_cnt , int index_offset){
+ 679              		.loc 2 379 0
+ 680              		.cfi_startproc
+ 681              		@ args = 0, pretend = 0, frame = 16
+ 682              		@ frame_needed = 1, uses_anonymous_args = 0
+ 683              		@ link register save eliminated.
+ 684 0000 80B4     		push	{r7}
+ 685              	.LCFI12:
+ 686              		.cfi_def_cfa_offset 4
+ 687 0002 85B0     		sub	sp, sp, #20
+ 688              	.LCFI13:
+ 689              		.cfi_def_cfa_offset 24
+ 690 0004 00AF     		add	r7, sp, #0
+ 691              		.cfi_offset 7, -4
+ 692              	.LCFI14:
+ 693              		.cfi_def_cfa_register 7
+ 694 0006 7860     		str	r0, [r7, #4]
+ 695 0008 3960     		str	r1, [r7, #0]
+ 696              	.LBB4:
+ 380:..//PHY/main.cpp **** 	unsigned int temp_int=0;
+ 697              		.loc 2 380 0
+ 698 000a 4FF00003 		mov	r3, #0
+ 699 000e FB60     		str	r3, [r7, #12]
+ 700              	.LBE4:
+ 381:..//PHY/main.cpp **** 	switch(modbus_cnt){
+ 382:..//PHY/main.cpp **** 
+ 383:..//PHY/main.cpp **** 		case MB_X_ACCEL:
+ 384:..//PHY/main.cpp **** 			// temp_int = (unsigned int)(accel_table[index_offset].read_datax);
+ 385:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[(modbus_cnt+(index_offset*ACCEL_REG_NUM))]){
+ 386:..//PHY/main.cpp **** 			// 	holdingRegs[(modbus_cnt+(index_offset*ACCEL_REG_NUM))] = temp_int;
+ 387:..//PHY/main.cpp **** 			// }
+ 388:..//PHY/main.cpp **** 			break;
  389:..//PHY/main.cpp **** 
- 390:..//PHY/main.cpp **** }
- 690              		.loc 2 390 0
- 691 0012 1846     		mov	r0, r3
- 692 0014 07F11407 		add	r7, r7, #20
- 693 0018 BD46     		mov	sp, r7
- 694 001a 80BC     		pop	{r7}
- 695 001c 7047     		bx	lr
- 696              		.cfi_endproc
- 697              	.LFE36:
- 699 001e 00BF     		.section	.text._Z20execute_eeprom_writei,"ax",%progbits
- 700              		.align	2
- 701              		.global	_Z20execute_eeprom_writei
- 702              		.thumb
- 703              		.thumb_func
- 705              	_Z20execute_eeprom_writei:
- 706              	.LFB37:
- 391:..//PHY/main.cpp **** 
- 392:..//PHY/main.cpp **** void execute_eeprom_write(int flash_write){
- 707              		.loc 2 392 0
- 708              		.cfi_startproc
- 709              		@ args = 0, pretend = 0, frame = 8
- 710              		@ frame_needed = 1, uses_anonymous_args = 0
- 711 0000 80B5     		push	{r7, lr}
- 712              	.LCFI15:
- 713              		.cfi_def_cfa_offset 8
- 714 0002 82B0     		sub	sp, sp, #8
- 715              	.LCFI16:
- 716              		.cfi_def_cfa_offset 16
- 717 0004 00AF     		add	r7, sp, #0
- 718              		.cfi_offset 14, -4
- 719              		.cfi_offset 7, -8
- 720              	.LCFI17:
- 721              		.cfi_def_cfa_register 7
- 722 0006 7860     		str	r0, [r7, #4]
- 393:..//PHY/main.cpp **** 	switch(flash_write){
- 723              		.loc 2 393 0
- 724 0008 7B68     		ldr	r3, [r7, #4]
- 725 000a 03F1FF33 		add	r3, r3, #-1
- 726 000e 032B     		cmp	r3, #3
- 727 0010 3ED8     		bhi	.L31
- 728 0012 01A2     		adr	r2, .L36
- 729 0014 52F823F0 		ldr	pc, [r2, r3, lsl #2]
- 730              		.align	2
- 731              	.L36:
- 732 0018 29000000 		.word	.L32+1
- 733 001c 43000000 		.word	.L33+1
- 734 0020 5D000000 		.word	.L34+1
- 735 0024 77000000 		.word	.L35+1
- 736              	.L32:
- 394:..//PHY/main.cpp **** 		case EEP_WRITE1:
- 395:..//PHY/main.cpp **** 			// printf("\n write 1");
- 396:..//PHY/main.cpp **** 			flash_write_now = 0;
- 737              		.loc 2 396 0
- 738 0028 40F20003 		movw	r3, #:lower16:flash_write_now
- 739 002c C0F20003 		movt	r3, #:upper16:flash_write_now
- 740 0030 4FF00002 		mov	r2, #0
- 741 0034 1A60     		str	r2, [r3, #0]
- 397:..//PHY/main.cpp **** 			write_config_data();		
- 742              		.loc 2 397 0
- 743 0036 40F20003 		movw	r3, #:lower16:_Z17write_config_datav
- 744 003a C0F20003 		movt	r3, #:upper16:_Z17write_config_datav
- 745 003e 9847     		blx	r3
- 398:..//PHY/main.cpp **** 			break;
- 746              		.loc 2 398 0
- 747 0040 2DE0     		b	.L38
- 748              	.L33:
- 399:..//PHY/main.cpp **** 
- 400:..//PHY/main.cpp **** 		case EEP_WRITE2:
- 401:..//PHY/main.cpp **** 			// printf("\n write 2");
- 402:..//PHY/main.cpp **** 			flash_write_now = 0;
- 749              		.loc 2 402 0
- 750 0042 40F20003 		movw	r3, #:lower16:flash_write_now
- 751 0046 C0F20003 		movt	r3, #:upper16:flash_write_now
- 752 004a 4FF00002 		mov	r2, #0
- 753 004e 1A60     		str	r2, [r3, #0]
- 403:..//PHY/main.cpp **** 			write_config_data_table_1();	
- 754              		.loc 2 403 0
- 755 0050 40F20003 		movw	r3, #:lower16:_Z25write_config_data_table_1v
- 756 0054 C0F20003 		movt	r3, #:upper16:_Z25write_config_data_table_1v
- 757 0058 9847     		blx	r3
- 404:..//PHY/main.cpp **** 			break;
- 758              		.loc 2 404 0
- 759 005a 20E0     		b	.L38
- 760              	.L34:
+ 390:..//PHY/main.cpp **** 		case MB_Y_ACCEL:
+ 391:..//PHY/main.cpp **** 			// temp_int = (unsigned int)(accel_table[index_offset].read_datay);
+ 392:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[(modbus_cnt+(index_offset*ACCEL_REG_NUM))]){
+ 393:..//PHY/main.cpp **** 			// 	holdingRegs[(modbus_cnt+(index_offset*ACCEL_REG_NUM))] = temp_int;
+ 394:..//PHY/main.cpp **** 			// }
+ 395:..//PHY/main.cpp **** 			break;
+ 396:..//PHY/main.cpp **** 			
+ 397:..//PHY/main.cpp **** 		case MB_Z_ACCEL:
+ 398:..//PHY/main.cpp **** 			// temp_int = (unsigned int)(accel_table[index_offset].read_dataz);
+ 399:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[(modbus_cnt+(index_offset*ACCEL_REG_NUM))]){
+ 400:..//PHY/main.cpp **** 			// 	holdingRegs[(modbus_cnt+(index_offset*ACCEL_REG_NUM))] = temp_int;
+ 401:..//PHY/main.cpp **** 			// }
+ 402:..//PHY/main.cpp **** 			break;		
+ 403:..//PHY/main.cpp **** 	}
+ 404:..//PHY/main.cpp **** }
+ 701              		.loc 2 404 0
+ 702 0010 07F11407 		add	r7, r7, #20
+ 703 0014 BD46     		mov	sp, r7
+ 704 0016 80BC     		pop	{r7}
+ 705 0018 7047     		bx	lr
+ 706              		.cfi_endproc
+ 707              	.LFE36:
+ 709 001a 00BF     		.section	.text.set_holding_registers_values,"ax",%progbits
+ 710              		.align	2
+ 711              		.global	set_holding_registers_values
+ 712              		.thumb
+ 713              		.thumb_func
+ 715              	set_holding_registers_values:
+ 716              	.LFB37:
  405:..//PHY/main.cpp **** 
- 406:..//PHY/main.cpp **** 		case EEP_WRITE3:
- 407:..//PHY/main.cpp **** 			// printf("\n write 3");
- 408:..//PHY/main.cpp **** 			flash_write_now = 0;
- 761              		.loc 2 408 0
- 762 005c 40F20003 		movw	r3, #:lower16:flash_write_now
- 763 0060 C0F20003 		movt	r3, #:upper16:flash_write_now
- 764 0064 4FF00002 		mov	r2, #0
- 765 0068 1A60     		str	r2, [r3, #0]
- 409:..//PHY/main.cpp **** 			write_config_data_table_2();	
- 766              		.loc 2 409 0
- 767 006a 40F20003 		movw	r3, #:lower16:_Z25write_config_data_table_2v
- 768 006e C0F20003 		movt	r3, #:upper16:_Z25write_config_data_table_2v
- 769 0072 9847     		blx	r3
- 410:..//PHY/main.cpp **** 			break;
- 770              		.loc 2 410 0
- 771 0074 13E0     		b	.L38
- 772              	.L35:
- 411:..//PHY/main.cpp **** 			
- 412:..//PHY/main.cpp **** 		case EEP_WRITE4:
- 413:..//PHY/main.cpp **** 			flash_write_now = 0;
- 773              		.loc 2 413 0
- 774 0076 40F20003 		movw	r3, #:lower16:flash_write_now
- 775 007a C0F20003 		movt	r3, #:upper16:flash_write_now
- 776 007e 4FF00002 		mov	r2, #0
- 777 0082 1A60     		str	r2, [r3, #0]
- 414:..//PHY/main.cpp **** 			write_config_data_table_3();	
- 778              		.loc 2 414 0
- 779 0084 40F20003 		movw	r3, #:lower16:_Z25write_config_data_table_3v
- 780 0088 C0F20003 		movt	r3, #:upper16:_Z25write_config_data_table_3v
- 781 008c 9847     		blx	r3
+ 406:..//PHY/main.cpp **** int set_holding_registers_values(int modbus_cnt){
+ 717              		.loc 2 406 0
+ 718              		.cfi_startproc
+ 719              		@ args = 0, pretend = 0, frame = 16
+ 720              		@ frame_needed = 1, uses_anonymous_args = 0
+ 721              		@ link register save eliminated.
+ 722 0000 80B4     		push	{r7}
+ 723              	.LCFI15:
+ 724              		.cfi_def_cfa_offset 4
+ 725 0002 85B0     		sub	sp, sp, #20
+ 726              	.LCFI16:
+ 727              		.cfi_def_cfa_offset 24
+ 728 0004 00AF     		add	r7, sp, #0
+ 729              		.cfi_offset 7, -4
+ 730              	.LCFI17:
+ 731              		.cfi_def_cfa_register 7
+ 732 0006 7860     		str	r0, [r7, #4]
+ 733              	.LBB5:
+ 407:..//PHY/main.cpp **** 	unsigned int temp_int=0;
+ 734              		.loc 2 407 0
+ 735 0008 4FF00003 		mov	r3, #0
+ 736 000c FB60     		str	r3, [r7, #12]
+ 408:..//PHY/main.cpp **** 	switch(modbus_cnt){
+ 409:..//PHY/main.cpp **** 		case MB_MY_IP1:
+ 410:..//PHY/main.cpp **** 			// temp_int = (unsigned int)MYIP_1;
+ 411:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[MB_MY_IP1]){
+ 412:..//PHY/main.cpp **** 			// 	holdingRegs[MB_MY_IP1] = temp_int;
+ 413:..//PHY/main.cpp **** 			// }
+ 414:..//PHY/main.cpp **** 			
  415:..//PHY/main.cpp **** 			break;
- 782              		.loc 2 415 0
- 783 008e 06E0     		b	.L38
- 784              	.L31:
- 416:..//PHY/main.cpp **** 		
- 417:..//PHY/main.cpp **** 		default:
- 418:..//PHY/main.cpp **** 			flash_write_now = 0;
- 785              		.loc 2 418 0
- 786 0090 40F20003 		movw	r3, #:lower16:flash_write_now
- 787 0094 C0F20003 		movt	r3, #:upper16:flash_write_now
- 788 0098 4FF00002 		mov	r2, #0
- 789 009c 1A60     		str	r2, [r3, #0]
- 790              	.L38:
- 419:..//PHY/main.cpp **** 			break;
- 420:..//PHY/main.cpp **** 	}
- 421:..//PHY/main.cpp **** 
- 422:..//PHY/main.cpp **** }
- 791              		.loc 2 422 0
- 792 009e 07F10807 		add	r7, r7, #8
- 793 00a2 BD46     		mov	sp, r7
- 794 00a4 80BD     		pop	{r7, pc}
- 795              		.cfi_endproc
- 796              	.LFE37:
- 798 00a6 00BF     		.section	.text.apply_modbus_values,"ax",%progbits
- 799              		.align	2
- 800              		.global	apply_modbus_values
- 801              		.thumb
- 802              		.thumb_func
- 804              	apply_modbus_values:
- 805              	.LFB38:
- 423:..//PHY/main.cpp **** 
- 424:..//PHY/main.cpp **** 
- 425:..//PHY/main.cpp **** #if 1
- 426:..//PHY/main.cpp **** int apply_modbus_values(int modbus_cnt){
- 806              		.loc 2 426 0
- 807              		.cfi_startproc
- 808              		@ args = 0, pretend = 0, frame = 8
- 809              		@ frame_needed = 1, uses_anonymous_args = 0
- 810              		@ link register save eliminated.
- 811 0000 80B4     		push	{r7}
- 812              	.LCFI18:
- 813              		.cfi_def_cfa_offset 4
- 814 0002 83B0     		sub	sp, sp, #12
- 815              	.LCFI19:
- 816              		.cfi_def_cfa_offset 16
- 817 0004 00AF     		add	r7, sp, #0
- 818              		.cfi_offset 7, -4
- 819              	.LCFI20:
- 820              		.cfi_def_cfa_register 7
- 821 0006 7860     		str	r0, [r7, #4]
- 427:..//PHY/main.cpp **** 	// if(holdingRegs_prev[modbus_cnt]!=holdingRegs[modbus_cnt]){
- 428:..//PHY/main.cpp **** 		
- 429:..//PHY/main.cpp **** 		switch(modbus_cnt){
- 430:..//PHY/main.cpp **** 			case MB_MY_IP1:{
- 431:..//PHY/main.cpp **** 				// MYIP_1 = (uint8_t)(holdingRegs[MB_MY_IP1]);
- 432:..//PHY/main.cpp **** 				// flash_write_now = 1;		
- 433:..//PHY/main.cpp **** 				break;
- 434:..//PHY/main.cpp **** 			}	
- 435:..//PHY/main.cpp **** 			case MB_MY_IP2:{
- 436:..//PHY/main.cpp **** 				// MYIP_2 = (uint8_t)(holdingRegs[MB_MY_IP2]);
- 437:..//PHY/main.cpp **** 				// flash_write_now = 1;
- 438:..//PHY/main.cpp **** 				break;
- 439:..//PHY/main.cpp **** 			}
- 440:..//PHY/main.cpp **** 
- 441:..//PHY/main.cpp **** 			case MB_MY_IP3:{
- 442:..//PHY/main.cpp **** 				// MYIP_3 = (uint8_t)(holdingRegs[MB_MY_IP3]);
- 443:..//PHY/main.cpp **** 				// flash_write_now = 1;				
- 444:..//PHY/main.cpp **** 				break;
- 445:..//PHY/main.cpp **** 			}
- 446:..//PHY/main.cpp **** 		
- 447:..//PHY/main.cpp **** 			case MB_MY_IP4:{
- 448:..//PHY/main.cpp **** 				// MYIP_4 = (uint8_t)(holdingRegs[MB_MY_IP4]);
- 449:..//PHY/main.cpp **** 				// flash_write_now = 1;
- 450:..//PHY/main.cpp **** 			break;
- 451:..//PHY/main.cpp **** 			}
- 452:..//PHY/main.cpp **** 
- 453:..//PHY/main.cpp **** 			case SM_DELAY_SET:{
- 454:..//PHY/main.cpp **** 				// delay_val = (uint16_t)(holdingRegs[SM_DELAY_SET]);
- 455:..//PHY/main.cpp **** 				// dt_set_delay(DELAY_LSM6DS3, delay_val);
- 456:..//PHY/main.cpp **** 				// flash_write_now = 1;
- 457:..//PHY/main.cpp **** 			break;	
- 458:..//PHY/main.cpp **** 			}
- 459:..//PHY/main.cpp **** 
- 460:..//PHY/main.cpp **** 			case MB_READ_REQUEST:{
- 461:..//PHY/main.cpp **** 				// addr_read = (uint8_t)(holdingRegs[MB_READ_REQUEST]);
- 462:..//PHY/main.cpp **** 				// read_request = 1; 
- 463:..//PHY/main.cpp **** 				
+ 416:..//PHY/main.cpp **** 
+ 417:..//PHY/main.cpp **** 		case MB_MY_IP2:
+ 418:..//PHY/main.cpp **** 			// temp_int = (unsigned int)MYIP_2;
+ 419:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[MB_MY_IP2])
+ 420:..//PHY/main.cpp **** 			// 	holdingRegs[MB_MY_IP2] = temp_int;
+ 421:..//PHY/main.cpp **** 			break;		
+ 422:..//PHY/main.cpp **** 
+ 423:..//PHY/main.cpp **** 		case MB_MY_IP3:
+ 424:..//PHY/main.cpp **** 			// temp_int = (unsigned int)MYIP_3;
+ 425:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[MB_MY_IP3])
+ 426:..//PHY/main.cpp **** 			// 	holdingRegs[MB_MY_IP3] = temp_int;
+ 427:..//PHY/main.cpp **** 			break;	
+ 428:..//PHY/main.cpp **** 
+ 429:..//PHY/main.cpp **** 		case MB_MY_IP4:
+ 430:..//PHY/main.cpp **** 			// temp_int = (unsigned int)MYIP_4;
+ 431:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[MYIP_4]){
+ 432:..//PHY/main.cpp **** 			// 	holdingRegs[MB_MY_IP4] = temp_int;
+ 433:..//PHY/main.cpp **** 			// }
+ 434:..//PHY/main.cpp **** 
+ 435:..//PHY/main.cpp **** 			break;
+ 436:..//PHY/main.cpp **** 
+ 437:..//PHY/main.cpp **** 		case SM_DELAY_SET:
+ 438:..//PHY/main.cpp **** 			// temp_int = (unsigned int)delay_val;
+ 439:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[SM_DELAY_SET])
+ 440:..//PHY/main.cpp **** 			// 	holdingRegs[SM_DELAY_SET] = temp_int;
+ 441:..//PHY/main.cpp **** 			break;			
+ 442:..//PHY/main.cpp **** 			
+ 443:..//PHY/main.cpp **** 		case SM_READ_DATA:
+ 444:..//PHY/main.cpp **** 			// temp_int = (unsigned int)read_data_lsm;
+ 445:..//PHY/main.cpp **** 			// if(temp_int != holdingRegs[SM_READ_DATA])
+ 446:..//PHY/main.cpp **** 			// 	holdingRegs[SM_READ_DATA] = temp_int;
+ 447:..//PHY/main.cpp **** 			
+ 448:..//PHY/main.cpp **** 		break;
+ 449:..//PHY/main.cpp **** 
+ 450:..//PHY/main.cpp **** 		default:
+ 451:..//PHY/main.cpp **** 
+ 452:..//PHY/main.cpp **** 			break;
+ 453:..//PHY/main.cpp **** 	}
+ 454:..//PHY/main.cpp **** 	return 1;
+ 737              		.loc 2 454 0
+ 738 000e 4FF00103 		mov	r3, #1
+ 739              	.LBE5:
+ 455:..//PHY/main.cpp **** 
+ 456:..//PHY/main.cpp **** }
+ 740              		.loc 2 456 0
+ 741 0012 1846     		mov	r0, r3
+ 742 0014 07F11407 		add	r7, r7, #20
+ 743 0018 BD46     		mov	sp, r7
+ 744 001a 80BC     		pop	{r7}
+ 745 001c 7047     		bx	lr
+ 746              		.cfi_endproc
+ 747              	.LFE37:
+ 749 001e 00BF     		.section	.text._Z20execute_eeprom_writei,"ax",%progbits
+ 750              		.align	2
+ 751              		.global	_Z20execute_eeprom_writei
+ 752              		.thumb
+ 753              		.thumb_func
+ 755              	_Z20execute_eeprom_writei:
+ 756              	.LFB38:
+ 457:..//PHY/main.cpp **** 
+ 458:..//PHY/main.cpp **** void execute_eeprom_write(int flash_write){
+ 757              		.loc 2 458 0
+ 758              		.cfi_startproc
+ 759              		@ args = 0, pretend = 0, frame = 8
+ 760              		@ frame_needed = 1, uses_anonymous_args = 0
+ 761 0000 80B5     		push	{r7, lr}
+ 762              	.LCFI18:
+ 763              		.cfi_def_cfa_offset 8
+ 764 0002 82B0     		sub	sp, sp, #8
+ 765              	.LCFI19:
+ 766              		.cfi_def_cfa_offset 16
+ 767 0004 00AF     		add	r7, sp, #0
+ 768              		.cfi_offset 14, -4
+ 769              		.cfi_offset 7, -8
+ 770              	.LCFI20:
+ 771              		.cfi_def_cfa_register 7
+ 772 0006 7860     		str	r0, [r7, #4]
+ 459:..//PHY/main.cpp **** 	switch(flash_write){
+ 773              		.loc 2 459 0
+ 774 0008 7B68     		ldr	r3, [r7, #4]
+ 775 000a 03F1FF33 		add	r3, r3, #-1
+ 776 000e 032B     		cmp	r3, #3
+ 777 0010 3ED8     		bhi	.L34
+ 778 0012 01A2     		adr	r2, .L39
+ 779 0014 52F823F0 		ldr	pc, [r2, r3, lsl #2]
+ 780              		.align	2
+ 781              	.L39:
+ 782 0018 29000000 		.word	.L35+1
+ 783 001c 43000000 		.word	.L36+1
+ 784 0020 5D000000 		.word	.L37+1
+ 785 0024 77000000 		.word	.L38+1
+ 786              	.L35:
+ 460:..//PHY/main.cpp **** 		case EEP_WRITE1:
+ 461:..//PHY/main.cpp **** 			// printf("\n write 1");
+ 462:..//PHY/main.cpp **** 			flash_write_now = 0;
+ 787              		.loc 2 462 0
+ 788 0028 40F20003 		movw	r3, #:lower16:flash_write_now
+ 789 002c C0F20003 		movt	r3, #:upper16:flash_write_now
+ 790 0030 4FF00002 		mov	r2, #0
+ 791 0034 1A60     		str	r2, [r3, #0]
+ 463:..//PHY/main.cpp **** 			write_config_data();		
+ 792              		.loc 2 463 0
+ 793 0036 40F20003 		movw	r3, #:lower16:_Z17write_config_datav
+ 794 003a C0F20003 		movt	r3, #:upper16:_Z17write_config_datav
+ 795 003e 9847     		blx	r3
  464:..//PHY/main.cpp **** 			break;
- 465:..//PHY/main.cpp **** 			}
- 466:..//PHY/main.cpp **** 
- 467:..//PHY/main.cpp **** 			case MB_WRITE_REQUEST:{
- 468:..//PHY/main.cpp **** 				// addr_write = (uint8_t)(holdingRegs[MB_WRITE_REQUEST]);
- 469:..//PHY/main.cpp **** 				// data_to_write = (uint8_t)(holdingRegs[MB_WRITE_REQUEST+ 1]);
- 470:..//PHY/main.cpp **** 				// write_request = 1;
+ 796              		.loc 2 464 0
+ 797 0040 2DE0     		b	.L41
+ 798              	.L36:
+ 465:..//PHY/main.cpp **** 
+ 466:..//PHY/main.cpp **** 		case EEP_WRITE2:
+ 467:..//PHY/main.cpp **** 			// printf("\n write 2");
+ 468:..//PHY/main.cpp **** 			flash_write_now = 0;
+ 799              		.loc 2 468 0
+ 800 0042 40F20003 		movw	r3, #:lower16:flash_write_now
+ 801 0046 C0F20003 		movt	r3, #:upper16:flash_write_now
+ 802 004a 4FF00002 		mov	r2, #0
+ 803 004e 1A60     		str	r2, [r3, #0]
+ 469:..//PHY/main.cpp **** 			write_config_data_table_1();	
+ 804              		.loc 2 469 0
+ 805 0050 40F20003 		movw	r3, #:lower16:_Z25write_config_data_table_1v
+ 806 0054 C0F20003 		movt	r3, #:upper16:_Z25write_config_data_table_1v
+ 807 0058 9847     		blx	r3
+ 470:..//PHY/main.cpp **** 			break;
+ 808              		.loc 2 470 0
+ 809 005a 20E0     		b	.L41
+ 810              	.L37:
  471:..//PHY/main.cpp **** 
- 472:..//PHY/main.cpp **** 			break;	
- 473:..//PHY/main.cpp **** 			}
- 474:..//PHY/main.cpp **** 
- 475:..//PHY/main.cpp **** 			case MB_START_ACCEL_READ:{
- 476:..//PHY/main.cpp **** 				// start_reading_acc = (uint8_t)(holdingRegs[MB_START_ACCEL_READ]);
- 477:..//PHY/main.cpp **** 			break;
- 478:..//PHY/main.cpp **** 			}
- 479:..//PHY/main.cpp **** 
- 480:..//PHY/main.cpp **** 			case MB_STOP_ACCEL_READ:{
- 481:..//PHY/main.cpp **** 				// stop_reading_acc = (uint8_t)(holdingRegs[MB_STOP_ACCEL_READ]);
- 482:..//PHY/main.cpp **** 			break;
- 483:..//PHY/main.cpp **** 			}
- 484:..//PHY/main.cpp **** 			
- 485:..//PHY/main.cpp **** 		}
- 486:..//PHY/main.cpp **** 	// }
- 487:..//PHY/main.cpp **** 	return 1;
- 822              		.loc 2 487 0
- 823 0008 4FF00103 		mov	r3, #1
+ 472:..//PHY/main.cpp **** 		case EEP_WRITE3:
+ 473:..//PHY/main.cpp **** 			// printf("\n write 3");
+ 474:..//PHY/main.cpp **** 			flash_write_now = 0;
+ 811              		.loc 2 474 0
+ 812 005c 40F20003 		movw	r3, #:lower16:flash_write_now
+ 813 0060 C0F20003 		movt	r3, #:upper16:flash_write_now
+ 814 0064 4FF00002 		mov	r2, #0
+ 815 0068 1A60     		str	r2, [r3, #0]
+ 475:..//PHY/main.cpp **** 			write_config_data_table_2();	
+ 816              		.loc 2 475 0
+ 817 006a 40F20003 		movw	r3, #:lower16:_Z25write_config_data_table_2v
+ 818 006e C0F20003 		movt	r3, #:upper16:_Z25write_config_data_table_2v
+ 819 0072 9847     		blx	r3
+ 476:..//PHY/main.cpp **** 			break;
+ 820              		.loc 2 476 0
+ 821 0074 13E0     		b	.L41
+ 822              	.L38:
+ 477:..//PHY/main.cpp **** 			
+ 478:..//PHY/main.cpp **** 		case EEP_WRITE4:
+ 479:..//PHY/main.cpp **** 			flash_write_now = 0;
+ 823              		.loc 2 479 0
+ 824 0076 40F20003 		movw	r3, #:lower16:flash_write_now
+ 825 007a C0F20003 		movt	r3, #:upper16:flash_write_now
+ 826 007e 4FF00002 		mov	r2, #0
+ 827 0082 1A60     		str	r2, [r3, #0]
+ 480:..//PHY/main.cpp **** 			write_config_data_table_3();	
+ 828              		.loc 2 480 0
+ 829 0084 40F20003 		movw	r3, #:lower16:_Z25write_config_data_table_3v
+ 830 0088 C0F20003 		movt	r3, #:upper16:_Z25write_config_data_table_3v
+ 831 008c 9847     		blx	r3
+ 481:..//PHY/main.cpp **** 			break;
+ 832              		.loc 2 481 0
+ 833 008e 06E0     		b	.L41
+ 834              	.L34:
+ 482:..//PHY/main.cpp **** 		
+ 483:..//PHY/main.cpp **** 		default:
+ 484:..//PHY/main.cpp **** 			flash_write_now = 0;
+ 835              		.loc 2 484 0
+ 836 0090 40F20003 		movw	r3, #:lower16:flash_write_now
+ 837 0094 C0F20003 		movt	r3, #:upper16:flash_write_now
+ 838 0098 4FF00002 		mov	r2, #0
+ 839 009c 1A60     		str	r2, [r3, #0]
+ 840              	.L41:
+ 485:..//PHY/main.cpp **** 			break;
+ 486:..//PHY/main.cpp **** 	}
+ 487:..//PHY/main.cpp **** 
  488:..//PHY/main.cpp **** }
- 824              		.loc 2 488 0
- 825 000c 1846     		mov	r0, r3
- 826 000e 07F10C07 		add	r7, r7, #12
- 827 0012 BD46     		mov	sp, r7
- 828 0014 80BC     		pop	{r7}
- 829 0016 7047     		bx	lr
- 830              		.cfi_endproc
- 831              	.LFE38:
- 833              		.section	.text.take_samples,"ax",%progbits
- 834              		.align	2
- 835              		.global	take_samples
- 836              		.thumb
- 837              		.thumb_func
- 839              	take_samples:
- 840              	.LFB39:
- 489:..//PHY/main.cpp **** #endif
- 490:..//PHY/main.cpp **** 	
- 491:..//PHY/main.cpp **** extern "C"{
- 492:..//PHY/main.cpp **** 	int take_samples(){
- 841              		.loc 2 492 0
- 842              		.cfi_startproc
- 843              		@ args = 0, pretend = 0, frame = 0
- 844              		@ frame_needed = 1, uses_anonymous_args = 0
- 845              		@ link register save eliminated.
- 846 0000 80B4     		push	{r7}
- 847              	.LCFI21:
- 848              		.cfi_def_cfa_offset 4
- 849 0002 00AF     		add	r7, sp, #0
- 850              		.cfi_offset 7, -4
- 851              	.LCFI22:
- 852              		.cfi_def_cfa_register 7
- 493:..//PHY/main.cpp **** 		return 1;
- 853              		.loc 2 493 0
- 854 0004 4FF00103 		mov	r3, #1
- 494:..//PHY/main.cpp **** 	}
- 855              		.loc 2 494 0
- 856 0008 1846     		mov	r0, r3
- 857 000a BD46     		mov	sp, r7
- 858 000c 80BC     		pop	{r7}
- 859 000e 7047     		bx	lr
- 860              		.cfi_endproc
- 861              	.LFE39:
- 863              		.section	.text.update_sm_operation_every_1ms,"ax",%progbits
- 864              		.align	2
- 865              		.global	update_sm_operation_every_1ms
- 866              		.thumb
- 867              		.thumb_func
- 869              	update_sm_operation_every_1ms:
- 870              	.LFB40:
- 495:..//PHY/main.cpp **** 
- 496:..//PHY/main.cpp **** 	int update_sm_operation_every_1ms(){
- 871              		.loc 2 496 0
- 872              		.cfi_startproc
- 873              		@ args = 0, pretend = 0, frame = 0
- 874              		@ frame_needed = 1, uses_anonymous_args = 0
- 875 0000 80B5     		push	{r7, lr}
- 876              	.LCFI23:
- 877              		.cfi_def_cfa_offset 8
- 878 0002 00AF     		add	r7, sp, #0
- 879              		.cfi_offset 14, -4
- 880              		.cfi_offset 7, -8
- 881              	.LCFI24:
- 882              		.cfi_def_cfa_register 7
- 497:..//PHY/main.cpp **** 		if(SM_START == sm_operation.SM_started()){
- 883              		.loc 2 497 0
- 884 0004 40F20000 		movw	r0, #:lower16:sm_operation
- 885 0008 C0F20000 		movt	r0, #:upper16:sm_operation
- 886 000c 40F20003 		movw	r3, #:lower16:_ZN13State_Machine10SM_startedEv
- 887 0010 C0F20003 		movt	r3, #:upper16:_ZN13State_Machine10SM_startedEv
- 888 0014 9847     		blx	r3
- 889 0016 0346     		mov	r3, r0
- 890 0018 012B     		cmp	r3, #1
- 891 001a 14BF     		ite	ne
- 892 001c 0023     		movne	r3, #0
- 893 001e 0123     		moveq	r3, #1
- 894 0020 DBB2     		uxtb	r3, r3
- 895 0022 002B     		cmp	r3, #0
- 896 0024 08D0     		beq	.L46
- 498:..//PHY/main.cpp **** 			sm_operation.update();
- 897              		.loc 2 498 0
- 898 0026 40F20000 		movw	r0, #:lower16:sm_operation
- 899 002a C0F20000 		movt	r0, #:upper16:sm_operation
- 900 002e 40F20003 		movw	r3, #:lower16:_ZN12SM_OPERATION6updateEv
- 901 0032 C0F20003 		movt	r3, #:upper16:_ZN12SM_OPERATION6updateEv
- 902 0036 9847     		blx	r3
- 903              	.L46:
- 499:..//PHY/main.cpp **** 		}
- 500:..//PHY/main.cpp **** 	}
- 904              		.loc 2 500 0
- 905 0038 80BD     		pop	{r7, pc}
- 906              		.cfi_endproc
- 907              	.LFE40:
- 909 003a 00BF     		.section	.text._Z19start_state_machinev,"ax",%progbits
- 910              		.align	2
- 911              		.global	_Z19start_state_machinev
- 912              		.thumb
- 913              		.thumb_func
- 915              	_Z19start_state_machinev:
- 916              	.LFB41:
- 501:..//PHY/main.cpp **** }
- 502:..//PHY/main.cpp **** 
- 503:..//PHY/main.cpp **** 
- 504:..//PHY/main.cpp **** 
- 505:..//PHY/main.cpp **** 
+ 841              		.loc 2 488 0
+ 842 009e 07F10807 		add	r7, r7, #8
+ 843 00a2 BD46     		mov	sp, r7
+ 844 00a4 80BD     		pop	{r7, pc}
+ 845              		.cfi_endproc
+ 846              	.LFE38:
+ 848 00a6 00BF     		.section	.text.apply_modbus_values,"ax",%progbits
+ 849              		.align	2
+ 850              		.global	apply_modbus_values
+ 851              		.thumb
+ 852              		.thumb_func
+ 854              	apply_modbus_values:
+ 855              	.LFB39:
+ 489:..//PHY/main.cpp **** 
+ 490:..//PHY/main.cpp **** 
+ 491:..//PHY/main.cpp **** #if 1
+ 492:..//PHY/main.cpp **** int apply_modbus_values(int modbus_cnt){
+ 856              		.loc 2 492 0
+ 857              		.cfi_startproc
+ 858              		@ args = 0, pretend = 0, frame = 8
+ 859              		@ frame_needed = 1, uses_anonymous_args = 0
+ 860              		@ link register save eliminated.
+ 861 0000 80B4     		push	{r7}
+ 862              	.LCFI21:
+ 863              		.cfi_def_cfa_offset 4
+ 864 0002 83B0     		sub	sp, sp, #12
+ 865              	.LCFI22:
+ 866              		.cfi_def_cfa_offset 16
+ 867 0004 00AF     		add	r7, sp, #0
+ 868              		.cfi_offset 7, -4
+ 869              	.LCFI23:
+ 870              		.cfi_def_cfa_register 7
+ 871 0006 7860     		str	r0, [r7, #4]
+ 493:..//PHY/main.cpp **** 	// if(holdingRegs_prev[modbus_cnt]!=holdingRegs[modbus_cnt]){
+ 494:..//PHY/main.cpp **** 		
+ 495:..//PHY/main.cpp **** 		switch(modbus_cnt){
+ 496:..//PHY/main.cpp **** 			case MB_MY_IP1:{
+ 497:..//PHY/main.cpp **** 				// MYIP_1 = (uint8_t)(holdingRegs[MB_MY_IP1]);
+ 498:..//PHY/main.cpp **** 				// flash_write_now = 1;		
+ 499:..//PHY/main.cpp **** 				break;
+ 500:..//PHY/main.cpp **** 			}	
+ 501:..//PHY/main.cpp **** 			case MB_MY_IP2:{
+ 502:..//PHY/main.cpp **** 				// MYIP_2 = (uint8_t)(holdingRegs[MB_MY_IP2]);
+ 503:..//PHY/main.cpp **** 				// flash_write_now = 1;
+ 504:..//PHY/main.cpp **** 				break;
+ 505:..//PHY/main.cpp **** 			}
  506:..//PHY/main.cpp **** 
- 507:..//PHY/main.cpp **** // call this to start state machine
- 508:..//PHY/main.cpp **** int start_state_machine(){
- 917              		.loc 2 508 0
- 918              		.cfi_startproc
- 919              		@ args = 0, pretend = 0, frame = 0
- 920              		@ frame_needed = 1, uses_anonymous_args = 0
- 921 0000 80B5     		push	{r7, lr}
- 922              	.LCFI25:
- 923              		.cfi_def_cfa_offset 8
- 924 0002 00AF     		add	r7, sp, #0
- 925              		.cfi_offset 14, -4
- 926              		.cfi_offset 7, -8
- 927              	.LCFI26:
- 928              		.cfi_def_cfa_register 7
- 509:..//PHY/main.cpp **** 	if(SM_START != sm_operation.SM_started()){
- 929              		.loc 2 509 0
- 930 0004 40F20000 		movw	r0, #:lower16:sm_operation
- 931 0008 C0F20000 		movt	r0, #:upper16:sm_operation
- 932 000c 40F20003 		movw	r3, #:lower16:_ZN13State_Machine10SM_startedEv
- 933 0010 C0F20003 		movt	r3, #:upper16:_ZN13State_Machine10SM_startedEv
- 934 0014 9847     		blx	r3
- 935 0016 0346     		mov	r3, r0
- 936 0018 012B     		cmp	r3, #1
- 937 001a 0CBF     		ite	eq
- 938 001c 0023     		moveq	r3, #0
- 939 001e 0123     		movne	r3, #1
- 940 0020 DBB2     		uxtb	r3, r3
- 941 0022 002B     		cmp	r3, #0
- 942 0024 1AD0     		beq	.L50
- 510:..//PHY/main.cpp **** 		sm_operation.SM_start();
- 943              		.loc 2 510 0
- 944 0026 40F20000 		movw	r0, #:lower16:sm_operation
- 945 002a C0F20000 		movt	r0, #:upper16:sm_operation
- 946 002e 40F20003 		movw	r3, #:lower16:_ZN13State_Machine8SM_startEv
- 947 0032 C0F20003 		movt	r3, #:upper16:_ZN13State_Machine8SM_startEv
- 948 0036 9847     		blx	r3
- 511:..//PHY/main.cpp **** 		io_set_output(GREEN_LED,1);
- 949              		.loc 2 511 0
- 950 0038 4FF00500 		mov	r0, #5
- 951 003c 4FF00101 		mov	r1, #1
- 952 0040 40F20003 		movw	r3, #:lower16:io_set_output
- 953 0044 C0F20003 		movt	r3, #:upper16:io_set_output
- 954 0048 9847     		blx	r3
- 512:..//PHY/main.cpp **** 		io_set_output(YELLOW_LED,0);
- 955              		.loc 2 512 0
- 956 004a 4FF00600 		mov	r0, #6
- 957 004e 4FF00001 		mov	r1, #0
- 958 0052 40F20003 		movw	r3, #:lower16:io_set_output
- 959 0056 C0F20003 		movt	r3, #:upper16:io_set_output
- 960 005a 9847     		blx	r3
- 961              	.L50:
- 513:..//PHY/main.cpp **** 	}
- 514:..//PHY/main.cpp **** }
- 962              		.loc 2 514 0
- 963 005c 80BD     		pop	{r7, pc}
- 964              		.cfi_endproc
- 965              	.LFE41:
- 967 005e 00BF     		.section	.text._Z18stop_state_machinev,"ax",%progbits
- 968              		.align	2
- 969              		.global	_Z18stop_state_machinev
- 970              		.thumb
- 971              		.thumb_func
- 973              	_Z18stop_state_machinev:
- 974              	.LFB42:
- 515:..//PHY/main.cpp **** 
- 516:..//PHY/main.cpp **** int stop_state_machine(){
- 975              		.loc 2 516 0
- 976              		.cfi_startproc
- 977              		@ args = 0, pretend = 0, frame = 0
- 978              		@ frame_needed = 1, uses_anonymous_args = 0
- 979 0000 80B5     		push	{r7, lr}
- 980              	.LCFI27:
- 981              		.cfi_def_cfa_offset 8
- 982 0002 00AF     		add	r7, sp, #0
- 983              		.cfi_offset 14, -4
- 984              		.cfi_offset 7, -8
- 985              	.LCFI28:
- 986              		.cfi_def_cfa_register 7
- 517:..//PHY/main.cpp **** 	if(SM_START == sm_operation.SM_started()){
- 987              		.loc 2 517 0
- 988 0004 40F20000 		movw	r0, #:lower16:sm_operation
- 989 0008 C0F20000 		movt	r0, #:upper16:sm_operation
- 990 000c 40F20003 		movw	r3, #:lower16:_ZN13State_Machine10SM_startedEv
- 991 0010 C0F20003 		movt	r3, #:upper16:_ZN13State_Machine10SM_startedEv
- 992 0014 9847     		blx	r3
- 993 0016 0346     		mov	r3, r0
- 994 0018 012B     		cmp	r3, #1
- 995 001a 14BF     		ite	ne
- 996 001c 0023     		movne	r3, #0
- 997 001e 0123     		moveq	r3, #1
- 998 0020 DBB2     		uxtb	r3, r3
- 999 0022 002B     		cmp	r3, #0
- 1000 0024 1AD0     		beq	.L54
- 518:..//PHY/main.cpp **** 		sm_operation.stop_now();
- 1001              		.loc 2 518 0
- 1002 0026 40F20000 		movw	r0, #:lower16:sm_operation
- 1003 002a C0F20000 		movt	r0, #:upper16:sm_operation
- 1004 002e 40F20003 		movw	r3, #:lower16:_ZN12SM_OPERATION8stop_nowEv
- 1005 0032 C0F20003 		movt	r3, #:upper16:_ZN12SM_OPERATION8stop_nowEv
- 1006 0036 9847     		blx	r3
- 519:..//PHY/main.cpp **** 		io_set_output(GREEN_LED,0);
- 1007              		.loc 2 519 0
- 1008 0038 4FF00500 		mov	r0, #5
- 1009 003c 4FF00001 		mov	r1, #0
- 1010 0040 40F20003 		movw	r3, #:lower16:io_set_output
- 1011 0044 C0F20003 		movt	r3, #:upper16:io_set_output
- 1012 0048 9847     		blx	r3
- 520:..//PHY/main.cpp **** 		io_set_output(YELLOW_LED,1);
- 1013              		.loc 2 520 0
- 1014 004a 4FF00600 		mov	r0, #6
- 1015 004e 4FF00101 		mov	r1, #1
- 1016 0052 40F20003 		movw	r3, #:lower16:io_set_output
- 1017 0056 C0F20003 		movt	r3, #:upper16:io_set_output
- 1018 005a 9847     		blx	r3
- 1019              	.L54:
- 521:..//PHY/main.cpp **** 	}
- 522:..//PHY/main.cpp **** }...
- 1020              		.loc 2 522 0
- 1021 005c 80BD     		pop	{r7, pc}
- 1022              		.cfi_endproc
- 1023              	.LFE42:
- 1025 005e 00BF     		.section	.text._ZN12SM_OPERATIOND1Ev,"axG",%progbits,_ZN12SM_OPERATIOND1Ev,comdat
- 1026              		.align	2
- 1027              		.weak	_ZN12SM_OPERATIOND1Ev
- 1028              		.thumb
- 1029              		.thumb_func
- 1031              	_ZN12SM_OPERATIOND1Ev:
- 1032              	.LFB46:
- 1033              		.file 3 "..//PHY/state_machines/SM_Operation.h"
+ 507:..//PHY/main.cpp **** 			case MB_MY_IP3:{
+ 508:..//PHY/main.cpp **** 				// MYIP_3 = (uint8_t)(holdingRegs[MB_MY_IP3]);
+ 509:..//PHY/main.cpp **** 				// flash_write_now = 1;				
+ 510:..//PHY/main.cpp **** 				break;
+ 511:..//PHY/main.cpp **** 			}
+ 512:..//PHY/main.cpp **** 		
+ 513:..//PHY/main.cpp **** 			case MB_MY_IP4:{
+ 514:..//PHY/main.cpp **** 				// MYIP_4 = (uint8_t)(holdingRegs[MB_MY_IP4]);
+ 515:..//PHY/main.cpp **** 				// flash_write_now = 1;
+ 516:..//PHY/main.cpp **** 			break;
+ 517:..//PHY/main.cpp **** 			}
+ 518:..//PHY/main.cpp **** 
+ 519:..//PHY/main.cpp **** 			case SM_DELAY_SET:{
+ 520:..//PHY/main.cpp **** 				// delay_val = (uint16_t)(holdingRegs[SM_DELAY_SET]);
+ 521:..//PHY/main.cpp **** 				// dt_set_delay(DELAY_LSM6DS3, delay_val);
+ 522:..//PHY/main.cpp **** 				// flash_write_now = 1;
+ 523:..//PHY/main.cpp **** 			break;	
+ 524:..//PHY/main.cpp **** 			}
+ 525:..//PHY/main.cpp **** 
+ 526:..//PHY/main.cpp **** 			case MB_READ_REQUEST:{
+ 527:..//PHY/main.cpp **** 				// addr_read = (uint8_t)(holdingRegs[MB_READ_REQUEST]);
+ 528:..//PHY/main.cpp **** 				// read_request = 1; 
+ 529:..//PHY/main.cpp **** 				
+ 530:..//PHY/main.cpp **** 			break;
+ 531:..//PHY/main.cpp **** 			}
+ 532:..//PHY/main.cpp **** 
+ 533:..//PHY/main.cpp **** 			case MB_WRITE_REQUEST:{
+ 534:..//PHY/main.cpp **** 				// addr_write = (uint8_t)(holdingRegs[MB_WRITE_REQUEST]);
+ 535:..//PHY/main.cpp **** 				// data_to_write = (uint8_t)(holdingRegs[MB_WRITE_REQUEST+ 1]);
+ 536:..//PHY/main.cpp **** 				// write_request = 1;
+ 537:..//PHY/main.cpp **** 
+ 538:..//PHY/main.cpp **** 			break;	
+ 539:..//PHY/main.cpp **** 			}
+ 540:..//PHY/main.cpp **** 
+ 541:..//PHY/main.cpp **** 			case MB_START_ACCEL_READ:{
+ 542:..//PHY/main.cpp **** 				// start_reading_acc = (uint8_t)(holdingRegs[MB_START_ACCEL_READ]);
+ 543:..//PHY/main.cpp **** 			break;
+ 544:..//PHY/main.cpp **** 			}
+ 545:..//PHY/main.cpp **** 
+ 546:..//PHY/main.cpp **** 			case MB_STOP_ACCEL_READ:{
+ 547:..//PHY/main.cpp **** 				// stop_reading_acc = (uint8_t)(holdingRegs[MB_STOP_ACCEL_READ]);
+ 548:..//PHY/main.cpp **** 			break;
+ 549:..//PHY/main.cpp **** 			}
+ 550:..//PHY/main.cpp **** 			
+ 551:..//PHY/main.cpp **** 		}
+ 552:..//PHY/main.cpp **** 	// }
+ 553:..//PHY/main.cpp **** 	return 1;
+ 872              		.loc 2 553 0
+ 873 0008 4FF00103 		mov	r3, #1
+ 554:..//PHY/main.cpp **** }
+ 874              		.loc 2 554 0
+ 875 000c 1846     		mov	r0, r3
+ 876 000e 07F10C07 		add	r7, r7, #12
+ 877 0012 BD46     		mov	sp, r7
+ 878 0014 80BC     		pop	{r7}
+ 879 0016 7047     		bx	lr
+ 880              		.cfi_endproc
+ 881              	.LFE39:
+ 883              		.section	.text.take_samples,"ax",%progbits
+ 884              		.align	2
+ 885              		.global	take_samples
+ 886              		.thumb
+ 887              		.thumb_func
+ 889              	take_samples:
+ 890              	.LFB40:
+ 555:..//PHY/main.cpp **** #endif
+ 556:..//PHY/main.cpp **** 	
+ 557:..//PHY/main.cpp **** extern "C"{
+ 558:..//PHY/main.cpp **** 	int take_samples(){
+ 891              		.loc 2 558 0
+ 892              		.cfi_startproc
+ 893              		@ args = 0, pretend = 0, frame = 0
+ 894              		@ frame_needed = 1, uses_anonymous_args = 0
+ 895              		@ link register save eliminated.
+ 896 0000 80B4     		push	{r7}
+ 897              	.LCFI24:
+ 898              		.cfi_def_cfa_offset 4
+ 899 0002 00AF     		add	r7, sp, #0
+ 900              		.cfi_offset 7, -4
+ 901              	.LCFI25:
+ 902              		.cfi_def_cfa_register 7
+ 559:..//PHY/main.cpp **** 		return 1;
+ 903              		.loc 2 559 0
+ 904 0004 4FF00103 		mov	r3, #1
+ 560:..//PHY/main.cpp **** 	}
+ 905              		.loc 2 560 0
+ 906 0008 1846     		mov	r0, r3
+ 907 000a BD46     		mov	sp, r7
+ 908 000c 80BC     		pop	{r7}
+ 909 000e 7047     		bx	lr
+ 910              		.cfi_endproc
+ 911              	.LFE40:
+ 913              		.section	.text.update_sm_operation_every_1ms,"ax",%progbits
+ 914              		.align	2
+ 915              		.global	update_sm_operation_every_1ms
+ 916              		.thumb
+ 917              		.thumb_func
+ 919              	update_sm_operation_every_1ms:
+ 920              	.LFB41:
+ 561:..//PHY/main.cpp **** 
+ 562:..//PHY/main.cpp **** 	int update_sm_operation_every_1ms(){
+ 921              		.loc 2 562 0
+ 922              		.cfi_startproc
+ 923              		@ args = 0, pretend = 0, frame = 0
+ 924              		@ frame_needed = 1, uses_anonymous_args = 0
+ 925 0000 80B5     		push	{r7, lr}
+ 926              	.LCFI26:
+ 927              		.cfi_def_cfa_offset 8
+ 928 0002 00AF     		add	r7, sp, #0
+ 929              		.cfi_offset 14, -4
+ 930              		.cfi_offset 7, -8
+ 931              	.LCFI27:
+ 932              		.cfi_def_cfa_register 7
+ 563:..//PHY/main.cpp **** 		if(SM_START == sm_operation.SM_started()){
+ 933              		.loc 2 563 0
+ 934 0004 40F20000 		movw	r0, #:lower16:sm_operation
+ 935 0008 C0F20000 		movt	r0, #:upper16:sm_operation
+ 936 000c 40F20003 		movw	r3, #:lower16:_ZN13State_Machine10SM_startedEv
+ 937 0010 C0F20003 		movt	r3, #:upper16:_ZN13State_Machine10SM_startedEv
+ 938 0014 9847     		blx	r3
+ 939 0016 0346     		mov	r3, r0
+ 940 0018 012B     		cmp	r3, #1
+ 941 001a 14BF     		ite	ne
+ 942 001c 0023     		movne	r3, #0
+ 943 001e 0123     		moveq	r3, #1
+ 944 0020 DBB2     		uxtb	r3, r3
+ 945 0022 002B     		cmp	r3, #0
+ 946 0024 08D0     		beq	.L49
+ 564:..//PHY/main.cpp **** 			sm_operation.update();
+ 947              		.loc 2 564 0
+ 948 0026 40F20000 		movw	r0, #:lower16:sm_operation
+ 949 002a C0F20000 		movt	r0, #:upper16:sm_operation
+ 950 002e 40F20003 		movw	r3, #:lower16:_ZN12SM_OPERATION6updateEv
+ 951 0032 C0F20003 		movt	r3, #:upper16:_ZN12SM_OPERATION6updateEv
+ 952 0036 9847     		blx	r3
+ 953              	.L49:
+ 565:..//PHY/main.cpp **** 		}
+ 566:..//PHY/main.cpp **** 	}
+ 954              		.loc 2 566 0
+ 955 0038 80BD     		pop	{r7, pc}
+ 956              		.cfi_endproc
+ 957              	.LFE41:
+ 959 003a 00BF     		.section	.text._Z19start_state_machinev,"ax",%progbits
+ 960              		.align	2
+ 961              		.global	_Z19start_state_machinev
+ 962              		.thumb
+ 963              		.thumb_func
+ 965              	_Z19start_state_machinev:
+ 966              	.LFB42:
+ 567:..//PHY/main.cpp **** }
+ 568:..//PHY/main.cpp **** 
+ 569:..//PHY/main.cpp **** 
+ 570:..//PHY/main.cpp **** 
+ 571:..//PHY/main.cpp **** 
+ 572:..//PHY/main.cpp **** 
+ 573:..//PHY/main.cpp **** // call this to start state machine
+ 574:..//PHY/main.cpp **** int start_state_machine(){
+ 967              		.loc 2 574 0
+ 968              		.cfi_startproc
+ 969              		@ args = 0, pretend = 0, frame = 0
+ 970              		@ frame_needed = 1, uses_anonymous_args = 0
+ 971 0000 80B5     		push	{r7, lr}
+ 972              	.LCFI28:
+ 973              		.cfi_def_cfa_offset 8
+ 974 0002 00AF     		add	r7, sp, #0
+ 975              		.cfi_offset 14, -4
+ 976              		.cfi_offset 7, -8
+ 977              	.LCFI29:
+ 978              		.cfi_def_cfa_register 7
+ 575:..//PHY/main.cpp **** 	if(SM_START != sm_operation.SM_started()){
+ 979              		.loc 2 575 0
+ 980 0004 40F20000 		movw	r0, #:lower16:sm_operation
+ 981 0008 C0F20000 		movt	r0, #:upper16:sm_operation
+ 982 000c 40F20003 		movw	r3, #:lower16:_ZN13State_Machine10SM_startedEv
+ 983 0010 C0F20003 		movt	r3, #:upper16:_ZN13State_Machine10SM_startedEv
+ 984 0014 9847     		blx	r3
+ 985 0016 0346     		mov	r3, r0
+ 986 0018 012B     		cmp	r3, #1
+ 987 001a 0CBF     		ite	eq
+ 988 001c 0023     		moveq	r3, #0
+ 989 001e 0123     		movne	r3, #1
+ 990 0020 DBB2     		uxtb	r3, r3
+ 991 0022 002B     		cmp	r3, #0
+ 992 0024 1AD0     		beq	.L53
+ 576:..//PHY/main.cpp **** 		sm_operation.SM_start();
+ 993              		.loc 2 576 0
+ 994 0026 40F20000 		movw	r0, #:lower16:sm_operation
+ 995 002a C0F20000 		movt	r0, #:upper16:sm_operation
+ 996 002e 40F20003 		movw	r3, #:lower16:_ZN13State_Machine8SM_startEv
+ 997 0032 C0F20003 		movt	r3, #:upper16:_ZN13State_Machine8SM_startEv
+ 998 0036 9847     		blx	r3
+ 577:..//PHY/main.cpp **** 		io_set_output(GREEN_LED,1);
+ 999              		.loc 2 577 0
+ 1000 0038 4FF00500 		mov	r0, #5
+ 1001 003c 4FF00101 		mov	r1, #1
+ 1002 0040 40F20003 		movw	r3, #:lower16:io_set_output
+ 1003 0044 C0F20003 		movt	r3, #:upper16:io_set_output
+ 1004 0048 9847     		blx	r3
+ 578:..//PHY/main.cpp **** 		io_set_output(YELLOW_LED,0);
+ 1005              		.loc 2 578 0
+ 1006 004a 4FF00600 		mov	r0, #6
+ 1007 004e 4FF00001 		mov	r1, #0
+ 1008 0052 40F20003 		movw	r3, #:lower16:io_set_output
+ 1009 0056 C0F20003 		movt	r3, #:upper16:io_set_output
+ 1010 005a 9847     		blx	r3
+ 1011              	.L53:
+ 579:..//PHY/main.cpp **** 	}
+ 580:..//PHY/main.cpp **** }
+ 1012              		.loc 2 580 0
+ 1013 005c 80BD     		pop	{r7, pc}
+ 1014              		.cfi_endproc
+ 1015              	.LFE42:
+ 1017 005e 00BF     		.section	.text._Z18stop_state_machinev,"ax",%progbits
+ 1018              		.align	2
+ 1019              		.global	_Z18stop_state_machinev
+ 1020              		.thumb
+ 1021              		.thumb_func
+ 1023              	_Z18stop_state_machinev:
+ 1024              	.LFB43:
+ 581:..//PHY/main.cpp **** 
+ 582:..//PHY/main.cpp **** int stop_state_machine(){
+ 1025              		.loc 2 582 0
+ 1026              		.cfi_startproc
+ 1027              		@ args = 0, pretend = 0, frame = 0
+ 1028              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1029 0000 80B5     		push	{r7, lr}
+ 1030              	.LCFI30:
+ 1031              		.cfi_def_cfa_offset 8
+ 1032 0002 00AF     		add	r7, sp, #0
+ 1033              		.cfi_offset 14, -4
+ 1034              		.cfi_offset 7, -8
+ 1035              	.LCFI31:
+ 1036              		.cfi_def_cfa_register 7
+ 583:..//PHY/main.cpp **** 	if(SM_START == sm_operation.SM_started()){
+ 1037              		.loc 2 583 0
+ 1038 0004 40F20000 		movw	r0, #:lower16:sm_operation
+ 1039 0008 C0F20000 		movt	r0, #:upper16:sm_operation
+ 1040 000c 40F20003 		movw	r3, #:lower16:_ZN13State_Machine10SM_startedEv
+ 1041 0010 C0F20003 		movt	r3, #:upper16:_ZN13State_Machine10SM_startedEv
+ 1042 0014 9847     		blx	r3
+ 1043 0016 0346     		mov	r3, r0
+ 1044 0018 012B     		cmp	r3, #1
+ 1045 001a 14BF     		ite	ne
+ 1046 001c 0023     		movne	r3, #0
+ 1047 001e 0123     		moveq	r3, #1
+ 1048 0020 DBB2     		uxtb	r3, r3
+ 1049 0022 002B     		cmp	r3, #0
+ 1050 0024 1AD0     		beq	.L57
+ 584:..//PHY/main.cpp **** 		sm_operation.stop_now();
+ 1051              		.loc 2 584 0
+ 1052 0026 40F20000 		movw	r0, #:lower16:sm_operation
+ 1053 002a C0F20000 		movt	r0, #:upper16:sm_operation
+ 1054 002e 40F20003 		movw	r3, #:lower16:_ZN12SM_OPERATION8stop_nowEv
+ 1055 0032 C0F20003 		movt	r3, #:upper16:_ZN12SM_OPERATION8stop_nowEv
+ 1056 0036 9847     		blx	r3
+ 585:..//PHY/main.cpp **** 		io_set_output(GREEN_LED,0);
+ 1057              		.loc 2 585 0
+ 1058 0038 4FF00500 		mov	r0, #5
+ 1059 003c 4FF00001 		mov	r1, #0
+ 1060 0040 40F20003 		movw	r3, #:lower16:io_set_output
+ 1061 0044 C0F20003 		movt	r3, #:upper16:io_set_output
+ 1062 0048 9847     		blx	r3
+ 586:..//PHY/main.cpp **** 		io_set_output(YELLOW_LED,1);
+ 1063              		.loc 2 586 0
+ 1064 004a 4FF00600 		mov	r0, #6
+ 1065 004e 4FF00101 		mov	r1, #1
+ 1066 0052 40F20003 		movw	r3, #:lower16:io_set_output
+ 1067 0056 C0F20003 		movt	r3, #:upper16:io_set_output
+ 1068 005a 9847     		blx	r3
+ 1069              	.L57:
+ 587:..//PHY/main.cpp **** 	}
+ 588:..//PHY/main.cpp **** }...
+ 1070              		.loc 2 588 0
+ 1071 005c 80BD     		pop	{r7, pc}
+ 1072              		.cfi_endproc
+ 1073              	.LFE43:
+ 1075 005e 00BF     		.section	.text._ZN12SM_OPERATIOND1Ev,"axG",%progbits,_ZN12SM_OPERATIOND1Ev,comdat
+ 1076              		.align	2
+ 1077              		.weak	_ZN12SM_OPERATIOND1Ev
+ 1078              		.thumb
+ 1079              		.thumb_func
+ 1081              	_ZN12SM_OPERATIOND1Ev:
+ 1082              	.LFB47:
+ 1083              		.file 3 "..//PHY/state_machines/SM_Operation.h"
    1:..//PHY/state_machines/SM_Operation.h **** #ifndef SM_OPERATION_H_
    2:..//PHY/state_machines/SM_Operation.h **** #define SM_OPERATION_H_
    3:..//PHY/state_machines/SM_Operation.h **** 
@@ -1594,220 +1708,222 @@
   12:..//PHY/state_machines/SM_Operation.h **** }
   13:..//PHY/state_machines/SM_Operation.h **** 
   14:..//PHY/state_machines/SM_Operation.h **** class SM_OPERATION: public State_Machine{
- 1034              		.loc 3 14 0
- 1035              		.cfi_startproc
- 1036              		@ args = 0, pretend = 0, frame = 8
- 1037              		@ frame_needed = 1, uses_anonymous_args = 0
- 1038 0000 80B5     		push	{r7, lr}
- 1039              	.LCFI29:
- 1040              		.cfi_def_cfa_offset 8
- 1041 0002 82B0     		sub	sp, sp, #8
- 1042              	.LCFI30:
- 1043              		.cfi_def_cfa_offset 16
- 1044 0004 00AF     		add	r7, sp, #0
- 1045              		.cfi_offset 14, -4
- 1046              		.cfi_offset 7, -8
- 1047              	.LCFI31:
- 1048              		.cfi_def_cfa_register 7
- 1049 0006 7860     		str	r0, [r7, #4]
- 1050              		.loc 3 14 0
- 1051 0008 7B68     		ldr	r3, [r7, #4]
- 1052 000a 0D4A     		ldr	r2, .L59
- 1053 000c 1A60     		str	r2, [r3, #0]
- 1054 000e 7B68     		ldr	r3, [r7, #4]
- 1055 0010 1846     		mov	r0, r3
- 1056 0012 40F20003 		movw	r3, #:lower16:_ZN13State_MachineD2Ev
- 1057 0016 C0F20003 		movt	r3, #:upper16:_ZN13State_MachineD2Ev
- 1058 001a 9847     		blx	r3
- 1059 001c 4FF00003 		mov	r3, #0
- 1060 0020 DBB2     		uxtb	r3, r3
- 1061 0022 002B     		cmp	r3, #0
- 1062 0024 05D0     		beq	.L57
- 1063 0026 7868     		ldr	r0, [r7, #4]
- 1064 0028 40F20003 		movw	r3, #:lower16:_ZdlPv
- 1065 002c C0F20003 		movt	r3, #:upper16:_ZdlPv
- 1066 0030 9847     		blx	r3
- 1067              	.L57:
- 1068 0032 7B68     		ldr	r3, [r7, #4]
- 1069 0034 1846     		mov	r0, r3
- 1070 0036 07F10807 		add	r7, r7, #8
- 1071 003a BD46     		mov	sp, r7
- 1072 003c 80BD     		pop	{r7, pc}
- 1073              	.L60:
- 1074 003e 00BF     		.align	2
- 1075              	.L59:
- 1076 0040 08000000 		.word	_ZTV12SM_OPERATION+8
- 1077              		.cfi_endproc
- 1078              	.LFE46:
- 1080              		.section	.text._Z41__static_initialization_and_destruction_0ii,"ax",%progbits
- 1081              		.align	2
- 1082              		.thumb
- 1083              		.thumb_func
- 1085              	_Z41__static_initialization_and_destruction_0ii:
- 1086              	.LFB43:
- 1087              		.loc 2 522 0
- 1088              		.cfi_startproc
- 1089              		@ args = 0, pretend = 0, frame = 8
- 1090              		@ frame_needed = 1, uses_anonymous_args = 0
- 1091 0000 80B5     		push	{r7, lr}
- 1092              	.LCFI32:
- 1093              		.cfi_def_cfa_offset 8
- 1094 0002 82B0     		sub	sp, sp, #8
- 1095              	.LCFI33:
- 1096              		.cfi_def_cfa_offset 16
- 1097 0004 00AF     		add	r7, sp, #0
- 1098              		.cfi_offset 14, -4
- 1099              		.cfi_offset 7, -8
- 1100              	.LCFI34:
- 1101              		.cfi_def_cfa_register 7
- 1102 0006 7860     		str	r0, [r7, #4]
- 1103 0008 3960     		str	r1, [r7, #0]
- 1104              		.loc 2 522 0
- 1105 000a 7B68     		ldr	r3, [r7, #4]
- 1106 000c 012B     		cmp	r3, #1
- 1107 000e 1FD1     		bne	.L63
- 1108 0010 3A68     		ldr	r2, [r7, #0]
- 1109 0012 4FF6FF73 		movw	r3, #65535
- 1110 0016 9A42     		cmp	r2, r3
- 1111 0018 1AD1     		bne	.L63
- 1112              		.loc 2 92 0
- 1113 001a 40F20000 		movw	r0, #:lower16:sm_operation
- 1114 001e C0F20000 		movt	r0, #:upper16:sm_operation
- 1115 0022 40F20003 		movw	r3, #:lower16:_ZN12SM_OPERATIONC1Ev
- 1116 0026 C0F20003 		movt	r3, #:upper16:_ZN12SM_OPERATIONC1Ev
- 1117 002a 9847     		blx	r3
- 1118 002c 40F20003 		movw	r3, #:lower16:_ZN12SM_OPERATIOND1Ev
- 1119 0030 C0F20003 		movt	r3, #:upper16:_ZN12SM_OPERATIOND1Ev
- 1120 0034 40F20000 		movw	r0, #:lower16:sm_operation
- 1121 0038 C0F20000 		movt	r0, #:upper16:sm_operation
- 1122 003c 1946     		mov	r1, r3
- 1123 003e 40F20002 		movw	r2, #:lower16:__dso_handle
- 1124 0042 C0F20002 		movt	r2, #:upper16:__dso_handle
- 1125 0046 40F20003 		movw	r3, #:lower16:__aeabi_atexit
- 1126 004a C0F20003 		movt	r3, #:upper16:__aeabi_atexit
- 1127 004e 9847     		blx	r3
- 1128              	.L63:
- 1129              		.loc 2 522 0
- 1130 0050 07F10807 		add	r7, r7, #8
- 1131 0054 BD46     		mov	sp, r7
- 1132 0056 80BD     		pop	{r7, pc}
- 1133              		.cfi_endproc
- 1134              	.LFE43:
- 1136              		.section	.text._GLOBAL__I_delay_timer_32,"ax",%progbits
- 1137              		.align	2
- 1138              		.thumb
- 1139              		.thumb_func
- 1141              	_GLOBAL__I_delay_timer_32:
- 1142              	.LFB48:
- 1143              		.loc 2 522 0
- 1144              		.cfi_startproc
- 1145              		@ args = 0, pretend = 0, frame = 0
- 1146              		@ frame_needed = 1, uses_anonymous_args = 0
- 1147 0000 80B5     		push	{r7, lr}
- 1148              	.LCFI35:
- 1149              		.cfi_def_cfa_offset 8
- 1150 0002 00AF     		add	r7, sp, #0
- 1151              		.cfi_offset 14, -4
- 1152              		.cfi_offset 7, -8
- 1153              	.LCFI36:
- 1154              		.cfi_def_cfa_register 7
- 1155              		.loc 2 522 0
- 1156 0004 4FF00100 		mov	r0, #1
- 1157 0008 4FF6FF71 		movw	r1, #65535
- 1158 000c 40F20003 		movw	r3, #:lower16:_Z41__static_initialization_and_destruction_0ii
- 1159 0010 C0F20003 		movt	r3, #:upper16:_Z41__static_initialization_and_destruction_0ii
- 1160 0014 9847     		blx	r3
- 1161 0016 80BD     		pop	{r7, pc}
- 1162              		.cfi_endproc
- 1163              	.LFE48:
- 1165              		.section	.init_array,"aw",%init_array
- 1166              		.align	2
- 1167 0000 00000000 		.word	_GLOBAL__I_delay_timer_32(target1)
- 1168              		.section	.rodata._ZZ4mainE4C.29,"a",%progbits
- 1169              		.align	2
- 1172              	_ZZ4mainE4C.29:
- 1173 0000 B0040000 		.word	1200
- 1174 0004 80250000 		.word	9600
- 1175 0008 004B0000 		.word	19200
- 1176 000c 00960000 		.word	38400
- 1177 0010 00E10000 		.word	57600
- 1178              		.text
- 1179              	.Letext0:
+ 1084              		.loc 3 14 0
+ 1085              		.cfi_startproc
+ 1086              		@ args = 0, pretend = 0, frame = 8
+ 1087              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1088 0000 80B5     		push	{r7, lr}
+ 1089              	.LCFI32:
+ 1090              		.cfi_def_cfa_offset 8
+ 1091 0002 82B0     		sub	sp, sp, #8
+ 1092              	.LCFI33:
+ 1093              		.cfi_def_cfa_offset 16
+ 1094 0004 00AF     		add	r7, sp, #0
+ 1095              		.cfi_offset 14, -4
+ 1096              		.cfi_offset 7, -8
+ 1097              	.LCFI34:
+ 1098              		.cfi_def_cfa_register 7
+ 1099 0006 7860     		str	r0, [r7, #4]
+ 1100              		.loc 3 14 0
+ 1101 0008 7B68     		ldr	r3, [r7, #4]
+ 1102 000a 0D4A     		ldr	r2, .L62
+ 1103 000c 1A60     		str	r2, [r3, #0]
+ 1104 000e 7B68     		ldr	r3, [r7, #4]
+ 1105 0010 1846     		mov	r0, r3
+ 1106 0012 40F20003 		movw	r3, #:lower16:_ZN13State_MachineD2Ev
+ 1107 0016 C0F20003 		movt	r3, #:upper16:_ZN13State_MachineD2Ev
+ 1108 001a 9847     		blx	r3
+ 1109 001c 4FF00003 		mov	r3, #0
+ 1110 0020 DBB2     		uxtb	r3, r3
+ 1111 0022 002B     		cmp	r3, #0
+ 1112 0024 05D0     		beq	.L60
+ 1113 0026 7868     		ldr	r0, [r7, #4]
+ 1114 0028 40F20003 		movw	r3, #:lower16:_ZdlPv
+ 1115 002c C0F20003 		movt	r3, #:upper16:_ZdlPv
+ 1116 0030 9847     		blx	r3
+ 1117              	.L60:
+ 1118 0032 7B68     		ldr	r3, [r7, #4]
+ 1119 0034 1846     		mov	r0, r3
+ 1120 0036 07F10807 		add	r7, r7, #8
+ 1121 003a BD46     		mov	sp, r7
+ 1122 003c 80BD     		pop	{r7, pc}
+ 1123              	.L63:
+ 1124 003e 00BF     		.align	2
+ 1125              	.L62:
+ 1126 0040 08000000 		.word	_ZTV12SM_OPERATION+8
+ 1127              		.cfi_endproc
+ 1128              	.LFE47:
+ 1130              		.section	.text._Z41__static_initialization_and_destruction_0ii,"ax",%progbits
+ 1131              		.align	2
+ 1132              		.thumb
+ 1133              		.thumb_func
+ 1135              	_Z41__static_initialization_and_destruction_0ii:
+ 1136              	.LFB44:
+ 1137              		.loc 2 588 0
+ 1138              		.cfi_startproc
+ 1139              		@ args = 0, pretend = 0, frame = 8
+ 1140              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1141 0000 80B5     		push	{r7, lr}
+ 1142              	.LCFI35:
+ 1143              		.cfi_def_cfa_offset 8
+ 1144 0002 82B0     		sub	sp, sp, #8
+ 1145              	.LCFI36:
+ 1146              		.cfi_def_cfa_offset 16
+ 1147 0004 00AF     		add	r7, sp, #0
+ 1148              		.cfi_offset 14, -4
+ 1149              		.cfi_offset 7, -8
+ 1150              	.LCFI37:
+ 1151              		.cfi_def_cfa_register 7
+ 1152 0006 7860     		str	r0, [r7, #4]
+ 1153 0008 3960     		str	r1, [r7, #0]
+ 1154              		.loc 2 588 0
+ 1155 000a 7B68     		ldr	r3, [r7, #4]
+ 1156 000c 012B     		cmp	r3, #1
+ 1157 000e 1FD1     		bne	.L66
+ 1158 0010 3A68     		ldr	r2, [r7, #0]
+ 1159 0012 4FF6FF73 		movw	r3, #65535
+ 1160 0016 9A42     		cmp	r2, r3
+ 1161 0018 1AD1     		bne	.L66
+ 1162              		.loc 2 92 0
+ 1163 001a 40F20000 		movw	r0, #:lower16:sm_operation
+ 1164 001e C0F20000 		movt	r0, #:upper16:sm_operation
+ 1165 0022 40F20003 		movw	r3, #:lower16:_ZN12SM_OPERATIONC1Ev
+ 1166 0026 C0F20003 		movt	r3, #:upper16:_ZN12SM_OPERATIONC1Ev
+ 1167 002a 9847     		blx	r3
+ 1168 002c 40F20003 		movw	r3, #:lower16:_ZN12SM_OPERATIOND1Ev
+ 1169 0030 C0F20003 		movt	r3, #:upper16:_ZN12SM_OPERATIOND1Ev
+ 1170 0034 40F20000 		movw	r0, #:lower16:sm_operation
+ 1171 0038 C0F20000 		movt	r0, #:upper16:sm_operation
+ 1172 003c 1946     		mov	r1, r3
+ 1173 003e 40F20002 		movw	r2, #:lower16:__dso_handle
+ 1174 0042 C0F20002 		movt	r2, #:upper16:__dso_handle
+ 1175 0046 40F20003 		movw	r3, #:lower16:__aeabi_atexit
+ 1176 004a C0F20003 		movt	r3, #:upper16:__aeabi_atexit
+ 1177 004e 9847     		blx	r3
+ 1178              	.L66:
+ 1179              		.loc 2 588 0
+ 1180 0050 07F10807 		add	r7, r7, #8
+ 1181 0054 BD46     		mov	sp, r7
+ 1182 0056 80BD     		pop	{r7, pc}
+ 1183              		.cfi_endproc
+ 1184              	.LFE44:
+ 1186              		.section	.text._GLOBAL__I_delay_timer_32,"ax",%progbits
+ 1187              		.align	2
+ 1188              		.thumb
+ 1189              		.thumb_func
+ 1191              	_GLOBAL__I_delay_timer_32:
+ 1192              	.LFB49:
+ 1193              		.loc 2 588 0
+ 1194              		.cfi_startproc
+ 1195              		@ args = 0, pretend = 0, frame = 0
+ 1196              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1197 0000 80B5     		push	{r7, lr}
+ 1198              	.LCFI38:
+ 1199              		.cfi_def_cfa_offset 8
+ 1200 0002 00AF     		add	r7, sp, #0
+ 1201              		.cfi_offset 14, -4
+ 1202              		.cfi_offset 7, -8
+ 1203              	.LCFI39:
+ 1204              		.cfi_def_cfa_register 7
+ 1205              		.loc 2 588 0
+ 1206 0004 4FF00100 		mov	r0, #1
+ 1207 0008 4FF6FF71 		movw	r1, #65535
+ 1208 000c 40F20003 		movw	r3, #:lower16:_Z41__static_initialization_and_destruction_0ii
+ 1209 0010 C0F20003 		movt	r3, #:upper16:_Z41__static_initialization_and_destruction_0ii
+ 1210 0014 9847     		blx	r3
+ 1211 0016 80BD     		pop	{r7, pc}
+ 1212              		.cfi_endproc
+ 1213              	.LFE49:
+ 1215              		.section	.init_array,"aw",%init_array
+ 1216              		.align	2
+ 1217 0000 00000000 		.word	_GLOBAL__I_delay_timer_32(target1)
+ 1218              		.section	.rodata._ZZ4mainE4C.29,"a",%progbits
+ 1219              		.align	2
+ 1222              	_ZZ4mainE4C.29:
+ 1223 0000 B0040000 		.word	1200
+ 1224 0004 80250000 		.word	9600
+ 1225 0008 004B0000 		.word	19200
+ 1226 000c 00960000 		.word	38400
+ 1227 0010 00E10000 		.word	57600
+ 1228              		.text
+ 1229              	.Letext0:
 DEFINED SYMBOLS
                             *ABS*:00000000 main.cpp
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:24     .text._ZN13State_MachineD2Ev:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:29     .text._ZN13State_MachineD2Ev:00000000 _ZN13State_MachineD2Ev
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:69     .text._ZN13State_MachineD2Ev:00000030 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:78     .bss.delay_timer_32:00000000 delay_timer_32
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:75     .bss.delay_timer_32:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:85     .bss.modbus_retVal:00000000 modbus_retVal
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:82     .bss.modbus_retVal:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:92     .bss.holdingRegs:00000000 holdingRegs
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:89     .bss.holdingRegs:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:99     .bss.holdingRegs_prev:00000000 holdingRegs_prev
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:96     .bss.holdingRegs_prev:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:106    .bss.slave_id_select:00000000 slave_id_select
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:103    .bss.slave_id_select:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:113    .bss.baud_rate_select:00000000 baud_rate_select
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:110    .bss.baud_rate_select:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:120    .bss.parity_bit:00000000 parity_bit
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:117    .bss.parity_bit:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:127    .data.stop_bit:00000000 stop_bit
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:124    .data.stop_bit:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:134    .data.input_rise_debounce_time:00000000 input_rise_debounce_time
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:131    .data.input_rise_debounce_time:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:141    .data.input_fall_debounce_time:00000000 input_fall_debounce_time
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:138    .data.input_fall_debounce_time:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:148    .bss.baud_value:00000000 baud_value
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:145    .bss.baud_value:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:155    .bss.flash_write_allowed:00000000 flash_write_allowed
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:152    .bss.flash_write_allowed:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:162    .bss.flash_write_now:00000000 flash_write_now
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:159    .bss.flash_write_now:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:168    .bss.fw_major_version:00000000 fw_major_version
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:169    .bss.fw_major_version:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:174    .bss.fw_minor_version:00000000 fw_minor_version
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:175    .bss.fw_minor_version:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:181    .bss.sm_operation:00000000 sm_operation
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:178    .bss.sm_operation:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:184    .rodata:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:185    .rodata:00000000 .LC0
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:188    .rodata:00000024 .LC1
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:191    .rodata:00000038 .LC2
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:194    .rodata:00000050 .LC3
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:197    .text.main:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:202    .text.main:00000000 main
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:1172   .rodata._ZZ4mainE4C.29:00000000 _ZZ4mainE4C.29
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:705    .text._Z20execute_eeprom_writei:00000000 _Z20execute_eeprom_writei
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:579    .text.main:00000394 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:587    .text._Z24modbus_exception_handleri:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:592    .text._Z24modbus_exception_handleri:00000000 _Z24modbus_exception_handleri
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:622    .text._Z40set_holding_registers_values_accel_tableii:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:627    .text._Z40set_holding_registers_values_accel_tableii:00000000 _Z40set_holding_registers_values_accel_tableii
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:660    .text.set_holding_registers_values:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:665    .text.set_holding_registers_values:00000000 set_holding_registers_values
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:700    .text._Z20execute_eeprom_writei:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:732    .text._Z20execute_eeprom_writei:00000018 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:738    .text._Z20execute_eeprom_writei:00000028 $t
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:799    .text.apply_modbus_values:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:804    .text.apply_modbus_values:00000000 apply_modbus_values
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:834    .text.take_samples:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:839    .text.take_samples:00000000 take_samples
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:864    .text.update_sm_operation_every_1ms:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:869    .text.update_sm_operation_every_1ms:00000000 update_sm_operation_every_1ms
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:910    .text._Z19start_state_machinev:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:915    .text._Z19start_state_machinev:00000000 _Z19start_state_machinev
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:968    .text._Z18stop_state_machinev:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:973    .text._Z18stop_state_machinev:00000000 _Z18stop_state_machinev
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:1026   .text._ZN12SM_OPERATIOND1Ev:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:1031   .text._ZN12SM_OPERATIOND1Ev:00000000 _ZN12SM_OPERATIOND1Ev
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:1076   .text._ZN12SM_OPERATIOND1Ev:00000040 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:1081   .text._Z41__static_initialization_and_destruction_0ii:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:1085   .text._Z41__static_initialization_and_destruction_0ii:00000000 _Z41__static_initialization_and_destruction_0ii
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:1137   .text._GLOBAL__I_delay_timer_32:00000000 $t
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:1141   .text._GLOBAL__I_delay_timer_32:00000000 _GLOBAL__I_delay_timer_32
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:1166   .init_array:00000000 $d
-C:\Users\hdhed\AppData\Local\Temp\ccHmEYYq.s:1169   .rodata._ZZ4mainE4C.29:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:24     .text._ZN13State_MachineD2Ev:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:29     .text._ZN13State_MachineD2Ev:00000000 _ZN13State_MachineD2Ev
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:69     .text._ZN13State_MachineD2Ev:00000030 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:78     .bss.delay_timer_32:00000000 delay_timer_32
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:75     .bss.delay_timer_32:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:85     .bss.modbus_retVal:00000000 modbus_retVal
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:82     .bss.modbus_retVal:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:92     .bss.holdingRegs:00000000 holdingRegs
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:89     .bss.holdingRegs:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:99     .bss.holdingRegs_prev:00000000 holdingRegs_prev
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:96     .bss.holdingRegs_prev:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:106    .bss.slave_id_select:00000000 slave_id_select
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:103    .bss.slave_id_select:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:113    .bss.baud_rate_select:00000000 baud_rate_select
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:110    .bss.baud_rate_select:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:120    .bss.parity_bit:00000000 parity_bit
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:117    .bss.parity_bit:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:127    .data.stop_bit:00000000 stop_bit
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:124    .data.stop_bit:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:134    .data.input_rise_debounce_time:00000000 input_rise_debounce_time
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:131    .data.input_rise_debounce_time:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:141    .data.input_fall_debounce_time:00000000 input_fall_debounce_time
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:138    .data.input_fall_debounce_time:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:148    .bss.baud_value:00000000 baud_value
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:145    .bss.baud_value:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:155    .bss.flash_write_allowed:00000000 flash_write_allowed
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:152    .bss.flash_write_allowed:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:162    .bss.flash_write_now:00000000 flash_write_now
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:159    .bss.flash_write_now:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:168    .bss.fw_major_version:00000000 fw_major_version
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:169    .bss.fw_major_version:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:174    .bss.fw_minor_version:00000000 fw_minor_version
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:175    .bss.fw_minor_version:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:181    .bss.sm_operation:00000000 sm_operation
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:178    .bss.sm_operation:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:184    .rodata:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:185    .rodata:00000000 .LC0
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:188    .rodata:00000024 .LC1
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:191    .rodata:00000038 .LC2
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:194    .rodata:00000050 .LC3
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:197    .text.main:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:202    .text.main:00000000 main
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:1222   .rodata._ZZ4mainE4C.29:00000000 _ZZ4mainE4C.29
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:755    .text._Z20execute_eeprom_writei:00000000 _Z20execute_eeprom_writei
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:579    .text.main:00000394 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:587    .text._Z13Check_RX_DataPt:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:592    .text._Z13Check_RX_DataPt:00000000 _Z13Check_RX_DataPt
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:637    .text._Z24modbus_exception_handleri:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:642    .text._Z24modbus_exception_handleri:00000000 _Z24modbus_exception_handleri
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:672    .text._Z40set_holding_registers_values_accel_tableii:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:677    .text._Z40set_holding_registers_values_accel_tableii:00000000 _Z40set_holding_registers_values_accel_tableii
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:710    .text.set_holding_registers_values:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:715    .text.set_holding_registers_values:00000000 set_holding_registers_values
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:750    .text._Z20execute_eeprom_writei:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:782    .text._Z20execute_eeprom_writei:00000018 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:788    .text._Z20execute_eeprom_writei:00000028 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:849    .text.apply_modbus_values:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:854    .text.apply_modbus_values:00000000 apply_modbus_values
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:884    .text.take_samples:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:889    .text.take_samples:00000000 take_samples
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:914    .text.update_sm_operation_every_1ms:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:919    .text.update_sm_operation_every_1ms:00000000 update_sm_operation_every_1ms
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:960    .text._Z19start_state_machinev:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:965    .text._Z19start_state_machinev:00000000 _Z19start_state_machinev
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:1018   .text._Z18stop_state_machinev:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:1023   .text._Z18stop_state_machinev:00000000 _Z18stop_state_machinev
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:1076   .text._ZN12SM_OPERATIOND1Ev:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:1081   .text._ZN12SM_OPERATIOND1Ev:00000000 _ZN12SM_OPERATIOND1Ev
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:1126   .text._ZN12SM_OPERATIOND1Ev:00000040 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:1131   .text._Z41__static_initialization_and_destruction_0ii:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:1135   .text._Z41__static_initialization_and_destruction_0ii:00000000 _Z41__static_initialization_and_destruction_0ii
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:1187   .text._GLOBAL__I_delay_timer_32:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:1191   .text._GLOBAL__I_delay_timer_32:00000000 _GLOBAL__I_delay_timer_32
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:1216   .init_array:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccrTWjHE.s:1219   .rodata._ZZ4mainE4C.29:00000000 $d
                      .debug_frame:00000010 $d
 
 UNDEFINED SYMBOLS
