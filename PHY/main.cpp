@@ -274,7 +274,25 @@ int main(void) {
 	}
 	return 0;
 }
+const int MemSize=10;
+uint16_t *CamResArray;
+uint8_t storeRes,CPTR;
+uint16_t temp=0x0000;
+uint16_t *Cam1ResPTR=CamResArray;
+uint16_t *Cam2ResPTR=CamResArray;
+uint16_t *Cam3ResPTR=CamResArray;
+uint16_t *Cam4ResPTR=CamResArray;
 
+uint16_t* UpdatePTR(uint16_t *camptr)
+{
+
+ if(camptr!=(CamResArray+MemSize))
+    camptr++;
+else 
+	camptr=CamResArray;
+   
+   return camptr;
+}
 enum getSerialCommand
 {
 	Set_Byte=0x23,
@@ -289,7 +307,11 @@ enum getSerialCommand
 	Read_byte=0x2C,
     Trig_Cam=0x2E,
 	Set_Delay=0x2F,
-	Read_Mem=0x30    
+	Read_Mem=0x30 ,
+	CAM1RESULT=0x00,
+	CAM2RESULT=0X01,
+	CAM3RESULT=0X10,
+	CAM4RESULT=0X11   
 };
 
 void Check_RX_Data(uint16_t *frameArray)
@@ -330,12 +352,54 @@ void Check_RX_Data(uint16_t *frameArray)
   }
  else
  {
+  storeRes=frameArray[i];
+  if((storeRes & 0x60)==0x00)
+  {
+      CPTR=storeRes & 0x06;
+      switch (CPTR)
+      {
+      	case CAM1RESULT:
+      		*Cam1ResPTR=0x0000;
+      		 temp=*Cam1ResPTR & 0xFFFC;
+      		 storeRes=storeRes & 0x0001;
+			 *Cam1ResPTR=temp | storeRes;
+			 Cam1ResPTR=UpdatePTR(Cam1ResPTR);
+      		 break;
+      	case CAM2RESULT:
+      		 temp=*Cam2ResPTR & 0xFFF3;
+      		 storeRes=storeRes & 0x0001;
+			 *Cam2ResPTR=temp | storeRes<<2;
+			 Cam2ResPTR=UpdatePTR(Cam2ResPTR);
+      		 break;
+      	case CAM3RESULT:
+      		temp=*Cam3ResPTR & 0xFFCF;
+      		storeRes=storeRes & 0x0001;
+			*Cam3ResPTR=temp | storeRes<<4;
+			Cam3ResPTR=UpdatePTR(Cam3ResPTR);
+      		 break;
+      	case CAM4RESULT:
+      		temp=*Cam4ResPTR & 0xFF3F;
+      		 storeRes=storeRes & 0x0001;
+			 *Cam4ResPTR=temp | storeRes<<6;
+			 Cam4ResPTR=UpdatePTR(Cam4ResPTR);
+      		 break;
+      }
+   
+    
+  	//ShiftByte=storeRes & 0x06;
+   // storeRes=storeRes & 0x01;
+   // storeRes=storeRes<<(ShiftByte*2+1);
+
+    
+  }
 
  //implement result checking logic
+
  }
 
 
 }
+
 
 
 

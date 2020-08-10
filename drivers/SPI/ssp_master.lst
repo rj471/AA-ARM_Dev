@@ -363,21 +363,21 @@
 DEFINED SYMBOLS
                             *ABS*:00000000 ssp_master.c
                             *COM*:00000018 SSP_ConfigStruct
-C:\Users\ACURAP~1\AppData\Local\Temp\ccdaHsMd.s:29     .data.iocon_cfg:00000000 iocon_cfg
-C:\Users\ACURAP~1\AppData\Local\Temp\ccdaHsMd.s:26     .data.iocon_cfg:00000000 $d
-C:\Users\ACURAP~1\AppData\Local\Temp\ccdaHsMd.s:37     .data.iodir_cfg:00000000 iodir_cfg
-C:\Users\ACURAP~1\AppData\Local\Temp\ccdaHsMd.s:34     .data.iodir_cfg:00000000 $d
-C:\Users\ACURAP~1\AppData\Local\Temp\ccdaHsMd.s:45     .data.iostate_on:00000000 iostate_on
-C:\Users\ACURAP~1\AppData\Local\Temp\ccdaHsMd.s:42     .data.iostate_on:00000000 $d
-C:\Users\ACURAP~1\AppData\Local\Temp\ccdaHsMd.s:53     .data.iostate_off:00000000 iostate_off
-C:\Users\ACURAP~1\AppData\Local\Temp\ccdaHsMd.s:50     .data.iostate_off:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccTQOHKI.s:29     .data.iocon_cfg:00000000 iocon_cfg
+C:\Users\ACURAP~1\AppData\Local\Temp\ccTQOHKI.s:26     .data.iocon_cfg:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccTQOHKI.s:37     .data.iodir_cfg:00000000 iodir_cfg
+C:\Users\ACURAP~1\AppData\Local\Temp\ccTQOHKI.s:34     .data.iodir_cfg:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccTQOHKI.s:45     .data.iostate_on:00000000 iostate_on
+C:\Users\ACURAP~1\AppData\Local\Temp\ccTQOHKI.s:42     .data.iostate_on:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccTQOHKI.s:53     .data.iostate_off:00000000 iostate_off
+C:\Users\ACURAP~1\AppData\Local\Temp\ccTQOHKI.s:50     .data.iostate_off:00000000 $d
                             *COM*:00000002 sspreadbuf
-C:\Users\ACURAP~1\AppData\Local\Temp\ccdaHsMd.s:58     .text.SSP_CS_Init:00000000 $t
-C:\Users\ACURAP~1\AppData\Local\Temp\ccdaHsMd.s:63     .text.SSP_CS_Init:00000000 SSP_CS_Init
-C:\Users\ACURAP~1\AppData\Local\Temp\ccdaHsMd.s:97     .text.SSP_CS_Force:00000000 $t
-C:\Users\ACURAP~1\AppData\Local\Temp\ccdaHsMd.s:102    .text.SSP_CS_Force:00000000 SSP_CS_Force
-C:\Users\ACURAP~1\AppData\Local\Temp\ccdaHsMd.s:147    .text.ssp_master_init:00000000 $t
-C:\Users\ACURAP~1\AppData\Local\Temp\ccdaHsMd.s:152    .text.ssp_master_init:00000000 ssp_master_init
+C:\Users\ACURAP~1\AppData\Local\Temp\ccTQOHKI.s:58     .text.SSP_CS_Init:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccTQOHKI.s:63     .text.SSP_CS_Init:00000000 SSP_CS_Init
+C:\Users\ACURAP~1\AppData\Local\Temp\ccTQOHKI.s:97     .text.SSP_CS_Force:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccTQOHKI.s:102    .text.SSP_CS_Force:00000000 SSP_CS_Force
+C:\Users\ACURAP~1\AppData\Local\Temp\ccTQOHKI.s:147    .text.ssp_master_init:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccTQOHKI.s:152    .text.ssp_master_init:00000000 ssp_master_init
                      .debug_frame:00000010 $d
 
 UNDEFINED SYMBOLS

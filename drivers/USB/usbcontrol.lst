@@ -769,28 +769,28 @@
  558              	.Letext0:
 DEFINED SYMBOLS
                             *ABS*:00000000 usbcontrol.c
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:24     .bss.Setup:00000000 $d
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:27     .bss.Setup:00000000 Setup
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:30     .bss.pbData:00000000 $d
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:33     .bss.pbData:00000000 pbData
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:36     .bss.iResidue:00000000 $d
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:39     .bss.iResidue:00000000 iResidue
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:42     .bss.iLen:00000000 $d
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:45     .bss.iLen:00000000 iLen
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:48     .bss.apfnReqHandlers:00000000 $d
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:51     .bss.apfnReqHandlers:00000000 apfnReqHandlers
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:54     .bss.apbDataStore:00000000 $d
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:57     .bss.apbDataStore:00000000 apbDataStore
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:60     .text._HandleRequest:00000000 $t
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:64     .text._HandleRequest:00000000 _HandleRequest
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:123    .text.StallControlPipe:00000000 $t
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:127    .text.StallControlPipe:00000000 StallControlPipe
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:176    .text.DataIn:00000000 $t
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:180    .text.DataIn:00000000 DataIn
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:241    .text.USBHandleControlTransfer:00000000 $t
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:246    .text.USBHandleControlTransfer:00000000 USBHandleControlTransfer
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:512    .text.USBRegisterRequestHandler:00000000 $t
-C:\Users\ACURAP~1\AppData\Local\Temp\cczjBjYw.s:517    .text.USBRegisterRequestHandler:00000000 USBRegisterRequestHandler
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:24     .bss.Setup:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:27     .bss.Setup:00000000 Setup
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:30     .bss.pbData:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:33     .bss.pbData:00000000 pbData
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:36     .bss.iResidue:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:39     .bss.iResidue:00000000 iResidue
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:42     .bss.iLen:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:45     .bss.iLen:00000000 iLen
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:48     .bss.apfnReqHandlers:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:51     .bss.apfnReqHandlers:00000000 apfnReqHandlers
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:54     .bss.apbDataStore:00000000 $d
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:57     .bss.apbDataStore:00000000 apbDataStore
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:60     .text._HandleRequest:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:64     .text._HandleRequest:00000000 _HandleRequest
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:123    .text.StallControlPipe:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:127    .text.StallControlPipe:00000000 StallControlPipe
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:176    .text.DataIn:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:180    .text.DataIn:00000000 DataIn
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:241    .text.USBHandleControlTransfer:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:246    .text.USBHandleControlTransfer:00000000 USBHandleControlTransfer
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:512    .text.USBRegisterRequestHandler:00000000 $t
+C:\Users\ACURAP~1\AppData\Local\Temp\ccB1blRh.s:517    .text.USBRegisterRequestHandler:00000000 USBRegisterRequestHandler
                      .debug_frame:00000010 $d
 
 UNDEFINED SYMBOLS
